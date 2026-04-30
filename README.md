@@ -4,9 +4,9 @@ Generate `.excalidraw` JSON files that argue visually — not just boxes-and-arr
 
 Based on [coleam00/excalidraw-diagram-skill](https://github.com/coleam00/excalidraw-diagram-skill), adapted for dual-environment use with a refined color palette and expanded semantic coverage.
 
-![Vault ingest fan-out](examples/vault-ingest-fanout.png)
+![Vault note half-life](examples/vault-note-half-life.png)
 
-> Generated end-to-end by the skill itself. Source: [`examples/vault-ingest-fanout.excalidraw`](examples/vault-ingest-fanout.excalidraw)
+> Generated end-to-end by the skill itself. Source: [`examples/vault-note-half-life.excalidraw`](examples/vault-note-half-life.excalidraw)
 
 ## Install
 
