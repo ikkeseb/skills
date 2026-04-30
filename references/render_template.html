@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #ffffff; overflow: hidden; }
+    /* No body background — we screenshot the SVG element directly, and a
+       transparent body lets `omit_background=True` produce a true alpha PNG. */
     #root { display: inline-block; }
     #root svg { display: block; }
   </style>
@@ -23,7 +24,9 @@
         const appState = data.appState || {};
         const files = data.files || {};
 
-        // Force white background in appState
+        // Default to white background unless caller has set viewBackgroundColor.
+        // For transparent renders, the Python side sets exportBackground:false,
+        // which we honor below.
         appState.viewBackgroundColor = appState.viewBackgroundColor || "#ffffff";
         appState.exportWithDarkMode = false;
 
@@ -31,7 +34,7 @@
           elements: elements,
           appState: {
             ...appState,
-            exportBackground: true,
+            exportBackground: appState.exportBackground !== false,
           },
           files: files,
         });

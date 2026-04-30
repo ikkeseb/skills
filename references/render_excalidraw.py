@@ -2,7 +2,14 @@
 
 Usage:
     cd <skill-path>/references
-    uv run python render_excalidraw.py <path-to-file.excalidraw> [--output path.png] [--scale 2] [--width 1920]
+    uv run python render_excalidraw.py <path-to-file.excalidraw> [flags]
+
+Flags:
+    --output, -o     Output PNG path (default: same name with .png)
+    --scale, -s      Device scale factor (default: 2)
+    --width, -w      Max viewport width (default: 1920)
+    --transparent    Transparent background instead of white
+    --validate       Validate JSON structure and bindings only — no render
 
 First-time setup:
     cd <skill-path>/references
@@ -33,6 +40,78 @@ def validate_excalidraw(data: dict) -> list[str]:
         errors.append("'elements' array is empty — nothing to render")
 
     return errors
+
+
+def validate_bindings(elements: list[dict]) -> list[str]:
+    """Walk elements and check that every cross-reference resolves.
+
+    Catches the common failure mode where an Edit introduces a typo in
+    `containerId`, `boundElements[].id`, `startBinding.elementId`, or
+    `endBinding.elementId`. Without this, a broken binding presents as a
+    generic 30s Playwright timeout. With it, you get the bad ID in milliseconds.
+    """
+    errors: list[str] = []
+    ids: dict[str, int] = {}
+
+    for idx, el in enumerate(elements):
+        eid = el.get("id")
+        if not eid:
+            errors.append(f"Element at index {idx} ({el.get('type', '?')}) is missing 'id'")
+            continue
+        if eid in ids:
+            errors.append(f"Duplicate element id '{eid}' (indexes {ids[eid]} and {idx})")
+        ids[eid] = idx
+
+    valid = set(ids)
+
+    def check(ref_id: str | None, where: str) -> None:
+        if ref_id and ref_id not in valid:
+            errors.append(f"{where} references missing element id '{ref_id}'")
+
+    for el in elements:
+        eid = el.get("id", "?")
+        etype = el.get("type", "?")
+
+        check(el.get("containerId"), f"Element '{eid}' ({etype}).containerId")
+
+        for i, b in enumerate(el.get("boundElements") or []):
+            if isinstance(b, dict):
+                check(b.get("id"), f"Element '{eid}' ({etype}).boundElements[{i}].id")
+
+        if etype == "arrow":
+            sb = el.get("startBinding")
+            if isinstance(sb, dict):
+                check(sb.get("elementId"), f"Arrow '{eid}'.startBinding.elementId")
+            eb = el.get("endBinding")
+            if isinstance(eb, dict):
+                check(eb.get("elementId"), f"Arrow '{eid}'.endBinding.elementId")
+
+    return errors
+
+
+def run_validation(excalidraw_path: Path) -> int:
+    """Read, parse, and validate an .excalidraw file. Print result and return exit code."""
+    raw = excalidraw_path.read_text(encoding="utf-8")
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        print(f"ERROR: Invalid JSON in {excalidraw_path}: {e}", file=sys.stderr)
+        return 1
+
+    errors = validate_excalidraw(data)
+    if not errors:
+        elements = [e for e in data.get("elements", []) if not e.get("isDeleted")]
+        errors = validate_bindings(elements)
+
+    if errors:
+        print(f"FAIL: {excalidraw_path}", file=sys.stderr)
+        for err in errors:
+            print(f"  - {err}", file=sys.stderr)
+        return 1
+
+    n = len([e for e in data.get("elements", []) if not e.get("isDeleted")])
+    print(f"OK: {excalidraw_path} ({n} elements, all bindings resolve)")
+    return 0
 
 
 def compute_bounding_box(elements: list[dict]) -> tuple[float, float, float, float]:
@@ -74,6 +153,7 @@ def render(
     output_path: Path | None = None,
     scale: int = 2,
     max_width: int = 1920,
+    transparent: bool = False,
 ) -> Path:
     """Render an .excalidraw file to PNG. Returns the output PNG path."""
     # Import playwright here so validation errors show before import errors
@@ -98,6 +178,13 @@ def render(
         for err in errors:
             print(f"  - {err}", file=sys.stderr)
         sys.exit(1)
+
+    # When transparent, signal to the template (and exportToSvg) to skip the
+    # background rect. Combined with omit_background on the screenshot, this
+    # produces a true alpha PNG.
+    if transparent:
+        data.setdefault("appState", {})["exportBackground"] = False
+        data["appState"]["viewBackgroundColor"] = "transparent"
 
     # Compute viewport size from element bounding box
     elements = [e for e in data["elements"] if not e.get("isDeleted")]
@@ -182,7 +269,7 @@ def render(
         if svg_el is None:
             fail("No SVG element found after render.")
 
-        svg_el.screenshot(path=str(output_path))
+        svg_el.screenshot(path=str(output_path), omit_background=transparent)
         browser.close()
 
     return output_path
@@ -194,13 +281,22 @@ def main() -> None:
     parser.add_argument("--output", "-o", type=Path, default=None, help="Output PNG path (default: same name with .png)")
     parser.add_argument("--scale", "-s", type=int, default=2, help="Device scale factor (default: 2)")
     parser.add_argument("--width", "-w", type=int, default=1920, help="Max viewport width (default: 1920)")
+    parser.add_argument("--transparent", action="store_true", help="Transparent background instead of white")
+    parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Validate JSON structure and bindings only — no render, no Chromium",
+    )
     args = parser.parse_args()
 
     if not args.input.exists():
         print(f"ERROR: File not found: {args.input}", file=sys.stderr)
         sys.exit(1)
 
-    png_path = render(args.input, args.output, args.scale, args.width)
+    if args.validate:
+        sys.exit(run_validation(args.input))
+
+    png_path = render(args.input, args.output, args.scale, args.width, args.transparent)
     print(str(png_path))
 
 

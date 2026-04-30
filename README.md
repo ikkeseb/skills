@@ -15,7 +15,7 @@ git clone https://github.com/ikkeseb/excalidraw-skill ~/excalidraw-skill
 ln -s ~/excalidraw-skill ~/.claude/skills/excalidraw
 ```
 
-For the render-validate loop (optional, Claude Code only — lets Claude check diagrams visually before delivering them):
+For opt-in PNG rendering (Claude Code only — Claude offers it after delivery):
 
 ```bash
 brew install uv  # or: curl -LsSf https://astral.sh/uv/install.sh | sh

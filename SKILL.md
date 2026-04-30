@@ -11,7 +11,7 @@ Generate `.excalidraw` JSON files that **argue visually**, not just display info
 
 This skill works in both Claude Code and Claude Chat.
 
-**Claude Code** (`~/.claude/skills/excalidraw/` or `<project>/.claude/skills/excalidraw/`): Full render-validate loop available via Playwright. After generating JSON, render to PNG, view it, and fix issues iteratively. See `references/render_excalidraw.py`. After delivery, offer to open the diagram in Excalidraw via clipboard + browser — see `references/open_in_excalidraw.py`.
+**Claude Code** (`~/.claude/skills/excalidraw/` or `<project>/.claude/skills/excalidraw/`): Generate the `.excalidraw` JSON and deliver it. Don't auto-render — get the diagram right by following the methodology. After delivery, offer two opt-in follow-ups: render to PNG (`references/render_excalidraw.py`) and open in Excalidraw via clipboard (`references/open_in_excalidraw.py`).
 
 **Claude Chat** (`/mnt/skills/user/excalidraw/`): Create the `.excalidraw` JSON file and save to `/mnt/user-data/outputs/`. The user opens it in [excalidraw.com](https://excalidraw.com) or the Excalidraw desktop app. No render loop — get it right by following the methodology carefully.
 
@@ -81,11 +81,15 @@ Mentally trace how the eye moves. There should be a clear visual story.
 ### Step 5: Generate JSON
 Only now create the Excalidraw elements. For large diagrams, build section-by-section (see below).
 
-### Step 6: Render & Validate (Claude Code only — MANDATORY)
-Run the render-view-fix loop. See Render & Validate section.
+### Step 6: Deliver
+Save the `.excalidraw` file and tell the user where it lives. The methodology is the verification — do **not** auto-render. Rendering is an opt-in follow-up the user requests.
 
-### Step 7: Offer to Open in Excalidraw (Claude Code only)
-Once the diagram is delivered, offer to open it on excalidraw.com so the user can interact with it without leaving their flow. See Open in Excalidraw section.
+### Step 7: Offer Follow-Ups (Claude Code only)
+After delivery, offer two opt-in actions in a single short prompt:
+- **Render to PNG** — useful for docs, sharing, or visual sanity-check on complex diagrams
+- **Open in Excalidraw** — copy JSON to clipboard, open excalidraw.com for editing
+
+See "After Delivery" below for the exact wording and commands.
 
 ---
 
@@ -171,6 +175,21 @@ Check cross-section arrow bindings, overall spacing balance, and that all IDs re
 
 ---
 
+## Layer Order (Z-Index)
+
+In Excalidraw, **array position is z-index**. Earlier elements render behind, later elements render on top. There's no separate `zIndex` field — order in the `elements` array IS the layering.
+
+Build elements in this order so layering stays correct without post-hoc reshuffling:
+
+1. **Background structure** — section dividers, region rectangles, large grouping shapes
+2. **Primary shapes** — rectangles, ellipses, diamonds for main concepts
+3. **Arrows and lines** — connections between shapes
+4. **Free-floating text** — labels, annotations, captions on top
+
+When labels look clipped by arrows, or arrows pass behind shapes that should sit in front, the fix is array reordering — not coordinates.
+
+---
+
 ## Color, Aesthetics & Layout
 
 **Colors**: Read `references/color-palette.md` before generating any diagram. Every color choice comes from there.
@@ -188,6 +207,8 @@ Check cross-section arrow bindings, overall spacing balance, and that all IDs re
 **Flow direction**: Left→right or top→bottom for sequences, radial for hub-and-spoke.
 
 **Connections**: Position alone doesn't show relationships. If A relates to B, there must be an arrow.
+
+**Layout fixes beat arrow gymnastics**: If an arrow needs a tortured curve or hand-placed waypoints to clear an obstacle, the layout is wrong, not the arrow. Move the box. Straight or gently curved arrows mean the spatial story is clear; bezier acrobatics mean it isn't.
 
 ---
 
@@ -221,46 +242,45 @@ See `references/json-schema.md` for the full schema reference.
 
 ---
 
-## Render & Validate (Claude Code — MANDATORY)
+## After Delivery: Opt-In Follow-Ups (Claude Code only)
 
-After generating JSON, render to PNG, view it, and fix — in a loop.
+The skill does **not** auto-render. Get the diagram right by following the methodology — rendering is a verification tool the user opts into, and Chromium cold-start is slow enough (~6–10s) that it's rude to spend it without permission.
+
+After saving the `.excalidraw` file, offer both follow-ups in one short prompt, e.g.:
+
+> Diagram saved to `path/to/file.excalidraw`. Want me to render a PNG, open it in Excalidraw, or both?
+
+### Render to PNG
+
+If the user wants a PNG (or you've decided a complex diagram needs visual verification):
 
 ```bash
 cd <skill-path>/references && uv run python render_excalidraw.py <path-to-file.excalidraw>
 ```
 
-### The Loop
+Useful flags:
+- `--transparent` — transparent background instead of white (for embedding on dark surfaces)
+- `--validate` — fast JSON walk that catches missing element IDs, broken `containerId` / `boundElements` / arrow bindings, and duplicate IDs **without** launching Chromium. Run this first if you suspect ID typos in cross-section bindings; it turns a 30s Playwright timeout into a millisecond error message.
 
-1. **Render & View** — Run script, read the PNG
-2. **Audit against vision** — Does the visual structure match the plan? Correct hierarchy? Evidence artifacts readable?
-3. **Check for defects** — Text clipped/overflowing, overlapping elements, arrows through elements, ambiguous labels, uneven spacing, text too small, lopsided composition
-4. **Fix** — Edit JSON. Widen containers, adjust coordinates, add arrow waypoints, reposition labels
-5. **Re-render & re-view**
-6. **Repeat** — Typically 2-4 iterations. Stop when it passes both vision and defect checks.
+If a render reveals problems, fix the JSON and re-render. One concrete fix per render — over-correcting wastes the round-trip. If an arrow needs tortured waypoints to dodge a shape, move the shape (see "Layout fixes beat arrow gymnastics" above).
 
----
+### Open in Excalidraw
 
-## Open in Excalidraw (Claude Code only)
-
-After delivering the file, **offer** to open it in Excalidraw — don't run it automatically (the user might not want their clipboard hijacked or a browser tab spawned). Phrase the offer as a one-liner like:
-
-> Want me to open this in Excalidraw? I'll copy the JSON to your clipboard and open excalidraw.com — paste it on the canvas with Cmd+V (macOS) or Ctrl+V (Linux/Windows).
-
-If the user agrees, run:
+If the user wants to edit the diagram interactively:
 
 ```bash
 python <skill-path>/references/open_in_excalidraw.py <path-to-file.excalidraw>
 ```
 
-The script is pure stdlib (no `uv` needed). It copies the JSON to the system clipboard via the platform-native tool — `pbcopy` on macOS, `clip` on Windows, `wl-copy`/`xclip`/`xsel` on Linux — and opens [excalidraw.com](https://excalidraw.com) in the default browser. The user pastes onto the canvas to import the scene.
+Pure stdlib (no `uv` needed). Copies the JSON to the system clipboard via the platform-native tool — `pbcopy` (macOS), `clip` (Windows), `wl-copy`/`xclip`/`xsel` (Linux) — and opens [excalidraw.com](https://excalidraw.com) in the default browser. The user pastes (Cmd+V / Ctrl+V) onto the canvas to import the scene.
 
-Then surface the link and the paste hint in your reply, e.g.:
+Then surface the link and the paste hint:
 
 > JSON copied to clipboard. Open: https://excalidraw.com — paste with Cmd+V on the canvas.
 
-**Why paste instead of auto-load?** Excalidraw can't fetch local files via URL (browser security), and `#json=`-style share links would require uploading the diagram to Excalidraw's backend. Clipboard paste keeps the diagram local and is the closest "one click" alternative.
+**Why paste instead of auto-load?** Excalidraw can't fetch local files via URL (browser security), and `#json=`-style share links would upload the diagram to Excalidraw's backend. Clipboard paste keeps it local.
 
-**Skip this step in Claude Chat** — the user already has the file via the chat UI and opens it themselves.
+**Skip both follow-ups in Claude Chat** — the user already has the file via the chat UI.
 
 ---
 
@@ -291,4 +311,5 @@ Then surface the link and the paste hint in your reply, e.g.:
 ### Technical
 - [ ] `fontFamily: 3`, `roughness: 0`, `opacity: 100`
 - [ ] `text` contains only readable words
-- [ ] Rendered and visually validated (Claude Code)
+- [ ] All `containerId`, `boundElements`, and arrow `startBinding`/`endBinding` references point at existing element IDs
+- [ ] Layer order in the array goes background → primary shapes → arrows → free-floating text
