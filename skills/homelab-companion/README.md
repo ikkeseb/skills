@@ -53,17 +53,17 @@ distribution.
 
 ## Install
 
-Drop the repo into your Claude Code skills directory:
+Part of the [`ikkeseb-skills`](https://github.com/ikkeseb/skills) plugin bundle:
 
 ```bash
-git clone https://github.com/ikkeseb/homelab-companion.git \
-    ~/.claude/skills/homelab-companion
+/plugin install ikkeseb/skills
 ```
 
-Or symlink if you prefer to keep the repo elsewhere:
+Or symlink just this skill from your own clone of the bundle:
 
 ```bash
-ln -s "$(pwd)" ~/.claude/skills/homelab-companion
+git clone https://github.com/ikkeseb/skills ~/skills
+ln -s ~/skills/skills/homelab-companion ~/.claude/skills/homelab-companion
 ```
 
 The skill loads automatically on the next Claude Code session.
