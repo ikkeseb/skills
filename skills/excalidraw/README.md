@@ -10,9 +10,17 @@ Based on [coleam00/excalidraw-diagram-skill](https://github.com/coleam00/excalid
 
 ## Install
 
+Part of the [`ikkeseb-skills`](https://github.com/ikkeseb/skills) plugin bundle:
+
 ```bash
-git clone https://github.com/ikkeseb/excalidraw-skill ~/excalidraw-skill
-ln -s ~/excalidraw-skill ~/.claude/skills/excalidraw
+/plugin install ikkeseb/skills
+```
+
+Or symlink just this skill from your own clone of the bundle:
+
+```bash
+git clone https://github.com/ikkeseb/skills ~/skills
+ln -s ~/skills/skills/excalidraw ~/.claude/skills/excalidraw
 ```
 
 For opt-in PNG rendering (Claude Code only — Claude offers it after delivery):

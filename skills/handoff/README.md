@@ -6,14 +6,17 @@ Saves a markdown file to `~/.claude/handoffs/YYYY-MM-DD-HHmm-<slug>.md` and show
 
 ## Install
 
+Part of the [`ikkeseb-skills`](https://github.com/ikkeseb/skills) plugin bundle:
+
 ```bash
-git clone https://github.com/ikkeseb/handoff ~/.claude/skills/handoff
+/plugin install ikkeseb/skills
 ```
 
-Or symlink your own clone (edits go live):
+Or symlink just this skill from your own clone of the bundle:
 
 ```bash
-ln -s /path/to/your/clone ~/.claude/skills/handoff
+git clone https://github.com/ikkeseb/skills ~/skills
+ln -s ~/skills/skills/handoff ~/.claude/skills/handoff
 ```
 
 ## Usage
