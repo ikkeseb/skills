@@ -1,0 +1,8 @@
+{
+  "name": "ikkeseb-skills",
+  "skills": [
+    "./skills/excalidraw",
+    "./skills/handoff",
+    "./skills/homelab-companion"
+  ]
+}
