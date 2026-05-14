@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Compact the session into a handoff — saves a file under ~/.claude/handoffs/ and shows the same content as a copy-paste snippet for a fresh Claude Code session.
+description: Compact the current session into a handoff snippet — saves to ~/.claude/handoffs/ and prints for copy-paste. Use when creating a handoff. Do NOT invoke when reading a handoff snippet pasted from another session — treat it as context and continue the work.
 ---
 
 # Handoff
