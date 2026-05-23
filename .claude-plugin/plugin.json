@@ -1,6 +1,7 @@
 {
   "name": "ikkeseb-skills",
   "skills": [
+    "./skills/afk",
     "./skills/excalidraw",
     "./skills/handoff",
     "./skills/homelab-companion"
