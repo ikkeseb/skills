@@ -8,6 +8,7 @@ A small set of Claude Code skills I use day-to-day. Each one does a single thing
 
 ## Skills
 
+- **[afk](skills/afk)** — posture for unattended autonomous work: no clarifying questions, low-blast default, audit log to `~/.claude/afk-logs/`. Invoke with `/afk` when handing off an overnight run, audit, or any session you won't supervise.
 - **[excalidraw](skills/excalidraw)** — generates `.excalidraw` diagrams that argue visually, not just label boxes. Use when a diagram needs to teach something, not decorate a slide.
 - **[handoff](skills/handoff)** — compacts the current session into a handoff file plus a paste-ready snippet. Use when switching machine, hitting a context limit, or briefing another agent.
 - **[homelab-companion](skills/homelab-companion)** — fail-mode forensics for homelab debugging and post-mortems. Use after something broke and you want a structured RCA instead of a guessing game.
