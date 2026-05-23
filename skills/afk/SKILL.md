@@ -71,7 +71,7 @@ Long AFK sessions WILL compress context; posture can be lost mid-flight. Re-stat
 
 ## Logging
 
-### During work — inline
+Inline during work — three formats:
 
 | Format | When |
 |---|---|
@@ -79,14 +79,20 @@ Long AFK sessions WILL compress context; posture can be lost mid-flight. Re-stat
 | `[AFK status] …` | Per major step. Short: done / deferred / blocked. Re-anchors posture. |
 | `[AFK BLOCKED] <what> — needs Seb on <X>` | When stopped on high-blast + uncertain. |
 
-### At the end — when AFK is explicitly dropped
+The conversation IS the audit trail. No separate log file written at the end.
 
-Write `~/.claude/afk-logs/YYYY-MM-DD-HHmm-<slug>.md` (slug from the initial AFK task description, kebab-case). Structure:
+## Return summary
 
-- **Summary** at top — 5–10 lines: what was done, what's pending, any blockers.
-- **Detailed log** below — full audit trail.
+When AFK is explicitly dropped, lead the reply with one tally line + bulleted index. Same scan-first format as verify-claims:
 
-Create `~/.claude/afk-logs/` if missing. On each AFK run, auto-delete `*.md` older than 30 days in that directory.
+> **3 done · 1 deferred · 1 blocked**
+>
+> - ✅ implemented X — commit `abc123`
+> - ✅ tests pass — 47/47
+> - ⏸ dependency bump deferred — minor vs major is your call
+> - 🛑 blocked: prod deploy — needs your AWS creds
+
+Status keys: ✅ done · ⏸ deferred · 🛑 blocked. One bullet per item, plain prose, no nested paragraphs — the inline `[AFK]` log above already has the detail. This is the index, not the recap.
 
 ## Composition with other skills and modes
 
