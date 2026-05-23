@@ -4,6 +4,7 @@
     "./skills/afk",
     "./skills/excalidraw",
     "./skills/handoff",
-    "./skills/homelab-companion"
+    "./skills/homelab-companion",
+    "./skills/max-effort"
   ]
 }

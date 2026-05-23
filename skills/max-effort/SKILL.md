@@ -1,0 +1,81 @@
+---
+name: max-effort
+description: Posture skill activated by `/max-effort` (single-task) or `/max-effort sustained` (session). Dispatches subagents widely, then runs an orchestrator-pass that's the load-bearing verification step. Invoke ONLY when the user explicitly types the command — do NOT auto-invoke from context cues like "this is important", "high-stakes", "be careful", "irreversible", or "do this thoroughly". Sustained mode drops only on explicit user off-signal.
+---
+
+# max-effort
+
+Posture for high-stakes / irreversible work. Throws maximum *useful* subagent capacity at the task, then runs an orchestrator-pass to catch what subagents missed.
+
+Not a "be careful" prompt. The load-bearing moves are (1) dispatching widely for independent signal, and (2) the orchestrator verifying the result rather than rubber-stamping it.
+
+## Modes
+
+- `/max-effort <task>` — single-task, one expensive round.
+- `/max-effort sustained` — session posture, persists until explicit off-signal.
+
+## Off-signal (sustained)
+
+Only explicit user signal drops the posture: `back`, `stopp`, `max-effort off`, `drop max-effort`, or unambiguous equivalent. Mid-sustained questions or redirects do not drop it. New session starts fresh.
+
+## Preamble — first response after `/max-effort`
+
+1. **Mode** — single or sustained, if not already in the invocation.
+2. **Task ambiguity** — surface in one batch only if genuinely unclear *what* is being asked. No "should I be thorough?" padding.
+
+Then wait.
+
+## Phase 1 — Broad dispatch
+
+**Principle.** Bias toward many strong subagents when they add independent signal. Token and time cost are not constraints — the user invoked this posture because they want resources spent.
+
+**Anti-patterns** (the brake — more agents is not always more signal):
+
+- Duplicate agents on the same question.
+- Agents reading the same source without a path to independent conclusions.
+- Deterministic tasks (lint, rename, mechanical refactor) where agents add noise, not signal.
+- Parallel dispatch on dependent subproblems — B's brief is incomplete without A's output.
+- Reviewers when the task doesn't warrant adversarial review — spawning a security agent on a research summary is theater.
+
+**Brief-content rule.** Subagents start with empty context. Include — when materially useful — skills they should load, relevant project context (CLAUDE.md slices, routing tables, conventions), prior session decisions. Don't dump everything; judgment per agent. Common failure: orchestrator loaded a skill and forgot to tell the subagent to load it too.
+
+## Phase 2 — Orchestrator pass
+
+**Always run.** This is what distinguishes max-effort from "specialists agreed, therefore done". Subagents got a brief, not the conversation. They miss the actual goal, hallucinate, conflict, and propose plausible-but-wrong solutions. You have the context to catch it.
+
+With subagent artifacts in front of you, in this turn:
+
+1. **Match against the actual goal.** Did subagents answer the question the user asked, or a neighboring one their brief drifted into?
+2. **Verify load-bearing claims against source-of-truth.** Task-specific: read the file cited, open the URL, check the browser, check internal consistency. Subagents hallucinate; their confidence is not evidence.
+3. **Resolve conflicts explicitly.** Don't paper over disagreements with "both have a point" — use the context they lacked to navigate.
+4. **Adversarial sub-dispatch — as a tool, not a phase.** When the artifact warrants red-team (security-sensitive, irreversible, externally-visible), spawn auditors against it. When it doesn't, skip — Phase 1 anti-patterns apply.
+5. **Run task-specific verification.** Code: tests, build, repro. Research: open the cited sources. Frontend: open the browser and look. Concept work: check internal consistency and constraint-fit. The CLAUDE.md / `superpowers:verification-before-completion` rule, generalized — not relaxed.
+6. **Be explicit about checked vs unchecked.** Calibration over confidence. Surface a gap rather than claim coverage you didn't deliver.
+
+## Final summary
+
+Inline only — no persistent log file. Persistent "max-effort was thorough on X" markers re-create a false-certainty cascade: the next session reads them and projects past confidence forward as fact. The verification has to live in the active turn, not state. For cross-session capture, use `/handoff`.
+
+Earn-its-place structure. `Done` and `Open / flagged` always present (write `None` when genuinely empty, don't omit). Others appear only with content.
+
+**Done.** What was produced.
+
+**Open / flagged.** Outstanding concerns, unresolved subagent conflicts, what wasn't verified, assumptions leaned on. Calibration anchor — its presence resists the cascade.
+
+**Verified** (optional). Load-bearing claims actually checked. Phrase as actions ("read file X, confirmed Y exports Z"), not verdicts ("code is correct"). A future session reading this back gets a list of checks performed, not a quality claim to project forward.
+
+**Subagents used** (optional, when >1). Who and what they contributed. Helps the user decide what's worth second-guessing.
+
+In sustained mode, prefix the summary with `[max-effort sustained]` so the posture is recoverable after context compression.
+
+## Composition with other skills and modes
+
+- **`afk`.** Stacks but stays distinct. afk owns the interaction model (no questions, low-blast default, audit log to disk); max-effort owns dispatch + orchestrator pass. Under afk the preamble does not run — asking is forbidden — so default to single-task and log as `[AFK] max-effort default → single-task`. Phase 1/2 unchanged.
+- **`superpowers:verification-before-completion` / CLAUDE.md verification rule.** Not relaxed. Phase 2 step 5 is the same rule generalized to non-code work.
+- **Plan mode.** Compatible. Plan first if the work is plan-shaped; max-effort dispatches against approved steps. If dispatch surfaces something that invalidates the plan, exit plan mode and re-plan.
+
+## Failure modes worth naming
+
+- **Trivial task invoked under max-effort.** Deterministic work where no dispatch can change the outcome. Say so once in the preamble and ask whether to proceed. Don't silently spawn agents that will produce nothing.
+- **Orchestrator pass collapsing to "subagents agreed, done".** This is the cascade. If you're writing the summary without having read at least one source-of-truth artifact in this turn, the orchestrator pass did not happen — go back and do it.
+- **Sustained mode quietly persisting after the high-stakes work is done.** If the user moves to small unrelated tasks, surface once: "still in sustained — drop?" Don't dispatch on micro-tasks just because the mode is on.
