@@ -28,25 +28,39 @@ For each claim, try sources in order:
 
 Classify each claim:
 
-- `DIRECT` — explicitly supported by the source
-- `UNVERIFIED` — no source found after the above
-- `CONTRADICTED` — source disagrees
+- ✅ **verified** — explicitly supported by the source
+- ❓ **unverified** — no source found after the above
+- ❌ **contradicted** — source disagrees
 
-`UNVERIFIED` is the honest answer when the support is "I remember reading it somewhere". Don't promote a guess to `DIRECT` to make the table look clean.
+❓ unverified is the honest answer when the support is "I remember reading it somewhere". Don't promote a guess to ✅ verified to make the table look clean.
 
 ## Special cases
 
-- **Session facts** ("I created X", "I ran Y", "the test passed") → verify against this session's tool-call history. `CONTRADICTED` if the call never happened. This is the most common confabulation mode — don't skip it.
-- **Predictions / estimates** ("this will take 2h", "Y will break under load") → `[N/A — predictive]`, listed below the table, not inside it.
+- **Session facts** ("I created X", "I ran Y", "the test passed") → verify against this session's tool-call history. ❌ contradicted if the call never happened. This is the most common confabulation mode — don't skip it.
+- **Predictions / estimates** ("this will take 2h", "Y will break under load") → list below the table as `[N/A — predictive]`, not inside it.
 - **Tautologies** (path the user just named, file they pointed at) → omit.
 
 ## Output
 
-Markdown table in chat:
+Optimize for human scanability. Three parts, in order:
 
-| claim | source | classification | note |
+**1. Tally line** — one bold line, dot-separated counts so the user reads the shape at a glance:
 
-After the table, a short retract list: each `UNVERIFIED` and `CONTRADICTED` row, quoting the original sentence and the issue. No automatic rewrites — the user decides what to strike or qualify.
+> **5 verified · 2 unverified · 1 contradicted**
+
+**2. Table** — emoji as the status column, plain prose in the others:
+
+| | claim | source | note |
+|---|---|---|---|
+| ✅ | "the API is called X" | `src/api.ts:42` | direct match |
+| ❓ | "X is the fastest framework" | — | no benchmark in workspace, no lookup match |
+| ❌ | "released in 2024" | webfetch (vendor docs) | docs say 2023 |
+
+Quote claims naturally. Sources should be specific (`file:line`, tool + what was fetched) — not just "websearch". The `note` column is for the *why* behind the classification, in human language.
+
+**3. Retract list** — one section below the table, only ❓ and ❌ rows. Quote the original sentence and say plainly what's wrong or missing. No automatic rewrites — the user decides what to strike or qualify.
+
+Don't add extra headers, preambles, or summary paragraphs. The three parts above are the whole output.
 
 ## Large targets
 
