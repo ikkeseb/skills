@@ -90,6 +90,7 @@ Create `~/.claude/afk-logs/` if missing. On each AFK run, auto-delete `*.md` old
 
 ## Composition with other skills and modes
 
+- **`max-effort`**: stacks. AFK owns the interaction model; max-effort owns dispatch + orchestrator pass. Under AFK the max-effort preamble does not run — asking is forbidden — so default to single-task and log as `[AFK] max-effort default → single-task`.
 - **Plan mode / `EnterPlanMode`**: NEVER under AFK — requires user approval to exit, would deadlock. Write the plan inline in the log and proceed (if low-blast).
 - **Long blocking brainstorming**: NEVER under AFK. Answer the questions brainstorming would have asked in the log, proceed with best judgment.
 - **Verification before "done"**: not relaxed by AFK. Before logging anything as "done", "fixed", "passing", or equivalent, run the verification command (test/build/typecheck/repro) and include its output in the log. No bare claims. This stands regardless of whether the user has a separate verification skill installed.
