@@ -1,5 +1,12 @@
 {
   "name": "ikkeseb-skills",
+  "description": "A small bundle of Claude Code skills: afk, excalidraw, handoff, max-effort, verify-claims.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Sebastian de la Nuez"
+  },
+  "repository": "https://github.com/ikkeseb/skills",
+  "license": "MIT",
   "skills": [
     "./skills/afk",
     "./skills/excalidraw",

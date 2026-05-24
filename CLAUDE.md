@@ -14,7 +14,7 @@ Three places must stay in sync:
 
 1. The folder under `skills/`
 2. The path in `.claude-plugin/plugin.json` → `skills`
-3. The row in the top-level `README.md` skills table
+3. The entry in the top-level `README.md` skills list
 
 If a skill is added, removed, or renamed and any of the three drift, plugin install will look broken to users. Update all three in the same change.
 
