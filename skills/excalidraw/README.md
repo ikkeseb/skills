@@ -23,13 +23,13 @@ git clone https://github.com/ikkeseb/skills ~/skills
 ln -s ~/skills/skills/excalidraw ~/.claude/skills/excalidraw
 ```
 
-For opt-in PNG rendering (Claude Code only — Claude offers it after delivery):
+For opt-in PNG rendering (Claude Code only — Claude offers it after delivery), install `uv` once:
 
 ```bash
 brew install uv  # or: curl -LsSf https://astral.sh/uv/install.sh | sh
-cd ~/.claude/skills/excalidraw/references
-uv sync && uv run playwright install chromium
 ```
+
+The first time you ask Claude to render a PNG, it resolves the skill's install path and runs `uv sync && uv run playwright install chromium` from the `references/` directory — works for both plugin and symlink installs.
 
 ## Use
 
