@@ -2,6 +2,32 @@
 
 Copy-paste JSON templates for each Excalidraw element type. Replace color placeholders with actual values from `color-palette.md` based on the element's semantic purpose.
 
+## Common Defaults
+
+Every template implicitly includes these fields. **Always include them in the output JSON**, even though they're omitted from the per-shape blocks below:
+
+```json
+{
+  "fillStyle": "solid",
+  "strokeStyle": "solid",
+  "roughness": 0,
+  "opacity": 100,
+  "angle": 0,
+  "version": 1,
+  "isDeleted": false,
+  "groupIds": [],
+  "link": null,
+  "locked": false
+}
+```
+
+For each new element, also generate:
+- `id`: descriptive string (e.g., `"rect_trigger"`, `"arrow_fan_left"`)
+- `seed`: unique integer, namespaced by section (see SKILL.md → Large Diagram Strategy)
+- `versionNonce`: unique integer
+
+---
+
 ## Free-Floating Text (no container)
 ```json
 {
@@ -17,20 +43,8 @@ Copy-paste JSON templates for each Excalidraw element type. Replace color placeh
   "verticalAlign": "top",
   "strokeColor": "<title color from palette>",
   "backgroundColor": "transparent",
-  "fillStyle": "solid",
   "strokeWidth": 1,
-  "strokeStyle": "solid",
-  "roughness": 0,
-  "opacity": 100,
-  "angle": 0,
-  "seed": 11111,
-  "version": 1,
-  "versionNonce": 22222,
-  "isDeleted": false,
-  "groupIds": [],
   "boundElements": null,
-  "link": null,
-  "locked": false,
   "containerId": null,
   "lineHeight": 1.25
 }
@@ -45,20 +59,8 @@ Copy-paste JSON templates for each Excalidraw element type. Replace color placeh
   "width": 0, "height": 200,
   "strokeColor": "<structural line color from palette>",
   "backgroundColor": "transparent",
-  "fillStyle": "solid",
   "strokeWidth": 2,
-  "strokeStyle": "solid",
-  "roughness": 0,
-  "opacity": 100,
-  "angle": 0,
-  "seed": 44444,
-  "version": 1,
-  "versionNonce": 55555,
-  "isDeleted": false,
-  "groupIds": [],
   "boundElements": null,
-  "link": null,
-  "locked": false,
   "points": [[0, 0], [0, 200]]
 }
 ```
@@ -70,22 +72,10 @@ Copy-paste JSON templates for each Excalidraw element type. Replace color placeh
   "id": "dot_descriptive_name",
   "x": 94, "y": 94,
   "width": 12, "height": 12,
-  "strokeColor": "#3b82f6",
-  "backgroundColor": "#3b82f6",
-  "fillStyle": "solid",
+  "strokeColor": "<marker dot color from palette>",
+  "backgroundColor": "<marker dot color from palette>",
   "strokeWidth": 1,
-  "strokeStyle": "solid",
-  "roughness": 0,
-  "opacity": 100,
-  "angle": 0,
-  "seed": 66666,
-  "version": 1,
-  "versionNonce": 77777,
-  "isDeleted": false,
-  "groupIds": [],
-  "boundElements": null,
-  "link": null,
-  "locked": false
+  "boundElements": null
 }
 ```
 
@@ -97,20 +87,8 @@ Copy-paste JSON templates for each Excalidraw element type. Replace color placeh
   "x": 100, "y": 100, "width": 180, "height": 90,
   "strokeColor": "<stroke from palette>",
   "backgroundColor": "<fill from palette>",
-  "fillStyle": "solid",
   "strokeWidth": 2,
-  "strokeStyle": "solid",
-  "roughness": 0,
-  "opacity": 100,
-  "angle": 0,
-  "seed": 12345,
-  "version": 1,
-  "versionNonce": 67890,
-  "isDeleted": false,
-  "groupIds": [],
   "boundElements": [{"id": "text_descriptive_name", "type": "text"}],
-  "link": null,
-  "locked": false,
   "roundness": {"type": 3}
 }
 ```
@@ -130,20 +108,8 @@ Copy-paste JSON templates for each Excalidraw element type. Replace color placeh
   "verticalAlign": "middle",
   "strokeColor": "<text color from palette>",
   "backgroundColor": "transparent",
-  "fillStyle": "solid",
   "strokeWidth": 1,
-  "strokeStyle": "solid",
-  "roughness": 0,
-  "opacity": 100,
-  "angle": 0,
-  "seed": 11111,
-  "version": 1,
-  "versionNonce": 22222,
-  "isDeleted": false,
-  "groupIds": [],
   "boundElements": null,
-  "link": null,
-  "locked": false,
   "containerId": "rect_descriptive_name",
   "lineHeight": 1.25
 }
@@ -157,20 +123,8 @@ Copy-paste JSON templates for each Excalidraw element type. Replace color placeh
   "x": 282, "y": 145, "width": 118, "height": 0,
   "strokeColor": "<arrow color — source element's stroke>",
   "backgroundColor": "transparent",
-  "fillStyle": "solid",
   "strokeWidth": 2,
-  "strokeStyle": "solid",
-  "roughness": 0,
-  "opacity": 100,
-  "angle": 0,
-  "seed": 33333,
-  "version": 1,
-  "versionNonce": 44444,
-  "isDeleted": false,
-  "groupIds": [],
   "boundElements": null,
-  "link": null,
-  "locked": false,
   "points": [[0, 0], [118, 0]],
   "startBinding": {"elementId": "rect_source", "focus": 0, "gap": 2},
   "endBinding": {"elementId": "rect_target", "focus": 0, "gap": 2},
@@ -187,22 +141,10 @@ For curved arrows: use 3+ points in the `points` array.
   "type": "diamond",
   "id": "decision_descriptive_name",
   "x": 100, "y": 100, "width": 120, "height": 90,
-  "strokeColor": "#92400e",
-  "backgroundColor": "#fde68a",
-  "fillStyle": "solid",
+  "strokeColor": "<Decision stroke from palette>",
+  "backgroundColor": "<Decision fill from palette>",
   "strokeWidth": 2,
-  "strokeStyle": "solid",
-  "roughness": 0,
-  "opacity": 100,
-  "angle": 0,
-  "seed": 88888,
-  "version": 1,
-  "versionNonce": 99999,
-  "isDeleted": false,
-  "groupIds": [],
-  "boundElements": [{"id": "text_decision", "type": "text"}],
-  "link": null,
-  "locked": false
+  "boundElements": [{"id": "text_decision", "type": "text"}]
 }
 ```
 
@@ -214,20 +156,8 @@ For curved arrows: use 3+ points in the `points` array.
   "x": 100, "y": 100, "width": 140, "height": 70,
   "strokeColor": "<stroke from palette>",
   "backgroundColor": "<fill from palette>",
-  "fillStyle": "solid",
   "strokeWidth": 2,
-  "strokeStyle": "solid",
-  "roughness": 0,
-  "opacity": 100,
-  "angle": 0,
-  "seed": 55555,
-  "version": 1,
-  "versionNonce": 66666,
-  "isDeleted": false,
-  "groupIds": [],
-  "boundElements": [{"id": "text_ellipse", "type": "text"}],
-  "link": null,
-  "locked": false
+  "boundElements": [{"id": "text_ellipse", "type": "text"}]
 }
 ```
 
@@ -238,22 +168,10 @@ For curved arrows: use 3+ points in the `points` array.
   "id": "frame_descriptive_name",
   "x": 50, "y": 50, "width": 400, "height": 300,
   "name": "Section Name",
-  "strokeColor": "#475569",
+  "strokeColor": "<structural line color from palette>",
   "backgroundColor": "transparent",
-  "fillStyle": "solid",
   "strokeWidth": 1,
-  "strokeStyle": "solid",
-  "roughness": 0,
-  "opacity": 100,
-  "angle": 0,
-  "seed": 77777,
-  "version": 1,
-  "versionNonce": 88888,
-  "isDeleted": false,
-  "groupIds": [],
-  "boundElements": null,
-  "link": null,
-  "locked": false
+  "boundElements": null
 }
 ```
 
