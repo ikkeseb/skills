@@ -5,7 +5,7 @@ description: Posture skill activated by `/max-effort` (single-task) or `/max-eff
 
 # max-effort
 
-Posture for high-stakes / irreversible work. Throws maximum *useful* subagent capacity at the task, then runs an orchestrator-pass to catch what subagents missed.
+Posture for high-stakes / irreversible work. Dispatches subagents widely, then runs an orchestrator-pass to catch what subagents missed.
 
 Not a "be careful" prompt. The load-bearing moves are (1) dispatching widely for independent signal, and (2) the orchestrator verifying the result rather than rubber-stamping it.
 
@@ -27,17 +27,15 @@ Then wait.
 
 ## Phase 1 — Broad dispatch
 
-**Principle.** Bias toward many strong subagents when they add independent signal. Token and time cost are not constraints — the user invoked this posture because they want resources spent.
+**Default.** Dispatch. Bar is low: if you can name distinct work per agent — different files, perspectives, risk surfaces — dispatch them. "Distinct contribution" is the test, not "maximum independence". Token and time cost are not constraints; the user invoked this posture because they want resources spent.
 
-**Anti-patterns** (the brake — more agents is not always more signal):
+**Skip dispatch only when:**
 
-- Duplicate agents on the same question.
-- Agents reading the same source without a path to independent conclusions.
-- Deterministic tasks (lint, rename, mechanical refactor) where agents add noise, not signal.
-- Parallel dispatch on dependent subproblems — B's brief is incomplete without A's output.
-- Reviewers when the task doesn't warrant adversarial review — spawning a security agent on a research summary is theater.
+- Deterministic single-step task (lint, rename, mechanical refactor) — no judgment to parallelize.
+- Single-file lookup where solo is strictly faster.
+- Fully sequential subproblems — B literally cannot start without A's output.
 
-**Brief-content rule.** Subagents start with empty context. Include — when materially useful — skills they should load, relevant project context (CLAUDE.md slices, routing tables, conventions), prior session decisions. Don't dump everything; judgment per agent. Common failure: orchestrator loaded a skill and forgot to tell the subagent to load it too.
+**Brief-content rule.** Subagents start with empty context — pass relevant skills, project context, prior decisions. Common failures: not telling the subagent to load a skill you loaded; duplicate agents on one question; adversarial reviewers when not warranted.
 
 ## Phase 2 — Orchestrator pass
 
@@ -48,13 +46,13 @@ With subagent artifacts in front of you, in this turn:
 1. **Match against the actual goal.** Did subagents answer the question the user asked, or a neighboring one their brief drifted into?
 2. **Verify load-bearing claims against source-of-truth.** Task-specific: read the file cited, open the URL, check the browser, check internal consistency. Subagents hallucinate; their confidence is not evidence.
 3. **Resolve conflicts explicitly.** Don't paper over disagreements with "both have a point" — use the context they lacked to navigate.
-4. **Adversarial sub-dispatch — as a tool, not a phase.** When the artifact warrants red-team (security-sensitive, irreversible, externally-visible), spawn auditors against it. When it doesn't, skip — Phase 1 anti-patterns apply.
+4. **Adversarial sub-dispatch — as a tool, not a phase.** Spawn auditors when the artifact warrants red-team (security-sensitive, irreversible, externally-visible). Otherwise skip.
 5. **Run task-specific verification.** Code: tests, build, repro. Research: open the cited sources. Frontend: open the browser and look. Concept work: check internal consistency and constraint-fit. The CLAUDE.md / `superpowers:verification-before-completion` rule, generalized — not relaxed.
 6. **Be explicit about checked vs unchecked.** Calibration over confidence. Surface a gap rather than claim coverage you didn't deliver.
 
 ## Final summary
 
-Inline only — no persistent log file. Persistent "max-effort was thorough on X" markers re-create a false-certainty cascade: the next session reads them and projects past confidence forward as fact. The verification has to live in the active turn, not state. For cross-session capture, use `/handoff`.
+Inline only — no persistent log file. Persistent "thorough on X" markers create a false-certainty cascade across sessions. Verification lives in the active turn, not state. For cross-session capture, use `/handoff`.
 
 Earn-its-place structure. `Done` and `Open / flagged` always present (write `None` when genuinely empty, don't omit). Others appear only with content.
 
@@ -72,10 +70,12 @@ In sustained mode, prefix the summary with `[max-effort sustained]` so the postu
 
 - **`afk`.** Stacks but stays distinct. afk owns the interaction model (no questions, low-blast default, audit log to disk); max-effort owns dispatch + orchestrator pass. Under afk the preamble does not run — asking is forbidden — so default to single-task and log as `[AFK] max-effort default → single-task`. Phase 1/2 unchanged.
 - **`superpowers:verification-before-completion` / CLAUDE.md verification rule.** Not relaxed. Phase 2 step 5 is the same rule generalized to non-code work.
+- **`superpowers:subagent-driven-development`** (if installed). The how-to for Phase 1 dispatch — load when available for brief-writing and parallel patterns.
 - **Plan mode.** Compatible. Plan first if the work is plan-shaped; max-effort dispatches against approved steps. If dispatch surfaces something that invalidates the plan, exit plan mode and re-plan.
 
 ## Failure modes worth naming
 
 - **Trivial task invoked under max-effort.** Deterministic work where no dispatch can change the outcome. Say so once in the preamble and ask whether to proceed. Don't silently spawn agents that will produce nothing.
+- **Solo'd a multi-angle task.** Orchestrator-pass against your own work is just verification-before-completion, not max-effort. If you couldn't name a skip-dispatch reason, you should have dispatched.
 - **Orchestrator pass collapsing to "subagents agreed, done".** This is the cascade. If you're writing the summary without having read at least one source-of-truth artifact in this turn, the orchestrator pass did not happen — go back and do it.
 - **Sustained mode quietly persisting after the high-stakes work is done.** If the user moves to small unrelated tasks, surface once: "still in sustained — drop?" Don't dispatch on micro-tasks just because the mode is on.
