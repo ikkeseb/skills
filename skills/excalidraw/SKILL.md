@@ -1,6 +1,6 @@
 ---
 name: excalidraw
-description: Create Excalidraw diagram JSON files that make visual arguments — not just boxes-and-arrows. Use this skill whenever the user asks to create, generate, draw, or visualize a diagram, flowchart, architecture diagram, process flow, system overview, network topology, integration map, workflow, or any visual that explains relationships, causality, or structure. Also trigger on "excalidraw", ".excalidraw", "lag et diagram", "tegn", "visualiser", "prosessflyt", "arkitekturdiagram", or when the user says things like "can you show me how X connects to Y" or "map out the flow of Z". Use this skill even for quick conceptual sketches — it handles both simple and comprehensive diagrams. Do NOT use for charts/graphs with numerical data (use a charting tool), UI mockups (use frontend-design), or pure text documentation.
+description: Generate `.excalidraw` JSON diagrams for relationships, flows, architectures, or system structure. Invoke ONLY when the user explicitly asks for a diagram or types `/excalidraw` — do NOT auto-invoke from soft cues like "show me" or "walk me through". Do NOT use for numerical charts (use a charting tool), UI mockups (use frontend-design), or text documentation.
 ---
 
 # Excalidraw Diagram Creator

@@ -1,9 +1,9 @@
 ---
 name: handoff
-description: Compact the current session into a handoff snippet — saves to ~/.claude/handoffs/ and prints for copy-paste. Use when creating a handoff. Do NOT invoke when reading a handoff snippet pasted from another session — treat it as context and continue the work.
+description: Compact the current session into a paste-ready handoff snippet (saved to `~/.claude/handoffs/`). Invoke ONLY when the user explicitly types `/handoff` — do NOT auto-invoke from cues like "wrap this up", "switching machines", or "context is full". Do NOT invoke when reading a pasted handoff snippet — that's context, continue the work.
 ---
 
-# Handoff
+# handoff
 
 Judgment exercise, not template fill. The failure mode is a polished snippet that mostly restates what the next session could read off `git status`.
 
@@ -21,3 +21,8 @@ Reply: `Saved to <path>. Snip below for cross-context paste:` then a **four**-ba
 - Opt-in: Failed Approaches, Key Decisions, Code Context, Current State, Warnings, Setup
 
 > Handoff written from session memory. Verify anything load-bearing before acting.
+
+## Design invariants
+
+- **No resume-side mechanism.** No `/handoff:resume`, no auto-detection. The snippet is self-describing — the next session reads it as context and continues.
+- **Single mode.** No `full`/`quick` split. Length is driven by the "earn its place" rule, not a flag.
