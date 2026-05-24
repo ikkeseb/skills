@@ -14,7 +14,7 @@ A small set of Claude Code skills I use day-to-day. Each one does a single thing
 - **[max-effort](skills/max-effort)** — posture for high-stakes / irreversible work: dispatches subagents widely, then runs an orchestrator-pass that's the load-bearing verification step. Invoke with `/max-effort` (single-task) or `/max-effort sustained` (session).
 - **[verify-claims](skills/verify-claims)** — audits factual claims in prose for traceable sources and returns a classified table. Use when you want to fact-check Claude's own output or a document — distinct from `/verify`, which runs the app to confirm code behavior.
 
-Each skill has its own README with details, install notes, and usage examples.
+Each skill folder contains its `SKILL.md`. A few add their own README for install-specific notes (e.g. `excalidraw`'s optional PNG renderer).
 
 ## Install
 
