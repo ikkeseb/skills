@@ -121,6 +121,15 @@ converging — stop and re-pick.
 - **Don't reach for `.header-bar` by default.** It's the loudest chrome element in the system
   — every doc using it looks like every other doc using it. `.header-typeset` or
   `.header-minimal` carries most documents better.
+- **Don't default to `.lede` (raised-cap opener).** It's a strong literary gesture, easy to
+  overuse, and recurs across AI-generated PDFs to the point of being a tell. Reserve it for
+  documents where the opening prose is genuinely doing literary work — a formal letter, a
+  personal essay. Skip it everywhere else. See `base-styles.md` for full guidance.
+- **Don't default to neutral palettes for visually-rich documents.** A data tearsheet, an
+  educational diagram, a reference card, anything where a chart or visualization is the hero
+  — these can carry saturated palettes (Berry, custom), multi-color SVG accents, or warm
+  paletted color coding. Falling back to Slate or Ink because the subject is "formal" or
+  "textbook" wastes the wow-factor opportunity.
 - **Match complexity to vision.** A formal letter needs precision and restraint — not fewer
   elements, but every element placed with care. A creative brief can be bolder and more expressive.
 
@@ -141,6 +150,8 @@ Before writing HTML, decide on the design direction based on what's being create
 | Creative/portfolio | Bold accent, dark bg option | Distinctive display font | Varies |
 | Legal/formal | Conservative dark palette | Traditional serif | High |
 | Invoice/financial | Clean minimal | Tabular sans-serif | Medium-high |
+| Data tearsheet / dataviz | Saturated accent or custom multi-color (the chart carries the color story) | Restrained sans — let the visualization be the visual interest, not the typography | Medium — chart-led |
+| Educational diagram / atlas / reference card | Saturated or color-coded (e.g. by category) | Either — sans for atlas/clinical feel, serif for textbook feel | Medium |
 
 These are starting points, not rules. The CSS system in `base-styles.md` uses CSS custom properties
 so you can swap the entire palette by changing 6 variables.

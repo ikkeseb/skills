@@ -56,6 +56,13 @@ borders, subtle backgrounds, text tone, page background for warm palettes — mo
 single-axis swap is what makes palettes feel like "same template, different paint." Use the
 full block below.
 
+**For visually-rich documents** (data tearsheets, educational diagrams, reference cards, anything
+where a chart or SVG is the hero), don't reflexively pick a neutral palette because the subject
+feels "formal" or "textbook." Saturated palettes (Berry), warm paletted ones (Terracotta, Copper),
+or custom multi-color palettes built from scratch — including category-coded SVG accents that go
+beyond the single accent variable — are all valid and often the right call. A music theory diagram
+or a periodic-table fragment doesn't have to be monochrome just because reference books often are.
+
 ### Ready-made palettes
 
 **Slate (default — professional, neutral)**
@@ -554,17 +561,27 @@ pre.code-block {
 }
 
 /* ---- Opening paragraph treatment (raised cap + small-caps lede) ----
-   Apply class="lede" to the FIRST paragraph after a header for a designed
+   Apply class="lede" to the FIRST paragraph after a header for a raised-cap
    opener — large initial in the accent color, small caps on the first line.
-   Most powerful single signal that a document was typeset, not generated.
-   Use for: letters, essays, longform reports, anything with a composed opener.
-   Avoid for: dense lists, short summaries, anything <3 lines per paragraph.
+
+   USE SPARINGLY. This is a strong, opinionated typographic gesture that
+   reads as "literary essay opener." On the wrong document — a data sheet,
+   a brief, a clinical summary, anything visual-first — it looks affected
+   rather than designed, and it recurs across AI-generated PDFs to the
+   point of being a tell. Default to NOT using it; reach for it only when
+   the content genuinely calls for a composed literary opener.
+
+   Appropriate for: a formal letter, a personal essay, an editorial-style
+   longform piece where the prose itself is the point.
+
+   Wrong for: data tearsheets, reference cards, anything where a chart or
+   diagram is the hero, anything <4 lines per paragraph, dense lists,
+   short summaries, technical specs, invoices, CVs, most reports.
 
    Note: this is a RAISED cap (initial sits on the baseline, sized up), not
    a wrapped dropcap. The classic wrap-around dropcap needs ::first-letter +
    float: left, which crashes weasyprint 68.x with an assertion in
-   float_layout. The raised cap is more restrained typographically anyway —
-   fits the literary tone these openers tend to carry. See gotchas.md §3. */
+   float_layout. See gotchas.md §3. */
 
 .lede {
   /* Hanging punctuation if the line starts with a quote (Inter doesn't ship
