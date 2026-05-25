@@ -15,48 +15,18 @@ description: >
 
 # Pretty PDF — Beautiful PDF Creation
 
-## Setup
-
-`pip install weasyprint`. Platform notes:
-
-- **Windows:** weasyprint also needs the GTK3 runtime (Pango/Cairo/GLib DLLs). Install with
-  `winget install tschoonj.GTKForWindows` (one-time, ~50MB, UAC prompt) or download from
-  github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases.
-  Without GTK3, `import weasyprint` fails at load time with a `cannot load library 'libgobject-2.0-0'` error.
-- **macOS:** `brew install pango` first, then `pip install weasyprint`.
-- **Linux:** `pip install weasyprint` usually suffices (Pango/Cairo come from system libs;
-  on Debian/Ubuntu: `apt install libpango-1.0-0 libpangoft2-1.0-0`).
-
-Verify: `python -c "import weasyprint; print(weasyprint.__version__)"`.
-
 ## Core Approach
 
-**HTML + CSS → PDF via weasyprint.** Write semantic HTML with a carefully designed stylesheet,
-then convert to PDF. This gives full control over typography, layout, colors, and spacing.
+HTML + CSS → PDF via weasyprint:
 
 ```python
 import weasyprint
 weasyprint.HTML(string=html_content).write_pdf(output_path)
 ```
 
-## Performance
-
-A cold render costs ~0.5–1s wall time and ~600KB of Google Fonts download per PDF — there
-is **no caching by default**, not even across renders inside the same Python process. If
-you're generating multiple PDFs in one session, reuse a single `FontConfiguration` to skip
-re-downloading fonts each time. Measured: render 2+ drops from ~1.6s → ~0.27s.
-
-```python
-from weasyprint import HTML
-from weasyprint.text.fonts import FontConfiguration
-fc = FontConfiguration()
-for spec in jobs:
-    HTML(string=spec.html).write_pdf(spec.path, font_config=fc)
-```
-
-Offline / firewalled environments will silently fall back to system fonts — the PDF still
-renders but looks visibly different. For deterministic offline builds, self-host the fonts
-and reference via `@font-face { src: url('./fonts/...') }`.
+If `import weasyprint` fails, see `references/setup.md` for install instructions per
+platform. For batch rendering (multiple PDFs in one session), reuse a `FontConfiguration` —
+see the Weasyprint Technical Notes in `references/base-styles.md`.
 
 ## Before You Start
 
@@ -111,33 +81,6 @@ should be unrecognizable from a personal letter in Cormorant + Terracotta + `.he
 + `.scale-generous` + standard edges. If two of your recent PDFs share more than 2 axes, you're
 converging — stop and re-pick.
 
-#### Specific things to avoid
-
-- **Don't pick fonts before reading content.** The default Inter Tight is for "I genuinely
-  don't know what this is" — every document where you DO know the tone should override it.
-  A clinical summary and a personal letter sharing a typeface is the failure mode.
-- **Vary palettes.** A letter to a doctor and a quarterly report should not share a color
-  scheme. Slate is the safe pick; pick differently when you can.
-- **Don't reach for `.header-bar` by default.** It's the loudest chrome element in the system
-  — every doc using it looks like every other doc using it. `.header-typeset` or
-  `.header-minimal` carries most documents better.
-- **Don't default to `.lede` (raised-cap opener).** It's a strong literary gesture, easy to
-  overuse, and recurs across AI-generated PDFs to the point of being a tell. Reserve it for
-  documents where the opening prose is genuinely doing literary work — a formal letter, a
-  personal essay. Skip it everywhere else. See `base-styles.md` for full guidance.
-- **Don't default to neutral palettes for visually-rich documents.** A data tearsheet, an
-  educational diagram, a reference card, anything where a chart or visualization is the hero
-  — these can carry saturated palettes (Berry, custom), multi-color SVG accents, or warm
-  paletted color coding. Falling back to Slate or Ink because the subject is "formal" or
-  "textbook" wastes the wow-factor opportunity.
-- **Match complexity to vision.** A formal letter needs precision and restraint — not fewer
-  elements, but every element placed with care. A creative brief can be bolder and more expressive.
-
-Avoid generic AI-generated aesthetics: overused font families (Inter classic, Arial, plain
-system fonts), clichéd color schemes (purple gradients, corporate blue-on-white), zebra-striped
-tables, rounded corners on printed images, and predictable safe layouts. If the design wouldn't
-stand out printed and handed to someone, push harder.
-
 ## Choosing a Design Direction
 
 Before writing HTML, decide on the design direction based on what's being created:
@@ -182,8 +125,3 @@ so you can swap the entire palette by changing 6 variables.
     they specify). Use `weasyprint.HTML(...).write_pdf(absolute_path)`. Relative paths are resolved
     from the current working directory, which is rarely what the user wants — be explicit.
 
-## Relationship to Other Skills
-
-- **Default `pdf` skill:** Reading, merging, splitting, form-filling, rotating — all manipulation of existing PDFs
-- **`docx` skill:** When the user explicitly wants a Word document
-- **This skill:** When creating any new PDF where visual quality matters

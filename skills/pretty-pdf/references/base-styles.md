@@ -881,10 +881,20 @@ covers / one-pagers.
 - **Google Fonts cost.** The default `@import` triggers ~6 HTTPS requests (~600KB) on every
   cold render — there's no caching by default, not even within the same Python process. Plan
   for ~0.5–1s of network time per PDF in addition to layout. If you're generating many PDFs
-  in one session, reuse a `FontConfiguration` (see SKILL.md → Performance). If offline or
-  firewalled, the render succeeds but **silently falls back to system fonts** — the PDF will
-  look noticeably different. Adding more `@import` URLs (e.g. picking a different pairing)
-  scales the cost roughly linearly.
+  in one session, reuse a `FontConfiguration` to drop render 2+ from ~1.6s → ~0.27s:
+
+  ```python
+  from weasyprint import HTML
+  from weasyprint.text.fonts import FontConfiguration
+  fc = FontConfiguration()
+  for spec in jobs:
+      HTML(string=spec.html).write_pdf(spec.path, font_config=fc)
+  ```
+
+  If offline or firewalled, the render succeeds but **silently falls back to system fonts** —
+  the PDF will look noticeably different. For deterministic offline builds, self-host the
+  fonts and reference via `@font-face { src: url('./fonts/...') }`. Adding more `@import`
+  URLs (e.g. picking a different pairing) scales the cost roughly linearly.
 - **Page size:** Default is A4. For US Letter, override with `@page { size: letter; }`.
 - **Images:** Must be absolute paths (e.g., `C:\Users\name\photo.jpg` on Windows or
   `/home/user/photo.jpg` on Linux/macOS) or base64 data URIs. Relative paths do not resolve.

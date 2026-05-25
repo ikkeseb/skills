@@ -15,11 +15,6 @@ This skill works in both Claude Code and Claude Chat.
 
 **Claude Chat** (`/mnt/skills/user/excalidraw/`): Create the `.excalidraw` JSON file and save to `/mnt/user-data/outputs/`. The user opens it in [excalidraw.com](https://excalidraw.com) or the Excalidraw desktop app. No render loop — get it right by following the methodology carefully.
 
-**First-time setup (Claude Code only):**
-```bash
-cd <skill-path>/references && uv sync && uv run playwright install chromium
-```
-
 ## Customization
 
 All colors live in `references/color-palette.md`. Edit that file to rebrand — everything else is universal methodology.
@@ -141,21 +136,9 @@ Default to free-floating text. Add containers only when they serve a purpose.
 
 ## Large Diagram Strategy
 
-**Build JSON one section at a time.** Do not attempt the entire file in a single pass — it leads to worse quality and may exceed output limits.
-
-### Section-by-Section Workflow
-
-**Phase 1 — Build each section:**
-1. Create the base file with JSON wrapper and first section of elements
-2. Add one section per edit — take your time with layout and spacing
-3. Use descriptive string IDs (e.g., `"trigger_rect"`, `"arrow_fan_left"`)
-4. Namespace seeds by section (section 1: 100xxx, section 2: 200xxx)
-5. Update cross-section bindings as you go
-
-**Phase 2 — Review the whole:**
-Check cross-section arrow bindings, overall spacing balance, and that all IDs reference existing elements.
-
-**Phase 3 — Render & validate** (Claude Code) or final review (Claude Chat).
+For diagrams with ~50+ elements, build section-by-section to stay under output limits and
+preserve layout quality. See `references/large-diagrams.md` for the phased workflow and ID
+namespacing convention.
 
 ---
 
@@ -244,43 +227,14 @@ See `references/json-schema.md` for the full schema reference.
 
 ## After Delivery: Opt-In Follow-Ups (Claude Code only)
 
-The skill does **not** auto-render. Get the diagram right by following the methodology — rendering is a verification tool the user opts into, and Chromium cold-start is slow enough (~6–10s) that it's rude to spend it without permission.
+After saving the `.excalidraw` file in Claude Code, offer two opt-in actions in one short
+prompt: render to PNG, or open in Excalidraw via clipboard. Do **not** auto-render — get
+the diagram right by following the methodology; rendering is opt-in verification, and
+Chromium cold-start (~6–10s) is rude to spend without permission. **Skip in Claude Chat** —
+the user already has the file via the chat UI.
 
-After saving the `.excalidraw` file, offer both follow-ups in one short prompt, e.g.:
-
-> Diagram saved to `path/to/file.excalidraw`. Want me to render a PNG, open it in Excalidraw, or both?
-
-### Render to PNG
-
-If the user wants a PNG (or you've decided a complex diagram needs visual verification):
-
-```bash
-cd <skill-path>/references && uv run python render_excalidraw.py <path-to-file.excalidraw>
-```
-
-Useful flags:
-- `--transparent` — transparent background instead of white (for embedding on dark surfaces)
-- `--validate` — fast JSON walk that catches missing element IDs, broken `containerId` / `boundElements` / arrow bindings, and duplicate IDs **without** launching Chromium. Run this first if you suspect ID typos in cross-section bindings; it turns a 30s Playwright timeout into a millisecond error message.
-
-If a render reveals problems, fix the JSON and re-render. One concrete fix per render — over-correcting wastes the round-trip. If an arrow needs tortured waypoints to dodge a shape, move the shape (see "Layout fixes beat arrow gymnastics" above).
-
-### Open in Excalidraw
-
-If the user wants to edit the diagram interactively:
-
-```bash
-python <skill-path>/references/open_in_excalidraw.py <path-to-file.excalidraw>
-```
-
-Pure stdlib (no `uv` needed). Copies the JSON to the system clipboard via the platform-native tool — `pbcopy` (macOS), `clip` (Windows), `wl-copy`/`xclip`/`xsel` (Linux) — and opens [excalidraw.com](https://excalidraw.com) in the default browser. The user pastes (Cmd+V / Ctrl+V) onto the canvas to import the scene.
-
-Then surface the link and the paste hint:
-
-> JSON copied to clipboard. Open: https://excalidraw.com — paste with Cmd+V on the canvas.
-
-**Why paste instead of auto-load?** Excalidraw can't fetch local files via URL (browser security), and `#json=`-style share links would upload the diagram to Excalidraw's backend. Clipboard paste keeps it local.
-
-**Skip both follow-ups in Claude Chat** — the user already has the file via the chat UI.
+For the exact wording, commands, flags, and first-time setup, see
+`references/follow-ups.md`.
 
 ---
 
