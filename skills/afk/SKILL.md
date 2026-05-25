@@ -15,15 +15,7 @@ Only an explicit user signal drops AFK: `back`, `I'm back`, `stopp`, `afk off`, 
 
 ## Preamble — first response after `/afk`
 
-Three steps, then wait. Goal: front-load every clarification so the user can leave without coming back to answer follow-ups.
-
-**Step 0 — Stop-hook scan.** Read each of these if present, list any `hooks.Stop` entries:
-- `~/.claude/settings.json`
-- `~/.claude/settings.local.json`
-- `<cwd>/.claude/settings.json`
-- `<cwd>/.claude/settings.local.json`
-
-Flag heuristically disruptive hooks (names/commands suggesting "journal", "log", "trigger", "audit", "review") and recommend the user mute them in `settings.json` before going AFK. Do not modify settings yourself — user decides.
+Two steps, then wait. Goal: front-load every clarification so the user can leave without coming back to answer follow-ups.
 
 **Step 1 — Subagent / token budget (one question, three options).** Ask the user to pick one:
 - *Single-agent* — Claude alone. Simpler, context compounds. Most token-conservative.
@@ -65,21 +57,13 @@ Separate core-task work from additional fixes in the log — the user should be 
 
 Without live feedback, sycophancy creeps in. Counter-pressure: write `"uncertain about X because Y, proceeded because Z"` rather than `"this is correct"`. Calibration over confidence.
 
-### Re-anchor in status summaries
-
-Long AFK sessions WILL compress context; posture can be lost mid-flight. Re-state AFK status in each `[AFK status]` summary so the posture is recoverable from any recent log entry.
-
 ## Logging
 
-Inline during work — three formats:
+Updates flow naturally in the conversation — what was done, what's running, what surfaced. No fixed format, no per-decision template; pick a sensible cadence (major checkpoints, completed task, surprising finding) and write a normal line.
 
-| Format | When |
-|---|---|
-| `[AFK] <what> — <why>` | Per non-trivial decision. One line, scannable. |
-| `[AFK status] …` | Per major step. Short: done / deferred / blocked. Re-anchors posture. |
-| `[AFK BLOCKED] <what> — needs Seb on <X>` | When stopped on high-blast + uncertain. |
+One exception: when stopped because of blast-radius rules + genuine uncertainty, use the structured marker `[AFK BLOCKED] <what> — needs Seb on <X>` so it's scannable if Seb pokes in from mobile.
 
-The conversation IS the audit trail. No separate log file written at the end.
+The conversation IS the audit trail. No separate log file written.
 
 ## Return summary
 
@@ -92,20 +76,18 @@ When AFK is explicitly dropped, lead the reply with one tally line + bulleted in
 > - ⏸ dependency bump deferred — minor vs major is your call
 > - 🛑 blocked: prod deploy — needs your AWS creds
 
-Status keys: ✅ done · ⏸ deferred · 🛑 blocked. One bullet per item, plain prose, no nested paragraphs — the inline `[AFK]` log above already has the detail. This is the index, not the recap.
+Status keys: ✅ done · ⏸ deferred · 🛑 blocked. One bullet per item, plain prose, no nested paragraphs — the inline updates above already have the detail. This is the index, not the recap.
 
 ## Composition with other skills and modes
 
-- **`max-effort`**: stacks. AFK owns the interaction model; max-effort owns dispatch + orchestrator pass. Under AFK the max-effort preamble does not run — asking is forbidden — so default to single-task and log as `[AFK] max-effort default → single-task`.
+- **`max-effort`**: stacks. AFK owns the interaction model; max-effort owns dispatch + orchestrator pass. Under AFK the max-effort preamble does not run — asking is forbidden — so default to single-task and note that briefly.
 - **Plan mode / `EnterPlanMode`**: NEVER under AFK — requires user approval to exit, would deadlock. Write the plan inline in the log and proceed (if low-blast).
 - **Long blocking brainstorming**: NEVER under AFK. Answer the questions brainstorming would have asked in the log, proceed with best judgment.
 - **Verification before "done"**: not relaxed by AFK. Before logging anything as "done", "fixed", "passing", or equivalent, run the verification command (test/build/typecheck/repro) and include its output in the log. No bare claims. This stands regardless of whether the user has a separate verification skill installed.
 
 ## Stop hooks firing mid-AFK
 
-Acknowledge briefly, continue the task. Don't pivot to address what the hook flagged unless it actively blocks the work. If the hook requests follow-up work (journal, log entry, audit), defer: log `hook requested X, pending end of AFK` and continue. The hook's content is recoverable later; the AFK task isn't.
-
-Hard-muting hooks for unattended runs requires editing `settings.json` — that's user-config, outside the skill's scope. Surface the option in Step 0 of the preamble; don't act on it.
+Acknowledge briefly, continue the task. Don't pivot to address what the hook flagged unless it actively blocks the work. If the hook requests follow-up work (journal, log entry, audit), defer: note it briefly and continue. The hook's content is recoverable later; the AFK task isn't.
 
 ## Failure modes worth naming
 
