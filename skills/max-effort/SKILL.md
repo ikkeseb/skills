@@ -39,9 +39,7 @@ Then wait.
 
 ## Phase 2 — Orchestrator pass
 
-**Always run.** This is what distinguishes max-effort from "specialists agreed, therefore done". Subagents got a brief, not the conversation. They miss the actual goal, hallucinate, conflict, and propose plausible-but-wrong solutions. You have the context to catch it.
-
-With subagent artifacts in front of you, in this turn:
+**Always run.** With subagent artifacts in front of you, in this turn:
 
 1. **Match against the actual goal.** Did subagents answer the question the user asked, or a neighboring one their brief drifted into?
 2. **Verify load-bearing claims against source-of-truth.** Task-specific: read the file cited, open the URL, check the browser, check internal consistency. Subagents hallucinate; their confidence is not evidence.
@@ -60,7 +58,7 @@ Earn-its-place structure. `Done` and `Open / flagged` always present (write `Non
 
 **Open / flagged.** Outstanding concerns, unresolved subagent conflicts, what wasn't verified, assumptions leaned on. Calibration anchor — its presence resists the cascade.
 
-**Verified** (optional). Load-bearing claims actually checked. Phrase as actions ("read file X, confirmed Y exports Z"), not verdicts ("code is correct"). A future session reading this back gets a list of checks performed, not a quality claim to project forward.
+**Verified** (optional). Load-bearing claims actually checked. Phrase as actions ("read file X, confirmed Y exports Z"), not verdicts ("code is correct").
 
 **Subagents used** (optional, when >1). Who and what they contributed. Helps the user decide what's worth second-guessing.
 
@@ -69,7 +67,6 @@ In sustained mode, prefix the summary with `[max-effort sustained]` so the postu
 ## Composition with other skills and modes
 
 - **`afk`.** Stacks but stays distinct. afk owns the interaction model (no questions, low-blast default, audit log to disk); max-effort owns dispatch + orchestrator pass. Under afk the preamble does not run — asking is forbidden — so default to single-task and log as `[AFK] max-effort default → single-task`. Phase 1/2 unchanged.
-- **`superpowers:verification-before-completion` / CLAUDE.md verification rule.** Not relaxed. Phase 2 step 5 is the same rule generalized to non-code work.
 - **`superpowers:subagent-driven-development`** (if installed). The how-to for Phase 1 dispatch — load when available for brief-writing and parallel patterns.
 - **Plan mode.** Compatible. Plan first if the work is plan-shaped; max-effort dispatches against approved steps. If dispatch surfaces something that invalidates the plan, exit plan mode and re-plan.
 
