@@ -5,13 +5,13 @@ HTML templates for common document types. Each template uses the base stylesheet
 
 **Each template below shows ONE layout choice.** That's a starting point, not a default to
 always pick. For real anti-convergence (see SKILL.md "Anti-Convergence Rule"), swap among the
-five header components (`.header-bar`, `.header-minimal`, `.header-centered`,
-`.header-side-rule`, `.header-large-numeral`, `.header-typeset`), the three type scales
-(default Editorial, `body.scale-compact`, `body.scale-generous`), and the three edge weights
-(default Standard, `body.edges-hairline`, `body.edges-chunky`) — not just palette and font.
-A medical doc rendered with `.header-side-rule` + `.scale-compact` + `.edges-hairline` should
-look like a different document family from one rendered with `.header-bar` + default scale +
-default edges.
+six header components (`.header-typeset` is the default, then `.header-minimal`,
+`.header-side-rule`, `.header-centered`, `.header-large-numeral`, `.header-bar`), the three
+type scales (default Editorial, `body.scale-compact`, `body.scale-generous`), and the three
+edge weights (default Standard, `body.edges-hairline`, `body.edges-chunky`) — not just palette
+and font. A medical doc rendered with `.header-side-rule` + `.scale-compact` + `.edges-hairline`
+should look like a different document family from a personal letter in `.header-centered` +
+`.scale-generous` + standard edges.
 
 ---
 
@@ -32,7 +32,10 @@ default edges.
 <a id="report"></a>
 ## 1. Report / Business Document
 
-Palette suggestion: **Ocean** or **Slate**. Use `.header-bar` for a strong opener.
+Palette suggestion: **Ocean** or **Slate**. Default to `.header-typeset` for a quiet, typographic
+opener; reach for `.header-bar` only when the document genuinely warrants the loudest chrome
+(quarterly review with brand-forward tone, etc.). The example below uses `.header-bar` to show
+the assertive variant.
 
 ```html
 <div class="header-bar">
@@ -74,8 +77,10 @@ if they read nothing else.</p>
 ## 2. Letter (Formal or Personal)
 
 Palette suggestion: **Ink** (formal) or **Terracotta** (personal/warm).
-Use `.header-minimal` instead of `.header-bar` for a lighter feel.
-For personal letters, consider an all-serif approach (set headings to `var(--font-serif)` too).
+Use `.header-minimal` or `.header-centered` for a quiet, composed opener.
+For personal letters, switch the `@import` to a literary serif like Cormorant Garamond or EB
+Garamond (see `base-styles.md` → Font Loading → "Pick by content") and let body + headings share
+the same family for a coherent reading rhythm.
 
 ```html
 <div class="header-minimal">
@@ -113,18 +118,20 @@ relatively short for readability.</p>
 <a id="medical"></a>
 ## 3. Medical Document / Doctor Summary
 
-Palette suggestion: **Teal**. Typography: consider using **DM Sans** throughout for maximum
-clarity — medical documents prioritize scannability over aesthetics.
+Palette suggestion: **Teal**. Typography: the default Inter Tight is already a clean sans and
+works well; for an even more clinical feel, swap the `@import` to **DM Sans** (see
+`base-styles.md` → Font Loading). Pair with `body class="scale-compact"` for the dense,
+scannable rhythm clinical reading wants.
 
 Key design principles for medical docs:
 - **High information density** with clear visual hierarchy
 - **Key-value layout** (`.kv-grid`) for patient info, dates, references
 - **Callout boxes** for important warnings, dosages, or action items
-- **Sans-serif throughout** — override `body { font-family: var(--font-sans); }` for clinical feel
+- **Sans-serif throughout** (default — body is already sans)
 - **No decorative elements** — function over form
 
 ```html
-<div class="header-bar">
+<div class="header-minimal">
   <h1>Document Title</h1>
   <p class="subtitle">Type of document (e.g., Epikrise, Henvisning, Legeerklæring)</p>
 </div>
@@ -183,11 +190,11 @@ Right-align all monetary values using `class="num"`.
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-bottom: 8mm;">
   <div>
     <h4>Fra</h4>
-    <p class="font-sans">Company Name<br>Address Line 1<br>Org.nr: 123 456 789</p>
+    <p>Company Name<br>Address Line 1<br>Org.nr: 123 456 789</p>
   </div>
   <div>
     <h4>Til</h4>
-    <p class="font-sans">Client Name<br>Client Address<br>Org.nr: 987 654 321</p>
+    <p>Client Name<br>Client Address<br>Org.nr: 987 654 321</p>
   </div>
 </div>
 
@@ -208,7 +215,7 @@ Right-align all monetary values using `class="num"`.
   </tbody>
 </table>
 
-<div style="text-align: right; font-family: var(--font-sans); margin-top: 4mm;">
+<div style="text-align: right; margin-top: 4mm;">
   <p>Subtotal: <strong>51 500,00 kr</strong></p>
   <p>MVA 25%: <strong>12 875,00 kr</strong></p>
   <p style="font-size: 14pt; margin-top: 2mm;"><strong>Totalt: 64 375,00 kr</strong></p>
@@ -303,12 +310,14 @@ Force everything onto one page — remove page numbers, reduce margins if needed
 ## 7. Personal Document (Travel Log, Journal, Notes)
 
 Palette suggestion: **Terracotta**, **Forest**, or **Copper**. Go warmer and more expressive.
-Consider using `Libre Baskerville` or `Cormorant Garamond` for body text to create a more
-literary feel. Add `body.scale-generous` for a less crowded reading rhythm.
+Swap the `@import` to **Cormorant Garamond** or **EB Garamond** (see `base-styles.md` → Font
+Loading) for a literary feel — the default Inter Tight is too neutral for journal-like content.
+Add `body class="scale-generous"` for a less crowded reading rhythm.
 
 Personal documents can break from the corporate constraint — use larger type, more whitespace,
-and let the content breathe. Decorative elements (pull quotes, larger drop caps) are welcome here.
-Use `.header-centered` or `.header-typeset` for a composed, non-corporate opener.
+and let the content breathe. The `.lede` component (dropcap + small-caps first line) is
+specifically designed for this kind of opener. Use `.header-centered` or `.header-typeset` for
+a composed, non-corporate opener.
 
 ```html
 <div class="header-centered">
@@ -342,8 +351,9 @@ Use `.header-centered` or `.header-typeset` for a composed, non-corporate opener
 <a id="technical"></a>
 ## 8. Technical Document / Specification
 
-Palette suggestion: **Slate**. Keep it functional. Code blocks and tables will dominate.
-Use `JetBrains Mono` for code-heavy documents.
+Palette suggestion: **Slate** or **Steel**. Keep it functional — code blocks and tables will
+dominate. For code-heavy documents, swap the mono `@import` to **JetBrains Mono** or **IBM Plex
+Mono** (see `base-styles.md` → Font Loading) for better code legibility than Source Code Pro.
 
 ```html
 <div class="header-minimal">
@@ -361,7 +371,7 @@ Use `JetBrains Mono` for code-heavy documents.
 <p>What this document covers and why it exists.</p>
 
 <h2>Requirements</h2>
-<table class="table-soft">
+<table>
   <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
   <tbody>
     <tr><td>REQ-01</td><td>The system shall...</td><td>Must</td></tr>
@@ -406,14 +416,15 @@ formal axes (the axes from the Anti-Convergence Rule in SKILL.md).
 
 ### Formal axes — vary these to defeat convergence
 
-| Axis | What it controls | Default | Alternatives |
+| Axis | What it controls | Default (fallback) | Alternatives |
 |------|------------------|---------|--------------|
-| Font pairing | Glyph character | Source Sans/Serif | 11 other pairings in `base-styles.md` |
-| Palette | Color temperature, chrome tone | Slate | 7 other palettes (each now overrides 5-7 vars) |
-| Header | Document opener | `.header-bar` | `.header-minimal`, `.header-centered`, `.header-side-rule`, `.header-large-numeral`, `.header-typeset` |
+| Font pairing | Glyph character | Inter Tight (clean sans, single-family) | Cormorant / EB Garamond (literary), DM Sans (clinical), Fraunces + Work Sans (editorial), Space Grotesk + IBM Plex (tech) — full table in `base-styles.md` |
+| Palette | Color temperature, chrome tone | Slate | 7 other palettes (each overrides 5-7 vars) |
+| Header | Document opener | `.header-typeset` (pure-type, quiet) | `.header-minimal`, `.header-side-rule`, `.header-centered`, `.header-large-numeral` (sparingly), `.header-bar` (sparingly, loudest) |
 | Type scale | Density and rhythm | Editorial | `body.scale-compact`, `body.scale-generous` |
 | Edge weight | Borders, rules, radii | Standard | `body.edges-hairline`, `body.edges-chunky` |
 
-**Don't default to the same design every time.** The whole point of this skill is that Claude
-adapts the visual treatment to what's being created. A travel journal should not look like a
-quarterly business review. Stretch on at least three axes per document.
+**Defaults are fallbacks, not picks.** Inter Tight is for "I genuinely don't know what this is".
+Every document where you DO know the tone should override at least the font + palette + header.
+A travel journal should not look like a quarterly business review. Stretch on at least three
+axes per document.
