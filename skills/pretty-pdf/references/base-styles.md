@@ -297,10 +297,9 @@ body.edges-chunky {
 }
 
 @page :first {
-  /* Note: no extra top margin here. Earlier drafts set 36mm to give covers more
-     breathing room, but that breaks .header-bar (which uses a negative top margin
-     calibrated to the default 28mm). Templates without a banner can add their own
-     top space via a leading h1 margin. */
+  /* Cover/first page: suppress the page number. Templates that want extra top
+     breathing room can set a leading h1 margin — page-margin overrides here
+     work but cascade weirdly with the running @bottom-right rule. */
   @bottom-right { content: none; }
 }
 
@@ -464,7 +463,7 @@ tbody td {
   vertical-align: top;
 }
 
-/* Bold variant — full-bleed accent header, use sparingly. Reads as "this
+/* Bold variant — accent-filled header row, use sparingly. Reads as "this
    table is a primary visual element of the page" — appropriate for a
    single hero table per document, wrong for every table by default. */
 table.table-bold thead th {
@@ -715,22 +714,25 @@ pre.code-block {
   margin-top: 0;
 }
 
-/* ---- Header bar (full-width accent banner) ----
+/* ---- Header bar (accent banner) ----
    USE SPARINGLY. Loudest chrome element in the system — every document
    that uses .header-bar looks like every other document that uses it,
    regardless of palette. Appropriate for: high-emphasis business reports,
    formal cover pages where a banner is convention. Wrong for: most things.
 
-   The negative margins (-12mm -24mm) assume the default @page margin of
-   28mm/24mm. Side margins fully bleed; top (-12mm) leaves ~16mm of
-   breathing room above the bar — not edge-to-top by design. If you
-   change the page margin, update these to match. */
+   Earlier versions used negative margins to bleed to the page edge.
+   That broke whenever @page margins changed (any custom margin, any
+   scale-* variant that adjusted spacing) — a 16mm hairline of white
+   along the top read as a misalignment, not as design. This version
+   lives inside the body margin: predictable, robust, and reads as an
+   intentional block rather than a leaky full-bleed. */
 
 .header-bar {
   background: var(--color-accent);
   color: white;
   padding: var(--space-md) var(--space-lg);
-  margin: -12mm -24mm var(--space-xl) -24mm;
+  margin: 0 0 var(--space-xl) 0;
+  border-radius: var(--radius-md);
   font-family: var(--font-sans);
 }
 
