@@ -5,20 +5,33 @@ for every PDF, then override CSS custom properties to change palette and feel.
 
 ## Font Loading
 
-The default stylesheet imports Source Serif 4, Source Sans 3, and Source Code Pro from Google Fonts.
-These are the FALLBACK — not the target. For each new document, actively choose fonts that fit
-the specific content. Don't default to Source Sans/Serif unless it genuinely suits the document.
+**Read the document content first, then choose the font.** The default stylesheet loads
+**Inter Tight** as a clean, neutral single-family sans — it's the fallback for "I genuinely
+don't know what this document is yet." For anything where you *do* know the content type and
+tone, override it. A medical summary, a personal letter, and a technical spec should not
+share a typeface.
+
+### Pick by content, not by reflex
+
+| Content cue | Reach for |
+|---|---|
+| Personal letter, journal, essay, literary | Cormorant Garamond, EB Garamond, IBM Plex Serif |
+| Editorial, magazine, recipe, longform | Fraunces + Work Sans (optical sizing earns its keep) |
+| Medical, clinical, scannable | DM Sans (single-family, weight hierarchy) |
+| Technical spec, dev doc, API ref | IBM Plex Sans/Mono, or JetBrains Mono for code-dominant docs |
+| Tech/startup, product brief | Space Grotesk + IBM Plex Serif |
+| Formal report, legal, traditional | Playfair Display + EB Garamond |
+| Default / unsure | Inter Tight (already loaded) |
 
 **How to swap fonts:** Replace the `@import` URL in the `<style>` block and update the
 `--font-serif`, `--font-sans`, and `--font-mono` CSS variables.
 
 ### Proven font pairings
 
-Pick one. Don't always reach for the same row.
-
 | Feel | Headings | Body | `@import` (append to `fonts.googleapis.com/css2?family=`) |
 |------|----------|------|--------|
-| Editorial (default) | Source Sans 3 | Source Serif 4 | *(included in base stylesheet)* |
+| Default (clean, neutral) | Inter Tight | Inter Tight | *(included in base stylesheet)* |
+| Editorial / classic | Source Sans 3 | Source Serif 4 | `Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400` |
 | Warm humanist | Libre Franklin | Libre Baskerville | `Libre+Franklin:wght@400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400` |
 | Clinical/medical | DM Sans | DM Sans | `DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400` |
 | Literary/traditional | Playfair Display | EB Garamond | `Playfair+Display:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400` |
@@ -32,9 +45,9 @@ Pick one. Don't always reach for the same row.
 
 For code-heavy documents, add JetBrains Mono or Fira Code: `&family=JetBrains+Mono:wght@400;600`
 
-**IMPORTANT:** When using a single font family for both headings and body (e.g., DM Sans, Outfit,
-Plus Jakarta Sans), create hierarchy through weight contrast and size — not font switching.
-Use lighter weights (300–400) for body, heavier weights (600–700) for headings.
+**Single-family hierarchy:** When using one family for both headings and body (Inter Tight,
+DM Sans, Outfit, Plus Jakarta Sans, Cormorant), create hierarchy through weight contrast and
+size — not font switching. Lighter weights (300–400) for body, heavier (600–700) for headings.
 
 ## Color Palettes
 
@@ -150,13 +163,17 @@ in a warm hue, override the four status vars too.
 Copy this entire block into every PDF's `<style>` tag, then override variables as needed.
 
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;600&display=swap');
 
 :root {
-  /* --- FONTS --- */
-  --font-serif: 'Source Serif 4', 'Liberation Serif', Georgia, serif;
-  --font-sans: 'Source Sans 3', 'Liberation Sans', 'Helvetica Neue', sans-serif;
-  --font-mono: 'Source Code Pro', 'Liberation Mono', 'Courier New', monospace;
+  /* --- FONTS ---
+     Default is single-family Inter Tight (clean sans, neutral). For any document
+     where you've read the content and know the tone, OVERRIDE these — see the
+     pairings table above for cue-based picks. --font-serif falls back to Georgia
+     so calling var(--font-serif) without an override gives a system serif. */
+  --font-serif: 'Inter Tight', Georgia, serif;
+  --font-sans: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Source Code Pro', 'Courier New', monospace;
 
   /* --- TYPE SCALE (Editorial — default; override via body.scale-compact / body.scale-generous) --- */
   --fs-h1: 24pt;
@@ -165,18 +182,11 @@ Copy this entire block into every PDF's `<style>` tag, then override variables a
   --fs-h4: 10pt;
   --fs-body: 10.5pt;
   --fs-small: 9pt;
-  --fs-table: 9.5pt;
   --fs-code: 8.5pt;
-  --fs-pagenum: 8pt;
 
-  --lh-tight: 1.25;
   --lh-body: 1.65;
   --lh-list: 1.55;
-  --lh-code: 1.55;
 
-  --tracking-display: -0.025em;
-  --tracking-caps: 0.06em;
-  --tracking-pagenum: 0.05em;
   --weight-h1: 700;
   --weight-heading: 600;
 
@@ -225,7 +235,8 @@ body.scale-compact {
   --fs-h3: 10pt;
   --fs-h4: 9pt;
   --fs-body: 9.5pt;
-  --fs-table: 9pt;
+  --fs-small: 8.5pt;
+  --fs-code: 8pt;
   --lh-body: 1.5;
   --lh-list: 1.4;
 }
@@ -236,6 +247,8 @@ body.scale-generous {
   --fs-h3: 12.5pt;
   --fs-h4: 10.5pt;
   --fs-body: 11.5pt;
+  --fs-small: 9.5pt;
+  --fs-code: 9pt;
   --lh-body: 1.8;
   --lh-list: 1.7;
 }
@@ -277,9 +290,9 @@ body.edges-chunky {
   @bottom-right {
     content: counter(page);
     font-family: var(--font-sans);
-    font-size: var(--fs-pagenum);
+    font-size: 8pt;
     color: var(--color-text-secondary);
-    letter-spacing: var(--tracking-pagenum);
+    letter-spacing: 0.05em;
   }
 }
 
@@ -296,19 +309,27 @@ body.edges-chunky {
    ============================================ */
 
 body {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   color: var(--color-text);
   background: var(--color-bg);
+  /* Print typography micro-detail: enable OpenType features that good text fonts
+     ship with — ligatures, kerning, oldstyle figures in running text, contextual
+     alternates. Fonts that don't support a given feature simply ignore it.
+     Requires <html lang="..."> for hyphenation to know the rule set. */
+  hyphens: auto;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "onum" 1;
 }
 
 /* ---- Headings ---- */
 
 h1, h2, h3, h4 {
   font-family: var(--font-sans);
-  line-height: var(--lh-tight);
+  line-height: 1.25;
   page-break-after: avoid;
+  /* Tabular figures off for headings; use lining figures for clean numeric titles */
+  font-feature-settings: "kern" 1, "liga" 1, "lnum" 1;
 }
 
 h1 {
@@ -316,7 +337,7 @@ h1 {
   font-weight: var(--weight-h1);
   color: var(--color-accent);
   margin: 0 0 var(--space-md) 0;
-  letter-spacing: var(--tracking-display);
+  letter-spacing: -0.025em;
 }
 
 h2 {
@@ -340,7 +361,7 @@ h4 {
   font-weight: var(--weight-heading);
   color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: var(--tracking-caps);
+  letter-spacing: 0.06em;
   margin: var(--space-md) 0 var(--space-xs) 0;
 }
 
@@ -409,12 +430,16 @@ hr {
    TABLES
    ============================================ */
 
+/* Table default is SOFT — hairline dividers, subtle header, no zebra stripes.
+   Designed to recede into the page so the data carries the visual weight,
+   not the chrome. For a strong accent-colored header bar (high-emphasis
+   reports, financial dashboards), opt in with class="table-bold". */
 table {
   width: 100%;
   border-collapse: collapse;
   margin: var(--space-md) 0 var(--space-lg) 0;
   font-family: var(--font-sans);
-  font-size: var(--fs-table);
+  font-size: 9.5pt;
   page-break-inside: auto;
 }
 
@@ -423,21 +448,14 @@ thead {
 }
 
 thead th {
-  background: var(--color-accent);
-  color: white;
   font-weight: var(--weight-heading);
-  padding: 2.5mm 3.5mm;
+  color: var(--color-text-secondary);
+  padding: 2mm 3.5mm;
   text-align: left;
-  font-size: calc(var(--fs-table) - 1pt);
+  font-size: 8.5pt;
   text-transform: uppercase;
-  letter-spacing: var(--tracking-pagenum);
-}
-
-/* Softer table header variant — use class="table-soft" on <table> */
-table.table-soft thead th {
-  background: var(--color-bg-subtle);
-  color: var(--color-text);
-  border-bottom: var(--border-strong) solid var(--color-accent);
+  letter-spacing: 0.06em;
+  border-bottom: var(--border-strong) solid var(--color-text);
 }
 
 tbody td {
@@ -446,14 +464,19 @@ tbody td {
   vertical-align: top;
 }
 
-tbody tr:nth-child(even) {
-  background: var(--color-bg-subtle);
+/* Bold variant — full-bleed accent header, use sparingly. Reads as "this
+   table is a primary visual element of the page" — appropriate for a
+   single hero table per document, wrong for every table by default. */
+table.table-bold thead th {
+  background: var(--color-accent);
+  color: white;
+  border-bottom: none;
 }
 
 /* Right-align numbers */
 td.num, th.num {
   text-align: right;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 /* ============================================
@@ -476,7 +499,7 @@ pre {
   padding: var(--space-sm) var(--space-md);
   font-family: var(--font-mono);
   font-size: var(--fs-code);
-  line-height: var(--lh-code);
+  line-height: 1.55;
   overflow-wrap: break-word;
   white-space: pre-wrap;
   margin: var(--space-sm) 0 var(--space-md) 0;
@@ -531,6 +554,40 @@ pre.code-block {
   letter-spacing: 0.01em;
 }
 
+/* ---- Opening paragraph treatment (raised cap + small-caps lede) ----
+   Apply class="lede" to the FIRST paragraph after a header for a designed
+   opener — large initial in the accent color, small caps on the first line.
+   Most powerful single signal that a document was typeset, not generated.
+   Use for: letters, essays, longform reports, anything with a composed opener.
+   Avoid for: dense lists, short summaries, anything <3 lines per paragraph.
+
+   Note: this is a RAISED cap (initial sits on the baseline, sized up), not
+   a wrapped dropcap. The classic wrap-around dropcap needs ::first-letter +
+   float: left, which crashes weasyprint 68.x with an assertion in
+   float_layout. The raised cap is more restrained typographically anyway —
+   fits the literary tone these openers tend to carry. See gotchas.md §3. */
+
+.lede {
+  /* Hanging punctuation if the line starts with a quote (Inter doesn't ship
+     it but kept here for fonts that do — graceful no-op otherwise). */
+  hanging-punctuation: first;
+}
+
+.lede::first-letter {
+  font-family: var(--font-serif);
+  font-size: 3.2em;
+  line-height: 0.85;
+  padding-right: 4pt;
+  font-weight: 700;
+  color: var(--color-accent);
+  vertical-align: -0.2em;
+}
+
+.lede::first-line {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.06em;
+}
+
 /* ---- Callout / highlight box ---- */
 
 .callout {
@@ -556,102 +613,15 @@ pre.code-block {
   border-left-color: var(--color-ok);
 }
 
-/* ---- Header bar (full-width accent banner) ----
-   The negative margins (-12mm -24mm) assume the default @page margin of 28mm/24mm.
-   Side margins (-24mm) fully bleed left/right; top (-12mm) intentionally leaves ~16mm
-   of breathing room above the bar — it's not edge-to-top by design. If you change the
-   page margin, update these to match. */
-
-.header-bar {
-  background: var(--color-accent);
-  color: white;
-  padding: var(--space-md) var(--space-lg);
-  margin: -12mm -24mm var(--space-xl) -24mm;
-  font-family: var(--font-sans);
-}
-
-.header-bar h1 {
-  color: white;
-  margin: 0;
-  font-size: calc(var(--fs-h1) * 0.83);
-}
-
-.header-bar .subtitle {
-  color: rgba(255,255,255,0.8);
-  margin: var(--space-xs) 0 0 0;
-  font-size: calc(var(--fs-body) + 0.5pt);
-}
-
-/* ---- Minimal header (no bar, just a rule) ---- */
-
-.header-minimal {
-  border-bottom: var(--border-bold) solid var(--color-accent);
-  padding-bottom: var(--space-sm);
-  margin-bottom: var(--space-xl);
-}
-
-.header-minimal h1 {
-  margin-bottom: var(--space-xs);
-}
-
-/* ---- Centered header (no rule, pure typography) ----
-   For personal/literary/formal documents that want their opening to feel composed,
-   not chrome'd. Title and subtitle both centered. */
-
-.header-centered {
-  text-align: center;
-  margin-bottom: var(--space-2xl);
-}
-
-.header-centered h1 {
-  margin: 0 0 var(--space-sm) 0;
-}
-
-.header-centered .subtitle {
-  margin-top: 0;
-}
-
-/* ---- Side-rule header (vertical accent bar left of title) ----
-   Distinctive editorial look — feels journalistic, suits reports and essays. */
-
-.header-side-rule {
-  border-left: var(--border-bold) solid var(--color-accent);
-  padding-left: var(--space-md);
-  margin-bottom: var(--space-xl);
-}
-
-.header-side-rule h1 {
-  margin: 0 0 var(--space-xs) 0;
-}
-
-.header-side-rule .subtitle {
-  margin-top: 0;
-}
-
-/* ---- Large-numeral header (display-scale title, no decoration) ----
-   For documents where the title itself carries the visual weight —
-   covers, dividers, statement openers. Use sparingly. */
-
-.header-large-numeral {
-  margin-bottom: var(--space-2xl);
-}
-
-.header-large-numeral h1 {
-  font-size: calc(var(--fs-h1) * 1.8);
-  line-height: 1.05;
-  margin: 0 0 var(--space-md) 0;
-  font-weight: var(--weight-h1);
-  letter-spacing: -0.03em;
-}
-
-.header-large-numeral .subtitle {
-  font-size: var(--fs-body);
-  margin-top: 0;
-}
+/* ============================================
+   HEADERS — pick ONE based on the document.
+   Ordered quiet → loud. Default toward the top.
+   ============================================ */
 
 /* ---- Pure-typesetting header (no geometry, refined and quiet) ----
-   For formal letters, literary documents, fine-print contexts where any banner
-   or rule would feel loud. Title is set in the body serif at modest weight. */
+   The recommended default for most documents. No chrome — the title
+   IS the design moment. Works for letters, reports, summaries, anything
+   where the content carries the page. Use unless you have a reason not to. */
 
 .header-typeset {
   margin-bottom: var(--space-2xl);
@@ -671,6 +641,109 @@ pre.code-block {
   font-style: italic;
   font-size: var(--fs-body);
   margin-top: 0;
+}
+
+/* ---- Minimal header (rule under title) ----
+   Slightly more structural than typeset. Suits technical docs, specs,
+   anything where a clear "this is the opener" demarcation helps. */
+
+.header-minimal {
+  border-bottom: var(--border-bold) solid var(--color-accent);
+  padding-bottom: var(--space-sm);
+  margin-bottom: var(--space-xl);
+}
+
+.header-minimal h1 {
+  margin-bottom: var(--space-xs);
+}
+
+/* ---- Side-rule header (vertical accent bar left of title) ----
+   Editorial / journalistic feel. Reports, essays, longform pieces. */
+
+.header-side-rule {
+  border-left: var(--border-bold) solid var(--color-accent);
+  padding-left: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.header-side-rule h1 {
+  margin: 0 0 var(--space-xs) 0;
+}
+
+.header-side-rule .subtitle {
+  margin-top: 0;
+}
+
+/* ---- Centered header (no rule, pure typography, centered) ----
+   For personal / literary / formal documents that want a composed
+   opener. Pairs well with .lede on the first body paragraph. */
+
+.header-centered {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.header-centered h1 {
+  margin: 0 0 var(--space-sm) 0;
+}
+
+.header-centered .subtitle {
+  margin-top: 0;
+}
+
+/* ---- Large-numeral header (display-scale title) ----
+   USE SPARINGLY. The title itself carries the visual weight — covers,
+   issue openers, statement pieces. Wrong for letters or routine docs.
+   Best with a single short title (1-3 words); long titles wrap into
+   awkward equal-weight lines. Pair with text-wrap: balance if available. */
+
+.header-large-numeral {
+  margin-bottom: var(--space-2xl);
+}
+
+.header-large-numeral h1 {
+  font-size: calc(var(--fs-h1) * 1.8);
+  line-height: 1.05;
+  margin: 0 0 var(--space-md) 0;
+  font-weight: var(--weight-h1);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.header-large-numeral .subtitle {
+  font-size: var(--fs-body);
+  margin-top: 0;
+}
+
+/* ---- Header bar (full-width accent banner) ----
+   USE SPARINGLY. Loudest chrome element in the system — every document
+   that uses .header-bar looks like every other document that uses it,
+   regardless of palette. Appropriate for: high-emphasis business reports,
+   formal cover pages where a banner is convention. Wrong for: most things.
+
+   The negative margins (-12mm -24mm) assume the default @page margin of
+   28mm/24mm. Side margins fully bleed; top (-12mm) leaves ~16mm of
+   breathing room above the bar — not edge-to-top by design. If you
+   change the page margin, update these to match. */
+
+.header-bar {
+  background: var(--color-accent);
+  color: white;
+  padding: var(--space-md) var(--space-lg);
+  margin: -12mm -24mm var(--space-xl) -24mm;
+  font-family: var(--font-sans);
+}
+
+.header-bar h1 {
+  color: white;
+  margin: 0;
+  font-size: calc(var(--fs-h1) * 0.83);
+}
+
+.header-bar .subtitle {
+  color: rgba(255,255,255,0.8);
+  margin: var(--space-xs) 0 0 0;
+  font-size: calc(var(--fs-body) + 0.5pt);
 }
 
 /* ---- Two-column layout ---- */
@@ -720,8 +793,13 @@ figure {
 
 figure img {
   max-width: 100%;
-  border-radius: var(--radius-md);
+  /* No border-radius by default — rounded image corners are a screen-UI
+     convention and read as "screenshot exported to PDF" in print. Opt in
+     with class="img-rounded" if a soft edge is genuinely wanted (digital
+     reports, presentation handouts). */
 }
+
+img.img-rounded { border-radius: var(--radius-md); }
 
 figcaption {
   font-family: var(--font-sans);
@@ -738,32 +816,69 @@ figcaption {
 .no-break { page-break-inside: avoid; }
 .text-center { text-align: center; }
 .text-right { text-align: right; }
-.mt-0 { margin-top: 0; }
-.mb-0 { margin-bottom: 0; }
 .muted { color: var(--color-text-secondary); }
-.font-sans { font-family: var(--font-sans); }
-.font-serif { font-family: var(--font-serif); }
 .uppercase { text-transform: uppercase; letter-spacing: 0.06em; }
+.smallcaps { font-variant-caps: small-caps; letter-spacing: 0.04em; }
 ```
+
+---
+
+## Optional patterns
+
+### Running header showing current section (multi-page docs)
+
+For documents longer than 2-3 pages, a bare page number in the footer doesn't tell the
+reader *where they are*. Use `string-set` on `h2` to expose the current section name to a
+margin box. Opt-in: drop these rules into `@page` and add them to a body class or override.
+
+```css
+/* Capture every h2 title into a CSS string */
+h2 { string-set: section content; }
+
+@page {
+  @top-right {
+    content: string(section);
+    font-family: var(--font-sans);
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-secondary);
+  }
+}
+
+/* Cover/first page: suppress the running head until section 1 starts */
+@page :first {
+  @top-right { content: none; }
+}
+```
+
+Wrong for: short docs (1-3 pages — adds noise), letters (the section concept doesn't apply),
+covers / one-pagers.
 
 ---
 
 ## Weasyprint Technical Notes
 
-- **Google Fonts:** The `@import` is fetched at PDF generation time. Requires internet access
-  to fonts.googleapis.com — if unavailable (offline, firewall), the fallback chain handles it,
-  but the document will visibly fall back to system fonts. If you need a fully offline build,
-  download the fonts and reference them as `@font-face { src: url('./fonts/...'); }`.
+- **Google Fonts cost.** The default `@import` triggers ~6 HTTPS requests (~600KB) on every
+  cold render — there's no caching by default, not even within the same Python process. Plan
+  for ~0.5–1s of network time per PDF in addition to layout. If you're generating many PDFs
+  in one session, reuse a `FontConfiguration` (see SKILL.md → Performance). If offline or
+  firewalled, the render succeeds but **silently falls back to system fonts** — the PDF will
+  look noticeably different. Adding more `@import` URLs (e.g. picking a different pairing)
+  scales the cost roughly linearly.
 - **Page size:** Default is A4. For US Letter, override with `@page { size: letter; }`.
 - **Images:** Must be absolute paths (e.g., `C:\Users\name\photo.jpg` on Windows or
   `/home/user/photo.jpg` on Linux/macOS) or base64 data URIs. Relative paths do not resolve.
 - **No JavaScript:** Weasyprint renders static HTML+CSS only. No JS execution.
 - **CSS Grid:** Supported. Flexbox is partially supported — grid is more reliable.
-- **`@page` margin notes:** The `@bottom-right` block creates page numbers. Weasyprint supports
-  `@top-left`, `@top-center`, `@top-right`, `@bottom-left`, `@bottom-center`, `@bottom-right`.
+- **`@page` margin notes:** Weasyprint supports `@top-left`, `@top-center`, `@top-right`,
+  `@bottom-left`, `@bottom-center`, `@bottom-right`.
 - **Print colors:** `background` on elements is rendered by default in weasyprint (unlike browsers
   which suppress backgrounds for print). No need for `-webkit-print-color-adjust`.
 - **Unicode:** Full Unicode support. Norwegian characters (æ, ø, å) work perfectly with all
   listed fonts. For subscript/superscript, use `<sub>` and `<sup>` HTML tags rather than
   Unicode characters (₀₁₂₃₄₅) — Unicode versions depend on font glyph coverage and may render
   inconsistently across pairings.
+- **`hyphens: auto` requires `lang`.** Hyphenation only works if `<html>` (or the body block)
+  has a `lang` attribute (`lang="en"`, `lang="no"`, etc.). Without it, the body wraps but
+  doesn't break at syllables.

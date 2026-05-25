@@ -178,3 +178,65 @@ Any docx → pretty-PDF conversion where the source contains images. If `a:srcRe
 present the script is a no-op on that image, so it's cheap to run unconditionally. When
 skipping this, note it in a comment — the failure mode is silent and the user may not
 notice until side-by-side comparison.
+
+---
+
+## 3. `::first-letter { float: left }` crashes weasyprint 68.x
+
+### The problem
+
+The classic CSS wrap-around dropcap recipe — `p::first-letter { float: left; font-size: 4em }` —
+raises `AssertionError` in `weasyprint/layout/float.py:79` during render. The traceback ends at
+`assert isinstance(box, boxes.BlockReplacedBox)`. Reproduces deterministically on weasyprint 68.1,
+and the same pattern has been broken in earlier 6x series.
+
+`initial-letter` (the modern CSS spec property explicitly designed for dropcaps) is **not
+implemented** in weasyprint as of 68.1 — silently no-ops, so the letter just renders at normal
+size. Easy to miss because the render succeeds.
+
+### Fix: raised cap via `::first-letter` (no float), or floated span
+
+Two options that both work:
+
+**(A) Raised cap — what `.lede` ships with.** Lower friction (no HTML wrapping needed),
+restrained look. The initial is sized up and baseline-shifted; text doesn't wrap around it.
+
+```css
+.lede::first-letter {
+  font-family: var(--font-serif);
+  font-size: 3.2em;
+  line-height: 0.85;
+  padding-right: 4pt;
+  font-weight: 700;
+  color: var(--color-accent);
+  vertical-align: -0.2em;
+}
+```
+
+**(B) Traditional wrapped dropcap via a span.** Use this when you specifically want the
+text-wraps-around-the-letter look. Costs one inline span on the first character.
+
+```css
+.lede .dropcap {
+  font-family: var(--font-serif);
+  float: left;
+  font-size: 4.2em;
+  line-height: 0.85;
+  padding: 2pt 6pt 0 0;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+```
+
+```html
+<p class="lede"><span class="dropcap">T</span>here is a particular kind of light...</p>
+```
+
+The `<span>` workaround works because the float crash is specific to `::first-letter` + float
+interaction, not float in general.
+
+### Detection
+
+Render-time only. The error fires during `write_pdf()`; you cannot catch it at CSS-parse time.
+If a doc fails to render and the traceback ends in `float_layout`, suspect a floated
+`::first-letter` somewhere in the stylesheet.
