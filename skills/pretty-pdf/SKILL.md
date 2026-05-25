@@ -2,17 +2,32 @@
 name: pretty-pdf
 description: >
   Create visually polished, professionally designed PDF documents using weasyprint (HTML+CSS → PDF).
-  Use this skill whenever creating NEW PDFs from scratch — reports, letters, summaries, medical documents,
-  personal letters, invoices, proposals, cover letters, recipes, travel itineraries, one-pagers, CVs,
-  or any other document where the output should look like it was designed by a professional.
-  This skill applies to ALL PDF creation regardless of topic or domain — work, personal, medical, legal,
-  creative. Trigger on any "create/generate/write/make a PDF" request, including when the source
-  content lives in a docx that should be re-typeset into a polished PDF. Adapt the design (typography,
-  color palette, layout density) to match the content and context. Do NOT use for reading, extracting,
-  merging, splitting, or form-filling existing PDFs — use the default pdf skill for those operations.
+  Use whenever creating a NEW PDF from scratch where the output should look designed — reports,
+  letters, summaries, medical documents, personal letters, invoices, proposals, cover letters, recipes,
+  travel itineraries, one-pagers, CVs, or any other document that will be read or shared and benefits
+  from typographic care. Applies across all domains — work, personal, medical, legal, creative. Also
+  use when the source content lives in a docx that should be re-typeset into a polished PDF. Adapt
+  the design (typography, color palette, layout density) to match content and context. Do NOT use
+  for: reading, extracting, merging, splitting, rotating, or form-filling existing PDFs (use the
+  default pdf skill); generating fillable AcroForm PDFs (weasyprint produces flat PDFs only); or
+  throwaway/quick-dump PDFs where the user signals they want output fast, not polished.
 ---
 
 # Pretty PDF — Beautiful PDF Creation
+
+## Setup
+
+`pip install weasyprint`. Platform notes:
+
+- **Windows:** weasyprint also needs the GTK3 runtime (Pango/Cairo/GLib DLLs). Install with
+  `winget install tschoonj.GTKForWindows` (one-time, ~50MB, UAC prompt) or download from
+  github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases.
+  Without GTK3, `import weasyprint` fails at load time with a `cannot load library 'libgobject-2.0-0'` error.
+- **macOS:** `brew install pango` first, then `pip install weasyprint`.
+- **Linux:** `pip install weasyprint` usually suffices (Pango/Cairo come from system libs;
+  on Debian/Ubuntu: `apt install libpango-1.0-0 libpangoft2-1.0-0`).
+
+Verify: `python -c "import weasyprint; print(weasyprint.__version__)"`.
 
 ## Core Approach
 
@@ -51,21 +66,39 @@ consulting firm's deliverables.
 ### Anti-Convergence Rule (critical)
 
 NEVER produce the same visual design twice. Each PDF should feel like it was designed for its
-specific content and context — not stamped from a template. This means:
+specific content and context — not stamped from a template. The CSS system is built around five
+independent variation axes; pick a **non-default value on at least 3 of 5** for every document,
+or you've shipped a re-skin, not a design.
 
-- **Vary fonts between documents.** Don't always reach for Source Sans/Serif. The base stylesheet
-  is a starting point — swap the `@import` URL and CSS variables to use different Google Fonts
-  for different documents. See `base-styles.md` for proven font pairings.
-- **Vary palettes.** Don't default to the same blue/slate every time. A letter to a doctor and
-  a quarterly report should not share a color scheme.
-- **Vary layout patterns.** Not every document needs a header-bar. Some documents are better with
-  a minimal rule, a centered title, or no header decoration at all.
-- **Match complexity to vision.** A formal letter needs precision and restraint — not fewer elements,
-  but every element placed with care. A creative brief can be bolder and more expressive.
+#### The five axes
 
-Avoid generic AI-generated aesthetics: overused font families (Inter, Arial, system fonts), clichéd
-color schemes (purple gradients, corporate blue-on-white), and predictable safe layouts. If the
-design wouldn't stand out printed and handed to someone, push harder.
+| Axis | Default | Vary by... |
+|------|---------|------------|
+| Font pairing | Source Sans / Source Serif | One of 12 pairings in `base-styles.md` (Cormorant, Playfair/EB Garamond, Space Grotesk/IBM Plex, Fraunces/Work Sans, etc.) |
+| Palette | Slate | One of 8 palettes in `base-styles.md` — each now overrides 5-7 CSS vars, not just the accent, so chrome/borders/bg move together |
+| Header pattern | `.header-bar` | `.header-minimal`, `.header-centered`, `.header-side-rule`, `.header-large-numeral`, `.header-typeset` |
+| Type scale | Editorial | `body class="scale-compact"` (denser) or `body class="scale-generous"` (more breathing room) |
+| Edge weight | Standard | `body class="edges-hairline"` (refined, near-zero radii) or `body class="edges-chunky"` (bold, larger radii) |
+
+A medical summary in DM Sans + Teal + `.header-minimal` + `.scale-compact` + `.edges-hairline`
+should be unrecognizable from a personal letter in Cormorant + Terracotta + `.header-centered`
++ `.scale-generous` + standard edges. If two of your recent PDFs share more than 2 axes, you're
+converging — stop and re-pick.
+
+#### Specific things to avoid
+
+- **Vary fonts between documents.** Don't always reach for Source Sans/Serif. That's the
+  fallback, not the target.
+- **Vary palettes.** Don't default to the same blue/slate. A letter to a doctor and a quarterly
+  report should not share a color scheme.
+- **Vary layout patterns.** Not every document needs a header-bar. Often a minimal rule,
+  a centered title, or pure-type (`.header-typeset`) does more for the document.
+- **Match complexity to vision.** A formal letter needs precision and restraint — not fewer
+  elements, but every element placed with care. A creative brief can be bolder and more expressive.
+
+Avoid generic AI-generated aesthetics: overused font families (Inter, Arial, system fonts),
+clichéd color schemes (purple gradients, corporate blue-on-white), and predictable safe layouts.
+If the design wouldn't stand out printed and handed to someone, push harder.
 
 ## Choosing a Design Direction
 
@@ -101,7 +134,9 @@ so you can swap the entire palette by changing 6 variables.
    Shipping multi-page code with a page footer will break copy/paste for users. The fix is
    either (a) shrink the code to fit on one page, or (b) use a named `@page` to suppress the
    footer on code pages. Do not reflex-split into a sidecar file.
-9. Save final PDF to `/mnt/user-data/outputs/`
+9. Save the final PDF to an absolute local path (e.g., the user's Downloads folder, or wherever
+   they specify). Use `weasyprint.HTML(...).write_pdf(absolute_path)`. Relative paths are resolved
+   from the current working directory, which is rarely what the user wants — be explicit.
 
 ## Relationship to Other Skills
 

@@ -38,7 +38,7 @@ pre.code-block {
 ```
 
 Any page that contains this `<pre>` renders under `code-page` rules → no footer → selecting
-across page breaks no longer picks up footer text. Works in weasyprint 60+.
+across page breaks no longer picks up footer text. Works in any actively-maintained weasyprint.
 
 **Caveat:** if only part of the pre spans page N, the whole of page N uses the code-page rules.
 Any other content that lands on that page also loses its footer. In practice long code blocks
@@ -81,10 +81,13 @@ is next to the original docx.
 
 ### Detection
 
-Before extracting, grep `word/document.xml` (after unzipping the docx):
+A docx is a zip; the document XML is at `word/document.xml`. Quickest cross-platform check:
 
-```bash
-unzip -p doc.docx word/document.xml | grep -c 'a:srcRect'
+```python
+import zipfile
+with zipfile.ZipFile('doc.docx') as z:
+    xml = z.read('word/document.xml').decode('utf-8', errors='ignore')
+    print(xml.count('a:srcRect'))
 ```
 
 A non-zero count means at least one image has a crop and you must handle it properly.
@@ -131,7 +134,7 @@ def extract_images_with_crops(docx_path, out_dir):
             # Load the raw image
             img = Image.open(io.BytesIO(z.read(rid_to_path[rid]))).convert('RGBA')
 
-            # Apply crop if present — values are percentages × 1000.
+            # Apply crop if present — values are in 1/100000ths (100000 = 100%).
             # e.g. l="12500" means "crop 12.5% off the left edge".
             # Right and bottom are *insets from the edge*, not absolute coords.
             src = blip_fill.find('a:srcRect', NS)
@@ -157,12 +160,17 @@ def extract_images_with_crops(docx_path, out_dir):
 
 Key details that are easy to get wrong:
 
-- `srcRect` values are percentages × 1000. `l="12500"` → 12.5%, not 12500 pixels.
+- `srcRect` values are in 1/100000ths of the image dimension (100000 = 100%). So `l="12500"`
+  is 12.5%, not 12500 pixels.
 - All four sides (`l`, `t`, `r`, `b`) are optional and default to 0.
 - `r` and `b` are **insets from that edge**, not absolute coordinates. Convert via
   `(1 - r) * width` and `(1 - b) * height`.
 - Apply the crop **before** embedding the image in HTML (data URI or file path). After is
   too late — the PDF has already captured the uncropped source.
+- Code above handles `r:embed` (image bytes packaged inside the docx). If a docx uses
+  `<a:blip r:link="rId7"/>` instead (image referenced from disk), the lookup returns `None`
+  and the image is silently dropped. Rare in modern docx, but worth catching — log a warning
+  if you see `r:link` so the user knows to embed those images first.
 
 ### When to run this
 

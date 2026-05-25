@@ -3,8 +3,15 @@
 HTML templates for common document types. Each template uses the base stylesheet from
 `base-styles.md` — copy that `<style>` block first, then drop in the relevant template HTML.
 
-Adapt freely — these are starting points, not rigid formats. The key is matching the design
-to the content's purpose and audience.
+**Each template below shows ONE layout choice.** That's a starting point, not a default to
+always pick. For real anti-convergence (see SKILL.md "Anti-Convergence Rule"), swap among the
+five header components (`.header-bar`, `.header-minimal`, `.header-centered`,
+`.header-side-rule`, `.header-large-numeral`, `.header-typeset`), the three type scales
+(default Editorial, `body.scale-compact`, `body.scale-generous`), and the three edge weights
+(default Standard, `body.edges-hairline`, `body.edges-chunky`) — not just palette and font.
+A medical doc rendered with `.header-side-rule` + `.scale-compact` + `.edges-hairline` should
+look like a different document family from one rendered with `.header-bar` + default scale +
+default edges.
 
 ---
 
@@ -214,7 +221,10 @@ Right-align all monetary values using `class="num"`.
 ## 5. CV / Resume
 
 Palette suggestion: **Slate** or personal preference. Use `.kv-grid` for structured data.
-Consider a two-column layout for compact CVs.
+Consider a two-column layout for compact CVs. The candidate's name should carry visual weight —
+`.header-large-numeral` or `.header-typeset` both work well; the example below uses a bare h1
+with custom sizing, but try `<div class="header-large-numeral"><h1>...</h1></div>` for a more
+statement opener.
 
 ```html
 <h1 style="margin-bottom: 2mm;">Full Name</h1>
@@ -294,14 +304,17 @@ Force everything onto one page — remove page numbers, reduce margins if needed
 
 Palette suggestion: **Terracotta**, **Forest**, or **Copper**. Go warmer and more expressive.
 Consider using `Libre Baskerville` or `Cormorant Garamond` for body text to create a more
-literary feel.
+literary feel. Add `body.scale-generous` for a less crowded reading rhythm.
 
 Personal documents can break from the corporate constraint — use larger type, more whitespace,
 and let the content breathe. Decorative elements (pull quotes, larger drop caps) are welcome here.
+Use `.header-centered` or `.header-typeset` for a composed, non-corporate opener.
 
 ```html
-<h1 style="text-align: center;">Title of the Document</h1>
-<p class="subtitle" style="text-align: center;">A brief description or date range</p>
+<div class="header-centered">
+  <h1>Title of the Document</h1>
+  <p class="subtitle">A brief description or date range</p>
+</div>
 
 <hr>
 
@@ -372,7 +385,10 @@ function example() {
 <a id="design-guidance"></a>
 ## 9. Design Guidance by Context
 
-When choosing how to design a document, think about three dimensions:
+When choosing how to design a document, think about three contextual dimensions, then five
+formal axes (the axes from the Anti-Convergence Rule in SKILL.md).
+
+### Contextual dimensions
 
 **1. Formality**
 - High formality (legal, medical, corporate) → conservative palette, traditional serif, more structure
@@ -380,12 +396,24 @@ When choosing how to design a document, think about three dimensions:
 
 **2. Density**
 - High density (invoices, specs, reference docs) → smaller font, tighter spacing, tables
+  → reach for `body.scale-compact`
 - Low density (letters, personal docs, summaries) → larger font, generous margins, fewer elements
+  → reach for `body.scale-generous`
 
 **3. Reader relationship**
 - Known reader (doctor, colleague, friend) → can be more personal, assume context
 - Unknown reader (application, public report) → more formal, more self-explanatory
 
+### Formal axes — vary these to defeat convergence
+
+| Axis | What it controls | Default | Alternatives |
+|------|------------------|---------|--------------|
+| Font pairing | Glyph character | Source Sans/Serif | 11 other pairings in `base-styles.md` |
+| Palette | Color temperature, chrome tone | Slate | 7 other palettes (each now overrides 5-7 vars) |
+| Header | Document opener | `.header-bar` | `.header-minimal`, `.header-centered`, `.header-side-rule`, `.header-large-numeral`, `.header-typeset` |
+| Type scale | Density and rhythm | Editorial | `body.scale-compact`, `body.scale-generous` |
+| Edge weight | Borders, rules, radii | Standard | `body.edges-hairline`, `body.edges-chunky` |
+
 **Don't default to the same design every time.** The whole point of this skill is that Claude
 adapts the visual treatment to what's being created. A travel journal should not look like a
-quarterly business review.
+quarterly business review. Stretch on at least three axes per document.
