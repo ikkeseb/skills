@@ -315,9 +315,10 @@ Loading) for a literary feel — the default Inter Tight is too neutral for jour
 Add `body class="scale-generous"` for a less crowded reading rhythm.
 
 Personal documents can break from the corporate constraint — use larger type, more whitespace,
-and let the content breathe. The `.lede` component (dropcap + small-caps first line) is
-specifically designed for this kind of opener. Use `.header-centered` or `.header-typeset` for
-a composed, non-corporate opener.
+and let the content breathe. Use `.header-centered` or `.header-typeset` for a composed,
+non-corporate opener. The `.lede` raised-cap component exists if a literary essay-style opener
+genuinely fits — but it's a strong gesture, easy to overuse, and not a default. Skip it on
+travel logs, journals, anything where the opening paragraph isn't doing literary work.
 
 ```html
 <div class="header-centered">
