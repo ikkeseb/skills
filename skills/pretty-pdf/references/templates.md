@@ -4,7 +4,7 @@ HTML templates for common document types. Each template uses the base stylesheet
 `base-styles.md` — copy that `<style>` block first, then drop in the relevant template HTML.
 
 **Each template below shows ONE layout choice.** That's a starting point, not a default to
-always pick. For real anti-convergence (see SKILL.md "Anti-Convergence Rule"), swap among the
+always pick. To fit the content (see SKILL.md "Anti-Convergence Rule"), remember you can swap among the
 six header components (`.header-typeset` is the default, then `.header-minimal`,
 `.header-side-rule`, `.header-centered`, `.header-large-numeral`, `.header-bar`), the three
 type scales (default Editorial, `body.scale-compact`, `body.scale-generous`), and the three
@@ -415,7 +415,7 @@ formal axes (the axes from the Anti-Convergence Rule in SKILL.md).
 - Known reader (doctor, colleague, friend) → can be more personal, assume context
 - Unknown reader (application, public report) → more formal, more self-explanatory
 
-### Formal axes — vary these to defeat convergence
+### Formal axes — fit these to the content
 
 | Axis | What it controls | Default (fallback) | Alternatives |
 |------|------------------|---------|--------------|
@@ -425,7 +425,7 @@ formal axes (the axes from the Anti-Convergence Rule in SKILL.md).
 | Type scale | Density and rhythm | Editorial | `body.scale-compact`, `body.scale-generous` |
 | Edge weight | Borders, rules, radii | Standard | `body.edges-hairline`, `body.edges-chunky` |
 
-**Defaults are fallbacks, not picks.** Inter Tight is for "I genuinely don't know what this is".
-Every document where you DO know the tone should override at least the font + palette + header.
-A travel journal should not look like a quarterly business review. Stretch on at least three
-axes per document.
+**Defaults are fallbacks, not reflexes.** Inter Tight is for "I genuinely don't know what this
+is" — a real answer when content is generic, wrong when it's a dodge for not reading. When you
+DO know the tone, let it drive the font + palette + header. A travel journal should not look
+like a quarterly business review — because the content differs, not to fill a quota.

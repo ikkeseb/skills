@@ -61,10 +61,11 @@ consulting firm's deliverables.
 
 ### Anti-Convergence Rule (critical)
 
-NEVER produce the same visual design twice. Each PDF should feel like it was designed for its
-specific content and context — not stamped from a template. The CSS system is built around five
-independent variation axes; pick a **non-default value on at least 3 of 5** for every document,
-or you've shipped a re-skin, not a design.
+The failure this guards against is **reaching for the default without reading the content** —
+shipping Inter Tight + Slate on every document regardless of what it says. The cure is fit, not
+novelty: choose each axis *from* the content, using the cue tables below and in `base-styles.md`.
+The CSS system gives you five independent axes to fit with — if you've moved fewer than 3 off
+their defaults, check whether that's genuine fit or just reflex.
 
 #### The five axes
 
@@ -77,9 +78,10 @@ or you've shipped a re-skin, not a design.
 | Edge weight | Standard | `body class="edges-hairline"` (refined, near-zero radii) or `body class="edges-chunky"` (bold, larger radii) |
 
 A medical summary in DM Sans + Teal + `.header-minimal` + `.scale-compact` + `.edges-hairline`
-should be unrecognizable from a personal letter in Cormorant + Terracotta + `.header-centered`
-+ `.scale-generous` + standard edges. If two of your recent PDFs share more than 2 axes, you're
-converging — stop and re-pick.
+naturally looks nothing like a personal letter in Cormorant + Terracotta + `.header-centered`
++ `.scale-generous` + standard edges — because the content pulled them apart, not a quota. Smoke
+test: if a document came out looking like the last one, ask whether you read its content or
+defaulted. If the content genuinely is similar, similar is the right answer.
 
 ## Choosing a Design Direction
 
@@ -104,8 +106,8 @@ so you can swap the entire palette by changing 6 variables.
 1. **Read the source content first.** What document type? Who reads it? What tone? Until you've
    answered this, you don't know what to design.
 2. **Pick fonts + palette + header to match the content** — use the cue tables in
-   `references/base-styles.md` (Font Loading) and the palette guidance. Defaults exist as
-   fallback only; using them on a document where you know the type is the convergence failure.
+   `references/base-styles.md` (Font Loading) and the palette guidance. Defaults are the
+   fallback for when content genuinely fits a clean sans — not a reflex that skips reading it.
 3. Read `references/base-styles.md` — copy the full `<style>` block as your starting point.
 4. **Customize the design** — replace the `@import` URL if you picked a non-default pairing,
    swap CSS variables for palette, set body class for scale/edge if appropriate. Don't ship
