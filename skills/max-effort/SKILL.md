@@ -50,17 +50,21 @@ Then wait.
 
 ## Final summary
 
-Inline only — no persistent log file. Persistent "thorough on X" markers create a false-certainty cascade across sessions. Verification lives in the active turn, not state. For cross-session capture, use `/handoff`.
+Inline only — no persistent log file. Persistent "thorough on X" markers create a false-certainty cascade across sessions; verification lives in the active turn, not state. For cross-session capture, use `/handoff`.
 
-Earn-its-place structure. `Done` and `Open / flagged` always present (write `None` when genuinely empty, don't omit). Others appear only with content.
+This lands *after* Claude Code's normal output — so it's a scannable index on top, not a recap. Don't re-narrate the work above; keep every line to one line. Same shape as afk's return summary: a tally line, then status bullets.
 
-**Done.** What was produced.
+> **[max-effort sustained] · 3 done · 2 open · 4 checks**
+>
+> - ✅ what was produced — `commit` / file when relevant
+> - 🚩 open: unresolved conflict, unverified claim, or assumption leaned on
+> - 🔍 verified: read X, confirmed Y exports Z
 
-**Open / flagged.** Outstanding concerns, unresolved subagent conflicts, what wasn't verified, assumptions leaned on. Calibration anchor — its presence resists the cascade.
+Status keys: ✅ done · 🚩 open/flagged · 🔍 verified (an action — "confirmed Y", not a verdict like "code is correct"). In sustained mode, fold `[max-effort sustained]` into the tally line so the posture survives context compression.
 
-**Verified** (optional). Load-bearing claims actually checked. Phrase as actions ("read file X, confirmed Y exports Z"), not verdicts ("code is correct").
+**One invariant:** open/flagged is always represented — at least one 🚩 bullet, or an explicit `✅ nothing open, all load-bearing claims checked`. It's the anti-cascade anchor; everything else flexes to the work, this doesn't.
 
-**Subagents used** (optional, when >1). Who and what they contributed. Helps the user decide what's worth second-guessing.
+When >1 subagent, add a one-line `Subagents: A (did x), B (did y)` so the user knows what to second-guess.
 
 In sustained mode, prefix the summary with `[max-effort sustained]` so the posture is recoverable after context compression.
 
