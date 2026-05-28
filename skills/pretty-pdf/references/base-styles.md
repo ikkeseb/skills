@@ -13,41 +13,31 @@ share a typeface.
 
 ### Pick by content, not by reflex
 
-| Content cue | Reach for |
-|---|---|
-| Personal letter, journal, essay, literary | Cormorant Garamond, EB Garamond, IBM Plex Serif |
-| Editorial, magazine, recipe, longform | Fraunces + Work Sans (optical sizing earns its keep) |
-| Medical, clinical, scannable | DM Sans (single-family, weight hierarchy) |
-| Technical spec, dev doc, API ref | IBM Plex Sans/Mono, or JetBrains Mono for code-dominant docs |
-| Tech/startup, product brief | Space Grotesk + IBM Plex Serif |
-| Formal report, legal, traditional | Playfair Display + EB Garamond |
-| Default / unsure | Inter Tight (already loaded) |
+Read the document, find the closest content cue, and use that row's exact `@import`. The base
+stylesheet already loads Inter Tight — only the **Default** row needs no `@import` change.
 
-**How to swap fonts:** Replace the `@import` URL in the `<style>` block and update the
-`--font-serif`, `--font-sans`, and `--font-mono` CSS variables.
+| Content cue | Feel | Headings | Body | `@import` (append to `fonts.googleapis.com/css2?family=`) |
+|---|---|---|---|---|
+| Default / unsure | Clean, neutral | Inter Tight | Inter Tight | *(included in base stylesheet)* |
+| Medical, clinical, scannable | Clinical | DM Sans | DM Sans | `DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400` |
+| Minimal, precise | Swiss precision | Outfit | Outfit | `Outfit:wght@300;400;500;600;700` |
+| Modern product / brand brief | Modern geometric | Plus Jakarta Sans | Plus Jakarta Sans | `Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400` |
+| Tech / startup, dev doc, API ref | Tech | Space Grotesk | IBM Plex Serif | `Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400` |
+| Personal letter, journal, essay | Elegant formal | Cormorant Garamond | Cormorant Garamond | `Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400` |
+| Formal report, legal, traditional | Literary / traditional | Playfair Display | EB Garamond | `Playfair+Display:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400` |
+| Warm, friendly longform | Warm humanist | Libre Franklin | Libre Baskerville | `Libre+Franklin:wght@400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400` |
+| Calm, natural, Scandinavian | Scandinavian clean | Familjen Grotesk | Lora | `Familjen+Grotesk:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400` |
+| Editorial, magazine, recipe | Newspaper / magazine | Fraunces | Work Sans | `Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Work+Sans:wght@300;400;500;600` |
+| Editorial / classic (neutral) | Editorial | Source Sans 3 | Source Serif 4 | `Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400` |
+| Statement, expressive opener | Bold / expressive | Sora | Bitter | `Sora:wght@400;500;600;700&family=Bitter:ital,wght@0,400;0,500;0,600;0,700;1,400` |
 
-### Proven font pairings
+**How to swap:** replace the `@import` URL in the `<style>` block, then update `--font-serif`,
+`--font-sans`, and `--font-mono` to match. For code-heavy or dev docs add a mono — IBM Plex Mono,
+JetBrains Mono, or Fira Code: `&family=JetBrains+Mono:wght@400;600`.
 
-| Feel | Headings | Body | `@import` (append to `fonts.googleapis.com/css2?family=`) |
-|------|----------|------|--------|
-| Default (clean, neutral) | Inter Tight | Inter Tight | *(included in base stylesheet)* |
-| Editorial / classic | Source Sans 3 | Source Serif 4 | `Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400` |
-| Warm humanist | Libre Franklin | Libre Baskerville | `Libre+Franklin:wght@400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400` |
-| Clinical/medical | DM Sans | DM Sans | `DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400` |
-| Literary/traditional | Playfair Display | EB Garamond | `Playfair+Display:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400` |
-| Swiss precision | Outfit | Outfit | `Outfit:wght@300;400;500;600;700` |
-| Elegant formal | Cormorant Garamond | Cormorant Garamond | `Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400` |
-| Modern geometric | Plus Jakarta Sans | Plus Jakarta Sans | `Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400` |
-| Scandinavian clean | Familjen Grotesk | Lora | `Familjen+Grotesk:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400` |
-| Tech/startup | Space Grotesk | IBM Plex Serif | `Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400` |
-| Newspaper/magazine | Fraunces | Work Sans | `Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Work+Sans:wght@300;400;500;600` |
-| Bold/expressive | Sora | Bitter | `Sora:wght@400;500;600;700&family=Bitter:ital,wght@0,400;0,500;0,600;0,700;1,400` |
-
-For code-heavy documents, add JetBrains Mono or Fira Code: `&family=JetBrains+Mono:wght@400;600`
-
-**Single-family hierarchy:** When using one family for both headings and body (Inter Tight,
-DM Sans, Outfit, Plus Jakarta Sans, Cormorant), create hierarchy through weight contrast and
-size — not font switching. Lighter weights (300–400) for body, heavier (600–700) for headings.
+**Single-family hierarchy:** when one family covers both headings and body (Inter Tight, DM Sans,
+Outfit, Plus Jakarta Sans, Cormorant), build hierarchy through weight and size, not font
+switching — lighter weights (300–400) for body, heavier (600–700) for headings.
 
 ## Color Palettes
 
