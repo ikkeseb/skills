@@ -1,6 +1,6 @@
 ---
 name: afk
-description: Posture skill for unattended autonomous work. Invoke ONLY when the user explicitly types `/afk` — do NOT auto-invoke from context cues like "I'm leaving", "going AFK", or "check back later". Sets a session posture (no clarifying questions, low-blast-radius default, audit-trail logging) that persists until the user explicitly drops it with "back", "I'm back", "stopp", "afk off", or "drop AFK".
+description: Posture skill for unattended autonomous work. Invoke ONLY when the user types the literal `/afk` command — a described intention to leave is not a trigger; only the command is. Sets a session posture (no clarifying questions, low-blast-radius default, audit-trail logging) that persists until the user signals they're back in any phrasing — "back", "I'm back", "jeg er tilbake", "ikke afk lenger", "stopp", "afk off".
 ---
 
 # afk
@@ -11,11 +11,11 @@ AFK is **not** "move fast". AFK is "work autonomously and leave a clean audit tr
 
 ## Off-signal
 
-Only an explicit user signal drops AFK: `back`, `I'm back`, `stopp`, `afk off`, `drop AFK`, or an unambiguous equivalent. Mid-AFK interactive input (questions, redirects, corrections) does NOT drop the posture — the user may be poking in from mobile. Answer briefly, stay in AFK. A new session starts fresh; nothing persists.
+Only an explicit user signal drops AFK: `back`, `I'm back`, `jeg er tilbake`, `ikke afk lenger`, `stopp`, `afk off`, `drop AFK`, or any unambiguous equivalent in any language. Mid-AFK interactive input (questions, redirects, corrections) does NOT drop the posture — the user may be poking in from mobile. Answer briefly, stay in AFK. A new session starts fresh; nothing persists.
 
 ## Preamble — first response after `/afk`
 
-Two steps, then wait. Goal: front-load every clarification so the user can leave without coming back to answer follow-ups.
+Open with `[afk mode engaged]` so activation is visible, then two steps, then wait. Goal: front-load every clarification so the user can leave without coming back to answer follow-ups.
 
 **Step 1 — Subagent / token budget (one question, three options).** Ask the user to pick one:
 - *Single-agent* — Claude alone. Simpler, context compounds. Most token-conservative.

@@ -1,6 +1,6 @@
 ---
 name: max-effort
-description: Posture skill activated by `/max-effort` (single-task) or `/max-effort sustained` (session). Dispatches subagents widely, then runs an orchestrator-pass that's the load-bearing verification step. Invoke ONLY when the user explicitly types the command — do NOT auto-invoke from context cues like "this is important", "high-stakes", "be careful", "irreversible", or "do this thoroughly". Sustained mode drops only on explicit user off-signal.
+description: Posture skill activated by `/max-effort` (single-task) or `/max-effort sustained` (session). Dispatches subagents widely, then runs an orchestrator-pass that's the load-bearing verification step. Invoke ONLY when the user types the literal `/max-effort` command — a described need for thoroughness is not a trigger; only the command is. Sustained mode drops when the user says so in any phrasing — "stop max-effort", "max-effort off", "back", "stopp".
 ---
 
 # max-effort
@@ -16,9 +16,11 @@ Not a "be careful" prompt. The load-bearing moves are (1) dispatching widely for
 
 ## Off-signal (sustained)
 
-Only explicit user signal drops the posture: `back`, `stopp`, `max-effort off`, `drop max-effort`, or unambiguous equivalent. Mid-sustained questions or redirects do not drop it. New session starts fresh.
+Only explicit user signal drops the posture: `back`, `stopp`, `max-effort off`, `stop max-effort`, `drop max-effort`, or any unambiguous equivalent in any language. Mid-sustained questions or redirects do not drop it. New session starts fresh.
 
 ## Preamble — first response after `/max-effort`
+
+Open with the activation marker so it's visible: `[max-effort]` (single) or `[max-effort sustained]`. Then:
 
 1. **Mode** — single or sustained, if not already in the invocation.
 2. **Task ambiguity** — surface in one batch only if genuinely unclear *what* is being asked. No "should I be thorough?" padding.
