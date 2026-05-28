@@ -66,7 +66,7 @@ In sustained mode, prefix the summary with `[max-effort sustained]` so the postu
 
 ## Composition with other skills and modes
 
-- **`afk`.** Stacks but stays distinct. afk owns the interaction model (no questions, low-blast default, audit log to disk); max-effort owns dispatch + orchestrator pass. Under afk the preamble does not run — asking is forbidden — so default to single-task and log as `[AFK] max-effort default → single-task`. Phase 1/2 unchanged.
+- **`afk`.** Stacks but stays distinct: afk owns the interaction model, max-effort owns dispatch + the orchestrator pass. Under afk, Phase 1/2 run unchanged but the preamble is suppressed (asking is forbidden). afk's "Composition with other skills and modes" section is the source of truth for the exact contract — no questions, single-task default, log format — so it isn't restated here.
 - **`superpowers:subagent-driven-development`** (if installed). The how-to for Phase 1 dispatch — load when available for brief-writing and parallel patterns.
 - **Plan mode.** Compatible. Plan first if the work is plan-shaped; max-effort dispatches against approved steps. If dispatch surfaces something that invalidates the plan, exit plan mode and re-plan.
 
