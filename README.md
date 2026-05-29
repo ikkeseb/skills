@@ -9,6 +9,7 @@ A small set of Claude Code skills I use day-to-day. Each one does a single thing
 ## Skills
 
 - **[afk](skills/afk)** — posture for unattended autonomous work: no clarifying questions, low-blast default, audit trail in the conversation itself. Invoke with `/afk` when handing off an overnight run, audit, or any session you won't supervise.
+- **[drawio](skills/drawio)** — generates native `.drawio` (mxGraphModel XML) diagrams that open directly in app.diagrams.net. XML-only by design; no desktop-app export step. Use for flowcharts, architectures, ER/sequence/class diagrams when you want a draw.io file rather than `.excalidraw`.
 - **[excalidraw](skills/excalidraw)** — generates `.excalidraw` diagrams that argue visually, not just label boxes. Use when a diagram needs to teach something, not decorate a slide.
 - **[handoff](skills/handoff)** — compacts the current session into a handoff file plus a paste-ready snippet. Invoke with `/handoff` when switching machine, hitting a context limit, or briefing another agent.
 - **[max-effort](skills/max-effort)** — posture for high-stakes / irreversible work: dispatches subagents widely, then runs an orchestrator-pass that's the load-bearing verification step. Invoke with `/max-effort` (single-task) or `/max-effort sustained` (session).
