@@ -54,21 +54,18 @@ Then wait.
 
 Inline only — no persistent log file. Persistent "thorough on X" markers create a false-certainty cascade across sessions; verification lives in the active turn, not state. For cross-session capture, use `/handoff`.
 
-This lands *after* Claude Code's normal output — so it's a scannable index on top, not a recap. Don't re-narrate the work above; keep every line to one line. Same shape as afk's return summary: a tally line, then status bullets.
+This lands *after* Claude Code's normal output, which already shows the work — so the summary is **not** a recap. It is two things and nothing else: the marker, and what's still open. No tally counts, no `🔍 verified` re-narration of checks already visible above, no `Subagents:` line, no "why I solo'd" justification.
 
-> **[max-effort sustained] · 3 done · 2 open · 4 checks**
+- **Marker.** Lead with `[max-effort]` / `[max-effort sustained]`. In sustained mode it's load-bearing — it's how the posture survives context compression — so it appears on every turn that emits a summary.
+- **Open items only.** One `🚩` line per unresolved conflict, unverified claim, assumption leaned on, or decision waiting on the user — what's left *for them*, not what you did.
+
+> **[max-effort sustained]**
 >
-> - ✅ what was produced — `commit` / file when relevant
-> - 🚩 open: unresolved conflict, unverified claim, or assumption leaned on
-> - 🔍 verified: read X, confirmed Y exports Z
+> - 🚩 prod confirmation pending the 04:30 run (last tar is pre-deploy)
+> - 🚩 stale 208 MB `gravity.db.bak` dominates offsite — delete / exclude?
+> - 🚩 backlog: miniflux restore-drill, NAS log-rotation — what to land first?
 
-Status keys: ✅ done · 🚩 open/flagged · 🔍 verified (an action — "confirmed Y", not a verdict like "code is correct"). In sustained mode, fold `[max-effort sustained]` into the tally line so the posture survives context compression.
-
-**One invariant:** open/flagged is always represented — at least one 🚩 bullet, or an explicit `✅ nothing open, all load-bearing claims checked`. It's the anti-cascade anchor; everything else flexes to the work, this doesn't.
-
-When >1 subagent, add a one-line `Subagents: A (did x), B (did y)` so the user knows what to second-guess.
-
-In sustained mode, prefix the summary with `[max-effort sustained]` so the posture is recoverable after context compression.
+**One invariant:** open/flagged is always represented — at least one `🚩` line, or an explicit `✅ nothing open, all load-bearing claims checked` when there genuinely is nothing. It's the anti-cascade anchor; everything else is cut, this stays.
 
 ## Composition with other skills and modes
 
