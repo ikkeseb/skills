@@ -29,12 +29,12 @@ Then wait.
 
 ## Phase 1 — Broad dispatch
 
-**Default.** Dispatch. Bar is low: if you can name distinct work per agent — different files, perspectives, risk surfaces — dispatch them. "Distinct contribution" is the test, not "maximum independence". Token and time cost are not constraints; the user invoked this posture because they want resources spent.
+**Always dispatch.** Bar is low: if you can name distinct work per agent — different files, perspectives, risk surfaces — dispatch them. "Distinct contribution" is the test, not "maximum independence". Token and time cost are not constraints; the user invoked this posture because they want resources spent.
 
 **Skip dispatch only when:**
 
 - Deterministic single-step task (lint, rename, mechanical refactor) — no judgment to parallelize.
-- Single-file lookup where solo is strictly faster.
+- Atomic lookup — one fact, where a second angle adds nothing.
 - Fully sequential subproblems — B literally cannot start without A's output.
 
 **Brief-content rule.** Subagents start with empty context — pass relevant skills, project context, prior decisions. Common failures: not telling the subagent to load a skill you loaded; duplicate agents on one question; adversarial reviewers when not warranted.
@@ -75,7 +75,7 @@ This lands *after* Claude Code's normal output, which already shows the work —
 
 ## Failure modes worth naming
 
-- **Trivial task invoked under max-effort.** Deterministic work where no dispatch can change the outcome. Say so once in the preamble and ask whether to proceed. Don't silently spawn agents that will produce nothing.
-- **Solo'd a multi-angle task.** Orchestrator-pass against your own work is just verification-before-completion, not max-effort. If you couldn't name a skip-dispatch reason, you should have dispatched.
+- **Solo'd a multi-angle task.** The most common way the posture degrades to a normal turn. About to verify work you did alone and can't name the skip condition that applied? The dispatch didn't happen — stop and dispatch before continuing.
 - **Orchestrator pass collapsing to "subagents agreed, done".** This is the cascade. If you're writing the summary without having read at least one source-of-truth artifact in this turn, the orchestrator pass did not happen — go back and do it.
+- **Trivial task invoked under max-effort.** Deterministic work where no dispatch can change the outcome. Say so once in the preamble and ask whether to proceed. Don't silently spawn agents that will produce nothing.
 - **Sustained mode quietly persisting after the high-stakes work is done.** If the user moves to small unrelated tasks, surface once: "still in sustained — drop?" Don't dispatch on micro-tasks just because the mode is on.
