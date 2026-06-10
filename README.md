@@ -20,10 +20,11 @@ Each skill folder contains its `SKILL.md`. A few add their own README for instal
 
 ## Install
 
-Install the whole bundle as a plugin:
+Install the whole bundle as a plugin — add the repo as a marketplace, then install:
 
 ```bash
-/plugin install ikkeseb/skills
+/plugin marketplace add ikkeseb/skills
+/plugin install ikkeseb-skills@ikkeseb
 ```
 
 Or clone and symlink individual skills:

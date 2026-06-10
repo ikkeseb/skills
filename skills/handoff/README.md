@@ -9,7 +9,8 @@ Saves a markdown file to `~/.claude/handoffs/YYYY-MM-DD-HHmm-<slug>.md` and show
 Part of the [`ikkeseb-skills`](https://github.com/ikkeseb/skills) plugin bundle:
 
 ```bash
-/plugin install ikkeseb/skills
+/plugin marketplace add ikkeseb/skills
+/plugin install ikkeseb-skills@ikkeseb
 ```
 
 Or symlink just this skill from your own clone of the bundle:

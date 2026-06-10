@@ -1,0 +1,13 @@
+{
+  "name": "ikkeseb",
+  "owner": {
+    "name": "Sebastian de la Nuez"
+  },
+  "plugins": [
+    {
+      "name": "ikkeseb-skills",
+      "source": "./",
+      "description": "A small bundle of Claude Code skills for day-to-day work."
+    }
+  ]
+}

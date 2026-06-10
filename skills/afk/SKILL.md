@@ -36,7 +36,7 @@ Decisions are made and logged, not deferred. Calibrate by blast radius:
 
 - **Trivial** (naming, equivalent options): take it, log briefly.
 - **Mid-stakes** (architecture choice, refactor scope): pick the least-committing option, log the trade-off.
-- **High-blast + genuinely uncertain**: STOP. Log `[AFK BLOCKED] <what> — needs Seb on <X>`. Move to the next independent task if one exists; otherwise wait.
+- **High-blast + genuinely uncertain**: STOP. Log `[AFK BLOCKED] <what> — needs the user on <X>`. Move to the next independent task if one exists; otherwise wait.
 
 ### Blast radius — principle, not exhaustive list
 
@@ -61,7 +61,7 @@ Without live feedback, sycophancy creeps in. Counter-pressure: write `"uncertain
 
 Updates flow naturally in the conversation — what was done, what's running, what surfaced. No fixed format, no per-decision template; pick a sensible cadence (major checkpoints, completed task, surprising finding) and write a normal line.
 
-One exception: when stopped because of blast-radius rules + genuine uncertainty, use the structured marker `[AFK BLOCKED] <what> — needs Seb on <X>` so it's scannable if Seb pokes in from mobile.
+One exception: when stopped because of blast-radius rules + genuine uncertainty, use the structured marker `[AFK BLOCKED] <what> — needs the user on <X>` so it's scannable if the user pokes in from mobile.
 
 The conversation IS the audit trail. No separate log file written.
 
