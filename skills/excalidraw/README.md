@@ -13,7 +13,8 @@ Based on [coleam00/excalidraw-diagram-skill](https://github.com/coleam00/excalid
 Part of the [`ikkeseb-skills`](https://github.com/ikkeseb/skills) plugin bundle:
 
 ```bash
-/plugin install ikkeseb/skills
+/plugin marketplace add ikkeseb/skills
+/plugin install ikkeseb-skills@ikkeseb
 ```
 
 Or symlink just this skill from your own clone of the bundle:

@@ -1,19 +1,10 @@
 {
   "name": "ikkeseb-skills",
-  "description": "A small bundle of Claude Code skills: afk, drawio, excalidraw, handoff, max-effort, pretty-pdf, verify-claims.",
-  "version": "0.2.0",
+  "description": "A small bundle of Claude Code skills for day-to-day work.",
+  "version": "0.2.1",
   "author": {
     "name": "Sebastian de la Nuez"
   },
   "repository": "https://github.com/ikkeseb/skills",
-  "license": "MIT",
-  "skills": [
-    "./skills/afk",
-    "./skills/drawio",
-    "./skills/excalidraw",
-    "./skills/handoff",
-    "./skills/max-effort",
-    "./skills/pretty-pdf",
-    "./skills/verify-claims"
-  ]
+  "license": "MIT"
 }

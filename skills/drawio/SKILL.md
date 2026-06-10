@@ -11,7 +11,7 @@ Produce a native `.drawio` file (mxGraphModel XML) that opens directly in [app.d
 
 ## Steps
 
-1. **Fetch the reference first** (WebFetch) — it carries the reasoning budget, rigid grid, styles, edge routing, swimlanes, layers, and dark mode, so you don't re-derive mechanics from memory: `https://raw.githubusercontent.com/jgraph/drawio-mcp/main/shared/xml-reference.md`
+1. **Fetch the reference first** (WebFetch) — it carries the reasoning budget, rigid grid, styles, edge routing, swimlanes, layers, and dark mode, so you don't re-derive mechanics from memory (URL pinned to a commit so upstream drift can't silently change the skill): `https://raw.githubusercontent.com/jgraph/drawio-mcp/2e49443f5109590aeebd30bd9ccd2e4c10c9ee44/shared/xml-reference.md`
 2. **Generate** uncompressed mxGraphModel XML (raw XML opens fine — no base64/deflate packing needed).
 3. **Write** it to `<descriptive-name>.drawio` (lowercase-with-hyphens), in the cwd unless told otherwise.
 4. **Report** the absolute path and how to open it: drag the file onto app.diagrams.net, or **File → Open from → Device**.
