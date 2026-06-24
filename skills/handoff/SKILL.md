@@ -11,20 +11,15 @@ Reconstruct mentally: goal, what was tried and why it failed, what's actually tr
 
 For each piece of content: *will the next session waste time, repeat a mistake, or miss the goal without this?* If no, omit.
 
-**A handoff does not replace repo docs.** It's transient — local to one machine, expires in 30 days, doesn't sync. If a convention, gotcha, or decision should outlive this task, update CLAUDE.md or the relevant repo doc *first*; knowledge parked only in a snippet can be lost in transit. The handoff carries in-flight state, not the lasting record.
+**A handoff does not replace repo docs.** It's transient — local to one machine, doesn't sync. If a convention, gotcha, or decision should outlive this task, update CLAUDE.md or the relevant repo docs *first*; knowledge parked only in a snippet can be lost in transit. The handoff carries in-flight state, not the lasting record.
 
 Save to `$HOME/.claude/handoffs/YYYY-MM-DD-HHmm-<slug>.md` (slug from goal, kebab-case). Create dir if missing. Delete `*.md` older than 30 days in that dir.
 
-Reply: `Saved to <path>. Snip below for cross-context paste:` then a **four**-backtick `markdown` fenced block with the same content as the file. (Four-tick outer fence so 3-tick blocks inside render when pasted.)
+Reply: `Saved to <path>. Snip below for cross-context paste:` then a **four**-backtick `markdown` fenced block with the same content as the file.
 
 **Content:**
 - Required: `# Handoff: [task]` title; disclaimer blockquote (verbatim below)
 - Almost always: Goal, Next
 - Opt-in: Failed Approaches, Key Decisions, Code Context, Current State, Warnings, Setup
 
-> Handoff written from session memory. Verify anything load-bearing before acting.
-
-## Design invariants
-
-- **No resume-side mechanism.** No `/handoff:resume`, no auto-detection. The snippet is self-describing — the next session reads it as context and continues.
-- **Single mode.** No `full`/`quick` split. Length is driven by the "earn its place" rule, not a flag.
+> Handoff written from session memory. Verify load-bearing details before acting.
