@@ -26,7 +26,7 @@ ln -s ~/skills/skills/handoff ~/.claude/skills/handoff
 /handoff
 ```
 
-Claude reconstructs the session, writes the file, and shows the same content as a snippet in a 4-backtick markdown block. For same-machine pickup, point the next session at the saved path. For cross-context use, paste the snippet and say "continue from this".
+Claude reconstructs the session, writes the file, and shows the same content as a snippet in a 4-backtick markdown block. For same-machine pickup, point the next session at the saved path. For cross-context use, paste the snippet and tell the session to continue from it — e.g. open with `handover: <snip>`. (Leading with the literal word "handoff" can re-trigger this skill on paste.)
 
 ## Snippet structure
 
