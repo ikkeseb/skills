@@ -134,6 +134,10 @@ Rules of thumb the table can't hold:
 Anti-regression rules ("don't do X, it broke Y") are the highest-value, lowest-token
 content in the file — they exist because the agent *will* repeat the mistake without them.
 
+- **Rules capture decisions, not current state.** A guardrail records a *rejected
+  alternative + why*, or a true invariant. A bare current-state fact ("box A is blue") is
+  not one — the code already says it, and it rots the moment the value changes, then
+  silently fights the change. Leave it at its source of truth; don't copy it into a rule.
 - **Never silently drop one.** Every "don't do X" line in the original must reappear in
   the output — moved, not deleted. No home found → keep it static and flag it.
 - **A guardrail moves *with* its domain** — into that domain's skill.
