@@ -22,4 +22,4 @@ Reply: `Saved to <path>. Snip below for cross-context paste:` then a **four**-ba
 - Almost always: Goal, Next
 - Opt-in: Failed Approaches, Key Decisions, Code Context, Current State, Warnings, Setup
 
-> Handoff written from session memory. Verify load-bearing details before acting.
+> Handoff written from session memory.
