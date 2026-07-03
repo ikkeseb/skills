@@ -35,3 +35,32 @@ Both `id="0"` and `id="1"` are mandatory — a missing layer renders blank. Diag
 - Escape `&amp;` `&lt;` `&gt;` `&quot;` in attribute values.
 - Unique `id` on every `mxCell`.
 - Every edge cell needs a child `<mxGeometry relative="1" as="geometry"/>` — a self-closing edge renders nothing.
+
+## Label placement on edges (common silent defect)
+
+Two labelled edges leaving the same node (e.g. Yes/No off a decision) default to mid-edge
+labels that can stack and collide. Anchor each label along its edge instead: set `x` on the
+**edge's own** `mxGeometry` (`relative="1"`), where `x` runs `-1` (at source) → `0` (middle)
+→ `1` (at target) — e.g. `<mxGeometry relative="1" x="-0.8" as="geometry"/>` pins the label
+near the source node. Add `labelBackgroundColor=#ffffff;` to the edge style so labels stay
+legible where they cross lines.
+
+## Visual verification (optional — catches what XML review can't)
+
+The well-formedness checks above are the cheap tier (no browser). Routing and label defects,
+though, never show up in the XML — only in the render — and rendering costs a Chromium
+cold-start, so reach for it on complex or edge-label-heavy diagrams, not every file. When
+Playwright + Chromium are available, render with the official viewer (same engine as
+app.diagrams.net):
+
+- Build an HTML page with
+  `<div class="mxgraph" data-mxgraph='{"xml":"<escaped-xml>","page":N,"resize":true,"nav":false}'></div>`
+  and `<script src="https://viewer.diagrams.net/js/viewer-static.min.js"></script>`. Escape the
+  XML for a JSON string inside a single-quoted attribute (double quotes and single quotes especially).
+- Load it via Playwright `page.setContent(html, {waitUntil: 'networkidle'})` so the CDN script
+  loads, wait for `.mxgraph svg`, screenshot **that svg element**, then LOOK at the PNG.
+- Gotchas: don't give the div `display:inline-block` (zero-width container → viewer renders
+  nothing); a transparent body + `omitBackground` yields a transparent PNG; `deviceScaleFactor`
+  sets the export resolution. The viewer JS loads from the CDN at runtime — pin a version (or
+  vendor the file / add Subresource Integrity) if you need reproducibility, offline runs, or
+  supply-chain safety.
