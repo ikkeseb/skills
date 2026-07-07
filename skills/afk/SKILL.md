@@ -1,6 +1,6 @@
 ---
 name: afk
-description: Posture skill for unattended autonomous work. Invoke ONLY when the user types the literal `/afk` command — a described intention to leave is not a trigger; only the command is. Sets a session posture (no clarifying questions, low-blast-radius default, audit-trail logging) that persists until the user signals they're back in any phrasing — "back", "I'm back", "jeg er tilbake", "ikke afk lenger", "stopp", "afk off".
+description: Posture skill for unattended autonomous work. Invoke ONLY when the user types the literal `/afk` command — a described intention to leave is not a trigger; only the command is. Sets a session posture (no clarifying questions, low-blast-radius default, audit-trail logging) that persists until an explicit return signal from the user.
 ---
 
 # afk
@@ -11,7 +11,7 @@ AFK is **not** "move fast". AFK is "work autonomously and leave a clean audit tr
 
 ## Off-signal
 
-Only an explicit user signal drops AFK: `back`, `I'm back`, `jeg er tilbake`, `ikke afk lenger`, `stopp`, `afk off`, `drop AFK`, or any unambiguous equivalent in any language. Mid-AFK interactive input (questions, redirects, corrections) does NOT drop the posture — the user may be poking in from mobile. Answer briefly, stay in AFK. A new session starts fresh; nothing persists.
+Only an explicit user signal drops AFK: `back`, `afk off`, or any unambiguous return/stop signal in any language. Mid-AFK interactive input (questions, redirects, corrections) does NOT drop the posture — the user may be poking in from mobile. Answer briefly, stay in AFK. A new session starts fresh; nothing persists.
 
 ## Preamble — first response after `/afk`
 
@@ -22,7 +22,7 @@ Open with `[afk mode engaged]` so activation is visible, then two steps, then wa
 - *Subagent-driven, moderate spend* — Claude orchestrates, prefer fewer larger subagents. Reduces context bloat without multiplying tokens hard.
 - *Subagent-driven, unconstrained* — parallelize aggressively, big jobs in own contexts.
 
-Bake token concern into this question — don't ask separately. Don't assume Max plan; Pro users will pick moderate or single-agent.
+Bake token concern into this question — don't ask separately.
 
 **Step 2 — Task-specific clarifications.** Surface any genuine ambiguity about the requested work. Front-load all of it in one batch.
 
@@ -46,12 +46,7 @@ Decisions are made and logged, not deferred. Calibrate by blast radius:
 
 ### Proactive scope expansion within blast rules
 
-Low-hanging fruit and clearly-desired fixes can be implemented during AFK if:
-- (a) blast-radius rules still hold,
-- (b) the log articulates *why* it was clearly desired with a concrete signal (`"duplicate logic in 3 places, extracted helper"` beats `"looked cleaner"`),
-- (c) if the fix drags into unknown terrain (unfamiliar imports, feature-flag context, unclear side effects), back out and log it as a suggestion instead of implementing.
-
-Separate core-task work from additional fixes in the log — the user should be able to scan "did the core job get done" before reviewing extras.
+Low-hanging fruit can be implemented during AFK when blast-radius rules hold and the log names the concrete signal that made it clearly desired (`"duplicate logic in 3 places, extracted helper"` beats `"looked cleaner"`). If a fix drags into unknown terrain (unfamiliar imports, feature flags, unclear side effects), back out and log it as a suggestion instead. Separate core-task work from extras in the log — the user should be able to scan "did the core job get done" before reviewing the rest.
 
 ### Bias toward uncertainty framing in the log
 
@@ -67,7 +62,7 @@ The conversation IS the audit trail. No separate log file written.
 
 ## Return summary
 
-When AFK is explicitly dropped, lead the reply with one tally line + bulleted index. Same scan-first format as verify-claims:
+When AFK is explicitly dropped, lead the reply with one tally line + bulleted index:
 
 > **3 done · 1 deferred · 1 blocked**
 >
@@ -76,11 +71,12 @@ When AFK is explicitly dropped, lead the reply with one tally line + bulleted in
 > - ⏸ dependency bump deferred — minor vs major is your call
 > - 🛑 blocked: prod deploy — needs your AWS creds
 
-Status keys: ✅ done · ⏸ deferred · 🛑 blocked. One bullet per item, plain prose, no nested paragraphs — the inline updates above already have the detail. This is the index, not the recap.
+Status keys: ✅ done · ⏸ deferred · 🛑 blocked. One bullet per item, plain prose, no nested paragraphs — this is the index, not the recap; the inline updates carry the detail.
 
 ## Composition with other skills and modes
 
-- **`max-effort`**: stacks. AFK owns the interaction model; max-effort owns dispatch + orchestrator pass. Under AFK the max-effort preamble does not run — asking is forbidden — so default to single-task and log it as `[AFK] max-effort default → single-task`. max-effort's Phase 1/2 are unchanged. This bullet is the source of truth for the afk×max-effort contract — max-effort points here rather than restating it.
+- **`max-effort`**: stacks. AFK owns the interaction model — the max-effort preamble does not run (asking is forbidden), so default to single-task and log it as `[AFK] max-effort default → single-task`. The adversarial pass itself runs unchanged; AFK's blast-radius rules still gate what it may touch.
+- **`full-send`**: stacks. The subagent budget picked in the AFK preamble is the spend authority — full-send fans out within it, never past it.
 - **Plan mode / `EnterPlanMode`**: NEVER under AFK — requires user approval to exit, would deadlock. Write the plan inline in the log and proceed (if low-blast).
 - **Long blocking brainstorming**: NEVER under AFK. Answer the questions brainstorming would have asked in the log, proceed with best judgment.
 - **Verification before "done"**: not relaxed by AFK. Before logging anything as "done", "fixed", "passing", or equivalent, run the verification command (test/build/typecheck/repro) and include its output in the log. No bare claims. This stands regardless of whether the user has a separate verification skill installed.
@@ -92,5 +88,4 @@ Acknowledge briefly, continue the task. Don't pivot to address what the hook fla
 ## Failure modes worth naming
 
 - **Test failures mid-AFK**: one retry on an obvious fix (typo, import). If still failing, stop and log. Don't guess deeper — that's where unsupervised AFK runs go off the rails.
-- **Forgetting AFK is on when the user returns**: low-cost. AFK is conservative by design; the failure mode is "more careful than needed", not destructive.
 

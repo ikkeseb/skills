@@ -1,6 +1,6 @@
 ---
 name: max-effort
-description: Posture skill activated by `/max-effort` (single-task) or `/max-effort sustained` (session). Adversarial review of the work in front of you — does it answer the real goal, and would it survive someone trying to break it? Match against the goal, red-team what's irreversible, check load-bearing claims against source-of-truth instead of rubber-stamping. Sustained mode drops when the user says so in any phrasing — "stop max-effort", "max-effort off", "back", "stop".
+description: Posture skill activated by `/max-effort` (single-task) or `/max-effort sustained` (session). Adversarial review of the work in front of you — does it answer the real goal, and would it survive someone trying to break it? Sustained mode persists until an explicit off-signal from the user.
 ---
 
 # max-effort
@@ -16,7 +16,7 @@ Not a "be careful" prompt, and not an engine for producing more work. This skill
 
 ## Off-signal (sustained)
 
-Only explicit user signal drops it: `back`, `stop`, `max-effort off`, `stop max-effort`, `drop max-effort`, or any unambiguous equivalent. Mid-sustained questions or redirects don't drop it. New session starts fresh.
+Only an explicit user signal drops it: `max-effort off`, `stop max-effort`, or any unambiguous stop/return signal in any language. Mid-sustained questions or redirects don't drop it. New session starts fresh.
 
 ## Preamble — first response after `/max-effort`
 
@@ -33,6 +33,11 @@ Always run, in this turn, against the work however it was produced:
 - **Calibrate.** Surface a gap rather than claim coverage you didn't deliver. If you haven't checked one source-of-truth artifact this turn, the pass didn't happen.
 
 Trivial task with nothing load-bearing to check: say so once in the preamble, ask whether to proceed.
+
+## Stacking
+
+- **`full-send`**: full-send owns generation; max-effort owns the adversarial pass on the converged result. Build wide, then tear down — in that order.
+- **`afk`**: the preamble does not run (asking is forbidden under AFK) — default to single-task, log it, and run the pass unchanged within AFK's blast-radius rules.
 
 ## Final summary
 

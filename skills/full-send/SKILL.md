@@ -1,6 +1,6 @@
 ---
 name: full-send
-description: Posture skill activated by `/full-send` (single-task) or `/full-send sustained` (session). Resources are authorized — tokens, time, subagents, agent teams. Go for the best result, not the first acceptable one: fan out across independent work (ideas, approaches, implementation), then converge to one. Workflows are opt-in: authorize the Workflow tool only when the user names it (e.g. `/full-send workflows`). Sustained mode drops when the user says so in any phrasing — "stop full-send", "full-send off", "back", "stop".
+description: Posture skill activated by `/full-send` (single-task) or `/full-send sustained` (session). Resources are authorized — tokens, time, subagents, agent teams. Go for the best result, not the first acceptable one — fan out across independent work, then converge to one. Sustained mode persists until an explicit off-signal from the user.
 ---
 
 # full-send
@@ -18,7 +18,7 @@ Breadth isn't correctness. Resolve conflicts and integrate yourself — never re
 
 ## Off-signal (sustained)
 
-Only explicit user signal drops it: `back`, `stop`, `full-send off`, `stop full-send`, `drop full-send`, or any unambiguous equivalent. Mid-sustained questions or redirects don't drop it. New session starts fresh.
+Only an explicit user signal drops it: `full-send off`, `stop full-send`, or any unambiguous stop/return signal in any language. Mid-sustained questions or redirects don't drop it. New session starts fresh.
 
 ## Preamble — first response after `/full-send`
 
@@ -34,6 +34,11 @@ No fixed procedure — use judgment on how wide to go and how to slice the work.
 - **Workflows stay opt-in.** Agents and teams are the default instrument; reach for the `Workflow` tool only when the user names it (e.g. `/full-send workflows`).
 
 **Skip the fan-out when it can't change the outcome:** deterministic single step (lint, rename), atomic lookup (one fact), or strictly sequential subproblems (B needs A's output first). Say so once instead of spawning agents that produce nothing.
+
+## Stacking
+
+- **`max-effort`**: full-send owns generation (fan out, converge); max-effort owns the adversarial pass on the converged result. Build wide, then tear down — in that order.
+- **`afk`**: the subagent budget picked in the AFK preamble is the spend authority — fan out within it, never past it.
 
 ## Final summary
 

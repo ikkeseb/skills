@@ -36,7 +36,7 @@ Claude reconstructs the session, writes the file, and shows the same content as 
 - Almost always: Goal, Next.
 - Opt-in (judgment call): Failed Approaches, Key Decisions, Code Context, Current State, Warnings, Setup.
 
-The disclaimer is verbatim — primes the next session to verify load-bearing claims against git/code rather than read the handoff as spec.
+The disclaimer is verbatim — it marks the content as reconstructed from session memory, not an authoritative record.
 
 ## TTL
 

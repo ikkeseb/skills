@@ -37,7 +37,7 @@ Classify each claim:
 ## Special cases
 
 - **Session facts** ("I created X", "I ran Y", "the test passed") → verify against this session's tool-call history. ❌ contradicted if the call never happened. This is the most common confabulation mode — don't skip it.
-- **Predictions / estimates** ("this will take 2h", "Y will break under load") → list below the table as `[N/A — predictive]`, not inside it.
+- **Predictions / estimates** ("this will take 2h", "Y will break under load") → list in a short `[N/A — predictive]` block after the retract list, not inside the table.
 - **Tautologies** (path the user just named, file they pointed at) → omit.
 
 ## Output
@@ -60,7 +60,7 @@ Quote claims naturally. Sources should be specific (`file:line`, tool + what was
 
 **3. Retract list** — one section below the table, only ❓ and ❌ rows. Quote the original sentence and say plainly what's wrong or missing. No automatic rewrites — the user decides what to strike or qualify.
 
-Don't add extra headers, preambles, or summary paragraphs. The three parts above are the whole output.
+Don't add extra headers, preambles, or summary paragraphs. The three parts above — plus the `[N/A — predictive]` block when predictions exist — are the whole output.
 
 ## Large targets
 
