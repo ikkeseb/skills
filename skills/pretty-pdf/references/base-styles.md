@@ -5,16 +5,10 @@ for every PDF, then override CSS custom properties to change palette and feel.
 
 ## Font Loading
 
-**Read the document content first, then choose the font.** The default stylesheet loads
-**Inter Tight** as a clean, neutral single-family sans — it's the fallback for "I genuinely
-don't know what this document is yet." For anything where you *do* know the content type and
-tone, override it. A medical summary, a personal letter, and a technical spec should not
-share a typeface.
-
-### Pick by content, not by reflex
-
-Read the document, find the closest content cue, and use that row's exact `@import`. The base
-stylesheet already loads Inter Tight — only the **Default** row needs no `@import` change.
+The default stylesheet loads **Inter Tight** — a clean, neutral single-family sans, the
+fallback for "I don't yet know what this document is." Fit the font to the content (see SKILL.md
+Anti-Convergence Rule): find the closest content cue below and use that row's exact `@import`.
+Only the **Default** row needs no `@import` change.
 
 | Content cue | Feel | Headings | Body | `@import` (append to `fonts.googleapis.com/css2?family=`) |
 |---|---|---|---|---|
@@ -163,11 +157,7 @@ Copy this entire block into every PDF's `<style>` tag, then override variables a
 @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;600&display=swap');
 
 :root {
-  /* --- FONTS ---
-     Default is single-family Inter Tight (clean sans, neutral). For any document
-     where you've read the content and know the tone, OVERRIDE these — see the
-     pairings table above for cue-based picks. --font-serif falls back to Georgia
-     so calling var(--font-serif) without an override gives a system serif. */
+  /* --- FONTS (default Inter Tight; override to fit content — see pairings table above) --- */
   --font-serif: 'Inter Tight', Georgia, serif;
   --font-sans: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'Source Code Pro', 'Courier New', monospace;
@@ -280,8 +270,7 @@ body.edges-chunky {
 @page {
   size: A4;
   margin: 28mm 24mm 32mm 24mm;
-  /* Page background fills the full sheet (including margins), so warm-bg palettes
-     like Terracotta and Copper tint the entire page, not just the content rect. */
+  /* Fills the full sheet incl. margins, so warm-bg palettes tint the whole page. */
   background: var(--color-bg);
 
   @bottom-right {
@@ -294,9 +283,7 @@ body.edges-chunky {
 }
 
 @page :first {
-  /* Cover/first page: suppress the page number. Templates that want extra top
-     breathing room can set a leading h1 margin — page-margin overrides here
-     work but cascade weirdly with the running @bottom-right rule. */
+  /* Cover/first page: suppress the page number. */
   @bottom-right { content: none; }
 }
 
@@ -310,10 +297,7 @@ body {
   line-height: var(--lh-body);
   color: var(--color-text);
   background: var(--color-bg);
-  /* Print typography micro-detail: enable OpenType features that good text fonts
-     ship with — ligatures, kerning, oldstyle figures in running text, contextual
-     alternates. Fonts that don't support a given feature simply ignore it.
-     Requires <html lang="..."> for hyphenation to know the rule set. */
+  /* OpenType niceties (kerning, ligatures, oldstyle figures); hyphens need <html lang>. */
   hyphens: auto;
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "onum" 1;
 }
@@ -426,10 +410,8 @@ hr {
    TABLES
    ============================================ */
 
-/* Table default is SOFT — hairline dividers, subtle header, no zebra stripes.
-   Designed to recede into the page so the data carries the visual weight,
-   not the chrome. For a strong accent-colored header bar (high-emphasis
-   reports, financial dashboards), opt in with class="table-bold". */
+/* Default table is SOFT — hairline dividers, subtle header, no zebra; the data
+   carries the weight. Opt into an accent header bar with class="table-bold". */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -460,9 +442,8 @@ tbody td {
   vertical-align: top;
 }
 
-/* Bold variant — accent-filled header row, use sparingly. Reads as "this
-   table is a primary visual element of the page" — appropriate for a
-   single hero table per document, wrong for every table by default. */
+/* Bold variant — accent-filled header row. Use sparingly: one hero table per
+   document, not every table. */
 table.table-bold thead th {
   background: var(--color-accent);
   color: white;
@@ -551,27 +532,13 @@ pre.code-block {
 }
 
 /* ---- Opening paragraph treatment (raised cap + small-caps lede) ----
-   Apply class="lede" to the FIRST paragraph after a header for a raised-cap
-   opener — large initial in the accent color, small caps on the first line.
-
-   USE SPARINGLY. This is a strong, opinionated typographic gesture that
-   reads as "literary essay opener." On the wrong document — a data sheet,
-   a brief, a clinical summary, anything visual-first — it looks affected
-   rather than designed, and it recurs across AI-generated PDFs to the
-   point of being a tell. Default to NOT using it; reach for it only when
-   the content genuinely calls for a composed literary opener.
-
-   Appropriate for: a formal letter, a personal essay, an editorial-style
-   longform piece where the prose itself is the point.
-
-   Wrong for: data tearsheets, reference cards, anything where a chart or
-   diagram is the hero, anything <4 lines per paragraph, dense lists,
-   short summaries, technical specs, invoices, CVs, most reports.
-
-   Note: this is a RAISED cap (initial sits on the baseline, sized up), not
-   a wrapped dropcap. The classic wrap-around dropcap needs ::first-letter +
-   float: left, which crashes weasyprint 68.x with an assertion in
-   float_layout. See gotchas.md §3. */
+   class="lede" on the FIRST paragraph gives a raised-cap literary opener.
+   USE SPARINGLY — a strong gesture that reads as "essay opener" and is an
+   AI-PDF tell when misapplied. Right for: formal letters, personal essays,
+   editorial longform. Wrong for: data-first docs, dense lists, short
+   summaries, specs, invoices, CVs, most reports.
+   This is a RAISED cap, not a wrapped dropcap — the float dropcap crashes
+   weasyprint 68.x; see gotchas.md §3. */
 
 .lede {
   /* Hanging punctuation if the line starts with a quote (Inter doesn't ship
@@ -722,17 +689,10 @@ pre.code-block {
 }
 
 /* ---- Header bar (accent banner) ----
-   USE SPARINGLY. Loudest chrome element in the system — every document
-   that uses .header-bar looks like every other document that uses it,
-   regardless of palette. Appropriate for: high-emphasis business reports,
-   formal cover pages where a banner is convention. Wrong for: most things.
-
-   Earlier versions used negative margins to bleed to the page edge.
-   That broke whenever @page margins changed (any custom margin, any
-   scale-* variant that adjusted spacing) — a 16mm hairline of white
-   along the top read as a misalignment, not as design. This version
-   lives inside the body margin: predictable, robust, and reads as an
-   intentional block rather than a leaky full-bleed. */
+   USE SPARINGLY — loudest chrome in the system; every .header-bar doc looks
+   alike regardless of palette. Right for high-emphasis reports and banner-
+   convention cover pages, wrong for most things. Kept inside the body margin
+   (not a full-bleed) — negative-margin bleeds break when @page margins change. */
 
 .header-bar {
   background: var(--color-accent);

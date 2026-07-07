@@ -3,8 +3,7 @@ name: pretty-pdf
 description: >
   Create visually polished, professionally designed PDF documents using weasyprint (HTML+CSS → PDF).
   Use whenever creating a NEW PDF from scratch where the output should look designed — reports,
-  letters, summaries, medical documents, personal letters, invoices, proposals, cover letters, recipes,
-  travel itineraries, one-pagers, CVs, or any other document that will be read or shared and benefits
+  letters, invoices, CVs, or any other document that will be read or shared and benefits
   from typographic care. Applies across all domains — work, personal, medical, legal, creative. Also
   use when the source content lives in a docx that should be re-typeset into a polished PDF. Adapt
   the design (typography, color palette, layout density) to match content and context. Do NOT use
@@ -28,20 +27,30 @@ If `import weasyprint` fails, see `references/setup.md` for install instructions
 platform. For batch rendering (multiple PDFs in one session), reuse a `FontConfiguration` —
 see the Weasyprint Technical Notes in `references/base-styles.md`.
 
-## Before You Start
+## Workflow
 
-1. **Read the source content first** — what kind of document is this actually? A clinical
-   summary, a personal letter, a recipe, a quarterly report, a CV? Tone, audience, density,
-   and reading context drive every design choice that follows. **Don't pick fonts or palette
-   before you've read the content** — the design should serve what's being communicated,
-   not be selected upfront from a default.
-2. **Read `references/base-styles.md`** — contains the full CSS system, font pairings keyed
-   to content cues, and color palettes.
-3. **Read `references/templates.md`** — HTML templates for common document types and design
-   guidance.
-4. **Read `references/gotchas.md` when any of these apply:** the document contains long code
-   blocks that will span pages, or the source content is a docx with images. These are empirical
-   traps with tidy fixes — skim it so you don't rediscover them the hard way.
+1. **Read the source content first.** What kind of document is this — clinical summary,
+   personal letter, recipe, quarterly report, CV? Tone, audience, density, and reading context
+   drive every design choice that follows. Don't pick fonts or palette before you've read it.
+2. **Read `references/base-styles.md`** — the full CSS system, font pairings keyed to content
+   cues, and color palettes.
+3. **Read `references/templates.md`** — HTML templates for common document types.
+4. **Read `references/gotchas.md` when it applies:** the source is a docx with images (`§2` —
+   Word crops live in `document.xml`, not the media file; extracting the raw image loses them
+   silently) or the document has long code blocks that will span pages (`§1` — a page footer
+   pulled into a multi-page `<pre>` breaks copy/paste). Empirical traps with tidy fixes.
+5. **Fit fonts + palette + header + scale + edge to the content**, not to a default — see the
+   Anti-Convergence Rule below. Copy the full `<style>` block from `base-styles.md`, then swap
+   the `@import` and CSS variables for your picks. Don't ship defaults unchanged unless they
+   genuinely fit.
+6. Choose a template from `references/templates.md`, or build from scratch.
+7. Write semantic HTML — `<h1>`, `<h2>`, `<p>`, `<table>`, `<blockquote>`, etc. Set
+   `<html lang="...">` so hyphenation works.
+8. Test page breaks with the `.page-break` and `.no-break` utility classes.
+9. **Images:** use absolute paths or base64 data URIs — relative paths don't resolve.
+10. **Save the final PDF to an absolute output path** (the user's Downloads folder, or wherever
+    they specify) via `weasyprint.HTML(...).write_pdf(absolute_path)`. Relative paths resolve
+    from the current working directory, rarely what the user wants.
 
 ## Design Philosophy
 
@@ -89,7 +98,7 @@ Before writing HTML, decide on the design direction based on what's being create
 
 | Context | Palette | Typography feel | Density |
 |---------|---------|-----------------|---------|
-| Business/corporate | Slate, navy, or steel | Clean sans-serif headings, serif body | Medium |
+| Business/corporate | Slate, Ocean, or Ink | Clean sans-serif headings, serif body | Medium |
 | Medical/clinical | Muted teal or warm gray | Clear sans-serif throughout | High — scannable |
 | Personal letter | Warm earthy tones or soft palette | Elegant serif throughout | Low — spacious |
 | Creative/portfolio | Bold accent, dark bg option | Distinctive display font | Varies |
@@ -101,29 +110,6 @@ Before writing HTML, decide on the design direction based on what's being create
 These are starting points, not rules. The CSS system in `base-styles.md` uses CSS custom properties
 so you can swap the entire palette by changing 6 variables.
 
-## Implementation Checklist
-
-1. **Read the source content first.** What document type? Who reads it? What tone? Until you've
-   answered this, you don't know what to design.
-2. **Pick fonts + palette + header to match the content** — use the cue tables in
-   `references/base-styles.md` (Font Loading) and the palette guidance. Defaults are the
-   fallback for when content genuinely fits a clean sans — not a reflex that skips reading it.
-3. Read `references/base-styles.md` — copy the full `<style>` block as your starting point.
-4. **Customize the design** — replace the `@import` URL if you picked a non-default pairing,
-   swap CSS variables for palette, set body class for scale/edge if appropriate. Don't ship
-   defaults unchanged unless they genuinely fit.
-5. Choose the right template from `references/templates.md` or build from scratch.
-6. Write semantic HTML — `<h1>`, `<h2>`, `<p>`, `<table>`, `<blockquote>`, etc. Set
-   `<html lang="...">` so hyphenation works.
-7. Test page breaks — use `.page-break` and `.no-break` utility classes.
-8. **Images:** use absolute paths or base64-encoded data URIs. **If the source is a docx with
-   images, read `references/gotchas.md §2` first** — Word crops live in `document.xml`, not in
-   the media file, and extracting the raw image loses them silently.
-9. **Long code blocks:** if a `<pre>` will span page breaks, read `references/gotchas.md §1`.
-   Shipping multi-page code with a page footer will break copy/paste for users. The fix is
-   either (a) shrink the code to fit on one page, or (b) use a named `@page` to suppress the
-   footer on code pages. Do not reflex-split into a sidecar file.
-10. Save the final PDF to an absolute local path (e.g., the user's Downloads folder, or wherever
-    they specify). Use `weasyprint.HTML(...).write_pdf(absolute_path)`. Relative paths are resolved
-    from the current working directory, which is rarely what the user wants — be explicit.
-
+**Also weigh the reader relationship:** a known reader (doctor, colleague, friend) lets the
+document assume shared context and lean personal; an unknown reader (application, public report)
+wants more formality and self-explanation.

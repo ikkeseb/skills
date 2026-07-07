@@ -3,15 +3,9 @@
 HTML templates for common document types. Each template uses the base stylesheet from
 `base-styles.md` — copy that `<style>` block first, then drop in the relevant template HTML.
 
-**Each template below shows ONE layout choice.** That's a starting point, not a default to
-always pick. To fit the content (see SKILL.md "Anti-Convergence Rule"), remember you can swap among the
-six header components (`.header-typeset` is the default, then `.header-minimal`,
-`.header-side-rule`, `.header-centered`, `.header-large-numeral`, `.header-bar`), the three
-type scales (default Editorial, `body.scale-compact`, `body.scale-generous`), and the three
-edge weights (default Standard, `body.edges-hairline`, `body.edges-chunky`) — not just palette
-and font. A medical doc rendered with `.header-side-rule` + `.scale-compact` + `.edges-hairline`
-should look like a different document family from a personal letter in `.header-centered` +
-`.scale-generous` + standard edges.
+**Each template below shows ONE layout choice** — a starting point, not a default. Fit each to
+the content across all five axes (font, palette, header, scale, edge), not just palette and
+font — see SKILL.md "Anti-Convergence Rule".
 
 ---
 
@@ -25,7 +19,6 @@ should look like a different document family from a personal letter in `.header-
 6. [One-Pager / Summary Brief](#one-pager)
 7. [Personal Document (travel log, journal, notes)](#personal)
 8. [Technical Document / Specification](#technical)
-9. [Design Guidance by Context](#design-guidance)
 
 ---
 
@@ -352,7 +345,7 @@ travel logs, journals, anything where the opening paragraph isn't doing literary
 <a id="technical"></a>
 ## 8. Technical Document / Specification
 
-Palette suggestion: **Slate** or **Steel**. Keep it functional — code blocks and tables will
+Palette suggestion: **Slate** or **Ink**. Keep it functional — code blocks and tables will
 dominate. For code-heavy documents, swap the mono `@import` to **JetBrains Mono** or **IBM Plex
 Mono** (see `base-styles.md` → Font Loading) for better code legibility than Source Code Pro.
 
@@ -390,42 +383,3 @@ function example() {
   <p><strong>Note:</strong> Important caveat or dependency.</p>
 </div>
 ```
-
----
-
-<a id="design-guidance"></a>
-## 9. Design Guidance by Context
-
-When choosing how to design a document, think about three contextual dimensions, then five
-formal axes (the axes from the Anti-Convergence Rule in SKILL.md).
-
-### Contextual dimensions
-
-**1. Formality**
-- High formality (legal, medical, corporate) → conservative palette, traditional serif, more structure
-- Low formality (personal, creative, notes) → warmer palette, expressive fonts, more whitespace
-
-**2. Density**
-- High density (invoices, specs, reference docs) → smaller font, tighter spacing, tables
-  → reach for `body.scale-compact`
-- Low density (letters, personal docs, summaries) → larger font, generous margins, fewer elements
-  → reach for `body.scale-generous`
-
-**3. Reader relationship**
-- Known reader (doctor, colleague, friend) → can be more personal, assume context
-- Unknown reader (application, public report) → more formal, more self-explanatory
-
-### Formal axes — fit these to the content
-
-| Axis | What it controls | Default (fallback) | Alternatives |
-|------|------------------|---------|--------------|
-| Font pairing | Glyph character | Inter Tight (clean sans, single-family) | Cormorant / EB Garamond (literary), DM Sans (clinical), Fraunces + Work Sans (editorial), Space Grotesk + IBM Plex (tech) — full table in `base-styles.md` |
-| Palette | Color temperature, chrome tone | Slate | 7 other palettes (each overrides 5-7 vars) |
-| Header | Document opener | `.header-typeset` (pure-type, quiet) | `.header-minimal`, `.header-side-rule`, `.header-centered`, `.header-large-numeral` (sparingly), `.header-bar` (sparingly, loudest) |
-| Type scale | Density and rhythm | Editorial | `body.scale-compact`, `body.scale-generous` |
-| Edge weight | Borders, rules, radii | Standard | `body.edges-hairline`, `body.edges-chunky` |
-
-**Defaults are fallbacks, not reflexes.** Inter Tight is for "I genuinely don't know what this
-is" — a real answer when content is generic, wrong when it's a dodge for not reading. When you
-DO know the tone, let it drive the font + palette + header. A travel journal should not look
-like a quarterly business review — because the content differs, not to fill a quota.

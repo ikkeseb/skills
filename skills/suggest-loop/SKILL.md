@@ -1,25 +1,22 @@
 ---
 name: suggest-loop
-description: Propose ready-to-paste `/loop` prompts for a target repo. Reads the repo's documented verification gate and emits 2–3 inline `/loop` suggestions with stop conditions baked in, each marking which half stays a human taste-gate. Use when the user asks "what could I loop here", wants an autonomous fix/babysit loop but can't author the prompt themselves, or asks how `/loop` applies to this repo. Do NOT use to actually run a loop — that's the `/loop` command itself; this only writes the prompt text. Refuse (and say why) when the repo has no documented machine gate, or when the work is taste/ear-gated.
+description: Propose ready-to-paste `/loop` prompts for a target repo. Reads the repo's documented verification gate and emits 2–3 inline `/loop` suggestions with stop conditions baked in. Use when the user asks "what could I loop here", wants an autonomous fix/babysit loop but can't author the prompt themselves, or asks how `/loop` applies to this repo. Do NOT use to actually run a loop — that's the `/loop` command itself; this only writes the prompt text. Refuse (and say why) when the repo has no documented machine gate, or when the work is taste/ear-gated.
 ---
 
 # suggest-loop
 
-Generation exercise, not template fill. The job: turn a repo's verification
-signal into `/loop` prompts a "vibe coder" can paste as-is — someone who can't
-author a precise loop prompt, so the repo proposes it for them and they just
-approve or tweak. The failure mode is a confident-sounding loop with no
-measurable "done", or one proposed for work that can only be judged by ear.
+Generation exercise, not template fill. Turn a repo's verification signal into
+`/loop` prompts a "vibe coder" can paste as-is — someone who can't author a
+precise loop prompt, so the repo proposes it and they just approve or tweak. The
+failure mode: a confident-sounding loop with no measurable "done".
 
 ## Read this first — the load-bearing constraint
 
 **Do not reason about `/loop` from memory.** `/loop`, the Monitor tool, and
-`/goal` all post-date the model's training cutoff; a session reconstructing them
-from memory gets them wrong (that's why this skill exists). Read
-[`references/loop-mechanics.md`](references/loop-mechanics.md) before emitting
-any suggestion — it carries the datestamped, verified mechanics and a
-re-verify-against-docs pointer. Every claim you make about *how* `/loop` behaves
-comes from there, not from priors.
+`/goal` post-date the model's training cutoff; a session reconstructing them from
+memory gets them wrong (that's why this skill exists). Read
+[`references/loop-mechanics.md`](references/loop-mechanics.md) before emitting any
+suggestion — every claim about *how* `/loop` behaves comes from there, not priors.
 
 ## Recipe
 
@@ -37,10 +34,13 @@ comes from there, not from priors.
    primary. Reach for `.claude/loop.md` only for a loop run *often*; reach for
    `/goal` only when "done" is judgment-heavy (see the mechanics file). Default
    to a plain inline `/loop`.
-4. **Mark the human/taste-gate explicitly.** Name the seam: what the loop proves
-   by machine, and what stays the user's call ("the by-ear check stays yours").
-   Most repos are a split — scope the loop to the machine-measurable half and
-   hand the taste half back. This line is the point, not a footnote.
+4. **Mark the human/taste-gate explicitly.** Autonomy follows the oracle: where
+   correctness is a fact about the world (an exit code, a hash, a measured peak)
+   the loop checks itself; where "correct" lives in the user's taste (does it
+   *sound* good, does the UI *feel* right) a human gates every step. Most repos
+   are a split — scope the loop to the machine-measurable half and hand the taste
+   half back ("the by-ear check stays yours"). Naming that seam is the point, not
+   a footnote.
 
 ## Anti-patterns — refuse these, don't dress them up
 
@@ -59,9 +59,8 @@ that runs to nowhere.
 
 ## Output shape
 
-Per loop, a short block: the **paste-ready `/loop` line**, the **hard signal**
-it terminates on, and the **taste-gate line**. Keep it scannable — the user is
-approving prompts, not reading an essay.
+Per loop, a short scannable block: the **paste-ready `/loop` line**, the **hard
+signal** it terminates on, and the **taste-gate line**.
 
 > **Loop 1 — keep the suite green (the clean first loop)**
 > ```
@@ -72,14 +71,6 @@ approving prompts, not reading an essay.
 > - **Stays yours:** whether the result *feels* right — animation smoothness,
 >   copy tone, visual polish — the loop never touches those.
 
-A repo's `CLAUDE.md` usually documents both halves: a **machine gate** (an exit
-code, an emptying queue) that's loopable, and a **taste/ear gate** (does it
-*sound* / *feel* / *read* right) that stays the human's. Surface both — scope the
-loop to the machine half and hand the taste half back. A second loop on the same
-repo might backfill a deterministic regression-test suite (queue-empties), and a
-*refused* suggestion ("make the animation feel smooth" — eye-gated) is itself a
-valid, useful output: it tells the user exactly what *can't* be automated here.
-
 **A queue-loop must carry its own queue.** Derive the work-list *inside the loop
 line* from source files ("build the list of X from `a.ts`, then drain it"), not
 from a `STATUS`/backlog doc that may be stale or a list the user never gave. If
@@ -88,7 +79,5 @@ to the refusals.
 
 ## Scope
 
-This skill writes prompt text; it does not run anything. Suggesting 2–3 good
-loops and naming what *can't* be looped is the whole job — resist proposing a
-loop for every corner of the repo. If nothing in the repo is cleanly loopable,
-the honest output is "no good loop here yet, and here's why."
+This skill writes prompt text; it does not run anything. Suggest 2–3 good loops,
+name what *can't* be looped, and stop — don't force a loop for every corner.

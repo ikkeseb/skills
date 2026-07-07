@@ -1,6 +1,6 @@
 ---
 name: excalidraw
-description: Generate `.excalidraw` JSON diagrams for relationships, flows, architectures, or system structure. Invoke ONLY when the user explicitly asks for a diagram or types `/excalidraw` — do NOT auto-invoke from soft cues like "show me" or "walk me through". Do NOT use for numerical charts (use a charting tool), UI mockups (use frontend-design), or text documentation.
+description: Generate `.excalidraw` JSON diagrams for relationships, flows, architectures, or system structure. Emits hand-drawn-style `.excalidraw` JSON — for editable draw.io/diagrams.net files use the drawio skill instead. Invoke ONLY when the user explicitly asks for a diagram or types `/excalidraw` — do NOT auto-invoke from soft cues like "show me" or "walk me through". Do NOT use for numerical charts (use a charting tool), UI mockups, or text documentation.
 ---
 
 # Excalidraw Diagram Creator
@@ -11,7 +11,7 @@ Generate `.excalidraw` JSON files that **argue visually**, not just display info
 
 This skill works in both Claude Code and Claude Chat.
 
-**Claude Code** (`~/.claude/skills/excalidraw/` or `<project>/.claude/skills/excalidraw/`): Generate the `.excalidraw` JSON and deliver it. Don't auto-render — get the diagram right by following the methodology. After delivery, offer two opt-in follow-ups: render to PNG (`references/render_excalidraw.py`) and open in Excalidraw via clipboard (`references/open_in_excalidraw.py`).
+**Claude Code** (`~/.claude/skills/excalidraw/` or `<project>/.claude/skills/excalidraw/`): Generate the `.excalidraw` JSON and deliver it, then offer opt-in follow-ups (see Design Process Step 7).
 
 **Claude Chat** (`/mnt/skills/user/excalidraw/`): Create the `.excalidraw` JSON file and save to `/mnt/user-data/outputs/`. The user opens it in [excalidraw.com](https://excalidraw.com) or the Excalidraw desktop app. No render loop — get it right by following the methodology carefully.
 
@@ -41,14 +41,11 @@ Use abstract shapes when explaining mental models, the audience doesn't need tec
 ### Comprehensive / Technical
 Use concrete examples when diagramming a real system, the diagram will teach or explain, the audience needs to understand what things actually look like, or you're showing how technologies integrate.
 
-**For technical diagrams, include evidence artifacts** — real code snippets, actual JSON payloads, real event/method names from specs. See the Evidence Artifacts section.
+**For technical diagrams, include evidence artifacts** — real code snippets, actual JSON payloads, real event/method names from specs. Research actual specs, formats, and terminology first. See the Evidence Artifacts section.
 
 ---
 
 ## Design Process
-
-### Step 0: Assess Depth
-Simple/conceptual or comprehensive/technical? If comprehensive — research actual specs, formats, and terminology first.
 
 ### Step 1: Understand Deeply
 For each concept, ask: What does it DO? What relationships exist? What's the core transformation? What would someone need to SEE?
@@ -77,14 +74,10 @@ Mentally trace how the eye moves. There should be a clear visual story.
 Only now create the Excalidraw elements. For large diagrams, build section-by-section (see below).
 
 ### Step 6: Deliver
-Save the `.excalidraw` file and tell the user where it lives. The methodology is the verification — do **not** auto-render. Rendering is an opt-in follow-up the user requests.
+Save the `.excalidraw` file and tell the user where it lives. The methodology is the verification — do **not** auto-render (Chromium cold-start is slow enough to be rude without permission); rendering is an opt-in follow-up the user requests.
 
 ### Step 7: Offer Follow-Ups (Claude Code only)
-After delivery, offer two opt-in actions in a single short prompt:
-- **Render to PNG** — useful for docs, sharing, or visual sanity-check on complex diagrams
-- **Open in Excalidraw** — copy JSON to clipboard, open excalidraw.com for editing
-
-See "After Delivery" below for the exact wording and commands.
+In one short prompt, offer to render a PNG or open the diagram in Excalidraw. See `references/follow-ups.md` for exact wording, commands, and flags. Skip in Claude Chat — the user already has the file via the chat UI.
 
 ---
 
@@ -136,9 +129,11 @@ Default to free-floating text. Add containers only when they serve a purpose.
 
 ## Large Diagram Strategy
 
-For diagrams with ~50+ elements, build section-by-section to stay under output limits and
-preserve layout quality. See `references/large-diagrams.md` for the phased workflow and ID
-namespacing convention.
+For diagrams with ~50+ elements, build section-by-section (one section per edit) to stay
+under output limits and preserve layout quality. Namespace `seed` values by section so IDs
+stay legible — section 1 uses `100xxx`, section 2 `200xxx`, and so on. After all sections
+are built, review the whole for cross-section arrow bindings, spacing balance, and that every
+ID reference points at an existing element.
 
 ---
 
@@ -179,7 +174,7 @@ When labels look clipped by arrows, or arrows pass behind shapes that should sit
 
 **Roughness**: `0` for clean/modern (default), `1` for hand-drawn/informal.
 
-**Stroke width**: `1` thin/elegant, `2` standard (default), `3` bold emphasis (sparingly).
+**Stroke width**: `1` thin/elegant, `2` bold/standard (default), `4` extra bold (sparingly). These are Excalidraw's UI presets.
 
 **Opacity**: Always `100`. Use color, size, and stroke width for hierarchy instead.
 
@@ -221,20 +216,6 @@ Settings: `fontSize: 16`, `fontFamily: 3`, `textAlign: "center"`, `verticalAlign
 ```
 
 See `references/element-templates.md` for copy-paste JSON templates per element type.
-See `references/json-schema.md` for the full schema reference.
-
----
-
-## After Delivery: Opt-In Follow-Ups (Claude Code only)
-
-After saving the `.excalidraw` file in Claude Code, offer two opt-in actions in one short
-prompt: render to PNG, or open in Excalidraw via clipboard. Do **not** auto-render — get
-the diagram right by following the methodology; rendering is opt-in verification, and
-Chromium cold-start (~6–10s) is rude to spend without permission. **Skip in Claude Chat** —
-the user already has the file via the chat UI.
-
-For the exact wording, commands, flags, and first-time setup, see
-`references/follow-ups.md`.
 
 ---
 

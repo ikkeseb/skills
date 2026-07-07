@@ -1,6 +1,6 @@
 ---
 name: drawio
-description: Generate a native `.drawio` (mxGraphModel XML) diagram — flowcharts, architectures, ER/sequence/class diagrams, network topologies, process flows — that opens directly in app.diagrams.net. Invoke ONLY when the user explicitly asks for a draw.io / drawio / `.drawio` diagram or types `/drawio`; do NOT auto-invoke from soft cues like "show me" or "walk me through". For `.excalidraw` use the excalidraw skill; for numerical charts use a charting tool; for UI mockups use frontend-design.
+description: Generate a native `.drawio` (mxGraphModel XML) diagram — flowcharts, architectures, ER/sequence/class diagrams, network topologies, process flows — that opens directly in app.diagrams.net. Invoke ONLY when the user explicitly asks for a draw.io / drawio / `.drawio` diagram or types `/drawio`; do NOT auto-invoke from soft cues like "show me" or "walk me through". For `.excalidraw` use the excalidraw skill; for numerical charts use a charting tool; not for UI mockups.
 ---
 
 # Draw.io Diagram Creator
@@ -15,6 +15,10 @@ Produce a native `.drawio` file (mxGraphModel XML) that opens directly in [app.d
 2. **Generate** uncompressed mxGraphModel XML (raw XML opens fine — no base64/deflate packing needed).
 3. **Write** it to `<descriptive-name>.drawio` (lowercase-with-hyphens), in the cwd unless told otherwise.
 4. **Report** the absolute path and how to open it: drag the file onto app.diagrams.net, or **File → Open from → Device**.
+
+## Design quality
+
+A diagram should argue, not just label boxes — strip the text and the structure alone should still carry the concept. Every real relationship gets an edge; position alone doesn't show a connection, so if A depends on B, draw the line. Build hierarchy through size and whitespace — make the important node bigger and give it room — not through decorative color or borders. And if an edge needs tortured routing (hand-placed waypoints, a curve bent around an obstacle) to reach its target, the layout is wrong, not the edge: move the node so the line runs straight.
 
 ## Required skeleton
 

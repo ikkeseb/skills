@@ -23,8 +23,10 @@ Every template implicitly includes these fields. **Always include them in the ou
 
 For each new element, also generate:
 - `id`: descriptive string (e.g., `"rect_trigger"`, `"arrow_fan_left"`)
-- `seed`: unique integer, namespaced by section (see SKILL.md → Large Diagram Strategy)
-- `versionNonce`: unique integer
+- `seed`: any integer; Excalidraw reassigns on load. Namespace by section (see SKILL.md → Large Diagram Strategy)
+- `versionNonce`: any integer; Excalidraw reassigns on load
+
+`strokeWidth` is `1` (thin), `2` (bold/standard), or `4` (extra bold) — Excalidraw's UI presets.
 
 ---
 
@@ -133,7 +135,7 @@ For each new element, also generate:
 }
 ```
 
-For curved arrows: use 3+ points in the `points` array.
+For curved arrows: use 3+ points in the `points` array. Arrowhead values (both `startArrowhead` and `endArrowhead`): `null`, `"arrow"`, `"bar"`, `"dot"`, `"triangle"`.
 
 ## Diamond (Decision)
 ```json
