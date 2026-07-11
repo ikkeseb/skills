@@ -75,8 +75,7 @@ Status keys: ✅ done · ⏸ deferred · 🛑 blocked. One bullet per item, plai
 
 ## Composition with other skills and modes
 
-- **`max-effort`**: stacks. AFK owns the interaction model — the max-effort preamble does not run (asking is forbidden), so default to single-task and log it as `[AFK] max-effort default → single-task`. The adversarial pass itself runs unchanged; AFK's blast-radius rules still gate what it may touch.
-- **`full-send`**: stacks. The subagent budget picked in the AFK preamble is the spend authority — full-send fans out within it, never past it.
+- **Other posture skills**: stack. AFK owns the interaction model and the spend authority — another posture's preamble does not run (asking is forbidden); it defaults to single-task, logged as `[AFK] <posture> default → single-task`. Its substantive pass runs unchanged within AFK's blast-radius rules, and the budget picked in the AFK preamble caps any fan-out — within it, never past it.
 - **Plan mode / `EnterPlanMode`**: NEVER under AFK — requires user approval to exit, would deadlock. Write the plan inline in the log and proceed (if low-blast).
 - **Long blocking brainstorming**: NEVER under AFK. Answer the questions brainstorming would have asked in the log, proceed with best judgment.
 - **Verification before "done"**: not relaxed by AFK. Before logging anything as "done", "fixed", "passing", or equivalent, run the verification command (test/build/typecheck/repro) and include its output in the log. No bare claims. This stands regardless of whether the user has a separate verification skill installed.

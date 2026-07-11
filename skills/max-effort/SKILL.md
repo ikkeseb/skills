@@ -12,15 +12,9 @@ Not a "be careful" prompt, and not an engine for producing more work. This skill
 ## Modes
 
 - `/max-effort <task>` — single-task, one review round.
-- `/max-effort sustained` — session posture, persists until explicit off-signal.
+- `/max-effort sustained` — session posture. Only an explicit user signal drops it (`max-effort off`, `stop max-effort`, or any unambiguous stop signal in any language); mid-sustained questions or redirects don't. New session starts fresh.
 
-## Off-signal (sustained)
-
-Only an explicit user signal drops it: `max-effort off`, `stop max-effort`, or any unambiguous stop/return signal in any language. Mid-sustained questions or redirects don't drop it. New session starts fresh.
-
-## Preamble — first response after `/max-effort`
-
-Open with the marker: `[max-effort]` (single) or `[max-effort sustained]`. Surface task ambiguity in one batch only if it's genuinely unclear *what* is asked — no "should I be thorough?" padding. Then go.
+Open the first response with the marker `[max-effort]` / `[max-effort sustained]`, batch any genuine ambiguity about *what* is asked once — no "should I be thorough?" padding — then go.
 
 ## The pass
 
@@ -30,17 +24,13 @@ Always run, in this turn, against the work however it was produced:
 - **Break it.** Red-team what's irreversible or externally-visible — spawn skeptics to tear down when the stakes warrant it. Confidence isn't evidence, yours or a subagent's.
 - **Check load-bearing claims against source-of-truth.** Read the cited file, open the URL, run the tests/build/repro, look at the browser — task-specific, the CLAUDE.md verification bar not relaxed.
 - **Resolve conflicts.** Don't paper over disagreement with "both have a point" — navigate it.
-- **Calibrate.** Surface a gap rather than claim coverage you didn't deliver. If you haven't checked one source-of-truth artifact this turn, the pass didn't happen.
+- **Calibrate.** Surface a gap rather than claim coverage you didn't deliver. If you haven't checked one source-of-truth artifact this turn, the pass didn't happen. No persistent log — cross-session "thorough on X" state breeds false certainty.
 
-Trivial task with nothing load-bearing to check: say so once in the preamble, ask whether to proceed.
+Trivial task with nothing load-bearing to check: say so once up front, ask whether to proceed.
 
-## Stacking
+## With other active postures
 
-- **`full-send`**: full-send owns generation; max-effort owns the adversarial pass on the converged result. Build wide, then tear down — in that order.
-- **`afk`**: the preamble does not run (asking is forbidden under AFK) — default to single-task, log it, and run the pass unchanged within AFK's blast-radius rules.
+max-effort owns the adversarial pass on finished work; it defers generation entirely.
 
-## Final summary
-
-Inline, marker-led — no persistent log (cross-session "thorough on X" state breeds false certainty). Not a recap of the work above: just the marker and what's still open.
-
-In sustained mode the marker is load-bearing — it's how the posture survives context compression, so it appears on every turn that emits a summary. After it, **open items only**: one `🚩` line per unresolved conflict, unverified claim, assumption leaned on, or decision waiting on you. Always at least one `🚩`, or `✅ nothing open` when there genuinely is nothing — the anti-cascade anchor.
+- **Generation**: if an active posture owns producing the work, let it converge first — tear down the converged result, not the drafts.
+- **Unattended sessions**: never ask — default to single-task, log it, and run the pass unchanged within the session's blast-radius rules.

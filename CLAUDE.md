@@ -20,6 +20,7 @@ Skills are auto-discovered from `skills/` at install time — `.claude-plugin/pl
 ## Conventions
 
 - The `description:` field in `SKILL.md` is the trigger surface — write it as a precise activation rule (when to use, when NOT to use), not a marketing blurb. Existing skills are the reference style.
+- Skills are self-contained: a `SKILL.md` body never references another skill by name. Posture skills coordinate through capability-based ownership declarations instead — each states what it owns and what it defers (breadth, instrument, teardown, spend, interaction) so any combination resolves without the skills knowing about each other. Sole exception: a `description:` field may name a sibling skill purely for trigger disambiguation (e.g. drawio vs excalidraw) — such pointers degrade harmlessly when the sibling isn't installed.
 - No build, lint, or test step. Content is markdown + YAML.
 - All repository content — every `SKILL.md`, reference file, and this `CLAUDE.md` — is written in English, whatever language a session converses in. (A skill's *runtime output* follows the session; the committed artifacts stay English.)
 - Skills publish publicly via the marketplace, so keep content free of PII and sensitive detail, don't personalize instructions (no personal names), and don't hard-wire a skill's logic to a specific private repo. Illustrative example flavor is fine — the bar is "no PII / nothing sensitive," not "never name a project." De-personalize before committing.

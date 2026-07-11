@@ -14,15 +14,9 @@ Breadth isn't correctness. Resolve conflicts and integrate yourself — never re
 ## Modes
 
 - `/full-send <task>` — single-task, one wide round.
-- `/full-send sustained` — session posture, persists until explicit off-signal.
+- `/full-send sustained` — session posture. Only an explicit user signal drops it (`full-send off`, `stop full-send`, or any unambiguous stop signal in any language); mid-sustained questions or redirects don't. New session starts fresh.
 
-## Off-signal (sustained)
-
-Only an explicit user signal drops it: `full-send off`, `stop full-send`, or any unambiguous stop/return signal in any language. Mid-sustained questions or redirects don't drop it. New session starts fresh.
-
-## Preamble — first response after `/full-send`
-
-Open with the marker: `[full-send]` (single) or `[full-send sustained]`. Surface task ambiguity in one batch only if it's genuinely unclear *what* is asked — no "should I go wide?" padding. Then go.
+Open the first response with the marker `[full-send]` / `[full-send sustained]`, batch any genuine ambiguity about *what* is asked once — no "should I go wide?" padding — then go.
 
 ## Judgment, not phases
 
@@ -35,11 +29,10 @@ No fixed procedure — use judgment on how wide to go and how to slice the work.
 
 **Skip the fan-out when it can't change the outcome:** deterministic single step (lint, rename), atomic lookup (one fact), or strictly sequential subproblems (B needs A's output first). Say so once instead of spawning agents that produce nothing.
 
-## Stacking
+## With other active postures
 
-- **`max-effort`**: full-send owns generation (fan out, converge); max-effort owns the adversarial pass on the converged result. Build wide, then tear down — in that order.
-- **`afk`**: the subagent budget picked in the AFK preamble is the spend authority — fan out within it, never past it.
+full-send owns generation — how wide to explore and how to converge. It defers everything else:
 
-## Final summary
-
-Inline, marker-led: `[full-send]` / `[full-send sustained]`. In sustained mode the marker is load-bearing — it's how the posture survives context compression, so it appears on every turn that emits a summary. After it, **open items only**: one `🚩` line per angle left unexplored, agent that came back empty, or decision waiting on you. If nothing's open: `✅ nothing open`.
+- **Teardown**: if an active posture owns adversarial review, generation converges first, then that pass runs on the result — build wide, then tear down, in that order.
+- **Instrument**: if an active posture restricts delegation to a specific instrument or role split, fan out through it.
+- **Spend**: a budget declared at session handoff is the spend authority — fan out within it, never past it.
