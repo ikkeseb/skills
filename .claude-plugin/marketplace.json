@@ -1,5 +1,6 @@
 {
   "name": "ikkeseb",
+  "description": "Personal marketplace for the ikkeseb-skills plugin — a small bundle of day-to-day agent skills.",
   "owner": {
     "name": "Sebastian de la Nuez"
   },

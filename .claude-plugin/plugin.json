@@ -6,5 +6,18 @@
     "name": "Sebastian de la Nuez"
   },
   "repository": "https://github.com/ikkeseb/skills",
-  "license": "MIT"
+  "license": "MIT",
+  "skills": [
+    "./skills/afk",
+    "./skills/context-audit",
+    "./skills/drawio",
+    "./skills/excalidraw",
+    "./skills/full-send",
+    "./skills/handoff",
+    "./skills/max-effort",
+    "./skills/orchestrate",
+    "./skills/pretty-pdf",
+    "./skills/suggest-loop",
+    "./skills/verify-claims"
+  ]
 }

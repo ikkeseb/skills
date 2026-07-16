@@ -14,12 +14,19 @@ Each skill lives in `skills/<name>/` with a `SKILL.md` whose YAML frontmatter (`
 
 ## Adding or renaming a skill
 
-Two places must stay in sync:
+Three places must stay in sync:
 
 1. The folder under `skills/`
 2. The entry in the top-level `README.md` skills list
+3. The explicit `skills` list in `.claude-plugin/plugin.json` — the published
+   plugin ships exactly this set. (This works as an allowlist only because the
+   marketplace entry's `source` is the marketplace root — that exception makes
+   the list *replace* the default `skills/` scan instead of adding to it.
+   Validate with `claude plugin validate . --strict` after editing.)
 
-Skills are auto-discovered from `skills/` at install time — `.claude-plugin/plugin.json` carries no skill list, and its `description` stays generic (don't enumerate skill names there). If the folder and the README drift, the README misleads users. Update both in the same change.
+The `plugin.json` `description` stays generic (don't enumerate skill names
+there). If the three drift, users get a misleading README or a plugin that
+silently misses a skill. Update all three in the same change.
 
 ## Conventions
 
