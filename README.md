@@ -41,8 +41,13 @@ Or clone and symlink individual skills:
 
 ```bash
 git clone https://github.com/ikkeseb/skills ~/skills
-ln -s ~/skills/skills/<name> ~/.claude/skills/<name>
+ln -s ~/skills/skills/<name> ~/.claude/skills/<name>   # Claude Code
+ln -s ~/skills/skills/<name> ~/.agents/skills/<name>   # Codex CLI
 ```
+
+Codex-supported skills are the ones carrying an `agents/openai.yaml` (per
+`.agents/adr/0001-agent-agnostic-repo.md`); the plugin bundle itself is
+Claude Code-only for now.
 
 ## License
 
