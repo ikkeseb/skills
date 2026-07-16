@@ -9,6 +9,7 @@
   "license": "MIT",
   "skills": [
     "./skills/afk",
+    "./skills/agents-md-convert",
     "./skills/context-audit",
     "./skills/drawio",
     "./skills/excalidraw",

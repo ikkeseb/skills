@@ -1,0 +1,10 @@
+interface:
+  display_name: agents-md-convert
+  short_description: >-
+    Convert the current repo to the AGENTS.md-canonical convention (AGENTS.md
+    holds the instructions; CLAUDE.md becomes a one-line @AGENTS.md import so
+    Claude Code still loads them, and Codex reads AGENTS.md natively), or check
+    an existing conversion. Explicit invocation only; does not author
+    instructions from scratch.
+policy:
+  allow_implicit_invocation: false

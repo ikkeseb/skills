@@ -16,6 +16,7 @@ A small set of Claude Code skills I use day-to-day. Each one does a single thing
 - **[max-effort](skills/max-effort)** — posture for high-stakes / irreversible work: adversarial review that tries to break the work and checks load-bearing claims against source-of-truth instead of rubber-stamping. Invoke with `/max-effort` (single-task) or `/max-effort sustained` (session).
 - **[verify-claims](skills/verify-claims)** — audits factual claims in prose for traceable sources and returns a classified table. Use when you want to fact-check Claude's own output or a document — distinct from `/verify`, which runs the app to confirm code behavior.
 - **[afk](skills/afk)** — posture for unattended autonomous work: no clarifying questions, low-blast default, audit trail in the conversation itself. Invoke with `/afk` when handing off an overnight run, audit, or any session you won't supervise.
+- **[agents-md-convert](skills/agents-md-convert)** — converts a repo to the AGENTS.md-canonical convention (`AGENTS.md` holds the instructions, `CLAUDE.md` becomes a one-line `@AGENTS.md` import adapter) or checks an existing conversion, then verifies with fresh one-shot canaries in each installed harness CLI. Invoke with `/agents-md-convert` in Claude Code or `$agents-md-convert` in Codex.
 
 ### Claude-only by design
 
