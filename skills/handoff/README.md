@@ -1,8 +1,8 @@
 # handoff
 
-A Claude Code skill that compacts the current session into a handoff for picking up elsewhere — either a fresh Claude Code session on the same machine, or any other context where you paste the snippet.
+A dual-harness skill (Claude Code and Codex CLI) that compacts the current session into a handoff for picking up elsewhere — either a fresh session on the same machine, or any other context where you paste the snippet.
 
-Saves a markdown file to `~/.claude/handoffs/YYYY-MM-DD-HHmm-<slug>.md` and shows the same content inside a 4-backtick markdown block in chat. File for same-machine pickup; snippet for cross-context paste.
+Saves a markdown file as `YYYY-MM-DD-HHmm-<slug>.md` under the active harness's home — `~/.claude/handoffs/` in Claude Code, `$CODEX_HOME/handoffs/` (default `~/.codex/handoffs/`) in Codex — and shows the same content inside a 4-backtick markdown block in chat. File for same-machine pickup; snippet for cross-context paste.
 
 ## Install
 
@@ -17,16 +17,18 @@ Or symlink just this skill from your own clone of the bundle:
 
 ```bash
 git clone https://github.com/ikkeseb/skills ~/skills
-ln -s ~/skills/skills/handoff ~/.claude/skills/handoff
+ln -s ~/skills/skills/handoff ~/.claude/skills/handoff   # Claude Code
+ln -s ~/skills/skills/handoff ~/.agents/skills/handoff   # Codex CLI
 ```
 
 ## Usage
 
 ```
-/handoff
+/handoff    # Claude Code
+$handoff    # Codex
 ```
 
-Claude reconstructs the session, writes the file, and shows the same content as a snippet in a 4-backtick markdown block. For same-machine pickup, point the next session at the saved path. For cross-context use, paste the snippet and tell the session to continue from it — e.g. open with `handover: <snip>`. (Leading with the literal word "handoff" can re-trigger this skill on paste.)
+The agent reconstructs the session, writes the file, and shows the same content as a snippet in a 4-backtick markdown block. For same-machine pickup, point the next session at the saved path. For cross-context use, paste the snippet and tell the session to continue from it — e.g. open with `handover: <snip>`. (Leading with the literal word "handoff" can re-trigger this skill on paste.)
 
 ## Snippet structure
 
@@ -40,7 +42,7 @@ The disclaimer is verbatim — it marks the content as reconstructed from sessio
 
 ## TTL
 
-Files older than 30 days in `~/.claude/handoffs/` are deleted on the next `/handoff` run. To keep one as documentation, move it out of the directory.
+Files older than 30 days in the active handoff directory are deleted on the next run. To keep one as documentation, move it out of the directory.
 
 ## What this skill won't do
 
