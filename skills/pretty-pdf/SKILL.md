@@ -5,8 +5,7 @@ description: >
   Use whenever creating a NEW PDF from scratch where the output should look designed — reports,
   letters, invoices, CVs, or any other document that will be read or shared and benefits
   from typographic care. Applies across all domains — work, personal, medical, legal, creative. Also
-  use when the source content lives in a docx that should be re-typeset into a polished PDF. Adapt
-  the design (typography, color palette, layout density) to match content and context. Do NOT use
+  use when the source content lives in a docx that should be re-typeset into a polished PDF. Do NOT use
   for: reading, extracting, merging, splitting, rotating, or form-filling existing PDFs (use the
   default pdf skill); generating fillable AcroForm PDFs (weasyprint produces flat PDFs only); or
   throwaway/quick-dump PDFs where the user signals they want output fast, not polished.
@@ -41,8 +40,7 @@ see the Weasyprint Technical Notes in `references/base-styles.md`.
    pulled into a multi-page `<pre>` breaks copy/paste). Empirical traps with tidy fixes.
 5. **Fit fonts + palette + header + scale + edge to the content**, not to a default — see the
    Anti-Convergence Rule below. Copy the full `<style>` block from `base-styles.md`, then swap
-   the `@import` and CSS variables for your picks. Don't ship defaults unchanged unless they
-   genuinely fit.
+   the `@import` and CSS variables for your picks.
 6. Choose a template from `references/templates.md`, or build from scratch.
 7. Write semantic HTML — `<h1>`, `<h2>`, `<p>`, `<table>`, `<blockquote>`, etc. Set
    `<html lang="...">` so hyphenation works.
@@ -65,8 +63,6 @@ consulting firm's deliverables.
 - **Whitespace is a feature.** Generous margins, breathing room between sections, no cramming.
 - **Restraint over decoration.** One dominant accent with sharp contrast outperforms a timid,
   evenly-distributed palette. Commit to a cohesive aesthetic.
-- **Adapt to context.** A medical summary needs clinical scannability. A travel log can be warm
-  and expressive. A business proposal should feel authoritative but not cold. Read the room.
 
 ### Anti-Convergence Rule (critical)
 

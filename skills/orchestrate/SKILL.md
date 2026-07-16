@@ -1,6 +1,7 @@
 ---
 name: orchestrate
-description: Posture skill activated only by an explicit `/orchestrate` (single-task) or `/orchestrate sustained` (session) — never self-triggers. Fable stays on everything critical — design, spec, planning, architecture, review — and delegates mechanical execution to opus agents at high effort inside dynamic Workflow scripts. Sustained mode persists until an explicit off-signal from the user.
+description: Posture skill for `/orchestrate` (single-task) or `/orchestrate sustained` (session) — the main loop keeps everything critical and delegates mechanical execution to opus agents at high effort inside dynamic Workflow scripts. Sustained mode persists until an explicit off-signal from the user.
+disable-model-invocation: true
 ---
 
 # orchestrate

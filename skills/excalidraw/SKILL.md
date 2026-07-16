@@ -74,7 +74,7 @@ Mentally trace how the eye moves. There should be a clear visual story.
 Only now create the Excalidraw elements. For large diagrams, build section-by-section (see below).
 
 ### Step 6: Deliver
-Save the `.excalidraw` file and tell the user where it lives. The methodology is the verification — do **not** auto-render (Chromium cold-start is slow enough to be rude without permission); rendering is an opt-in follow-up the user requests.
+Check that every `containerId`, `boundElements`, and arrow `startBinding`/`endBinding` reference points at an existing element ID, then save the `.excalidraw` file and tell the user where it lives. The methodology is the verification — do **not** auto-render (Chromium cold-start is slow enough to be rude without permission); rendering is an opt-in follow-up the user requests.
 
 ### Step 7: Offer Follow-Ups (Claude Code only)
 In one short prompt, offer to render a PNG or open the diagram in Excalidraw. See `references/follow-ups.md` for exact wording, commands, and flags. Skip in Claude Chat — the user already has the file via the chat UI.
@@ -216,35 +216,3 @@ Settings: `fontSize: 16`, `fontFamily: 3`, `textAlign: "center"`, `verticalAlign
 ```
 
 See `references/element-templates.md` for copy-paste JSON templates per element type.
-
----
-
-## Quality Checklist
-
-### Depth & Evidence (Technical Diagrams)
-- [ ] Research done — actual specs, formats, event names
-- [ ] Evidence artifacts — code snippets, JSON examples, real data
-- [ ] Multi-zoom — summary + sections + detail
-- [ ] Concrete over abstract — real content, not labeled boxes
-
-### Conceptual
-- [ ] Isomorphism — visual structure mirrors concept behavior
-- [ ] Argument — shows something text alone couldn't
-- [ ] Variety — each concept uses a different visual pattern
-- [ ] No uniform containers — no card grids or equal boxes
-
-### Container Discipline
-- [ ] Minimal containers — <30% of text in boxes
-- [ ] Lines as structure — timelines/trees use lines + text, not boxes
-- [ ] Typography hierarchy — font size and color create hierarchy
-
-### Structural
-- [ ] Connections — every relationship has an arrow/line
-- [ ] Flow — clear visual path for the eye
-- [ ] Hierarchy — important elements larger/more isolated
-
-### Technical
-- [ ] `fontFamily: 3`, `roughness: 0`, `opacity: 100`
-- [ ] `text` contains only readable words
-- [ ] All `containerId`, `boundElements`, and arrow `startBinding`/`endBinding` references point at existing element IDs
-- [ ] Layer order in the array goes background → primary shapes → arrows → free-floating text

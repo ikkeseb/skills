@@ -40,8 +40,7 @@ Build the proposal on the real mechanics, not folklore:
   the model judges the task matches the description** — model-invoked is the *default*;
   typing `/name` is an additional manual path, not the only one. (3) Bundled
   `references/`, `scripts/` load only when the skill points to them. **The `description`
-  is the router** — a sharp one pulls the skill in on its own, so you never need a
-  `CLAUDE.md` routing table to *trigger* a skill. (Opt out with
+  is the router** — a sharp one pulls the skill in on its own. (Opt out with
   `disable-model-invocation: true` for manual-only.)
 - **`paths:` glob on a skill** (e.g. `paths: ["**/*.css"]`) auto-activates it **only when
   the session touches matching files** — native, file-scoped, no routing prose.
@@ -108,15 +107,15 @@ place on both axes.
 
 ## Placement
 
-| Where it lives | Loads when | Best for |
-|---|---|---|
-| `CLAUDE.md` (static) | Always | Universal, every-session content |
-| Skill `description` | Model matches task to the description | Domain task-types spanning dirs |
-| Skill `paths:` glob | Session touches matching files | Domain tied to specific file types |
-| Nested `CLAUDE.md` | Working in that directory subtree | Domain that is a folder |
-| `PreToolUse` hook | A matching tool call fires (can block) | Sacred invariants, hard stops |
-| `PostToolUse` hook | After a matching edit (injects context) | Reminders on specific file types |
-| Delete / archive | Never | Stale / resolved content |
+| Where it lives | Best for |
+|---|---|
+| `CLAUDE.md` (static) | Universal, every-session content |
+| Skill `description` | Domain task-types spanning dirs |
+| Skill `paths:` glob | Domain tied to specific file types |
+| Nested `CLAUDE.md` | Domain that is a folder |
+| `PreToolUse` hook | Sacred invariants, hard stops (can block) |
+| `PostToolUse` hook | Reminders on specific file types (injects context) |
+| Delete / archive | Stale / resolved content |
 
 Rules of thumb the table can't hold:
 
