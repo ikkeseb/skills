@@ -23,8 +23,8 @@ Exclude: opinions ("this is simpler"), recommendations, questions, hypotheses al
 For each claim, try sources in order:
 
 1. **Workspace files** — cite as `file:line`
-2. **Session context** — tool output, web-fetch, context7 already done this session
-3. **External** — websearch / context7 / webfetch. Default budget: one lookup per claim. User can lift it ("search broadly", "don't spare lookups").
+2. **Session context** — tool output, fetches, or doc lookups already done this session
+3. **External** — web search, documentation lookup (e.g. a docs MCP like context7), or page fetch with whatever tools the session has. Default budget: one lookup per claim. User can lift it ("search broadly", "don't spare lookups").
 
 Classify each claim:
 

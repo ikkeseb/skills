@@ -1,0 +1,11 @@
+interface:
+  display_name: pretty-pdf
+  short_description: >-
+    Create visually polished, professionally designed PDF documents with
+    weasyprint (HTML+CSS to PDF). Use when creating a new PDF that should
+    look designed — reports, letters, invoices, CVs — or re-typesetting a
+    docx into a polished PDF. Not for reading, merging, splitting, or
+    form-filling existing PDFs, fillable AcroForm output, or quick
+    throwaway PDFs.
+policy:
+  allow_implicit_invocation: true

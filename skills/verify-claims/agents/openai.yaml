@@ -1,0 +1,10 @@
+interface:
+  display_name: verify-claims
+  short_description: >-
+    Audit factual claims in prose for traceable sources — produces a
+    classified table (verified / unverified / contradicted) plus a retract
+    list. Fires on explicit request only: fact-check, source-audit, or
+    "check what you just said". No argument means the assistant's most
+    recent message; a path argument audits that file or directory.
+policy:
+  allow_implicit_invocation: true
