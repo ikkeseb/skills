@@ -10,7 +10,7 @@ This is a skills repository — a collection of agent skills published as a Clau
 
 ## Structure
 
-Each skill lives in `skills/<name>/` with a `SKILL.md` whose YAML frontmatter (`name`, `description`, optional `allowed-tools`) is how Claude Code discovers and triggers the skill. Other files in the skill folder (references, scripts, assets) are loaded on demand by the skill itself.
+Each skill lives in `skills/<name>/` with a `SKILL.md` whose YAML frontmatter (`name`, `description`, optional `allowed-tools`) is how Claude Code discovers and triggers the skill. Other files in the skill folder (references, scripts, assets) load on demand: keep the core workflow in `SKILL.md`, put branch-only or bulky reference in sibling files, and word each pointer to say when to read it.
 
 ## Adding or renaming a skill
 
@@ -33,7 +33,9 @@ silently misses a skill. Update all three in the same change.
 
 ## Conventions
 
-- The `description:` field in `SKILL.md` is the trigger surface — write it as a precise activation rule (when to use, when NOT to use), not a marketing blurb. Existing skills are the reference style.
+- Every skill is deliberately user- or model-invoked; the axis and the description-writing rules live in `.agents/invocation.md`.
+- Each meaning lives once per skill. Don't restate a rule across description, body, tables, and checklists — keep it where it governs behaviour. Prose that wouldn't change the agent's behaviour if deleted gets deleted.
+- In procedural skills where steps can fail or branch, end each step on a checkable "done when".
 - Skills are self-contained: a `SKILL.md` body never references another skill by name. Posture skills coordinate through capability-based ownership declarations instead — each states what it owns and what it defers (breadth, instrument, teardown, spend, interaction) so any combination resolves without the skills knowing about each other. Sole exception: a `description:` field may name a sibling skill purely for trigger disambiguation (e.g. drawio vs excalidraw) — such pointers degrade harmlessly when the sibling isn't installed.
 - No build, lint, or test step. Content is markdown + YAML.
 - All repository content — every `SKILL.md`, reference file, and this `AGENTS.md` — is written in English, whatever language a session converses in. (A skill's *runtime output* follows the session; the committed artifacts stay English.)

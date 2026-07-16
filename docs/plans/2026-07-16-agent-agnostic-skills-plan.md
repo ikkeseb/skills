@@ -29,7 +29,7 @@ and must never reference private infrastructure.
 ## Patterns worth stealing from mattpocock/skills
 
 Inspected 2026-07-16 (github.com/mattpocock/skills). Each item lists what it
-buys; none are adopted yet.
+buys; adopted/rejected dispositions, where decided, are noted inline.
 
 1. **Per-skill `agents/openai.yaml`** — Codex UI metadata
    (`interface.display_name`, `interface.short_description`) and, for
@@ -55,15 +55,18 @@ buys; none are adopted yet.
    invocation rules, docs-writing rules) live in a dotted dir that is NOT a
    reserved Claude component name. Buys: a home for "how this repo works"
    that both harnesses can be pointed at.
-6. **`writing-great-skills` methodology** — predictability as the root
-   virtue; checkable completion criteria per step; leading words; failure
-   modes (no-op lines, sediment, sprawl, negation, premature completion,
-   duplication). Worth adopting as the house editing standard regardless of
-   structure decisions.
-7. **Router skill** (his `ask-matt`) — one user-invoked skill that maps all
-   user-reachable skills and when to reach for each, curing the cognitive
-   load of many user-invoked skills. Contract: any skill add/rename/removal
-   re-syncs the router, or the router lies.
+6. **`writing-great-skills` methodology** — evaluated 2026-07-16 (full-repo
+   audit + Codex second opinion): adopted *selectively* into `AGENTS.md`
+   Conventions and `.agents/invocation.md` — single source of truth per
+   skill, the no-op deletion test, one activation condition per description
+   branch, the placement/pointer rule, and a narrow "done when" rule for
+   branching procedures. Rejected as standing convention (review-checklist
+   material, not house rules): predictability-as-root-virtue, leading words
+   as explicit technique, sequence-splitting, and a general negation ban.
+7. **Router skill** (his `ask-matt`) — rejected 2026-07-16: conflicts with
+   the self-contained-skills convention, and the current number of
+   user-invoked skills doesn't create the cognitive load it cures. Revisit
+   only if they multiply.
 
 Counter-note: his root `CLAUDE.md` is a full duplicate of `AGENTS.md`; the
 one-line `@AGENTS.md` import adapter used elsewhere in this ecosystem is
