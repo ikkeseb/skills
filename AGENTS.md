@@ -22,7 +22,10 @@ Three places must stay in sync:
    plugin ships exactly this set. (This works as an allowlist only because the
    marketplace entry's `source` is the marketplace root — that exception makes
    the list *replace* the default `skills/` scan instead of adding to it.
-   Validate with `claude plugin validate . --strict` after editing.)
+   Validate with `claude plugin validate . --strict` after editing — but note
+   it only validates the manifests, not skill files. Also YAML-parse every
+   changed `SKILL.md` frontmatter; an unquoted `description:` containing
+   ": " (colon+space) is invalid YAML the validator will not catch.)
 
 The `plugin.json` `description` stays generic (don't enumerate skill names
 there). If the three drift, users get a misleading README or a plugin that

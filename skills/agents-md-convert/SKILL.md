@@ -1,6 +1,6 @@
 ---
 name: agents-md-convert
-description: Convert the current repo to the AGENTS.md-canonical convention — AGENTS.md holds the agent instructions, CLAUDE.md becomes a one-line `@AGENTS.md` import so Claude Code still loads them, and Codex reads AGENTS.md natively — or check an existing conversion. Use only on explicit invocation: `/agents-md-convert` in Claude Code, `$agents-md-convert` in Codex. Do NOT auto-invoke. Do NOT use to author agent instructions from scratch — this converts an existing CLAUDE.md or AGENTS.md, it does not write one.
+description: Convert the current repo to the AGENTS.md-canonical convention — AGENTS.md holds the agent instructions, CLAUDE.md becomes a one-line `@AGENTS.md` import so Claude Code still loads them, and Codex reads AGENTS.md natively — or check an existing conversion. Use only on explicit invocation — `/agents-md-convert` in Claude Code, `$agents-md-convert` in Codex. Do NOT auto-invoke. Do NOT use to author agent instructions from scratch — this converts an existing CLAUDE.md or AGENTS.md, it does not write one.
 disable-model-invocation: true
 ---
 
