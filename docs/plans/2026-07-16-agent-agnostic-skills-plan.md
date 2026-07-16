@@ -267,3 +267,24 @@ installed binary plus current main-branch source); bare `$name` alias behaviour
 under plugin namespacing, explicit invocation with the merged `handoff`, desktop
 UI rendering, dependency prompting, and Windows junction creation remain
 untested.
+
+## Execution log (2026-07-16, evening)
+
+Implemented and committed: plan doc; AGENTS.md-canonical conversion +
+`.agents/` (invocation convention, ADR 0001) — canary-verified in both
+harnesses; explicit plugin `skills` allowlist (works via the
+marketplace-root-source exception; `--strict` green; runtime exposure of an
+installed copy remains untested); README Claude-only grouping;
+`agents-md-convert` skill (dual-harness, first born under ADR 0001);
+`handoff` merged to one dual-harness body — live canaries passed in both
+harnesses (correct save roots, format; `allow_implicit_invocation: false`
+confirmed hiding it from Codex's implicit list). `~/.agents/skills/handoff`
+repointed to this repo.
+
+Adjustments: `context-audit` reclassified "Claude-only for now" (a
+Codex-aware variant is plausible; posture skills stay non-portable).
+
+Open: the Codex plugin distribution probe hung (3h+ web-search loop, killed)
+— `.codex-plugin` manifest semantics remain unverified; Codex-side consumer
+distribution stays symlink/git-clone until probed. The local `~/codex-skills`
+clone is retired: archive the repo, then delete the clone.

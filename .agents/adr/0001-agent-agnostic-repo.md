@@ -25,8 +25,11 @@ Claude-specific frontmatter, so one repo can serve both harnesses.
   is Codex-supported". It is added on demand — when the body is actually
   neutralised and verified under Codex — never speculatively.
 - Skills whose substance is Claude machinery stay Claude-only by design
-  (currently `orchestrate`, `suggest-loop`, `context-audit`) and never get
-  `agents/openai.yaml`. Porting them would mistranslate, not translate.
+  (currently `orchestrate`, `suggest-loop`, `context-audit`) and don't get
+  `agents/openai.yaml` while so classified. Porting them as-is would
+  mistranslate, not translate. The classification is revisitable per skill —
+  `context-audit` is the most plausible future port (its subject matter
+  generalises to AGENTS.md/config auditing); the posture skills are not.
 - `codex-skills` is retired once `handoff` is merged here and canary-verified
   in both harnesses; it is archived as a shell with a README pointer.
 
