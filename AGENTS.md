@@ -12,6 +12,8 @@ This is a skills repository — a collection of agent skills published as a Clau
 
 Each skill lives in `skills/<name>/` with a `SKILL.md` whose YAML frontmatter (`name`, `description`, optional `allowed-tools`) is how Claude Code discovers and triggers the skill. Other files in the skill folder (references, scripts, assets) load on demand: keep the core workflow in `SKILL.md`, put branch-only or bulky reference in sibling files, and word each pointer to say when to read it.
 
+The plugin also ships subagent definitions from top-level `agents/` (auto-discovered; not governed by the manifest's `skills` list). Bump the plugin `version` whenever shipped content changes — it is the update/cache key for installs.
+
 ## Adding or renaming a skill
 
 Three places must stay in sync:
