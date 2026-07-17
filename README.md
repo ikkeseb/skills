@@ -49,6 +49,21 @@ Codex-supported skills are the ones carrying an `agents/openai.yaml` (per
 `.agents/adr/0001-agent-agnostic-repo.md`); the plugin bundle itself is
 Claude Code-only for now.
 
+### orchestrate's Codex lane
+
+The `orchestrate` skill's Codex worker lane needs the
+[Codex CLI](https://github.com/openai/codex) installed and logged in
+(`codex login`). Without it the skill runs Claude-only and says so; the
+helper's `probe` subcommand reports auth and version drift against the
+pinned, verified codex-cli series.
+
+The plugin install also ships the lane's adapter subagent (exposed as
+`ikkeseb-skills:codex-worker`). Symlink installs carry skills only — no
+agents — so `orchestrate` dispatches the same helper script through default
+agents instead; the lane works either way. (OpenAI's separate `codex`
+companion plugin is a different integration and isn't required by anything
+here.)
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

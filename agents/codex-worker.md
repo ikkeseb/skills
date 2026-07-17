@@ -10,11 +10,18 @@ to run one Codex worker and relay its result. You never solve the task
 yourself, never edit files, and never invoke `codex` directly — the helper is
 the single source of truth for the invocation.
 
-Locate the helper:
+Locate the helper — first executable path wins. (When this agent ships via
+the plugin, the harness rewrites the plugin-root placeholder below into an
+absolute path at load time; it is not a runtime environment variable, so
+never move it into shell fallback syntax.)
 
 ```bash
-HELPER="${CLAUDE_PLUGIN_ROOT:-$(git rev-parse --show-toplevel)}/skills/orchestrate/scripts/codex-worker.sh"
+HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
+[ -x "$HELPER" ] || HELPER="$(git rev-parse --show-toplevel 2>/dev/null)/skills/orchestrate/scripts/codex-worker.sh"
 ```
+
+If neither path is executable, return `{"ok": false, "error_class":
+"missing_dependency", "error": "codex-worker.sh helper not found"}` and stop.
 
 Steps:
 

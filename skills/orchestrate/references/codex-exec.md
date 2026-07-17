@@ -44,8 +44,10 @@ scripts/codex-worker.sh run \
 ```
 
 Prefer dispatching through the `codex-worker` agent type when it appears in
-the session's agent list (plugin installs may namespace it); otherwise give
-any default agent the helper path and parameters. Either way the agent relays
+the session's agent list — plugin installs namespace it as
+`ikkeseb-skills:codex-worker`; otherwise (e.g. skills installed by symlink,
+which carries no agents) give any default agent the helper's absolute path
+and parameters. Either way the agent relays
 the helper's JSON verbatim as its final message — pair it with a matching
 Workflow `schema` so the orchestrator gets typed data.
 
