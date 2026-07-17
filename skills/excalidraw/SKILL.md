@@ -1,5 +1,6 @@
 ---
 name: excalidraw
+disable-model-invocation: true
 description: Generate `.excalidraw` JSON diagrams for relationships, flows, architectures, or system structure. Emits hand-drawn-style `.excalidraw` JSON — for editable draw.io/diagrams.net files use the drawio skill instead. Invoke ONLY when the user explicitly asks for a diagram or types `/excalidraw` — do NOT auto-invoke from soft cues like "show me" or "walk me through". Do NOT use for numerical charts (use a charting tool), UI mockups, or text documentation.
 ---
 

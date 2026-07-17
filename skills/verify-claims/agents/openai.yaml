@@ -7,4 +7,4 @@ interface:
     "check what you just said". No argument means the assistant's most
     recent message; a path argument audits that file or directory.
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

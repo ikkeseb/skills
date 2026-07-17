@@ -1,5 +1,6 @@
 ---
 name: full-send
+disable-model-invocation: true
 description: Posture skill activated by `/full-send` (single-task) or `/full-send sustained` (session). Resources are authorized — tokens, time, subagents, agent teams. Go for the best result, not the first acceptable one — fan out across independent work, then converge to one. Sustained mode persists until an explicit off-signal from the user.
 ---
 

@@ -8,4 +8,4 @@ interface:
     form-filling existing PDFs, fillable AcroForm output, or quick
     throwaway PDFs.
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

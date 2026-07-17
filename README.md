@@ -3,28 +3,34 @@
 Claude Code skills I use day-to-day, published as a plugin. Four of them also
 work in Codex CLI. Pick what you need, ignore the rest.
 
-![Vault note half-life diagram](skills/excalidraw/examples/vault-note-half-life.png)
-
-> Drawn end-to-end by the [`excalidraw`](skills/excalidraw) skill.
-
 ## Skills
 
-- **[handoff](skills/handoff)** — compacts the session into a handoff file plus a paste-ready snippet, for switching machines or briefing another agent.
-- **[pretty-pdf](skills/pretty-pdf)** — PDFs that look designed rather than auto-generated (HTML+CSS via weasyprint).
-- **[excalidraw](skills/excalidraw)** — `.excalidraw` diagrams that explain something, not just label boxes.
-- **[drawio](skills/drawio)** — native `.drawio` XML that opens straight in app.diagrams.net.
-- **[verify-claims](skills/verify-claims)** — fact-checks prose against traceable sources and returns a classified table.
-- **[agents-md-convert](skills/agents-md-convert)** — converts a repo to the AGENTS.md-canonical convention (`CLAUDE.md` becomes a one-line import) and verifies it in each installed harness.
-- **[full-send](skills/full-send)** — posture: resource use is authorized, fan out subagents freely, then synthesize.
-- **[max-effort](skills/max-effort)** — posture: high-stakes work gets adversarial review instead of a rubber stamp.
-- **[afk](skills/afk)** — posture: unattended runs — no clarifying questions, low blast radius, audit trail in the conversation.
+Every skill is deliberately command-invoked: it runs when you type its
+command and never triggers itself. (In Codex, use the `$` skill picker —
+see Install below.)
 
-Three more are Claude-only by design — their substance is Claude Code
-machinery, so porting them would mistranslate rather than translate:
+| Skill | What it does | Invoke |
+|---|---|---|
+| **[handoff](skills/handoff)** | Compacts the session into a handoff file plus a paste-ready snippet — for switching machines or briefing another agent. | `/handoff` |
+| **[pretty-pdf](skills/pretty-pdf)** | PDFs that look designed rather than auto-generated (HTML + CSS via weasyprint). | `/pretty-pdf` |
+| **[excalidraw](skills/excalidraw)** | `.excalidraw` diagrams that explain something instead of just labeling boxes. | `/excalidraw` |
+| **[drawio](skills/drawio)** | Native `.drawio` XML that opens straight in app.diagrams.net. | `/drawio` |
+| **[verify-claims](skills/verify-claims)** | Fact-checks prose against traceable sources and returns a classified table. | `/verify-claims` |
+| **[agents-md-convert](skills/agents-md-convert)** | Converts a repo to the AGENTS.md-canonical convention (`CLAUDE.md` becomes a one-line import) and verifies it in each installed harness. | `/agents-md-convert` |
+| **[full-send](skills/full-send)** | Posture: resources are authorized — fan out subagents freely, then converge. | `/full-send` · `/full-send sustained` |
+| **[max-effort](skills/max-effort)** | Posture: high-stakes work gets adversarial review, not a rubber stamp. | `/max-effort` · `/max-effort sustained` |
+| **[afk](skills/afk)** | Posture: unattended runs — no clarifying questions, low blast radius, audit trail in the conversation. | `/afk` |
 
-- **[orchestrate](skills/orchestrate)** — the main loop keeps everything critical (design, spec, review, integration) and routes mechanical work to worker models: Claude agents, plus an optional Codex CLI lane.
-- **[suggest-loop](skills/suggest-loop)** — turns a repo's documented verification gate into ready-to-paste `/loop` prompts with stop conditions baked in.
-- **[context-audit](skills/context-audit)** — audits a bloated `CLAUDE.md` and proposes a leaner context structure, for you to apply by hand.
+### Claude-only by design
+
+Their substance is Claude Code machinery, so porting them would mistranslate
+rather than translate.
+
+| Skill | What it does | Invoke |
+|---|---|---|
+| **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes mechanical work to worker models: Claude agents, plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
+| **[suggest-loop](skills/suggest-loop)** | Turns a repo's documented verification gate into ready-to-paste `/loop` prompts with stop conditions baked in. | `/suggest-loop` |
+| **[context-audit](skills/context-audit)** | Audits a bloated `CLAUDE.md` and proposes a leaner context structure, for you to apply by hand. | `/context-audit` |
 
 Each skill folder contains its `SKILL.md`; a few add a README for
 install-specific notes (e.g. `excalidraw`'s optional PNG renderer).

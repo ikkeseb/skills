@@ -1,5 +1,6 @@
 ---
 name: context-audit
+disable-model-invocation: true
 description: >-
   Audit a project's CLAUDE.md and context architecture, then propose a leaner
   structure that moves domain-specific rules out of always-on static context

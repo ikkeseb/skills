@@ -1,5 +1,6 @@
 ---
 name: verify-claims
+disable-model-invocation: true
 description: Audit factual claims in prose for traceable sources — produces a classified table flagging which assertions have sources and which are unverified. Use when the user asks to verify claims, fact-check, source-audit, or "check what you just said". Different from /verify (which runs the app to confirm code works) — this checks whether assertions in writing have backing sources, not whether software behaves. Do NOT auto-invoke; explicit user request only.
 ---
 

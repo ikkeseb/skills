@@ -1,5 +1,6 @@
 ---
 name: afk
+disable-model-invocation: true
 description: Posture skill for unattended autonomous work. Invoke ONLY when the user types the literal `/afk` command — a described intention to leave is not a trigger; only the command is. Sets a session posture (no clarifying questions, low-blast-radius default, audit-trail logging) that persists until an explicit return signal from the user.
 ---
 

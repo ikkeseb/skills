@@ -1,5 +1,6 @@
 ---
 name: suggest-loop
+disable-model-invocation: true
 description: Propose ready-to-paste `/loop` prompts for a target repo. Reads the repo's documented verification gate and emits 2–3 inline `/loop` suggestions with stop conditions baked in. Use when the user asks "what could I loop here", wants an autonomous fix/babysit loop but can't author the prompt themselves, or asks how `/loop` applies to this repo. Do NOT use to actually run a loop — that's the `/loop` command itself; this only writes the prompt text. Refuse (and say why) when the repo has no documented machine gate, or when the work is taste/ear-gated.
 ---
 
