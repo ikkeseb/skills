@@ -41,7 +41,15 @@ scripts/codex-worker.sh run \
                                        #   REQUIRED for workspace-write
   [--schema-file "$DIR/schema.json"]   # JSON Schema the result must satisfy
   [--timeout 3600]
+  [--run-dir "$RUN_DIR"]               # orchestrator-minted empty dir; the
+                                       #   durable receipt for lost-adapter
+                                       #   recovery (see Delivery ownership)
 ```
+
+Mint the run dir in the orchestrator before dispatch (`RUN_DIR="$(mktemp -d)"`
+— pass a path that does not exist yet or is empty) and pass it with
+`--run-dir`, so the result location is known even if the adapter never
+reports back.
 
 Prefer dispatching through the `codex-worker` agent type when it appears in
 the session's agent list — plugin installs namespace it as
@@ -53,22 +61,60 @@ mode; for write workers swap in the write-gate flags below):
 
 ```
 You are a one-shot Codex-lane adapter. Do EXACTLY this, nothing else:
-1. Run this exact command with Bash in a SINGLE invocation, with the Bash
-   tool's timeout parameter set to 900000 — it may legitimately take
-   several minutes (including a worker-slot queue wait); do NOT kill,
+1. Run this exact command with Bash in a SINGLE FOREGROUND invocation, with
+   the Bash tool's timeout parameter set to 900000 — it may legitimately
+   take several minutes (including a worker-slot queue wait); do NOT kill,
    re-run, or modify it:
    HELPER_ABS_PATH run --model MODEL --effort EFFORT \
      --sandbox read-only --workspace WORKSPACE \
-     --prompt-file PROMPT_FILE --schema-file SCHEMA_FILE --timeout 840
+     --prompt-file PROMPT_FILE --schema-file SCHEMA_FILE \
+     --run-dir RUN_DIR --timeout 840
 2. Return the helper's ENTIRE stdout verbatim as your result.
 Rules: strictly one-shot — never retry, never interpret or summarize the
-result, never touch the repo. If the Bash call itself fails, return the
-raw error text instead.
+result, never touch the repo. Foreground means foreground: never set
+run_in_background, never append `&`, never end your turn with a "started,
+waiting" style status while the command runs — an idle adapter is a lost
+delivery. If you cannot keep the single blocking call open, do not start
+it; return the raw error text instead.
 ```
 
 Either way the adapter relays the helper's JSON verbatim as its final
 message — pair it with a matching Workflow `schema` so the orchestrator
 gets typed data.
+
+## Delivery ownership and lost-adapter recovery
+
+One job, one delivery owner, fixed at dispatch:
+
+- **Foreground-relay** (the default above): the adapter blocks on the single
+  helper call and relays stdout. This is legitimate delivery *only* because
+  the call stays foreground for the whole run — the tool timeout (900s)
+  exceeds the helper deadline (840s), so the helper always emits terminal
+  JSON before the adapter's call can die.
+- **Main-loop harvest** (fallback, not a mode to design for): if an adapter
+  goes idle or dies without returning JSON, ownership does NOT bounce back
+  through the adapter. Never ping or re-invoke it — an idle adapter is
+  evidence of a lost delivery, not a paused one. Recover from ground truth
+  in the orchestrator-minted `--run-dir`:
+  1. Terminal-state check: the helper (and codex) processes are gone AND
+     `events.jsonl` contains a `turn.completed` event. `jq -Rrse
+     '[split("\n")[] | fromjson? | .type] | index("turn.completed") != null'
+     RUN_DIR/events.jsonl`
+  2. Harvest: `RUN_DIR/final.json` is the worker's final message (parse it;
+     apply the same schema expectations as the stage). For write runs, the
+     workspace diff is the artifact — inspect it as usual.
+  3. No `turn.completed` and no live process → the run died; treat as
+     `codex_failed` with `events.jsonl` + `stderr.log` as evidence. A live
+     process with a quiet log is NOT dead — log staleness is suspicion,
+     never kill authority; recheck the PID before any cleanup.
+  4. Cleanup is identity-scoped: kill only processes traceable to this run
+     (children of the recorded helper PID / processes whose cwd or args
+     reference RUN_DIR), never by broad name-matching.
+
+Done when: every dispatched worker ends in exactly one of — adapter-relayed
+JSON, a main-loop harvest from its `--run-dir` with the evidence above, or a
+recorded failure with `run_dir` evidence. No job is closed off an idle
+notification, and no adapter is ever pinged to deliver.
 
 ## Result contract
 

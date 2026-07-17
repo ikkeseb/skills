@@ -12,6 +12,9 @@
 #       [--expected-base-sha <sha>]  fail unless HEAD matches at launch time
 #       [--schema-file <json-schema file>]
 #       [--timeout <seconds>]                               (default: 3600)
+#       [--run-dir <dir>]  caller-minted run dir (must be empty/nonexistent);
+#                          lets the orchestrator harvest from disk if the
+#                          adapter relaying stdout is lost (default: mktemp)
 #   codex-worker.sh probe
 #
 # Output: exactly one JSON object on stdout. Everything else goes to stderr.
@@ -236,10 +239,10 @@ cmd_run() {
   is_pos_int "$SLOT_WAIT_SECS" || fail_json usage "CODEX_WORKER_SLOT_WAIT must be a positive integer"
 
   local model="" effort="high" sandbox="read-only" workspace="$PWD"
-  local prompt_file="" schema_file="" timeout_secs=3600 expected_sha=""
+  local prompt_file="" schema_file="" timeout_secs=3600 expected_sha="" run_dir_opt=""
   while [ $# -gt 0 ]; do
     case "$1" in
-      --model|--effort|--sandbox|--workspace|--prompt-file|--schema-file|--timeout|--expected-base-sha)
+      --model|--effort|--sandbox|--workspace|--prompt-file|--schema-file|--timeout|--expected-base-sha|--run-dir)
         [ $# -ge 2 ] || fail_json usage "missing value for $1"
         case "$1" in
           --model)             model="$2" ;;
@@ -250,6 +253,7 @@ cmd_run() {
           --schema-file)       schema_file="$2" ;;
           --timeout)           timeout_secs="$2" ;;
           --expected-base-sha) expected_sha="$2" ;;
+          --run-dir)           run_dir_opt="$2" ;;
         esac
         shift 2 ;;
       *) fail_json usage "unknown argument: $1" ;;
@@ -276,7 +280,18 @@ cmd_run() {
     [ -z "$expected_sha" ] || fail_json usage "--expected-base-sha given for a non-git workspace"
   fi
   local run_dir
-  run_dir="$(mktemp -d "${TMPDIR:-/tmp}/codex-worker.XXXXXX")"
+  if [ -n "$run_dir_opt" ]; then
+    # A caller-minted run dir is the durable receipt: the orchestrator knows
+    # the path before dispatch, so a lost adapter can't strand the result.
+    # Refuse a non-empty dir — reusing one would mix evidence across runs.
+    mkdir -p "$run_dir_opt" 2>/dev/null \
+      || fail_json usage "cannot create --run-dir: $run_dir_opt"
+    [ -z "$(ls -A "$run_dir_opt" 2>/dev/null)" ] \
+      || fail_json usage "--run-dir must be empty: $run_dir_opt"
+    run_dir="$run_dir_opt"
+  else
+    run_dir="$(mktemp -d "${TMPDIR:-/tmp}/codex-worker.XXXXXX")"
+  fi
   mkdir -p "$run_dir/tmp"
 
   acquire_slot
@@ -373,10 +388,17 @@ cmd_run() {
       '[split("\n")[] | fromjson? | select(.type == "error") | .message][0] // "" | .[0:2000]' \
       "$run_dir/events.jsonl" 2>/dev/null || true)"
   fi
-  # `false` and `null` are valid JSON results; validate parse+count, not truthiness.
+  # With a schema, the final message must be one parseable JSON document —
+  # `false` and `null` are valid results; validate parse+count, not
+  # truthiness. Without a schema, codex writes the final message as plain
+  # text: any non-empty message is valid and gets JSON-encoded as a string.
   local result_ok=false
-  if [ -s "$run_dir/final.json" ] \
-     && jq -es 'length == 1' "$run_dir/final.json" >/dev/null 2>&1; then
+  if [ -n "$schema_file" ]; then
+    if [ -s "$run_dir/final.json" ] \
+       && jq -es 'length == 1' "$run_dir/final.json" >/dev/null 2>&1; then
+      result_ok=true
+    fi
+  elif [ -s "$run_dir/final.json" ]; then
     result_ok=true
   fi
 
@@ -397,6 +419,16 @@ cmd_run() {
     error="exit=$exit_code turn_completed=$turn_completed result_valid=$result_ok"
   fi
 
+  # Normalize the result via a real file, not process substitution: native
+  # Windows jq cannot open MSYS /proc/<pid>/fd paths, which made the final
+  # emission — the delivery step itself — crash after a successful run.
+  if [ -n "$schema_file" ]; then
+    jq -c . "$run_dir/final.json" > "$run_dir/result.norm.json" 2>/dev/null \
+      || printf 'null\n' > "$run_dir/result.norm.json"
+  else
+    jq -Rs . "$run_dir/final.json" > "$run_dir/result.norm.json" 2>/dev/null \
+      || printf 'null\n' > "$run_dir/result.norm.json"
+  fi
   jq -n \
     --argjson ok "$ok" \
     --arg error_class "$error_class" --arg error "$error" \
@@ -405,7 +437,7 @@ cmd_run() {
     --argjson dirty_before "$dirty_before" \
     --argjson exit_code "$exit_code" --argjson turn_completed "$turn_completed" \
     --arg run_dir "$run_dir" \
-    --slurpfile result_doc <(jq -c . "$run_dir/final.json" 2>/dev/null || printf 'null') \
+    --slurpfile result_doc "$run_dir/result.norm.json" \
     --arg stderr_tail "$(tail -c 2000 "$run_dir/stderr.log" 2>/dev/null || true)" \
     --arg api_error "$api_error" \
     '{ok: $ok, model: $model, effort: $effort, sandbox: $sandbox,

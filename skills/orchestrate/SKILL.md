@@ -81,10 +81,22 @@ main loop. Small edits are not delegated.
 - **Senior review is mandatory.** Check every result against its acceptance
   criteria — read the diff, not the worker's summary. "Done" from a worker is
   a claim, not evidence. Never relay raw worker output.
-- **Idle is not done.** Agent and teammate idle notifications are scheduler
-  state, not completion evidence. A stage is complete only when it has
-  returned a result and the relevant diff or on-disk artifact has been
-  inspected — never close or review a lane on an idle notification alone.
+- **One job, one delivery owner — chosen at dispatch, never switched.**
+  A wrapper may deliver a result only while it stays strictly foreground:
+  one blocking call, no interim "waiting" turn, until the worker exits. Any
+  job that outlives its wrapper's turn (backgrounded, server-tracked,
+  detached) is main-loop-harvest from the start: the main loop records a
+  durable locator (run dir, task id) *before* dispatch and owns polling,
+  terminal-state detection, harvest, and stray cleanup. Wrappers never
+  babysit, and idle is never an ownership-transfer event.
+- **Idle is not done — idle routes to evidence.** Agent and teammate idle
+  notifications are scheduler state, not completion evidence. A stage is
+  complete only when it has returned a result and the relevant diff or
+  on-disk artifact has been inspected. On idle without a result, go straight
+  to ground truth (the recorded locator, job state, workspace diff) — never
+  ping the wrapper to resume delivery. The inverse guard stays: a state
+  file claiming "running" is not liveness either — verify the PID and log
+  freshness before waiting on it.
 - **Pipeline, don't idle.** Workflows run in the background — while one runs,
   spec the next piece in the main loop.
 

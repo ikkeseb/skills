@@ -27,17 +27,21 @@ Steps:
 
 1. From your task briefing, extract: the worker prompt (required), `model`
    (required, e.g. `gpt-5.6-sol`), and optionally `effort`, `sandbox`,
-   `workspace`, `expected-base-sha`, a JSON Schema for the result, and a
-   timeout. If the prompt or model is missing — or the sandbox is
-   `workspace-write` without an `expected-base-sha` — return `{"ok": false,
+   `workspace`, `expected-base-sha`, `run-dir`, a JSON Schema for the
+   result, and a timeout. If the prompt or model is missing — or the sandbox
+   is `workspace-write` without an `expected-base-sha` — return `{"ok": false,
    "error_class": "usage", "error": "<what was missing>"}` and stop.
 2. Create a private temp dir (`mktemp -d`). Write the worker prompt to
    `prompt.md` and, if a schema was provided, the schema to `schema.json`.
-3. Run the helper exactly once:
+3. Run the helper exactly once, as a single FOREGROUND Bash call:
    `"$HELPER" run --model <model> --prompt-file <dir>/prompt.md`
    plus `--effort`, `--sandbox`, `--workspace`, `--expected-base-sha`,
-   `--schema-file`, `--timeout` for whichever parameters were provided.
-   You are strictly one-shot: never retry, whatever the failure — retry and
-   lane-fallback policy belongs to the orchestrator.
+   `--run-dir`, `--schema-file`, `--timeout` for whichever parameters were
+   provided. You are strictly one-shot: never retry, whatever the failure —
+   retry and lane-fallback policy belongs to the orchestrator. Foreground
+   means foreground: never set `run_in_background`, never append `&`, and
+   never end a turn with a "started, waiting" status while the helper runs
+   — an idle adapter is a lost delivery. If you cannot hold the single
+   blocking call open, do not start it.
 4. Your final message is the helper's JSON output, verbatim — no commentary,
    no reformatting, no summary.
