@@ -16,6 +16,18 @@ The plugin also ships subagent definitions from top-level `agents/` (auto-discov
 
 The repo is also a Codex CLI plugin: Codex reads `.claude-plugin/marketplace.json` for the marketplace, but `.codex-plugin/plugin.json` takes precedence over `.claude-plugin/plugin.json` as the plugin manifest — its narrower `skills` list is what Codex advertises to the model (the whole repo is still copied into the consumer's cache; the list filters exposure, not download).
 
+## Maintainer-local workspace
+
+A gitignored `local/` directory may exist in maintainer checkouts for
+internal working material; it is never committed or shipped, so cloned
+copies and plugin installs won't have it. If it is present, read
+`local/AGENTS.md` before working in or with that directory — it carries
+its own instructions, which nested auto-loading may not surface.
+
+Never run `git clean -xdf` (or `-x` variants) in this repo: it deletes
+ignored files, which on a maintainer machine means the entire `local/`
+workspace.
+
 ## Adding or renaming a skill
 
 Four places must stay in sync:
