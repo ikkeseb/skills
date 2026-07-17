@@ -30,24 +30,39 @@ Each skill folder contains its `SKILL.md`. A few add their own README for instal
 
 ## Install
 
-Install the whole bundle as a plugin — add the repo as a marketplace, then install:
+### Claude Code
+
+Add the repo as a marketplace, then install the plugin (ships every skill above):
 
 ```bash
 /plugin marketplace add ikkeseb/skills
 /plugin install ikkeseb-skills@ikkeseb
 ```
 
-Or clone and symlink individual skills:
+### Codex CLI
+
+The same repo installs as a Codex plugin. It exposes only the Codex-supported
+skills — the ones carrying an `agents/openai.yaml`, per
+`.agents/adr/0001-agent-agnostic-repo.md`: `agents-md-convert`, `handoff`,
+`pretty-pdf`, `verify-claims`.
 
 ```bash
-git clone https://github.com/ikkeseb/skills ~/skills
-ln -s ~/skills/skills/<name> ~/.claude/skills/<name>   # Claude Code
-ln -s ~/skills/skills/<name> ~/.agents/skills/<name>   # Codex CLI
+codex plugin marketplace add ikkeseb/skills
+codex plugin add ikkeseb-skills@ikkeseb
 ```
 
-Codex-supported skills are the ones carrying an `agents/openai.yaml` (per
-`.agents/adr/0001-agent-agnostic-repo.md`); the plugin bundle itself is
-Claude Code-only for now.
+Skills surface namespaced (`ikkeseb-skills:<name>`); invoke them through the
+TUI's `$` skill picker. Newly installed or upgraded plugins load in the
+*next* Codex session. To upgrade later:
+
+```bash
+codex plugin marketplace upgrade ikkeseb
+codex plugin list   # verify the installed version
+```
+
+If you previously symlinked skills from this repo into `~/.agents/skills/`,
+remove those symlinks before installing — otherwise the same skills load
+twice. Route verified with codex-cli 0.144.5.
 
 ### orchestrate's Codex lane
 

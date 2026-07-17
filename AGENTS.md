@@ -12,11 +12,13 @@ This is a skills repository — a collection of agent skills published as a Clau
 
 Each skill lives in `skills/<name>/` with a `SKILL.md` whose YAML frontmatter (`name`, `description`, optional `allowed-tools`) is how Claude Code discovers and triggers the skill. Other files in the skill folder (references, scripts, assets) load on demand: keep the core workflow in `SKILL.md`, put branch-only or bulky reference in sibling files, and word each pointer to say when to read it.
 
-The plugin also ships subagent definitions from top-level `agents/` (auto-discovered; not governed by the manifest's `skills` list). Bump the plugin `version` whenever shipped content changes — it is the update/cache key for installs.
+The plugin also ships subagent definitions from top-level `agents/` (auto-discovered; not governed by the manifest's `skills` list). Bump the plugin `version` whenever shipped content changes — it is the update/cache key for installs. The `version` fields in `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` are one repository-wide release version: keep them equal and bump both in the same commit.
+
+The repo is also a Codex CLI plugin: Codex reads `.claude-plugin/marketplace.json` for the marketplace, but `.codex-plugin/plugin.json` takes precedence over `.claude-plugin/plugin.json` as the plugin manifest — its narrower `skills` list is what Codex advertises to the model (the whole repo is still copied into the consumer's cache; the list filters exposure, not download).
 
 ## Adding or renaming a skill
 
-Three places must stay in sync:
+Four places must stay in sync:
 
 1. The folder under `skills/`
 2. The entry in the top-level `README.md` skills list
@@ -28,6 +30,11 @@ Three places must stay in sync:
    it only validates the manifests, not skill files. Also YAML-parse every
    changed `SKILL.md` frontmatter; an unquoted `description:` containing
    ": " (colon+space) is invalid YAML the validator will not catch.)
+4. The `skills` list in `.codex-plugin/plugin.json`, which must equal exactly
+   the set of skills carrying `agents/openai.yaml` (the Codex-support marker
+   stays the single source of truth — check with
+   `ls skills/*/agents/openai.yaml`). Codex-only README bits: the four-skill
+   enumeration in the Install section.
 
 The `plugin.json` `description` stays generic (don't enumerate skill names
 there). If the three drift, users get a misleading README or a plugin that

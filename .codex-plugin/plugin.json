@@ -1,0 +1,11 @@
+{
+  "name": "ikkeseb-skills",
+  "description": "A small bundle of agent skills for day-to-day work — Codex CLI packaging, shipping only the Codex-supported skills.",
+  "version": "0.5.0",
+  "skills": [
+    "./skills/agents-md-convert",
+    "./skills/handoff",
+    "./skills/pretty-pdf",
+    "./skills/verify-claims"
+  ]
+}
