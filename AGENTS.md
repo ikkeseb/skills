@@ -18,15 +18,9 @@ The repo is also a Codex CLI plugin: Codex reads `.claude-plugin/marketplace.jso
 
 ## Maintainer-local workspace
 
-A gitignored `local/` directory may exist in maintainer checkouts for
-internal working material; it is never committed or shipped, so cloned
-copies and plugin installs won't have it. If it is present, read
-`local/AGENTS.md` before working in or with that directory — it carries
-its own instructions, which nested auto-loading may not surface.
-
-Never run `git clean -xdf` (or `-x` variants) in this repo: it deletes
-ignored files, which on a maintainer machine means the entire `local/`
-workspace.
+Gitignored `local/`, when present, is maintainer-internal — follow
+`local/AGENTS.md`. Never run `git clean -x` variants in this repo; they
+delete it.
 
 ## Adding or renaming a skill
 
