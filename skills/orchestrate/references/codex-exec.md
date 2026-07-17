@@ -59,7 +59,7 @@ You are a one-shot Codex-lane adapter. Do EXACTLY this, nothing else:
    re-run, or modify it:
    HELPER_ABS_PATH run --model MODEL --effort EFFORT \
      --sandbox read-only --workspace WORKSPACE \
-     --prompt-file PROMPT_FILE --schema-file SCHEMA_FILE --timeout 720
+     --prompt-file PROMPT_FILE --schema-file SCHEMA_FILE --timeout 840
 2. Return the helper's ENTIRE stdout verbatim as your result.
 Rules: strictly one-shot — never retry, never interpret or summarize the
 result, never touch the repo. If the Bash call itself fails, return the

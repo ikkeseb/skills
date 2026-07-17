@@ -81,6 +81,10 @@ main loop. Small edits are not delegated.
 - **Senior review is mandatory.** Check every result against its acceptance
   criteria — read the diff, not the worker's summary. "Done" from a worker is
   a claim, not evidence. Never relay raw worker output.
+- **Idle is not done.** Agent and teammate idle notifications are scheduler
+  state, not completion evidence. A stage is complete only when it has
+  returned a result and the relevant diff or on-disk artifact has been
+  inspected — never close or review a lane on an idle notification alone.
 - **Pipeline, don't idle.** Workflows run in the background — while one runs,
   spec the next piece in the main loop.
 
