@@ -20,7 +20,18 @@ set -euo pipefail
 VERIFIED_CODEX_SERIES="0.144"   # write-capable runs are gated on this series
 MAX_SLOTS="${CODEX_WORKER_MAX_SLOTS:-4}"
 SLOT_WAIT_SECS="${CODEX_WORKER_SLOT_WAIT:-1800}"
-SLOT_ROOT="${TMPDIR:-/tmp}/codex-worker-slots"
+# Per-uid suffix + ownership check (ensure_slot_root): a world-writable /tmp
+# must not let another user squat the lock tree or plant a symlink there.
+SLOT_ROOT="${TMPDIR:-/tmp}/codex-worker-slots-$(id -u)"
+
+ensure_slot_root() {
+  mkdir -p "$SLOT_ROOT"
+  chmod 700 "$SLOT_ROOT" 2>/dev/null || true
+  if [ -L "$SLOT_ROOT" ] || [ ! -d "$SLOT_ROOT" ] || [ ! -O "$SLOT_ROOT" ]; then
+    fail_json slot_root_hijacked \
+      "$SLOT_ROOT is a symlink or not owned by this user — refusing to use it"
+  fi
+}
 
 SLOT_DIR="" WS_LOCK="" CODEX_PID=""
 # Unique ownership token: locks are only ever released by their creator, so
@@ -147,7 +158,7 @@ reclaim_stale_slots() {
 }
 
 acquire_slot() {
-  mkdir -p "$SLOT_ROOT"
+  ensure_slot_root
   local waited=0 i slot
   while :; do
     for i in $(seq 1 "$MAX_SLOTS"); do
