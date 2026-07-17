@@ -45,11 +45,30 @@ scripts/codex-worker.sh run \
 
 Prefer dispatching through the `codex-worker` agent type when it appears in
 the session's agent list — plugin installs namespace it as
-`ikkeseb-skills:codex-worker`; otherwise (e.g. skills installed by symlink,
-which carries no agents) give any default agent the helper's absolute path
-and parameters. Either way the agent relays
-the helper's JSON verbatim as its final message — pair it with a matching
-Workflow `schema` so the orchestrator gets typed data.
+`ikkeseb-skills:codex-worker`. Otherwise (e.g. skills installed by symlink,
+which carries no agents) spawn a default agent as the adapter — sonnet at
+low effort is right for the relay — with this verified prompt (fill the
+UPPERCASE slots; keep the rules verbatim, each guards an observed failure
+mode; for write workers swap in the write-gate flags below):
+
+```
+You are a one-shot Codex-lane adapter. Do EXACTLY this, nothing else:
+1. Run this exact command with Bash in a SINGLE invocation, with the Bash
+   tool's timeout parameter set to 900000 — it may legitimately take
+   several minutes (including a worker-slot queue wait); do NOT kill,
+   re-run, or modify it:
+   HELPER_ABS_PATH run --model MODEL --effort EFFORT \
+     --sandbox read-only --workspace WORKSPACE \
+     --prompt-file PROMPT_FILE --schema-file SCHEMA_FILE --timeout 720
+2. Return the helper's ENTIRE stdout verbatim as your result.
+Rules: strictly one-shot — never retry, never interpret or summarize the
+result, never touch the repo. If the Bash call itself fails, return the
+raw error text instead.
+```
+
+Either way the adapter relays the helper's JSON verbatim as its final
+message — pair it with a matching Workflow `schema` so the orchestrator
+gets typed data.
 
 ## Result contract
 

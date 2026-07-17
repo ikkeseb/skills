@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Delegation posture — the main loop keeps everything critical (design, spec, review, integration) and routes mechanical execution to worker models through dynamic Workflow scripts, across Claude and Codex lanes. Single-task or sustained for the session.
+description: Delegation posture — the main loop keeps everything critical (design, spec, review, integration) and routes mechanical execution to worker models, primarily through dynamic Workflow scripts, across Claude and Codex lanes. Single-task or sustained for the session.
 disable-model-invocation: true
 ---
 
@@ -14,10 +14,18 @@ the first delegation of a run).
 
 ## The instrument
 
-**Dynamic Workflow scripts only** — no one-off subagents, no agent teams.
-Invoking `/orchestrate` is the explicit opt-in the Workflow tool requires.
-Every delegated call pins `{model, effort}` explicitly and uses the `schema`
-option so stages return data, not prose to re-parse.
+**Dynamic Workflow scripts are the primary instrument.** Invoking
+`/orchestrate` is the explicit opt-in the Workflow tool requires. One-off
+subagents or agent teams are a judgment call for work a workflow fits poorly
+(e.g. a single delegated stage with nothing to fan out). And when delegation
+itself is a poor fit, push back: say so and propose running sequentially in
+the main loop instead of forcing the ceremony.
+
+Worker invocations run inside delegated stages (Workflow `agent()` calls or
+subagents) — main-loop worker runs are legitimate only as that explicitly
+declared sequential fallback, never silent drift. Every delegated call pins
+`{model, effort}` explicitly and returns typed data — Workflow stages via
+the `schema` option — not prose to re-parse.
 
 ## Two worker lanes
 

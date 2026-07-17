@@ -17,7 +17,7 @@ when experience disagrees.
 | gpt-5.6-terra | codex | 7 | 7–8 | 6 | high | Broad fan-out workhorse (recon, parallel analysis, bulk transforms) | opus-4.8 |
 | sonnet-5 | claude | 5 | 6 | 7 | high | Narrow niche: only when opus is overkill and the task needs more taste than the cheap tier offers | opus-4.8 |
 | gpt-5.6-luna | codex | 9 | 5–6 | 5 | low/medium | THE cheap tier: extraction, classification, sanity checks | gpt-5.6-terra |
-| haiku-4.5 | claude | 10 | 4 | 5 | — | Avoid — luna covers this tier | gpt-5.6-luna |
+| haiku-4.5 | claude | 10 | 4 | 5 | — | Never use — off-limits even for mechanical relay/adapter stages; luna covers this tier | gpt-5.6-luna |
 
 The fallback column is *availability* fallback (model or lane down/throttled),
 kept cross-lane where possible so a lane outage never strands a role. Quality
