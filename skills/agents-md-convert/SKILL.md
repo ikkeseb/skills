@@ -1,6 +1,6 @@
 ---
 name: agents-md-convert
-description: Convert the current repo to the AGENTS.md-canonical convention — AGENTS.md holds the agent instructions, CLAUDE.md becomes a one-line `@AGENTS.md` import so Claude Code still loads them, and Codex reads AGENTS.md natively — or check an existing conversion. Use only on explicit invocation — `/agents-md-convert` in Claude Code, `$agents-md-convert` in Codex. Do NOT auto-invoke. Do NOT use to author agent instructions from scratch — this converts an existing CLAUDE.md or AGENTS.md, it does not write one.
+description: Convert a repo to the AGENTS.md-canonical convention — AGENTS.md holds the instructions, CLAUDE.md becomes a one-line `@AGENTS.md` import — or check an existing conversion. Converts existing instructions; does not author them from scratch.
 disable-model-invocation: true
 ---
 
@@ -13,7 +13,7 @@ Never touch the *content* of the instructions except the harness-wording pass be
 ## What "converted" means
 
 - `AGENTS.md` is canonical — it holds the real instruction content.
-- `CLAUDE.md` contains exactly `@AGENTS.md` and a trailing newline — an import adapter so Claude Code loads `AGENTS.md`.
+- `CLAUDE.md` is a one-line `@AGENTS.md` import adapter so Claude Code loads `AGENTS.md`.
 - Codex and other agents read `AGENTS.md` directly.
 
 ## Step 1 — Preflight and mode selection
@@ -52,7 +52,7 @@ Run in order; each has a stop-or-continue criterion.
 
 ## Step 3 — Adapter mode
 
-Only `AGENTS.md` exists, so the content is already canonical. Write `CLAUDE.md` as the one-line `@AGENTS.md` adapter (as in Step 2.3). Done when `cat CLAUDE.md` shows exactly `@AGENTS.md` plus a trailing newline. Then run the wording pass (Step 4) and nested-scope pass (Step 4b) over `AGENTS.md`, then verify (Step 6).
+Only `AGENTS.md` exists, so the content is already canonical. Write the adapter per Step 2.3 (same done-when). Then run the wording pass (Step 4) and nested-scope pass (Step 4b) over `AGENTS.md`, then verify (Step 6).
 
 ## Step 4 — Harness-wording pass over AGENTS.md
 
@@ -76,7 +76,7 @@ Verify each element without editing. Emit one compact pass/gap table, one row pe
 | Check | Pass criterion |
 |---|---|
 | Canonical file | `AGENTS.md` exists with real instruction content |
-| Adapter content | root `CLAUDE.md` is exactly `@AGENTS.md` + trailing newline |
+| Adapter content | root `CLAUDE.md` matches the Step 2.3 adapter criterion |
 | Instruction-source section | present right after the title in `AGENTS.md` |
 | Harness-isms | no unlabeled Claude-only wording remains (per Step 4) |
 | Nested pairs | every nested `CLAUDE.md` is a one-line adapter beside its `AGENTS.md`, and the root names them |

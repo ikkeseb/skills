@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Create a concise, paste-ready continuation handoff for the current task, save it under the active agent's handoff directory, and return the exact Markdown for a fresh session. Use only when the user explicitly invokes `/handoff` in Claude Code or `$handoff` in Codex; never trigger from wrap-up cues or when reading a pasted handoff.
+description: Create and save a concise, paste-ready continuation handoff for resuming the current task in a fresh session.
 disable-model-invocation: true
 ---
 
@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 A handoff is a judgment exercise, not template fill: the failure mode is a polished snippet that restates what the next session could read off `git status`. Create a compact, high-signal handoff for continuing the current task in a fresh session.
 
-Treat invocation as a request for a portable artifact. Do not substitute `/compact`, `/resume`, or `/fork`, and do not continue implementation except for narrow, read-only checks needed to make the handoff accurate.
+Do not substitute `/compact`, `/resume`, or `/fork`, and do not continue implementation except for narrow, read-only checks needed to make the handoff accurate.
 
 ## Build the handoff
 

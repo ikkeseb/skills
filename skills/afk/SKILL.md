@@ -1,14 +1,12 @@
 ---
 name: afk
 disable-model-invocation: true
-description: Posture skill for unattended autonomous work. Invoke ONLY when the user types the literal `/afk` command — a described intention to leave is not a trigger; only the command is. Sets a session posture (no clarifying questions, low-blast-radius default, audit-trail logging) that persists until an explicit return signal from the user.
+description: Posture for unattended autonomous work — front-loads all clarifications, then runs without questions on a low-blast-radius default, audit trail in the conversation, until an explicit return signal.
 ---
 
 # afk
 
 Posture for sessions where the user has handed work off and won't be available to course-correct in real time. Mutates session behavior until explicitly dropped. Common uses: overnight runs, discovery/optimization sweeps, audits, spec-driven implementation on low-risk repos, greenfield work.
-
-AFK is **not** "move fast". AFK is "work autonomously and leave a clean audit trail."
 
 ## Off-signal
 
@@ -51,7 +49,7 @@ Low-hanging fruit can be implemented during AFK when blast-radius rules hold and
 
 ### Bias toward uncertainty framing in the log
 
-Without live feedback, sycophancy creeps in. Counter-pressure: write `"uncertain about X because Y, proceeded because Z"` rather than `"this is correct"`. Calibration over confidence.
+Without live feedback, overconfidence creeps in — write `"uncertain about X because Y, proceeded because Z"` rather than `"this is correct"`.
 
 ## Logging
 

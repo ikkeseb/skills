@@ -1,7 +1,7 @@
 ---
 name: max-effort
 disable-model-invocation: true
-description: Posture skill activated by `/max-effort` (single-task) or `/max-effort sustained` (session). Adversarial review of the work in front of you — does it answer the real goal, and would it survive someone trying to break it? Sustained mode persists until an explicit off-signal from the user.
+description: Adversarial-review posture for high-stakes or irreversible work — test whether the result answers the real goal and survives attempts to break it. Single-task or sustained for the session.
 ---
 
 # max-effort

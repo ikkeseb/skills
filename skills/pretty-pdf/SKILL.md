@@ -1,15 +1,11 @@
 ---
 name: pretty-pdf
 disable-model-invocation: true
-description: >
-  Create visually polished, professionally designed PDF documents using weasyprint (HTML+CSS → PDF).
-  Use whenever creating a NEW PDF from scratch where the output should look designed — reports,
-  letters, invoices, CVs, or any other document that will be read or shared and benefits
-  from typographic care. Applies across all domains — work, personal, medical, legal, creative. Also
-  use when the source content lives in a docx that should be re-typeset into a polished PDF. Do NOT use
-  for: reading, extracting, merging, splitting, rotating, or form-filling existing PDFs (use the
-  default pdf skill); generating fillable AcroForm PDFs (weasyprint produces flat PDFs only); or
-  throwaway/quick-dump PDFs where the user signals they want output fast, not polished.
+description: >-
+  Create visually polished, professionally designed PDFs with weasyprint (HTML+CSS → PDF) —
+  reports, letters, invoices, CVs — from new content or by re-typesetting a docx. Not for
+  reading, merging, splitting, or form-filling existing PDFs (use the default pdf skill),
+  fillable AcroForm output, or quick throwaway PDFs.
 ---
 
 # Pretty PDF — Beautiful PDF Creation
@@ -32,6 +28,9 @@ see the Weasyprint Technical Notes in `references/base-styles.md`.
 1. **Read the source content first.** What kind of document is this — clinical summary,
    personal letter, recipe, quarterly report, CV? Tone, audience, density, and reading context
    drive every design choice that follows. Don't pick fonts or palette before you've read it.
+   Also weigh the reader relationship: a known reader (doctor, colleague, friend) lets the
+   document assume shared context and lean personal; an unknown reader (application, public
+   report) wants more formality and self-explanation.
 2. **Read `references/base-styles.md`** — the full CSS system, font pairings keyed to content
    cues, and color palettes.
 3. **Read `references/templates.md`** — HTML templates for common document types.
@@ -39,9 +38,8 @@ see the Weasyprint Technical Notes in `references/base-styles.md`.
    Word crops live in `document.xml`, not the media file; extracting the raw image loses them
    silently) or the document has long code blocks that will span pages (`§1` — a page footer
    pulled into a multi-page `<pre>` breaks copy/paste). Empirical traps with tidy fixes.
-5. **Fit fonts + palette + header + scale + edge to the content**, not to a default — see the
-   Anti-Convergence Rule below. Copy the full `<style>` block from `base-styles.md`, then swap
-   the `@import` and CSS variables for your picks.
+5. **Pick the five axes via the Anti-Convergence Rule below**, then copy the full `<style>`
+   block from `base-styles.md` and swap the `@import` and CSS variables for your picks.
 6. Choose a template from `references/templates.md`, or build from scratch.
 7. Write semantic HTML — `<h1>`, `<h2>`, `<p>`, `<table>`, `<blockquote>`, etc. Set
    `<html lang="...">` so hyphenation works.
@@ -53,9 +51,8 @@ see the Weasyprint Technical Notes in `references/base-styles.md`.
 
 ## Design Philosophy
 
-The goal is PDFs that look like they were typeset by someone who cares. Not "default LaTeX" and
-not "PowerPoint exported to PDF" — somewhere between a well-designed book interior and a premium
-consulting firm's deliverables.
+The goal is PDFs that look typeset by someone who cares — between a well-designed book
+interior and a premium consulting firm's deliverables.
 
 ### Core Principles
 
@@ -88,25 +85,3 @@ naturally looks nothing like a personal letter in Cormorant + Terracotta + `.hea
 + `.scale-generous` + standard edges — because the content pulled them apart, not a quota. Smoke
 test: if a document came out looking like the last one, ask whether you read its content or
 defaulted. If the content genuinely is similar, similar is the right answer.
-
-## Choosing a Design Direction
-
-Before writing HTML, decide on the design direction based on what's being created:
-
-| Context | Palette | Typography feel | Density |
-|---------|---------|-----------------|---------|
-| Business/corporate | Slate, Ocean, or Ink | Clean sans-serif headings, serif body | Medium |
-| Medical/clinical | Muted teal or warm gray | Clear sans-serif throughout | High — scannable |
-| Personal letter | Warm earthy tones or soft palette | Elegant serif throughout | Low — spacious |
-| Creative/portfolio | Bold accent, dark bg option | Distinctive display font | Varies |
-| Legal/formal | Conservative dark palette | Traditional serif | High |
-| Invoice/financial | Clean minimal | Tabular sans-serif | Medium-high |
-| Data tearsheet / dataviz | Saturated accent or custom multi-color (the chart carries the color story) | Restrained sans — let the visualization be the visual interest, not the typography | Medium — chart-led |
-| Educational diagram / atlas / reference card | Saturated or color-coded (e.g. by category) | Either — sans for atlas/clinical feel, serif for textbook feel | Medium |
-
-These are starting points, not rules. The CSS system in `base-styles.md` uses CSS custom properties
-so you can swap the entire palette by changing 6 variables.
-
-**Also weigh the reader relationship:** a known reader (doctor, colleague, friend) lets the
-document assume shared context and lean personal; an unknown reader (application, public report)
-wants more formality and self-explanation.

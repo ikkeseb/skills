@@ -3,31 +3,15 @@ name: context-audit
 disable-model-invocation: true
 description: >-
   Audit a project's CLAUDE.md and context architecture, then propose a leaner
-  structure that moves domain-specific rules out of always-on static context
-  and into auto-loading skills, nested CLAUDE.md files, or hooks — so the agent
-  isn't slowed or distracted by rules irrelevant to the current task.
-  Analysis-only: produces a classification, draft files, and an honest
-  worth-it verdict for the user to apply by hand. Use this whenever the user
-  wants to audit, slim, declutter, or reorganize a CLAUDE.md / context setup,
-  mentions context bloat, a bloated or huge CLAUDE.md, the agent "loading too
-  much" or "getting confused" by unrelated rules, or asks where a rule should
-  live (static vs skill vs nested file vs hook). Do NOT trigger for routine
-  edits that just add or change one rule.
+  structure — universal rules stay static, domain rules move to skills, nested
+  files, or hooks. Analysis-only — produces a classification, draft files, and
+  an honest worth-it verdict for the user to apply by hand.
 ---
 
 # Context Audit
 
 Audit exercise, not a line-count diet. The win is **attention, not tokens** — and the
 failure mode is splitting a lean file into indirection nobody needed.
-
-## Why
-
-Everything in a project's `CLAUDE.md` is **static context** — it loads every session no
-matter what the task touches. The tokens are cheap; the cost is that irrelevant rules
-crowd the agent's attention, so it conflates unrelated rules or follows a guideline meant
-for another subsystem. Keep static only what *every* session needs; let the rest load on
-demand, exactly when the task calls for it. Claude Code supports this natively — map each
-rule to the right loader, don't invent one.
 
 ## Mechanics — how Claude Code loads context
 
@@ -54,8 +38,7 @@ Build the proposal on the real mechanics, not folklore:
   the only mechanism that fires *guaranteed*, not "if the model matches" — reserve them
   for the handful of sacred invariants.
 
-The upshot: a **spectrum**, not a static-vs-manual binary. Route each rule to the
-cheapest mechanism that still guarantees it shows up when needed (see the table below).
+Route each rule to the cheapest mechanism that still guarantees it shows up when needed.
 
 ## When to run — and when to stop
 
@@ -82,9 +65,8 @@ nudge, not a law.)
 4. **Place** each rule via the table below.
 5. **Draft** ready-to-review files (slimmed `CLAUDE.md` + one file per extracted domain
    + any hook config).
-6. **Verdict** — state honestly whether it's worth it. A no-op "leave it" is a valid,
-   useful result, not a failure: near-done or rarely-touched projects may not repay the
-   migration plus the ongoing "where does this rule live?" overhead.
+6. **Verdict** — apply the worth-it test above; a no-op "leave it" is a valid,
+   useful result, not a failure.
 
 ## Classify on two axes
 

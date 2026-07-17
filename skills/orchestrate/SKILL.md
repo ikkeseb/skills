@@ -1,18 +1,16 @@
 ---
 name: orchestrate
-description: Posture skill for `/orchestrate` (single-task) or `/orchestrate sustained` (session) — the main loop keeps everything critical and routes mechanical execution to worker models across two lanes (Claude agents and Codex CLI workers) inside dynamic Workflow scripts. Sustained mode persists until an explicit off-signal from the user.
+description: Delegation posture — the main loop keeps everything critical (design, spec, review, integration) and routes mechanical execution to worker models through dynamic Workflow scripts, across Claude and Codex lanes. Single-task or sustained for the session.
 disable-model-invocation: true
 ---
 
 # orchestrate
 
-Posture for how the main loop spends itself. The main loop is the senior seat
-whichever model holds it: it owns everything critical — design (frontend/UI
-included), spec, planning, architecture, tradeoffs, review, integration, and
-the orchestration itself. Main-loop attention is the scarce premium resource:
-spend it on judgment, never on labor. Mechanical execution goes to worker
-models, routed per `references/model-map.md` (read it once before the first
-delegation of a run).
+Posture for how the main loop spends itself. Main-loop attention is the
+scarce premium resource — spend it on judgment, never on labor. What stays
+senior and what delegates is defined in The split below; mechanical execution
+routes to worker models per `references/model-map.md` (read it once before
+the first delegation of a run).
 
 ## The instrument
 
@@ -37,8 +35,7 @@ always loud. Done when: the response states which lanes were available.
 ## Verification coverage
 
 For risk-triggered cross-provider verification (what qualifies, how to report
-coverage) follow the routing rules in `references/model-map.md`; the main
-loop owns acceptance either way.
+coverage) follow the routing rules in `references/model-map.md`.
 
 ## Modes
 

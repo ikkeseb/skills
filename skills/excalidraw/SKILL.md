@@ -1,12 +1,10 @@
 ---
 name: excalidraw
 disable-model-invocation: true
-description: Generate `.excalidraw` JSON diagrams for relationships, flows, architectures, or system structure. Emits hand-drawn-style `.excalidraw` JSON — for editable draw.io/diagrams.net files use the drawio skill instead. Invoke ONLY when the user explicitly asks for a diagram or types `/excalidraw` — do NOT auto-invoke from soft cues like "show me" or "walk me through". Do NOT use for numerical charts (use a charting tool), UI mockups, or text documentation.
+description: Generate hand-drawn-style `.excalidraw` JSON diagrams for relationships, flows, architectures, and system structure. For editable draw.io/diagrams.net files use the drawio skill; for numerical charts use a charting tool.
 ---
 
 # Excalidraw Diagram Creator
-
-Generate `.excalidraw` JSON files that **argue visually**, not just display information.
 
 ## Environment Detection
 
@@ -15,12 +13,6 @@ This skill works in both Claude Code and Claude Chat.
 **Claude Code** (`~/.claude/skills/excalidraw/` or `<project>/.claude/skills/excalidraw/`): Generate the `.excalidraw` JSON and deliver it, then offer opt-in follow-ups (see Design Process Step 7).
 
 **Claude Chat** (`/mnt/skills/user/excalidraw/`): Create the `.excalidraw` JSON file and save to `/mnt/user-data/outputs/`. The user opens it in [excalidraw.com](https://excalidraw.com) or the Excalidraw desktop app. No render loop — get it right by following the methodology carefully.
-
-## Customization
-
-All colors live in `references/color-palette.md`. Edit that file to rebrand — everything else is universal methodology.
-
----
 
 ## Core Philosophy
 
@@ -42,7 +34,7 @@ Use abstract shapes when explaining mental models, the audience doesn't need tec
 ### Comprehensive / Technical
 Use concrete examples when diagramming a real system, the diagram will teach or explain, the audience needs to understand what things actually look like, or you're showing how technologies integrate.
 
-**For technical diagrams, include evidence artifacts** — real code snippets, actual JSON payloads, real event/method names from specs. Research actual specs, formats, and terminology first. See the Evidence Artifacts section.
+**For technical diagrams, include evidence artifacts** — see the Evidence Artifacts section.
 
 ---
 
@@ -133,8 +125,7 @@ Default to free-floating text. Add containers only when they serve a purpose.
 For diagrams with ~50+ elements, build section-by-section (one section per edit) to stay
 under output limits and preserve layout quality. Namespace `seed` values by section so IDs
 stay legible — section 1 uses `100xxx`, section 2 `200xxx`, and so on. After all sections
-are built, review the whole for cross-section arrow bindings, spacing balance, and that every
-ID reference points at an existing element.
+are built, review the whole for cross-section arrow bindings and spacing balance.
 
 ---
 

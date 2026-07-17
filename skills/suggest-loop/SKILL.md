@@ -1,7 +1,7 @@
 ---
 name: suggest-loop
 disable-model-invocation: true
-description: Propose ready-to-paste `/loop` prompts for a target repo. Reads the repo's documented verification gate and emits 2–3 inline `/loop` suggestions with stop conditions baked in. Use when the user asks "what could I loop here", wants an autonomous fix/babysit loop but can't author the prompt themselves, or asks how `/loop` applies to this repo. Do NOT use to actually run a loop — that's the `/loop` command itself; this only writes the prompt text. Refuse (and say why) when the repo has no documented machine gate, or when the work is taste/ear-gated.
+description: Draft 2–3 paste-ready `/loop` prompts from a repo's documented verification gate, stop conditions baked in — or explain why the work isn't safely loopable. Writes the prompt text only; running loops is `/loop` itself.
 ---
 
 # suggest-loop
@@ -24,9 +24,8 @@ suggestion — every claim about *how* `/loop` behaves comes from there, not pri
 1. **Find the hard gate.** Read the target repo's `CLAUDE.md`, `package.json`
    scripts, CI config, test setup — whatever documents how work is checked.
    You're looking for a *machine* signal: an exit code, a measured assertion, an
-   emptying queue. If the repo documents **no** verification signal, stop and say
-   so — suggest the repo document one first; **do not fabricate a gate**. A
-   suggestion is only as good as the documented oracle.
+   emptying queue. No documented signal → refuse (see Anti-patterns); **do not
+   fabricate a gate**.
 2. **Match the gate to real work.** A failing suite, a backlog item, a scoped
    feature, a refactor that must stay green. The loop has to be *about*
    something in this repo, not a generic shape.
