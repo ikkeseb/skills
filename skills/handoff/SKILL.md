@@ -42,6 +42,8 @@ Make `## Next` executable: lead with the clearest next step, then name any prere
 4. Never overwrite a file. If the name already exists, append `-2`, `-3`, and so on before `.md`.
 5. Ensure the saved file contains exactly the handoff Markdown and ends with a newline.
 
+Done when: the file exists at the chosen path with exactly the handoff content — verify by reading it back, so a partial failure anywhere in the sequence is caught before the Reply claims success.
+
 ## Reply
 
 After a successful write, reply with `Saved to <absolute path>. Snip below for cross-context paste:` followed by a four-backtick `markdown` fence containing exactly the saved file content. Add nothing after the fence.
