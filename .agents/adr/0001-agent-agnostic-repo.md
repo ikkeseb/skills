@@ -37,8 +37,7 @@ Claude-specific frontmatter, so one repo can serve both harnesses.
 
 Improvements land once. The Codex-supported set is explicit and greppable.
 The published Claude plugin is curated via the explicit `skills` list in
-`.claude-plugin/plugin.json`. Full background and evidence:
-`docs/plans/2026-07-16-agent-agnostic-skills-plan.md`.
+`.claude-plugin/plugin.json`.
 
 ## Amendment (2026-07-17) — Codex packaging route verified and adopted
 
