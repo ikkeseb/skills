@@ -10,7 +10,7 @@ when experience disagrees.
 
 | model | lane | cost | intelligence | taste | default effort | default role | fallback |
 |---|---|---:|---:|---:|---|---|---|
-| fable-5 (or session model) | main loop | 2 | 10 | 9 | — | Senior seat: orchestration, synthesis, final review. Not a delegate. | — |
+| fable-5 (or session model) | main loop | 2 | 10 | 9 | — | Senior seat: orchestration, synthesis, final review. Not a delegate. Scores describe fable-5; the seat invariant holds for whatever model runs the session — when the seat's model family also appears as a delegate, verify its lane's work in the other lane. | — |
 | opus-4.8 | claude | 5 | 8 | 8 | high/xhigh | Real-coding workhorse; best taste among delegates — user-facing surface (UI, copy, API shape) build-out | gpt-5.6-sol |
 | gpt-5.6-sol | codex | 5 | 8–9 | 6 | high/xhigh | Heavy implementation, root-cause work | opus-4.8 |
 | gpt-5.6-sol @ max | codex | 3 | 9–10 | 6 | max | Adversarial verification, independent second opinion on critical work | opus-4.8 @ xhigh |
