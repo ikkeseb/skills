@@ -10,7 +10,7 @@
 #       [--sandbox read-only|workspace-write]               (default: read-only)
 #       [--workspace <dir>]                                 (default: $PWD)
 #       [--expected-base-sha <sha>]  fail unless HEAD matches at launch time
-#       [--schema-file <json-schema file>]
+#       [--schema-file <json-schema file>]  linted locally for OpenAI strict mode
 #       [--timeout <seconds>]                               (default: 3600)
 #       [--run-dir <dir>]  caller-minted run dir (must be empty/nonexistent);
 #                          lets the orchestrator harvest from disk if the
@@ -262,6 +262,30 @@ cmd_run() {
   [ -n "$model" ] || fail_json usage "--model is required"
   [ -f "$prompt_file" ] || fail_json usage "--prompt-file missing or unreadable: $prompt_file"
   [ -z "$schema_file" ] || [ -f "$schema_file" ] || fail_json usage "--schema-file unreadable: $schema_file"
+  # OpenAI structured output runs in strict mode: every object level must set
+  # additionalProperties:false and list EVERY property key in required
+  # (optional keys are expressed as required-but-nullable, never omitted).
+  # Violations otherwise surface only as a 400 invalid_json_schema after a
+  # full worker startup round-trip — lint locally and fail fast instead.
+  if [ -n "$schema_file" ]; then
+    local schema_lint
+    schema_lint="$(jq -r '. as $doc
+      | [ ([], paths(if type == "object" then has("properties") else false end))
+        | . as $p | ($doc | getpath($p))
+        | select(type == "object" and has("properties")) | . as $o
+        | [ (if $o.additionalProperties != false
+             then "additionalProperties must be false" else empty end),
+            ((($o.properties | keys) - ($o.required // []))
+             | if length > 0
+               then "required must list: " + join(", ") else empty end) ]
+        | select(length > 0)
+        | "\(if ($p | length) == 0 then "(root)"
+             else ($p | map(tostring) | join(".")) end): \(join("; "))"
+      ] | join(" | ")' "$schema_file" 2>/dev/null)" \
+      || fail_json usage "--schema-file is not valid JSON: $schema_file"
+    [ -z "$schema_lint" ] || fail_json usage \
+      "--schema-file violates OpenAI strict mode ($schema_lint) — every object needs additionalProperties:false and a required array listing every property key"
+  fi
   [ -d "$workspace" ] || fail_json usage "--workspace is not a directory: $workspace"
   is_pos_int "$timeout_secs" && [ ${#timeout_secs} -le 6 ] && [ "$timeout_secs" -le 86400 ] \
     || fail_json usage "--timeout must be an integer between 1 and 86400"

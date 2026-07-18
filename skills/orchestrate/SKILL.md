@@ -27,6 +27,30 @@ declared sequential fallback, never silent drift. Every delegated call pins
 `{model, effort}` explicitly and returns typed data — Workflow stages via
 the `schema` option — not prose to re-parse.
 
+## Instrument pitfalls (field-observed)
+
+- **Workflow `args` may arrive JSON-stringified** despite being passed as an
+  object. Open scripts that consume structured `args` with
+  `if (typeof args === 'string') args = JSON.parse(args)` — or hardcode the
+  values as constants.
+- **Workflow resume caches on `(prompt, opts)` only.** Fixing a file the
+  prompt merely *references* (schema file, prompt file, data file) is
+  invisible to the cache: resume replays the stale failure. Bust it by
+  editing the stage prompt (e.g. a `[dispatch v2 — <what changed>]` marker),
+  and mint attempt-suffixed run dirs/paths so no two attempts share disk
+  state.
+- **Schema-valid is not real.** A schema-forced recon/inventory stage can
+  return syntactically valid placeholder output. Put an anti-stub clause in
+  the prompt ("placeholder values are a failed task; reconcile your count
+  against a raw `rg -c` run and state both numbers") and sanity-check result
+  sizes in the main loop before consuming. Exhaustive-inventory stages run at
+  high effort, not medium.
+- **Plugin commands with `disable-model-invocation` can't go through the
+  Skill tool.** The flag blocks autonomous triggering, not a user-ordered
+  run: when the user has explicitly asked for that pass, run the command's
+  documented underlying script directly via Bash with the same arguments,
+  and say that's what happened.
+
 ## Two worker lanes
 
 - **Claude lane**: Workflow `agent()` calls — opus at high effort is the

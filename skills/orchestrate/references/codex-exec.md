@@ -39,20 +39,70 @@ scripts/codex-worker.sh run \
   [--workspace "$PWD"]                 # the checkout/worktree the worker sees
   [--expected-base-sha "$SHA"]         # refuse to run unless HEAD matches;
                                        #   REQUIRED for workspace-write
-  [--schema-file "$DIR/schema.json"]   # JSON Schema the result must satisfy
+  [--schema-file "$DIR/schema.json"]   # JSON Schema the result must satisfy;
+                                       #   must be OpenAI strict-mode valid
+                                       #   (see below) — the helper lints it
+                                       #   locally before dispatch
   [--timeout 3600]
   [--run-dir "$RUN_DIR"]               # orchestrator-minted empty dir; the
-                                       #   durable receipt for lost-adapter
-                                       #   recovery (see Delivery ownership)
+                                       #   durable result locator (see
+                                       #   Delivery ownership)
 ```
+
+Schema files run under OpenAI **strict mode**: every object level needs
+`additionalProperties: false` and a `required` array listing *every* key in
+`properties` — optional keys are expressed as required-but-nullable, never
+omitted. The helper lints this locally and fails fast (`usage`) instead of
+letting it surface as a 400 `invalid_json_schema` after a full worker
+startup.
 
 Mint the run dir in the orchestrator before dispatch (`RUN_DIR="$(mktemp -d)"`
 — pass a path that does not exist yet or is empty) and pass it with
-`--run-dir`, so the result location is known even if the adapter never
-reports back.
+`--run-dir`, so the result location is known even if the dispatching agent
+never reports back. **Fresh run dir per attempt, always**: the helper refuses
+a non-empty dir (mixed evidence), and a retry that reuses the previous
+attempt's path — which is exactly what a Workflow resume replays — fails on
+that guard. Suffix an attempt counter into both the run-dir path and the
+dispatch prompt (the prompt edit also busts the resume cache; see the resume
+notes in the orchestrate skill).
 
-Prefer dispatching through the `codex-worker` agent type when it appears in
-the session's agent list — plugin installs namespace it as
+Sandbox choice is about execution, not just writes: `read-only` blocks **all
+process spawning**, so a read-only worker cannot run tests, linters, or even
+`node --check` — it can only read and reason. If the task must *run* anything,
+use `workspace-write` in a throwaway worktree; keep `read-only` for pure
+read-and-reason work, and don't ask a read-only worker to execute gates.
+
+Worker runtime is task-shaped and not reliably predictable — a max-effort
+verification mandate has been observed running 86 tool steps over 14+
+minutes. Don't tune `--timeout` per role; leave headroom (the 3600 default is
+fine under background dispatch) and, for verification-heavy prompts, state a
+time/effort budget in the prompt itself (e.g. "recon facts are already
+verified; spend your run on judgment; finish within 30 minutes").
+
+## Two dispatch patterns
+
+Pick by expected runtime, at dispatch, and never switch owners mid-job:
+
+**Background dispatch + run-dir harvest — the default.** Any run that *may*
+exceed ~8 minutes (max-effort work, verification mandates, real repo audits —
+in practice most Codex-lane stages) is dispatched by the main loop itself:
+mint the run dir, start the helper with the Bash tool's `run_in_background`,
+and harvest `RUN_DIR/final.json` on `turn.completed` (terminal-state check
+below). The main loop owns delivery from the start; no adapter agent is
+involved. This is the primary delivery path, not a recovery mode — the
+foreground relay's timing contract structurally cannot hold for long runs.
+
+**Foreground adapter relay — short runs only.** The Bash tool's timeout
+parameter is hard-capped at 600000 ms and the call auto-backgrounds past it,
+which silently breaks a foreground relay: the invariant "tool timeout
+outlives helper deadline" is only satisfiable under 600 s. So relay through
+an adapter only when the run is confidently short (small prompt, low/medium
+effort), with helper `--timeout 540` and Bash timeout 600000. A run that
+would need more time is a background-dispatch case, full stop — do not raise
+the relay numbers.
+
+For the relay, prefer the `codex-worker` agent type when it appears in the
+session's agent list — plugin installs namespace it as
 `ikkeseb-skills:codex-worker`. Otherwise (e.g. skills installed by symlink,
 which carries no agents) spawn a default agent as the adapter — sonnet at
 low effort is right for the relay — with this verified prompt (fill the
@@ -62,13 +112,13 @@ mode; for write workers swap in the write-gate flags below):
 ```
 You are a one-shot Codex-lane adapter. Do EXACTLY this, nothing else:
 1. Run this exact command with Bash in a SINGLE FOREGROUND invocation, with
-   the Bash tool's timeout parameter set to 900000 — it may legitimately
+   the Bash tool's timeout parameter set to 600000 — it may legitimately
    take several minutes (including a worker-slot queue wait); do NOT kill,
    re-run, or modify it:
    HELPER_ABS_PATH run --model MODEL --effort EFFORT \
      --sandbox read-only --workspace WORKSPACE \
      --prompt-file PROMPT_FILE --schema-file SCHEMA_FILE \
-     --run-dir RUN_DIR --timeout 840
+     --run-dir RUN_DIR --timeout 540
 2. Return the helper's ENTIRE stdout verbatim as your result.
 Rules: strictly one-shot — never retry, never interpret or summarize the
 result, never touch the repo. Foreground means foreground: never set
@@ -78,24 +128,24 @@ delivery. If you cannot keep the single blocking call open, do not start
 it; return the raw error text instead.
 ```
 
-Either way the adapter relays the helper's JSON verbatim as its final
-message — pair it with a matching Workflow `schema` so the orchestrator
-gets typed data.
+The adapter relays the helper's JSON verbatim as its final message — pair it
+with a matching Workflow `schema` so the orchestrator gets typed data. But
+treat the run-dir as ground truth even on success: adapters have been
+observed wrapping the JSON in code fences or prose despite the verbatim
+instruction, so when anything about the relayed text is off, parse
+`RUN_DIR/final.json` instead of fighting the relay.
 
 ## Delivery ownership and lost-adapter recovery
 
-One job, one delivery owner, fixed at dispatch:
-
-- **Foreground-relay** (the default above): the adapter blocks on the single
-  helper call and relays stdout. This is legitimate delivery *only* because
-  the call stays foreground for the whole run — the tool timeout (900s)
-  exceeds the helper deadline (840s), so the helper always emits terminal
-  JSON before the adapter's call can die.
-- **Main-loop harvest** (fallback, not a mode to design for): if an adapter
-  goes idle or dies without returning JSON, ownership does NOT bounce back
-  through the adapter. Never ping or re-invoke it — an idle adapter is
-  evidence of a lost delivery, not a paused one. Recover from ground truth
-  in the orchestrator-minted `--run-dir`:
+One job, one delivery owner, fixed at dispatch. Background dispatches are
+main-loop-owned by construction. For foreground relays, the adapter blocks
+on the single helper call and relays stdout — legitimate only while the call
+stays foreground for the whole run. If an adapter goes idle or dies without
+returning JSON, ownership does NOT bounce back through the adapter. Never
+ping or re-invoke it — an idle adapter is evidence of a lost delivery, not a
+paused one. Recover from ground truth in the orchestrator-minted
+`--run-dir`, using the same terminal-state check as a normal background
+harvest:
   1. Terminal-state check: the helper (and codex) processes are gone AND
      `events.jsonl` contains a `turn.completed` event. `jq -Rrse
      '[split("\n")[] | fromjson? | .type] | index("turn.completed") != null'
@@ -146,6 +196,17 @@ the orchestrator:
 
 Never blind-retry a `workspace-write` failure of any class: the tree may hold
 a partial change that must be inspected, not overwritten.
+
+Known signals when reading `stderr.log` on 0.144.x:
+
+- `failed to load/renew models cache: missing field supports_reasoning_summaries`
+  recurring on every run is harmless noise (stale `~/.codex` models cache vs
+  a newer CLI schema) — don't let it mask the real failure line.
+- On Windows, repeated `code-mode host closed its stdout` with exit code
+  `-1073741502` (0xC0000142, STATUS_DLL_INIT_FAILED) is an intermittent
+  Codex-CLI runtime crash, observed under heavy `max`-effort runs. It is an
+  availability failure, not a quality miss: re-route the stage to the Claude
+  lane instead of retrying the crash lottery.
 
 ## Write-worker gates
 
