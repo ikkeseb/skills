@@ -11,7 +11,8 @@
 #       [--workspace <dir>]                                 (default: $PWD)
 #       [--expected-base-sha <sha>]  fail unless HEAD matches at launch time
 #       [--schema-file <json-schema file>]  linted locally for OpenAI strict mode
-#       [--timeout <seconds>]                               (default: 3600)
+#       [--timeout <seconds>]  TOTAL wall-clock deadline including any
+#                              worker-slot queue wait     (default: 3600)
 #       [--run-dir <dir>]  caller-minted run dir (must be empty/nonexistent);
 #                          lets the orchestrator harvest from disk if the
 #                          adapter relaying stdout is lost (default: mktemp)
@@ -42,10 +43,19 @@ SLOT_DIR="" WS_LOCK="" CODEX_PID=""
 # else just legitimately acquired.
 LOCK_TOKEN="$$-$RANDOM-$RANDOM"
 
+FAIL_RUN_DIR=""  # set once the run dir exists; lets every later failure mirror there
 fail_json() { # fail_json <error_class> <message> [run_dir]
-  jq -n --arg class "$1" --arg msg "$2" --arg run_dir "${3:-}" \
+  local rd="${3:-$FAIL_RUN_DIR}" out
+  out="$(jq -n --arg class "$1" --arg msg "$2" --arg run_dir "$rd" \
     '{ok: false, error_class: $class, error: $msg}
-     + (if $run_dir == "" then {} else {run_dir: $run_dir} end)'
+     + (if $run_dir == "" then {} else {run_dir: $run_dir} end)')"
+  # Mirror the verdict into the run dir (atomically) so a harvest that never
+  # sees stdout still gets the full envelope, not just the model payload.
+  if [ -n "$rd" ] && [ -d "$rd" ]; then
+    printf '%s\n' "$out" > "$rd/result.json.tmp" 2>/dev/null \
+      && mv -f "$rd/result.json.tmp" "$rd/result.json" 2>/dev/null || true
+  fi
+  printf '%s\n' "$out"
   exit 0
 }
 
@@ -262,29 +272,56 @@ cmd_run() {
   [ -n "$model" ] || fail_json usage "--model is required"
   [ -f "$prompt_file" ] || fail_json usage "--prompt-file missing or unreadable: $prompt_file"
   [ -z "$schema_file" ] || [ -f "$schema_file" ] || fail_json usage "--schema-file unreadable: $schema_file"
-  # OpenAI structured output runs in strict mode: every object level must set
+  # OpenAI structured output runs in strict mode: the root must be an object
+  # schema (no root anyOf), and every object schema must set
   # additionalProperties:false and list EVERY property key in required
   # (optional keys are expressed as required-but-nullable, never omitted).
   # Violations otherwise surface only as a 400 invalid_json_schema after a
   # full worker startup round-trip — lint locally and fail fast instead.
+  # The traversal is schema-keyword-aware (properties/items/anyOf/allOf/
+  # $defs/definitions), so a data field literally named "properties" is not
+  # mistaken for a schema node. $ref targets outside $defs/definitions are
+  # not resolved — those pass the lint and rely on the server check.
   if [ -n "$schema_file" ]; then
     local schema_lint
-    schema_lint="$(jq -r '. as $doc
-      | [ ([], paths(if type == "object" then has("properties") else false end))
-        | . as $p | ($doc | getpath($p))
-        | select(type == "object" and has("properties")) | . as $o
-        | [ (if $o.additionalProperties != false
-             then "additionalProperties must be false" else empty end),
-            ((($o.properties | keys) - ($o.required // []))
-             | if length > 0
-               then "required must list: " + join(", ") else empty end) ]
-        | select(length > 0)
-        | "\(if ($p | length) == 0 then "(root)"
-             else ($p | map(tostring) | join(".")) end): \(join("; "))"
+    schema_lint="$(jq -r '
+      def walk_s($p):
+        if type != "object" then empty
+        else
+          [$p, .],
+          ((.properties? // {}) | select(type == "object") | to_entries[]
+            | .key as $k | .value | walk_s($p + ["properties", $k])),
+          ((.items? // empty) | walk_s($p + ["items"])),
+          ((.anyOf? // []) | select(type == "array") | to_entries[]
+            | .key as $i | .value | walk_s($p + ["anyOf", $i])),
+          ((.allOf? // []) | select(type == "array") | to_entries[]
+            | .key as $i | .value | walk_s($p + ["allOf", $i])),
+          ((."$defs"? // {}) | select(type == "object") | to_entries[]
+            | .key as $k | .value | walk_s($p + ["$defs", $k])),
+          ((.definitions? // {}) | select(type == "object") | to_entries[]
+            | .key as $k | .value | walk_s($p + ["definitions", $k]))
+        end;
+      . as $doc
+      | [ (if ($doc | type) != "object"
+              or ($doc | has("anyOf"))
+              or (($doc | has("type")) and $doc.type != "object")
+           then "(root): must be a single object schema (type \"object\", no root anyOf)"
+           else empty end),
+          ($doc | walk_s([])
+            | . as [$p, $o]
+            | select(($o.type? == "object") or ($o | has("properties")))
+            | [ (if $o.additionalProperties != false
+                 then "additionalProperties must be false" else empty end),
+                ((($o.properties? // {} | keys) - ($o.required? // []))
+                 | if length > 0
+                   then "required must list: " + join(", ") else empty end) ]
+            | select(length > 0)
+            | "\(if ($p | length) == 0 then "(root)"
+                 else ($p | map(tostring) | join(".")) end): \(join("; "))")
       ] | join(" | ")' "$schema_file" 2>/dev/null)" \
-      || fail_json usage "--schema-file is not valid JSON: $schema_file"
+      || fail_json usage "--schema-file is not valid JSON (or not lintable as a JSON Schema): $schema_file"
     [ -z "$schema_lint" ] || fail_json usage \
-      "--schema-file violates OpenAI strict mode ($schema_lint) — every object needs additionalProperties:false and a required array listing every property key"
+      "--schema-file violates OpenAI strict mode ($schema_lint) — object root, additionalProperties:false, and required listing every property key"
   fi
   [ -d "$workspace" ] || fail_json usage "--workspace is not a directory: $workspace"
   is_pos_int "$timeout_secs" && [ ${#timeout_secs} -le 6 ] && [ "$timeout_secs" -le 86400 ] \
@@ -317,6 +354,14 @@ cmd_run() {
     run_dir="$(mktemp -d "${TMPDIR:-/tmp}/codex-worker.XXXXXX")"
   fi
   mkdir -p "$run_dir/tmp"
+  FAIL_RUN_DIR="$run_dir"
+
+  # --timeout is the TOTAL wall-clock deadline, queue wait included: a
+  # foreground caller sizing its tool timeout against --timeout must not be
+  # blindsided by a long slot wait that starts before the run clock does.
+  local start_ts
+  start_ts="$(date +%s)"
+  [ "$SLOT_WAIT_SECS" -le "$timeout_secs" ] || SLOT_WAIT_SECS="$timeout_secs"
 
   acquire_slot
   [ "$sandbox" != "workspace-write" ] || acquire_workspace_lock "$workspace"
@@ -354,6 +399,15 @@ cmd_run() {
     fi
   fi
 
+  local setup_elapsed remaining_secs
+  setup_elapsed=$(( $(date +%s) - start_ts ))
+  remaining_secs=$(( timeout_secs - setup_elapsed ))
+  if [ "$remaining_secs" -lt 1 ]; then
+    release_locks; trap - EXIT INT TERM HUP
+    fail_json timeout \
+      "deadline exhausted before launch (${setup_elapsed}s of ${timeout_secs}s spent on queue wait and gates)" "$run_dir"
+  fi
+
   build_worker_env
   local -a env_args=("${WORKER_ENV[@]}" TMPDIR="$run_dir/tmp")
 
@@ -385,7 +439,7 @@ cmd_run() {
   set +m
   local elapsed=0 timed_out=false
   while kill -0 "$CODEX_PID" 2>/dev/null; do
-    if [ "$elapsed" -ge "$timeout_secs" ]; then
+    if [ "$elapsed" -ge "$remaining_secs" ]; then
       timed_out=true
       kill_worker_group
       break
@@ -428,7 +482,7 @@ cmd_run() {
 
   local ok=false error_class="" error=""
   if [ "$timed_out" = true ]; then
-    error_class=timeout; error="worker exceeded ${timeout_secs}s"
+    error_class=timeout; error="worker exceeded the ${timeout_secs}s total deadline (${setup_elapsed}s of it queue wait and gates)"
   elif [ "$exit_code" -eq 0 ] && [ "$turn_completed" = true ] && [ "$result_ok" = true ]; then
     ok=true
   else
@@ -453,6 +507,10 @@ cmd_run() {
     jq -Rs . "$run_dir/final.json" > "$run_dir/result.norm.json" 2>/dev/null \
       || printf 'null\n' > "$run_dir/result.norm.json"
   fi
+  # The full envelope (verdict included) is written atomically into the run
+  # dir before it is printed: a harvester that never sees stdout reads
+  # result.json and gets the same authoritative ok/error_class verdict, not
+  # just the model payload in final.json.
   jq -n \
     --argjson ok "$ok" \
     --arg error_class "$error_class" --arg error "$error" \
@@ -470,7 +528,10 @@ cmd_run() {
       exit_code: $exit_code, turn_completed: $turn_completed,
       run_dir: $run_dir, stderr_tail: $stderr_tail}
      + (if $ok then {}
-        else {error_class: $error_class, error: $error, api_error: $api_error} end)'
+        else {error_class: $error_class, error: $error, api_error: $api_error} end)' \
+    > "$run_dir/result.json.tmp"
+  mv -f "$run_dir/result.json.tmp" "$run_dir/result.json"
+  cat "$run_dir/result.json"
 }
 
 case "${1:-}" in

@@ -4,6 +4,26 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.7.2 — 2026-07-18
+
+Fixes from an adversarial (Codex) review of 0.7.1:
+
+- The helper now mirrors its full result envelope atomically to
+  `RUN_DIR/result.json` (success and every failure class), so a background
+  harvest gets the authoritative `ok`/`error_class` verdict instead of just
+  the model payload in `final.json`. Harvest steps updated to gate on it.
+- `--timeout` is now the total wall-clock deadline including worker-slot
+  queue wait — the foreground relay's 540/600000 invariant previously broke
+  under slot contention (queue wait started before the run clock).
+- The schema lint traversal is schema-keyword-aware
+  (`properties`/`items`/`anyOf`/`allOf`/`$defs`/`definitions`) instead of
+  matching any object containing a `properties` key — a field literally
+  named `properties` no longer false-positives — and it now rejects
+  non-object and `anyOf` roots.
+- orchestrate SKILL.md explicitly authorizes main-loop background dispatch
+  of Codex workers as delegation mechanics (was contradictory with the new
+  primary path).
+
 ## 0.7.1 — 2026-07-18
 
 Codex-lane hardening from two field sessions' friction logs:

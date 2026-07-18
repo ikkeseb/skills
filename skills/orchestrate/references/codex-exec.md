@@ -43,7 +43,8 @@ scripts/codex-worker.sh run \
                                        #   must be OpenAI strict-mode valid
                                        #   (see below) — the helper lints it
                                        #   locally before dispatch
-  [--timeout 3600]
+  [--timeout 3600]                     # TOTAL wall-clock deadline, worker-
+                                       #   slot queue wait included
   [--run-dir "$RUN_DIR"]               # orchestrator-minted empty dir; the
                                        #   durable result locator (see
                                        #   Delivery ownership)
@@ -87,9 +88,11 @@ Pick by expected runtime, at dispatch, and never switch owners mid-job:
 exceed ~8 minutes (max-effort work, verification mandates, real repo audits —
 in practice most Codex-lane stages) is dispatched by the main loop itself:
 mint the run dir, start the helper with the Bash tool's `run_in_background`,
-and harvest `RUN_DIR/final.json` on `turn.completed` (terminal-state check
-below). The main loop owns delivery from the start; no adapter agent is
-involved. This is the primary delivery path, not a recovery mode — the
+and harvest `RUN_DIR/result.json` — the helper's full envelope, written
+atomically at termination — accepting the payload only on `ok: true` (the
+verdict lives in the envelope, never in `final.json`, which is just the raw
+model payload). The main loop owns delivery from the start; no adapter agent
+is involved. This is the primary delivery path, not a recovery mode — the
 foreground relay's timing contract structurally cannot hold for long runs.
 
 **Foreground adapter relay — short runs only.** The Bash tool's timeout
@@ -97,9 +100,11 @@ parameter is hard-capped at 600000 ms and the call auto-backgrounds past it,
 which silently breaks a foreground relay: the invariant "tool timeout
 outlives helper deadline" is only satisfiable under 600 s. So relay through
 an adapter only when the run is confidently short (small prompt, low/medium
-effort), with helper `--timeout 540` and Bash timeout 600000. A run that
-would need more time is a background-dispatch case, full stop — do not raise
-the relay numbers.
+effort), with helper `--timeout 540` and Bash timeout 600000. The helper's
+`--timeout` is a total deadline including any worker-slot queue wait, so 540
+genuinely bounds the whole call under 600 s even when slots are contended. A
+run that would need more time is a background-dispatch case, full stop — do
+not raise the relay numbers.
 
 For the relay, prefer the `codex-worker` agent type when it appears in the
 session's agent list — plugin installs namespace it as
@@ -146,17 +151,22 @@ ping or re-invoke it — an idle adapter is evidence of a lost delivery, not a
 paused one. Recover from ground truth in the orchestrator-minted
 `--run-dir`, using the same terminal-state check as a normal background
 harvest:
-  1. Terminal-state check: the helper (and codex) processes are gone AND
-     `events.jsonl` contains a `turn.completed` event. `jq -Rrse
-     '[split("\n")[] | fromjson? | .type] | index("turn.completed") != null'
-     RUN_DIR/events.jsonl`
-  2. Harvest: `RUN_DIR/final.json` is the worker's final message (parse it;
-     apply the same schema expectations as the stage). For write runs, the
-     workspace diff is the artifact — inspect it as usual.
-  3. No `turn.completed` and no live process → the run died; treat as
-     `codex_failed` with `events.jsonl` + `stderr.log` as evidence. A live
-     process with a quiet log is NOT dead — log staleness is suspicion,
-     never kill authority; recheck the PID before any cleanup.
+  1. Terminal-state check: `RUN_DIR/result.json` exists → the helper
+     finished and that file is the authoritative envelope; parse it and gate
+     on `ok: true` exactly as if it had arrived on stdout (`result` holds
+     the payload). Done — skip the remaining steps.
+  2. No `result.json`: the helper itself died mid-run. Establish death first
+     — the helper (and codex) processes are gone. Then `events.jsonl` is the
+     evidence: with a `turn.completed` event (`jq -Rrse '[split("\n")[] |
+     fromjson? | .type] | index("turn.completed") != null'
+     RUN_DIR/events.jsonl`), `RUN_DIR/final.json` holds the model payload —
+     usable, but degraded: no helper verdict exists, so apply the stage's
+     schema expectations yourself and say the envelope was lost. For write
+     runs, the workspace diff is the artifact — inspect it as usual.
+  3. No `result.json`, no `turn.completed`, no live process → the run died;
+     treat as `codex_failed` with `events.jsonl` + `stderr.log` as evidence.
+     A live process with a quiet log is NOT dead — log staleness is
+     suspicion, never kill authority; recheck the PID before any cleanup.
   4. Cleanup is identity-scoped: kill only processes traceable to this run
      (children of the recorded helper PID / processes whose cwd or args
      reference RUN_DIR), never by broad name-matching.
@@ -168,7 +178,8 @@ notification, and no adapter is ever pinged to deliver.
 
 ## Result contract
 
-One JSON object on stdout. `ok: true` means all of: exit 0, a
+One JSON object on stdout, mirrored atomically to `RUN_DIR/result.json` so
+background harvests read the identical envelope. `ok: true` means all of: exit 0, a
 `turn.completed` event observed, and a parseable (schema-valid, if given)
 final message. Fields: `result` (the parsed final message — the payload),
 `base_sha` / `dirty_before` (git state when the run started), `run_dir`

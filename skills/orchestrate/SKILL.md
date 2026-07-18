@@ -22,10 +22,14 @@ itself is a poor fit, push back: say so and propose running sequentially in
 the main loop instead of forcing the ceremony.
 
 Worker invocations run inside delegated stages (Workflow `agent()` calls or
-subagents) — main-loop worker runs are legitimate only as that explicitly
-declared sequential fallback, never silent drift. Every delegated call pins
-`{model, effort}` explicitly and returns typed data — Workflow stages via
-the `schema` option — not prose to re-parse.
+subagents), with one standing exception: Codex-lane background dispatch,
+where the main loop starts the worker helper and harvests its run dir per
+the lane's delivery contract — dispatch-and-harvest is delegation mechanics,
+not main-loop labor. Doing the work itself in the main loop is legitimate
+only as that explicitly declared sequential fallback, never silent drift.
+Every delegated call pins `{model, effort}` explicitly and returns typed
+data — Workflow stages via the `schema` option, Codex stages via the
+helper's envelope — not prose to re-parse.
 
 ## Instrument pitfalls (field-observed)
 
