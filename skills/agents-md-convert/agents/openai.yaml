@@ -1,9 +1,6 @@
 interface:
-  display_name: agents-md-convert
-  short_description: >-
-    Convert a repo to the AGENTS.md-canonical convention (AGENTS.md holds the
-    instructions; CLAUDE.md becomes a one-line @AGENTS.md import), or check an
-    existing conversion. Converts existing instructions; does not author them
-    from scratch.
+  display_name: "AGENTS.md Convert"
+  short_description: "Audit or repair AGENTS.md ownership"
+  default_prompt: "Use $agents-md-convert to audit or repair this repository's instruction ownership."
 policy:
   allow_implicit_invocation: false

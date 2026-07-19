@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.7.3 — 2026-07-19
+
+- Redesign `agents-md-convert` around user-selected Audit or Apply operations,
+  repository-wide instruction mapping, partial and nested repairs, competing
+  override detection, and overlap-safe work in dirty trees.
+- Separate deterministic ownership, adapter, routing, reference, and diff
+  checks from optional paid/authenticated harness canaries.
+- Keep the public workflow environment-neutral and make the one-line adapter
+  strict without assuming LF versus CRLF.
+
 ## 0.7.2 — 2026-07-18
 
 Fixes from an adversarial (Codex) review of 0.7.1:

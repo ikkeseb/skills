@@ -16,7 +16,7 @@ see Install below.)
 | **[excalidraw](skills/excalidraw)** | `.excalidraw` diagrams that explain something instead of just labeling boxes. | `/excalidraw` |
 | **[drawio](skills/drawio)** | Native `.drawio` XML that opens straight in app.diagrams.net. | `/drawio` |
 | **[verify-claims](skills/verify-claims)** | Fact-checks prose against traceable sources and returns a classified table. | `/verify-claims` |
-| **[agents-md-convert](skills/agents-md-convert)** | Converts a repo to the AGENTS.md-canonical convention (`CLAUDE.md` becomes a one-line import) and verifies it in each installed harness. | `/agents-md-convert` |
+| **[agents-md-convert](skills/agents-md-convert)** | Audits, converts, or repairs repository instruction scopes so `AGENTS.md` is canonical and `CLAUDE.md` stays a one-line import adapter. | `/agents-md-convert` |
 | **[full-send](skills/full-send)** | Posture: resources are authorized — fan out subagents freely, then converge. | `/full-send` · `/full-send sustained` |
 | **[max-effort](skills/max-effort)** | Posture: high-stakes work gets adversarial review, not a rubber stamp. | `/max-effort` · `/max-effort sustained` |
 | **[afk](skills/afk)** | Posture: unattended runs — no clarifying questions, low blast radius, audit trail in the conversation. | `/afk` |
