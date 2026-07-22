@@ -1,6 +1,5 @@
 ---
 name: drawio
-disable-model-invocation: true
 description: Generate a native `.drawio` (mxGraphModel XML) diagram — flowcharts, architectures, ER/sequence/class diagrams, network topologies — that opens directly in app.diagrams.net. For hand-drawn-style `.excalidraw` JSON use the excalidraw skill; for numerical charts use a charting tool.
 ---
 

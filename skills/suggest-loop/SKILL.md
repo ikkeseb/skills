@@ -1,6 +1,5 @@
 ---
 name: suggest-loop
-disable-model-invocation: true
 description: Draft 2–3 paste-ready `/loop` prompts from a repo's documented verification gate, stop conditions baked in — or explain why the work isn't safely loopable. Writes the prompt text only; running loops is `/loop` itself.
 ---
 

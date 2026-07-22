@@ -1,6 +1,5 @@
 ---
 name: verify-claims
-disable-model-invocation: true
 description: Audit factual claims in prose against traceable sources and classify each as verified, unverified, or contradicted. Unlike the verify skill (which runs the app to confirm code works), this checks written assertions, not software behavior.
 ---
 

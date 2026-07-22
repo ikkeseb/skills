@@ -1,7 +1,6 @@
 ---
 name: orchestrate
 description: Delegation posture — the main loop keeps everything critical (design, spec, review, integration) and routes mechanical execution to worker models, primarily through dynamic Workflow scripts, across Claude and Codex lanes. Single-task or sustained for the session.
-disable-model-invocation: true
 ---
 
 # orchestrate

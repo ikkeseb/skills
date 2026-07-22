@@ -4,6 +4,21 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.7.5 — 2026-07-22
+
+- Remove `disable-model-invocation: true` from every remaining SKILL.md. In
+  current Claude Code the flag hides the skill from the model entirely, and
+  since typed `/name` runs go through the model's Skill tool, author-locked
+  skills were uninvocable even by explicit slash command (upstream
+  anthropics/claude-code #26251, #38969, #43875; unfixed as of v2.1.217).
+  The 0.7.4 assumption that slash invocation kept working was wrong.
+- User-invoked intent now rests on human-readable descriptions plus, on Codex,
+  the unchanged `allow_implicit_invocation: false` markers; consumers can tune
+  Claude Code exposure with settings `skillOverrides` (`name-only` works;
+  `user-invocable-only` currently re-triggers the hiding bug). Convention
+  rewritten in `.agents/invocation.md`; `context-audit`'s skill-architecture
+  advice updated to stop recommending the broken flag.
+
 ## 0.7.4 — 2026-07-22
 
 - `handoff` is now model-invokable in both harnesses (removed

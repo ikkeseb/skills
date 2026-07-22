@@ -1,6 +1,5 @@
 ---
 name: context-audit
-disable-model-invocation: true
 description: >-
   Audit a project's CLAUDE.md and context architecture, then propose a leaner
   structure — universal rules stay static, domain rules move to skills, nested
@@ -25,8 +24,10 @@ Build the proposal on the real mechanics, not folklore:
   the model judges the task matches the description** — model-invoked is the *default*;
   typing `/name` is an additional manual path, not the only one. (3) Bundled
   `references/`, `scripts/` load only when the skill points to them. **The `description`
-  is the router** — a sharp one pulls the skill in on its own. (Opt out with
-  `disable-model-invocation: true` for manual-only.)
+  is the router** — a sharp one pulls the skill in on its own. (An opt-out flag
+  `disable-model-invocation: true` exists but currently hides the skill from the
+  model entirely in Claude Code — typed `/name` runs included; for exposure
+  control prefer settings-level `skillOverrides`, e.g. `name-only`.)
 - **`paths:` glob on a skill** (e.g. `paths: ["**/*.css"]`) auto-activates it **only when
   the session touches matching files** — native, file-scoped, no routing prose.
 - **Nested `CLAUDE.md`** loads when the agent works **in that directory subtree** — ideal

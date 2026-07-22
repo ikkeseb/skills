@@ -1,6 +1,5 @@
 ---
 name: full-send
-disable-model-invocation: true
 description: Posture for when resources are authorized — explore independent approaches in parallel and converge on the best result, not the first acceptable one. Single-task or sustained for the session.
 ---
 

@@ -1,6 +1,5 @@
 ---
 name: afk
-disable-model-invocation: true
 description: Posture for unattended autonomous work — front-loads all clarifications, then runs without questions on a low-blast-radius default, audit trail in the conversation, until an explicit return signal.
 ---
 

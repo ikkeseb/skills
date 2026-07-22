@@ -5,7 +5,6 @@ description: >-
   and CLAUDE.md is a one-line @AGENTS.md adapter. Use for existing root or
   nested instructions, including partial conversions; does not author guidance
   from scratch.
-disable-model-invocation: true
 ---
 
 # agents-md-convert

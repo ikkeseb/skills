@@ -1,6 +1,5 @@
 ---
 name: pretty-pdf
-disable-model-invocation: true
 description: >-
   Create visually polished, professionally designed PDFs with weasyprint (HTML+CSS → PDF) —
   reports, letters, invoices, CVs — from new content or by re-typesetting a docx. Not for
