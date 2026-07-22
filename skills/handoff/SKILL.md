@@ -1,7 +1,6 @@
 ---
 name: handoff
 description: Create and save a concise, paste-ready continuation handoff for resuming the current task in a fresh session.
-disable-model-invocation: true
 ---
 
 # Handoff

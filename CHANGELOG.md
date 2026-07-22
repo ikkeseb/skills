@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.7.4 — 2026-07-22
+
+- `handoff` is now model-invokable in both harnesses (removed
+  `disable-model-invocation` from its frontmatter; set
+  `allow_implicit_invocation: true` in its Codex marker). It is the one skill the
+  model legitimately reaches for on its own at session wrap-up; the blanket
+  user-invoked convention hid it from the model, which then improvised a
+  `handoff.md` in the working repo instead of using the skill. Slash invocation
+  was unaffected throughout. Carve-out documented in `.agents/invocation.md`;
+  every other skill stays user-invoked.
+
 ## 0.7.3 — 2026-07-19
 
 - Redesign `agents-md-convert` around user-selected Audit or Apply operations,
