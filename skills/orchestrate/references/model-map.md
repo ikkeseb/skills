@@ -33,14 +33,20 @@ rules.
 | `haiku` | claude | 10 | 4 | 5 | — | Never use — off-limits even for mechanical relay/adapter stages; luna covers this tier | gpt-5.6-luna |
 
 **The two lanes are named differently, and the difference matters.** Claude-lane
-rows are *harness aliases* (`opus`, `sonnet`, `haiku`) that resolve to whatever
-version the installed Claude Code points them at — so a harness update re-points
-a row silently, with no change in this repo. Observed 2026-07-25 under Claude
-Code 2.1.219: `opus` resolves to Opus 5. Codex-lane rows are *exact model IDs*
-passed straight through to `codex -m` by the worker helper; they do not resolve
-to anything and go stale loudly (a wrong ID fails as `config`). Never write a
-versioned Claude model string into a delegated call — pin the alias and let it
-resolve.
+rows are *harness aliases* (`opus`, `sonnet`, `haiku`) — the values the Agent
+tool's `model` parameter accepts — which resolve to whatever version the
+installed Claude Code points them at. A harness update therefore re-points a row
+silently, with no change in this repo: observed 2026-07-25 under Claude Code
+2.1.219, `opus` resolves to Opus 5. Codex-lane rows are *exact model IDs* passed
+straight through to `codex -m` by the worker helper; they do not resolve to
+anything and go stale loudly (a wrong ID fails as `config`).
+
+Write the alias in Claude-lane calls. Versioned Claude IDs (`claude-opus-5`)
+are real and are what settings and the API use, but they are the wrong choice
+here for two reasons: a delegated stage wants the current best model in its
+tier, not a frozen one, and a pinned ID rots into a support question the moment
+a version retires. The tradeoff is the silent re-point above — which is why the
+seat verifies the delegate's lane rather than trusting a label.
 
 The fallback column is *availability* fallback (model or lane down/throttled),
 kept cross-lane where possible so a lane outage never strands a role. Quality
