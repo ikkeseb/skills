@@ -4,6 +4,58 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.7.6 — 2026-07-25
+
+- `orchestrate`: the model map now separates the senior-seat *invariant* (the
+  session model holds the seat; this skill never selects it) from the delegate
+  table, which previously carried Fable-specific scores on the seat row and was
+  internally false in any non-Fable session.
+- Claude-lane rows are now written as harness aliases (`opus`, `sonnet`,
+  `haiku`) instead of versioned strings, in the table and in all four stale
+  fallback cells. Aliases re-point silently on harness update — `opus` was
+  observed resolving to Opus 5 under Claude Code 2.1.219 with no repo change.
+  Codex-lane rows stay exact model IDs because the worker helper passes them
+  straight to `codex -m`. The map documents the asymmetry.
+- `opus` intelligence 8 → 9 (Opus 5, vendor-reported); taste deliberately held
+  at 8 — benchmarks do not measure the column's subject. The sol-vs-opus
+  calibration drops its presumed capability ordering: they are peers, and the
+  reason to pair them is vendor independence.
+- Verification rules sharpened: still risk-triggered, but when owed, the
+  verifier must not share the producer's model family — including the seat's
+  own, which is the common case when the seat and the delegate resolve to the
+  same model. Same-family verification is declared degraded coverage.
+- Explicit effort policy: `high` default for substantive delegated work,
+  `medium` floor, `xhigh`/`max` for exhaustive and adversarial work, `low` only
+  for transport and bounded mechanical stages. Pinning `{model, effort}` is
+  now justified where it is stated — an omitted effort inherits a per-session,
+  per-machine setting.
+- New pitfall: safety classifiers can swap the model underneath a running
+  request with no error, so security work is partitioned before dispatch
+  rather than diagnosed after the fact.
+- Fixed a contradiction between `SKILL.md` and the map: adversarial and
+  verification passes were described as undelegatable while the map assigned
+  adversarial verification to a delegate. The invariant is final review and
+  integration; producing review *evidence* delegates.
+- Corrected the `disable-model-invocation` pitfall, which still carried the
+  rationale `.agents/invocation.md` disproved in 0.7.5.
+- Added a `Spend` section naming the Workflow `budget` global and the session
+  size guideline, and a prioritised-review rule for diffs too large to read
+  whole.
+- Codex lane: recipe re-verified against codex-cli 0.145.0 (read-only and
+  `workspace-write`, `--output-schema`, base-sha and dirty-tree gates) and the
+  pin bumped from 0.144, which was blocking all write-capable workers.
+  Corrected four documentation overclaims found by audit and confirmed against
+  the script: `result.json` is not mirrored for `usage`, `codex_missing`, or
+  `interrupted` failures (stdout-only — background dispatch must capture it);
+  the helper does not validate schema instances, only parseability, with
+  conformance enforced server-side; the semaphore is per-uid and per-`TMPDIR`,
+  not machine-global; and the strict-mode lint does not traverse `oneOf`,
+  `not`, `if`/`then`/`else`, or external `$ref`. Added the missing `usage`,
+  `slot_root_hijacked`, and `interrupted` failure classes, a stop condition on
+  quality escalation, and a JSON error envelope for the adapter's
+  cannot-hold-foreground branch, which previously returned raw text and broke
+  the enclosing schema.
+
 ## 0.7.5 — 2026-07-22
 
 - Remove `disable-model-invocation: true` from every remaining SKILL.md. In

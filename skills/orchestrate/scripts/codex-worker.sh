@@ -21,7 +21,7 @@
 # Output: exactly one JSON object on stdout. Everything else goes to stderr.
 set -euo pipefail
 
-VERIFIED_CODEX_SERIES="0.144"   # write-capable runs are gated on this series
+VERIFIED_CODEX_SERIES="0.145"   # write-capable runs are gated on this series
 MAX_SLOTS="${CODEX_WORKER_MAX_SLOTS:-4}"
 SLOT_WAIT_SECS="${CODEX_WORKER_SLOT_WAIT:-1800}"
 # Per-uid suffix + ownership check (ensure_slot_root): a world-writable /tmp

@@ -7,7 +7,9 @@ back. Never hand-roll `codex` commands in prompts; shells may wrap `codex` in
 functions that inject extra profile or config flags, and the helper bypasses
 all of that by invoking the binary directly with a pinned flag set.
 
-The recipe is verified against codex-cli 0.144.5. `probe` reports
+The recipe is verified against codex-cli 0.145.0 (re-verified 2026-07-25 on
+0.145.0: read-only and `workspace-write` runs, `--output-schema`, the
+`base_sha` and dirty-tree gates, and effort passthrough). `probe` reports
 `version_matches`; after a major Codex upgrade, re-verify before trusting the
 lane.
 
@@ -54,8 +56,12 @@ Schema files run under OpenAI **strict mode**: every object level needs
 `additionalProperties: false` and a `required` array listing *every* key in
 `properties` — optional keys are expressed as required-but-nullable, never
 omitted. The helper lints this locally and fails fast (`usage`) instead of
-letting it surface as a 400 `invalid_json_schema` after a full worker
-startup.
+letting it surface as a 400 `invalid_json_schema` after a full worker startup.
+The lint is a fast filter, not a validator: it walks `properties`, `items`,
+`anyOf`, `allOf`, `$defs`, and `definitions`, so a violation hiding under
+`oneOf`, `not`, `if`/`then`/`else`, or a `$ref` pointing outside `$defs`
+passes locally and is caught only by the server. Keep schemas to that plain
+shape and the local gate is meaningful.
 
 Mint the run dir in the orchestrator before dispatch (`RUN_DIR="$(mktemp -d)"`
 — pass a path that does not exist yet or is empty) and pass it with
@@ -130,7 +136,10 @@ result, never touch the repo. Foreground means foreground: never set
 run_in_background, never append `&`, never end your turn with a "started,
 waiting" style status while the command runs — an idle adapter is a lost
 delivery. If you cannot keep the single blocking call open, do not start
-it; return the raw error text instead.
+it; return exactly this instead, with the reason substituted, so the
+result stays machine-readable:
+{"ok": false, "error_class": "codex_failed", "error": "adapter could not
+hold a foreground call: REASON", "run_dir": "RUN_DIR"}
 ```
 
 The adapter relays the helper's JSON verbatim as its final message — pair it
@@ -179,12 +188,27 @@ notification, and no adapter is ever pinged to deliver.
 ## Result contract
 
 One JSON object on stdout, mirrored atomically to `RUN_DIR/result.json` so
-background harvests read the identical envelope. `ok: true` means all of: exit 0, a
-`turn.completed` event observed, and a parseable (schema-valid, if given)
-final message. Fields: `result` (the parsed final message — the payload),
+background harvests read the identical envelope. `ok: true` means all of: exit
+0, a `turn.completed` event observed, and a final message that parses as
+exactly one JSON document (when a schema was given) or is non-empty (when it
+wasn't). Note what that does *not* mean: the helper performs no JSON-Schema
+instance validation. Conformance to `--schema-file` is enforced server-side by
+`--output-schema` — so a schema-shaped result is the model's compliance, not a
+local guarantee, and a stage that must not act on malformed data checks the
+shape itself. Fields: `result` (the parsed final message — the payload),
 `base_sha` / `dirty_before` (git state when the run started), `run_dir`
 (events.jsonl + stderr.log for diagnosis), and on failure `error_class` /
 `error` / `api_error`.
+
+**The mirror has two holes, and background dispatch must cover them.** The run
+dir is only known to the helper once it exists and passes its gates, so
+failures *before* that point — `usage` (bad flags, unreadable prompt or schema,
+strict-mode lint rejection, non-empty run dir) and `codex_missing` — emit their
+envelope on **stdout only**, with no `run_dir` field and no `result.json`. The
+`interrupted` class (the runner took a termination signal) is likewise
+stdout-only. So a background dispatch always redirects stdout to a file and
+reads it when `result.json` is absent; a missing `result.json` alone does not
+mean the run died.
 
 Failure classes and what to do. This is the single retry/fallback policy —
 the adapter agent is strictly one-shot, and every decision below belongs to
@@ -204,6 +228,15 @@ the orchestrator:
 - `timeout`, `codex_failed`, `schema`, `slots_exhausted` — judgment call;
   read `run_dir` evidence before deciding.
 - `dirty_worktree` — a write run against a dirty tree was refused; see gates.
+- `usage` — the dispatch itself is malformed (bad flag, unreadable prompt or
+  schema, strict-mode lint rejection, non-empty run dir). Fix the call. Never
+  retried: nothing ran, and no `run_dir` evidence exists.
+- `slot_root_hijacked` — the lock directory is a symlink or owned by another
+  user. A local integrity problem, not a lane outage: do not degrade to the
+  Claude lane and do not retry. Stop and surface it.
+- `interrupted` — the runner took a termination signal. Whether the worker
+  itself survived is unknown; establish ground truth from the run dir before
+  redispatching, and for write runs inspect the worktree first.
 
 Never blind-retry a `workspace-write` failure of any class: the tree may hold
 a partial change that must be inspected, not overwritten.
@@ -245,11 +278,19 @@ never silently move worker traffic onto metered API billing.
 
 ## Concurrency
 
-The helper holds a machine-global semaphore of 4 concurrent workers (override:
+The helper holds a semaphore of 4 concurrent workers (override:
 `CODEX_WORKER_MAX_SLOTS`); extra workers queue up to 30 minutes, then fail as
 `slots_exhausted`. Workflow concurrency is higher than 4, so batch Codex-lane
 stages in groups of ≤4 — queued workers burn workflow agent slots doing
 nothing.
+
+The semaphore is not machine-global: its lock tree lives under `$TMPDIR` and is
+scoped per uid, so orchestrators running with different `TMPDIR` values (or as
+different users) do not see each other and the real concurrency can exceed 4.
+Treat 4 as a per-orchestrator budget. The 30-minute queue wait is also bounded
+by each run's own `--timeout`, which is a *total* deadline — a short-timeout run
+that sits in the queue fails as `timeout`, not `slots_exhausted`, so don't read
+the class as proof the queue was clear.
 
 Done when: every Codex-lane stage returns the helper's JSON (typed via the
 Workflow `schema` option), and every failure path either degrades loudly or
