@@ -18,37 +18,48 @@ The repo is also a Codex CLI plugin: Codex reads `.claude-plugin/marketplace.jso
 
 ## Maintainer-local workspace
 
-Gitignored `local/`, when present, is maintainer-internal — follow
-`local/AGENTS.md`. Never run `git clean -x` variants in this repo; they
-delete it.
+If a `local/` directory exists here, you are on a maintainer machine: read
+`local/STATUS.md` before starting work. It carries release state plus active
+and parked leads, so you don't re-propose something already decided.
+`local/AGENTS.md` governs everything under it. `local/` is gitignored, so a
+clone or plugin install simply won't have it — skip this when it's absent.
+Never run `git clean -x` variants in this repo; they delete it.
 
 ## Adding or renaming a skill
 
-Four places must stay in sync:
+These must stay in sync:
 
 1. The folder under `skills/`
 2. The entry in the top-level `README.md` skills list
-3. The explicit `skills` list in `.claude-plugin/plugin.json` — the published
-   plugin ships exactly this set. (This works as an allowlist only because the
-   marketplace entry's `source` is the marketplace root — that exception makes
-   the list *replace* the default `skills/` scan instead of adding to it.
-   Validate with `claude plugin validate . --strict` after editing — but note
-   it only validates the manifests, not skill files. Also YAML-parse every
-   changed `SKILL.md` frontmatter; an unquoted `description:` containing
-   ": " (colon+space) is invalid YAML the validator will not catch.)
-4. The `skills` list in `.codex-plugin/plugin.json`, which must equal exactly
+3. The `skills` list in `.codex-plugin/plugin.json`, which must equal exactly
    the set of skills carrying `agents/openai.yaml` (the Codex-support marker
    stays the single source of truth — check with
-   `ls skills/*/agents/openai.yaml`). Codex-only README bits: the four-skill
+   `ls skills/*/agents/openai.yaml`). Codex-only README bits: the skill
    enumeration in the Install section.
 
+`.claude-plugin/plugin.json` deliberately carries **no** `skills` key: Claude
+Code discovers every `skills/*/SKILL.md` by default, and an explicit list
+neither restricts nor is needed. Verified 2026-07-25 on Claude Code 2.1.220 by
+installing the repo three ways in an isolated `CLAUDE_CONFIG_DIR` — with the
+full 12-entry list, with no list, and with a 3-entry subset — and reading
+`claude plugin details`: all three shipped the same 12 skills. Don't reintroduce
+the key expecting it to exclude anything.
+
+Verify manifest changes with `claude plugin validate . --strict` (it checks the
+manifests, not skill files), and YAML-parse every changed `SKILL.md`
+frontmatter; an unquoted `description:` containing ": " (colon+space) is
+invalid YAML the validator will not catch. `claude plugin details <name>` on a
+test install reports the shipped inventory and its always-on token cost — the
+honest check that a new skill actually ships.
+
 The `plugin.json` `description` stays generic (don't enumerate skill names
-there). If the three drift, users get a misleading README or a plugin that
-silently misses a skill. Update all three in the same change.
+there). If any of these drift, users get a misleading README or a plugin that
+silently misses a skill. Update all of them in the same change, and add the
+`CHANGELOG.md` entry alongside the version bump.
 
 ## Conventions
 
-- Every skill is user-invoked (command-only, never auto-triggered); the mechanics and description-writing rules live in `.agents/invocation.md`.
+- Skills are written to be reached by explicit invocation, `handoff` excepted; nothing in the frontmatter enforces that, so the guard is description wording. Mechanics and the description-writing rules live in `.agents/invocation.md`.
 - Each meaning lives once per skill. Don't restate a rule across description, body, tables, and checklists — keep it where it governs behaviour. Prose that wouldn't change the agent's behaviour if deleted gets deleted.
 - In procedural skills where steps can fail or branch, end each step on a checkable "done when".
 - Skills are self-contained: a `SKILL.md` body never references another skill by name. Posture skills coordinate through capability-based ownership declarations instead — each states what it owns and what it defers (breadth, instrument, teardown, spend, interaction) so any combination resolves without the skills knowing about each other. Sole exception: a `description:` field may name a sibling skill purely for trigger disambiguation (e.g. drawio vs excalidraw) — such pointers degrade harmlessly when the sibling isn't installed.

@@ -5,8 +5,9 @@ work in Codex CLI. Pick what you need, ignore the rest.
 
 ## Skills
 
-Every skill is deliberately command-invoked: it runs when you type its
-command and never triggers itself. (In Codex, use the `$` skill picker —
+Every skill here is meant to be reached by an explicit command rather than
+firing on its own — `handoff` is the deliberate exception, since a wrap-up
+handoff is worth offering unprompted. (In Codex, use the `$` skill picker —
 see Install below.)
 
 | Skill | What it does | Invoke |
@@ -28,6 +29,7 @@ rather than translate.
 
 | Skill | What it does | Invoke |
 |---|---|---|
+| **[second-opinion](skills/second-opinion)** | One read-only Codex call on work that already exists, answered as a synthesis rather than a relay. Vendor independence without the delegation ceremony. | `/second-opinion` |
 | **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes mechanical work to worker models: Claude agents, plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
 | **[suggest-loop](skills/suggest-loop)** | Turns a repo's documented verification gate into ready-to-paste `/loop` prompts with stop conditions baked in. | `/suggest-loop` |
 | **[context-audit](skills/context-audit)** | Audits a bloated `CLAUDE.md` and proposes a leaner context structure, for you to apply by hand. | `/context-audit` |

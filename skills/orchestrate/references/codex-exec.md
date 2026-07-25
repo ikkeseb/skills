@@ -7,33 +7,51 @@ back. Never hand-roll `codex` commands in prompts; shells may wrap `codex` in
 functions that inject extra profile or config flags, and the helper bypasses
 all of that by invoking the binary directly with a pinned flag set.
 
-The recipe is verified against codex-cli 0.145.0 (re-verified 2026-07-25 on
-0.145.0: read-only and `workspace-write` runs, `--output-schema`, the
-`base_sha` and dirty-tree gates, and effort passthrough). `probe` reports
-`version_matches`; after a major Codex upgrade, re-verify before trusting the
-lane.
+The recipe's dependency on the CLI is a **flag surface, not a version**. The
+helper checks that `codex exec --help` still advertises every flag it passes
+and ignores the version number entirely. That replaced a pinned-series gate
+whose failure mode was backwards: a routine release blocked every write-capable
+worker (the 0.144 pin did exactly that), while a same-series release that
+dropped a flag sailed through.
 
 ## Preflight
 
 Run once per session before the first Codex-lane stage:
 
 ```bash
-scripts/codex-worker.sh probe
+scripts/codex-worker.sh probe        # auth + flag contract, no model call
 ```
 
-Returns `{ok, codex_version, authenticated, version_matches, ...}`. On
-`ok: false`, the lane is down: route everything to the Claude lane and say so
-in the response — never degrade silently. On `version_matches: false` the
-CLI has drifted from the series the recipe was verified against: read-only
-workers may proceed (state the mismatch in the response), and the helper
-itself refuses write-capable runs until the recipe is re-verified and its
-pinned series bumped.
+Returns `{ok, codex_version, authenticated, contract_ok, missing_flags}`. On
+`ok: false` the lane is down: route everything to the Claude lane and say so in
+the response — never degrade silently. `contract_ok: false` names the flags that
+disappeared; read-only workers may proceed (state it), and the helper refuses
+write-capable runs until the invocation is fixed.
+
+Flag presence proves the CLI still *accepts* the invocation, not that it still
+*behaves* the same. After a Codex upgrade you care about, close that gap:
+
+```bash
+scripts/codex-worker.sh verify       # one tiny billed read-only run, ~20s
+```
+
+It exercises the real `run` path and asserts the whole envelope — contract,
+`ok`, and schema conformance. That is the re-verification; there is no manual
+recipe ritual to perform.
 
 ## Running a worker
 
 ```bash
 scripts/codex-worker.sh run \
-  --model gpt-5.6-terra \
+  [--model gpt-5.6-terra]              # omit to take the CLI's built-in
+                                       #   default — note runs pass
+                                       #   --ignore-user-config, so this is
+                                       #   NOT your config.toml model. Omit
+                                       #   when "current provider default" is
+                                       #   what you want; name one when the
+                                       #   tier or reproducibility matters
+                                       #   (the envelope records model:"" for
+                                       #   unpinned runs)
   --prompt-file "$DIR/prompt.md" \
   [--effort high]                      # default high; server rejects values a
                                        #   model doesn't support (clear api_error)
@@ -221,8 +239,9 @@ the orchestrator:
   Claude lane, report it.
 - `config` — the invocation itself is wrong (bad model name, unsupported
   effort — see `api_error`); fix the call, don't retry blindly.
-- `version_mismatch` — the CLI drifted from the verified series and a write
-  run was refused; re-verify the recipe before write-capable work.
+- `contract_mismatch` — the CLI no longer advertises a flag the runner passes,
+  and a write run was refused. The message names the missing flags; fix the
+  invocation, then `verify`. Not a lane outage and not retryable.
 - `base_sha_mismatch`, `git_error`, `workspace_locked` — the workspace isn't
   in the expected state; fix the orchestration, not the worker.
 - `timeout`, `codex_failed`, `schema`, `slots_exhausted` — judgment call;

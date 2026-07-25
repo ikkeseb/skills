@@ -1,24 +1,10 @@
 {
   "name": "ikkeseb-skills",
   "description": "A small bundle of Claude Code skills for day-to-day work.",
-  "version": "0.7.6",
+  "version": "0.8.0",
   "author": {
     "name": "Sebastian de la Nuez"
   },
   "repository": "https://github.com/ikkeseb/skills",
-  "license": "MIT",
-  "skills": [
-    "./skills/afk",
-    "./skills/agents-md-convert",
-    "./skills/context-audit",
-    "./skills/drawio",
-    "./skills/excalidraw",
-    "./skills/full-send",
-    "./skills/handoff",
-    "./skills/max-effort",
-    "./skills/orchestrate",
-    "./skills/pretty-pdf",
-    "./skills/suggest-loop",
-    "./skills/verify-claims"
-  ]
+  "license": "MIT"
 }

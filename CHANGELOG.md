@@ -4,6 +4,40 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.8.0 — 2026-07-25
+
+- New `second-opinion` skill: one read-only Codex call on work that already
+  exists, answered as a synthesis rather than a relay. It exists because the
+  most common Codex need — "what does another model family think of this?" —
+  was only reachable through the full delegation posture and its ~1,200 lines
+  of lane contract. The skill is the question-writing discipline plus one
+  helper invocation.
+- The Codex lane no longer gates on a pinned CLI series. `codex-worker.sh`
+  checks that `codex exec --help` still advertises every flag it passes and
+  ignores the version number; `probe` reports `contract_ok` / `missing_flags`,
+  and `version_mismatch` becomes `contract_mismatch`. The old gate's failure
+  mode was backwards — a routine release refused every write-capable worker
+  (0.144 did precisely that) while a same-series release that dropped a flag
+  passed. New `codex-worker.sh verify` closes the remaining gap with one tiny
+  billed run asserting the full envelope, replacing the manual re-verification
+  ritual.
+- `--model` is now optional: omitted, the run takes the CLI's built-in default,
+  so a new provider model needs no repo change. Runs pass `--ignore-user-config`,
+  so this is deliberately *not* the user's `config.toml` model, and the envelope
+  records `model: ""` — pin one where reproducibility matters. `--effort`
+  validation flipped from an allowlist to a denylist (only `ultra` refused), so
+  a new effort level the server accepts is no longer rejected locally.
+- Dropped the `skills` key from `.claude-plugin/plugin.json`. Verified on Claude
+  Code 2.1.220 across three isolated installs (full list, no list, 3-entry
+  subset): all three shipped the same 12 skills, so the key neither restricted
+  nor was needed, and the documented "replaces the default scan" mechanic was
+  false. One fewer place to keep in sync.
+- Honest invocation wording in `README.md` and `AGENTS.md`: both claimed no
+  skill ever self-triggers, which stopped being true in 0.7.5 when the enforcing
+  flag was removed, and `handoff` is a deliberate exception besides.
+- `AGENTS.md` now routes maintainer sessions to `local/STATUS.md` up front, and
+  its sync section drops the miscount ("Four places" then "the three").
+
 ## 0.7.6 — 2026-07-25
 
 - `orchestrate`: the model map now separates the senior-seat *invariant* (the

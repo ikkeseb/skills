@@ -5,8 +5,14 @@
 # prompts.
 #
 # Usage:
-#   codex-worker.sh run --model <model> --prompt-file <file>
-#       [--effort none|minimal|low|medium|high|xhigh|max]   (default: high)
+#   codex-worker.sh run --prompt-file <file>
+#       [--model <model>]  omitted -> the CLI's built-in default. Note this is
+#                          NOT the user's config.toml default: runs pass
+#                          --ignore-user-config by design. Omit it when the
+#                          caller wants whatever the provider currently ships;
+#                          name one when the tier actually matters.
+#       [--effort <level>]  passed through; the server rejects what a model
+#                           does not support        (default: high)
 #       [--sandbox read-only|workspace-write]               (default: read-only)
 #       [--workspace <dir>]                                 (default: $PWD)
 #       [--expected-base-sha <sha>]  fail unless HEAD matches at launch time
@@ -16,12 +22,28 @@
 #       [--run-dir <dir>]  caller-minted run dir (must be empty/nonexistent);
 #                          lets the orchestrator harvest from disk if the
 #                          adapter relaying stdout is lost (default: mktemp)
-#   codex-worker.sh probe
+#   codex-worker.sh probe     auth + CLI contract, no model call
+#   codex-worker.sh verify    end-to-end smoke test (one tiny billed run)
 #
 # Output: exactly one JSON object on stdout. Everything else goes to stderr.
 set -euo pipefail
 
-VERIFIED_CODEX_SERIES="0.145"   # write-capable runs are gated on this series
+# The recipe's real dependency is this flag surface, not a version number.
+# Gating writes on version equality made every routine Codex release a
+# self-inflicted outage (the 0.144 pin silently refused every write-capable
+# worker) while still passing a same-series release that dropped a flag.
+#
+# Two rules keep the check honest:
+#   * The invocation below uses ONLY these long forms — never a short alias —
+#     so "what we check" and "what we send" cannot drift apart.
+#   * ALWAYS = passed on every run; these gate write-capable work. CONDITIONAL
+#     = passed only for some runs; probe reports them, but a missing one must
+#     not block a run that would never have used it (that is the outage the
+#     version pin caused, rebuilt).
+ALWAYS_EXEC_FLAGS="--ignore-user-config --ephemeral --disable --config
+                   --sandbox --cd --json --output-last-message"
+ALWAYS_ROOT_FLAGS="--ask-for-approval"
+CONDITIONAL_EXEC_FLAGS="--model --output-schema --skip-git-repo-check"
 MAX_SLOTS="${CODEX_WORKER_MAX_SLOTS:-4}"
 SLOT_WAIT_SECS="${CODEX_WORKER_SLOT_WAIT:-1800}"
 # Per-uid suffix + ownership check (ensure_slot_root): a world-writable /tmp
@@ -37,7 +59,10 @@ ensure_slot_root() {
   fi
 }
 
-SLOT_DIR="" WS_LOCK="" CODEX_PID=""
+SLOT_DIR="" WS_LOCK="" CODEX_PID="" VERIFY_TMP=""
+# Script-scope, not `local`: the EXIT trap fires after the function returns, so
+# a function-local would be unbound there and `set -u` would abort the run.
+verify_cleanup() { [ -z "${VERIFY_TMP:-}" ] || rm -rf "$VERIFY_TMP"; }
 # Unique ownership token: locks are only ever released by their creator, so
 # a contender that cached a stale observation can't delete a lock someone
 # else just legitimately acquired.
@@ -76,6 +101,38 @@ resolve_codex() {
 }
 
 codex_version() { "$CODEX_BIN" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true; }
+
+# Prints the flags the installed CLI no longer advertises. $1 selects the set:
+# "always" (gates writes) or "all" (probe reporting). Empty output means the
+# checked surface still holds. Flag presence does not prove unchanged semantics
+# — `verify` covers that — but it catches the breakage a version pin was
+# standing in for, without blocking on releases that changed nothing.
+#
+# Matching is token-exact: a plain substring test would let `--model-provider`
+# or a deprecation notice satisfy `--model`. A help invocation that fails
+# outright is reported as the whole set missing rather than silently passing on
+# truncated output.
+missing_contract_flags() {
+  local scope="${1:-always}" help_exec help_root out="" f
+  local exec_set="$ALWAYS_EXEC_FLAGS"
+  [ "$scope" != "all" ] || exec_set="$ALWAYS_EXEC_FLAGS $CONDITIONAL_EXEC_FLAGS"
+
+  if ! help_exec="$("$CODEX_BIN" exec --help 2>&1)"; then
+    printf '%s' "$(printf '%s' "$exec_set" | tr -s '[:space:]' ' ')"
+    return
+  fi
+  if ! help_root="$("$CODEX_BIN" --help 2>&1)"; then
+    printf '%s' "$(printf '%s' "$ALWAYS_ROOT_FLAGS" | tr -s '[:space:]' ' ')"
+    return
+  fi
+  for f in $exec_set; do
+    printf '%s' "$help_exec" | grep -qE -- "(^|[^[:alnum:]_-])$f([^[:alnum:]_-]|$)" || out="$out $f"
+  done
+  for f in $ALWAYS_ROOT_FLAGS; do
+    printf '%s' "$help_root" | grep -qE -- "(^|[^[:alnum:]_-])$f([^[:alnum:]_-]|$)" || out="$out $f"
+  done
+  printf '%s' "${out# }"
+}
 
 # One explicit environment allowlist, shared by probe and run. Keeps the
 # orchestrator's secrets (cloud creds, tokens) out of workers while preserving
@@ -233,12 +290,72 @@ cmd_probe() {
     # verify it — report the mode and trust the key's presence.
     authenticated=true auth_mode=api_key
   fi
-  jq -n --arg v "$version" --arg series "$VERIFIED_CODEX_SERIES" \
+  local missing
+  missing="$(missing_contract_flags all)"
+  jq -n --arg v "$version" --arg missing "$missing" \
     --arg auth_mode "$auth_mode" --argjson auth "$authenticated" \
-    '{ok: ($auth and ($v != "")), codex_version: $v,
+    '{ok: ($auth and ($v != "") and ($missing == "")),
+      codex_version: $v,
       authenticated: $auth, auth_mode: $auth_mode,
-      recipe_verified_series: $series,
-      version_matches: ($v | startswith($series + "."))}'
+      contract_ok: ($missing == ""),
+      missing_flags: (if $missing == "" then [] else ($missing | split(" ")) end)}'
+}
+
+# --- verify -------------------------------------------------------------------
+# End-to-end smoke test: one tiny billed read-only run through the real `run`
+# path, asserting the whole envelope. This is what a version pin was trying to
+# guarantee — flag presence proves the CLI still accepts our invocation, this
+# proves the invocation still behaves. Run it after a Codex upgrade instead of
+# re-verifying the recipe by hand.
+cmd_verify() {
+  require_jq
+  resolve_codex
+  local dir out missing verdict
+  missing="$(missing_contract_flags all)"
+
+  # Nothing to learn from a billed run when the invocation is already known
+  # broken — report the contract failure and stop.
+  if [ -n "$missing" ]; then
+    jq -n --arg v "$(codex_version)" --arg missing "$missing" \
+      '{ok: false, codex_version: $v, contract_ok: false,
+        missing_flags: ($missing | split(" ")),
+        envelope_ok: false, schema_honoured: false,
+        error: "contract check failed; skipped the billed run"}'
+    return
+  fi
+
+  dir="$(mktemp -d)"; VERIFY_TMP="$dir"
+  trap verify_cleanup EXIT           # named function, so a TMPDIR containing a
+                                     # quote can never become shell injection
+  # The prompt deliberately never mentions the response shape, so conformance
+  # is evidence that --output-schema actually took effect rather than the model
+  # echoing a shape it was shown.
+  printf 'What is the capital of Norway?\n' > "$dir/prompt.md"
+  printf '%s\n' '{"type":"object","additionalProperties":false,"required":["city","confident"],"properties":{"city":{"type":"string"},"confident":{"type":"boolean"}}}' > "$dir/schema.json"
+
+  out="$(bash "${BASH_SOURCE[0]}" run --model default --effort low \
+           --sandbox read-only --workspace "$dir" \
+           --prompt-file "$dir/prompt.md" --schema-file "$dir/schema.json" \
+           --run-dir "$dir/run" --timeout 300 2>/dev/null || true)"
+
+  # One jq pass over the raw stdout: a non-JSON, empty, or multi-document relay
+  # degrades to false instead of failing an --argjson under `set -e`, so verify
+  # keeps its promise of exactly one JSON object on stdout.
+  verdict="$(printf '%s' "$out" | jq -sR '
+      (try (fromjson? // {}) catch {}) as $_ |
+      (. | try fromjson catch {}) as $e |
+      {envelope_ok: ($e.ok == true),
+       schema_honoured: (($e.result | type) == "object"
+                         and ($e.result.city | type) == "string"
+                         and ($e.result.confident | type) == "boolean"),
+       error: ($e.error // "")}' 2>/dev/null \
+    || printf '%s' '{"envelope_ok":false,"schema_honoured":false,"error":"unparseable runner output"}')"
+
+  jq -n --arg v "$(codex_version)" --argjson d "$verdict" \
+    '{ok: ($d.envelope_ok and $d.schema_honoured),
+      codex_version: $v, contract_ok: true, missing_flags: [],
+      envelope_ok: $d.envelope_ok, schema_honoured: $d.schema_honoured}
+     + (if $d.error == "" then {} else {error: $d.error} end)'
 }
 
 # --- run ----------------------------------------------------------------------
@@ -269,7 +386,7 @@ cmd_run() {
       *) fail_json usage "unknown argument: $1" ;;
     esac
   done
-  [ -n "$model" ] || fail_json usage "--model is required"
+  [ -n "$model" ] || fail_json usage "--model is required (use 'default' for the CLI's built-in model)"
   [ -f "$prompt_file" ] || fail_json usage "--prompt-file missing or unreadable: $prompt_file"
   [ -z "$schema_file" ] || [ -f "$schema_file" ] || fail_json usage "--schema-file unreadable: $schema_file"
   # OpenAI structured output runs in strict mode: the root must be an object
@@ -326,6 +443,11 @@ cmd_run() {
   [ -d "$workspace" ] || fail_json usage "--workspace is not a directory: $workspace"
   is_pos_int "$timeout_secs" && [ ${#timeout_secs} -le 6 ] && [ "$timeout_secs" -le 86400 ] \
     || fail_json usage "--timeout must be an integer between 1 and 86400"
+  # Allowlist, deliberately. A new effort level cannot break existing calls —
+  # nothing asks for a value that does not exist yet — so the staleness risk is
+  # a one-line edit made alongside the first caller that wants it. A denylist
+  # would instead accept typos, empty strings, and any future level whose
+  # delegation or cost behaviour is as unwanted as `ultra`'s.
   case "$effort" in none|minimal|low|medium|high|xhigh|max) ;;
     *) fail_json usage "invalid --effort: $effort (ultra is deliberately unsupported)" ;; esac
   case "$sandbox" in read-only|workspace-write) ;; *) fail_json usage "invalid --sandbox: $sandbox" ;; esac
@@ -367,17 +489,16 @@ cmd_run() {
   [ "$sandbox" != "workspace-write" ] || acquire_workspace_lock "$workspace"
 
   if [ "$sandbox" = "workspace-write" ]; then
-    # Version gate runs AFTER the queue wait — the binary can be upgraded
-    # underneath a queued worker. The recipe (flags, event shapes) is
-    # verified against one Codex series; writes on an unverified CLI are
-    # refused, reads may proceed (probe reports the mismatch loudly).
-    local v
-    v="$(codex_version)"
-    case "$v" in
-      "$VERIFIED_CODEX_SERIES".*) ;;
-      *) fail_json version_mismatch \
-           "codex $v is outside the verified $VERIFIED_CODEX_SERIES.x series; re-verify the recipe before write-capable runs" ;;
-    esac
+    # Contract gate runs AFTER the queue wait — the binary can be upgraded
+    # underneath a queued worker. A write run on a CLI that no longer accepts
+    # one of our flags would fail mid-edit, so refuse up front; reads may
+    # proceed (probe reports the same drift). Only the always-passed flags gate:
+    # blocking a write because an optional flag it never sends disappeared would
+    # rebuild the outage the version pin used to cause.
+    local missing
+    missing="$(missing_contract_flags always)"
+    [ -z "$missing" ] || fail_json contract_mismatch \
+      "codex $(codex_version) no longer advertises: $missing — re-verify the recipe before write-capable runs"
   fi
 
   # Git state is read AFTER the locks: a slot wait can be long, and gating on
@@ -411,19 +532,26 @@ cmd_run() {
   build_worker_env
   local -a env_args=("${WORKER_ENV[@]}" TMPDIR="$run_dir/tmp")
 
+  # Long forms only, matching ALWAYS_EXEC_FLAGS / ALWAYS_ROOT_FLAGS exactly.
+  # Short aliases (-a -s -C -m -c) would make the contract check and the real
+  # invocation two different surfaces, so a dropped alias could pass the gate.
   local -a codex_args=(
-    -a never exec
+    --ask-for-approval never exec
     --ignore-user-config
     --ephemeral
     --disable multi_agent
-    -m "$model"
-    -c "model_reasoning_effort=\"$effort\""
-    -c 'shell_environment_policy.inherit="core"'
-    -s "$sandbox"
-    -C "$workspace"
+    --config "model_reasoning_effort=\"$effort\""
+    --config 'shell_environment_policy.inherit="core"'
+    --sandbox "$sandbox"
+    --cd "$workspace"
     --json
     --output-last-message "$run_dir/final.json"
   )
+  # `--model default` is an explicit opt-in to the CLI's built-in model, so a
+  # lane call needs no repo change when the provider ships a new one. It is a
+  # sentinel rather than a plain omission on purpose: a forgotten --model must
+  # stay a usage error, not a silent run on a moving target.
+  [ "$model" = default ] || codex_args+=(--model "$model")
   [ -z "$schema_file" ] || codex_args+=(--output-schema "$schema_file")
   # Deliberate non-git runs are allowed for read-only workers only.
   [ "$in_git" = true ] || codex_args+=(--skip-git-repo-check)
@@ -535,7 +663,8 @@ cmd_run() {
 }
 
 case "${1:-}" in
-  run)   shift; cmd_run "$@" ;;
-  probe) cmd_probe ;;
-  *)     require_jq; fail_json usage "usage: codex-worker.sh run|probe (see header comment)" ;;
+  run)    shift; cmd_run "$@" ;;
+  probe)  cmd_probe ;;
+  verify) cmd_verify ;;
+  *)      require_jq; fail_json usage "usage: codex-worker.sh run|probe|verify (see header comment)" ;;
 esac
