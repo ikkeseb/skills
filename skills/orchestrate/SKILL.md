@@ -64,6 +64,17 @@ helper's envelope — not prose to re-parse.
   them or reported as unsupported. When diagnosing anomalous output from a
   security stage, treat a classifier swap as one unverified hypothesis among
   several — a quality drop is not evidence that it happened.
+- **Naming a one-off subagent silently disables result delivery.** An
+  anonymous Agent-tool dispatch returns its result to the main loop on its
+  own; passing `name` switches it into addressable "teammate" mode, where it
+  is tracked outside that path entirely (invisible to `TaskList` and
+  `TaskOutput`) and delivery depends on the *agent itself* choosing to call
+  `SendMessage({to: "main"})`. The dispatcher cannot force that from its
+  side — field-confirmed: a named agent finished a trivial task in seconds,
+  never sent the message, and met a direct `SendMessage` asking for its
+  result with nothing but further `idle_notification`s. So never pass `name`
+  to a one-off dispatch; reserve names for genuinely multi-turn addressable
+  work, where the mailbox is the point.
 
 ## Two worker lanes
 

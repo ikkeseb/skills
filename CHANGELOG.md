@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.8.1 — 2026-07-25
+
+- `orchestrate`: documented a field-confirmed trap in its "one-off subagents"
+  escape hatch — passing `name` to the Agent tool switches a dispatch into
+  addressable "teammate" mode, where the result is no longer delivered
+  automatically and the agent can fail to relay it even when asked directly.
+  Dispatch one-off subagents anonymously.
+
 ## 0.8.0 — 2026-07-25
 
 - New `second-opinion` skill: one read-only Codex call on work that already
