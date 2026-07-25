@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.8.2 — 2026-07-25
+
+- Revert the `handoff` model-invocation carve-out from 0.7.4. Its Codex marker
+  goes back to `allow_implicit_invocation: false`, and the exception is gone
+  from `.agents/invocation.md`, `AGENTS.md`, and `README.md` — every skill in
+  the repo is user-invoked again, with no exceptions. Nothing changes for
+  `/handoff` or `$handoff`; only the model's autonomous reach at wrap-up is
+  withdrawn, and on the Claude Code side that now rests on description wording
+  alone, since `disable-model-invocation` stays banned (0.7.5).
+
 ## 0.8.1 — 2026-07-25
 
 - `orchestrate`: documented a field-confirmed trap in its "one-off subagents"

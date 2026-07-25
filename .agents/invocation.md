@@ -2,9 +2,9 @@
 
 Every skill in this repo is *intended* user-invoked — reached through an
 explicit invocation (`/name` in Claude Code, the `$` skill picker in Codex)
-rather than self-triggering from a matching request — **with one deliberate
-exception, `handoff`** (see below). What changed on 2026-07-22 is the
-*enforcement*: the frontmatter flag that used to encode this is banned.
+rather than self-triggering from a matching request. No skill is exempt. What
+changed on 2026-07-22 is the *enforcement*: the frontmatter flag that used to
+encode this is banned.
 
 ## Why no `disable-model-invocation: true`
 
@@ -35,13 +35,10 @@ Mechanics now:
   `user-invocable-only` override for these skills: on current Claude Code it
   hides personal skills from the model just like the frontmatter flag did.
 
-## The `handoff` exception
-
-`handoff` is the one skill the model legitimately reaches for on its own — at
-session wrap-up, when a continuation handoff is the obviously right tool. It
-is model-invokable in both harnesses: its `agents/openai.yaml` sets
-`policy.allow_implicit_invocation: true`. (Decided in 0.7.4, when hiding it
-made the model improvise a `handoff.md` instead of using the skill.)
+`handoff` carried a model-invokable carve-out from 0.7.4 to 0.8.1, on the
+argument that a wrap-up handoff is worth offering unprompted. Reverted in
+0.8.2: it follows the same convention as every other skill. Don't reintroduce
+it without a decision that says so.
 
 `agents/openai.yaml` presence is also the repo's machine-readable marker for
 "this skill is Codex-supported" — see `.agents/adr/0001-agent-agnostic-repo.md`.

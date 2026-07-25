@@ -6,9 +6,9 @@ work in Codex CLI. Pick what you need, ignore the rest.
 ## Skills
 
 Every skill here is meant to be reached by an explicit command rather than
-firing on its own — `handoff` is the deliberate exception, since a wrap-up
-handoff is worth offering unprompted. (In Codex, use the `$` skill picker —
-see Install below.)
+firing on its own; nothing in Claude Code enforces that, so the guard is how
+the descriptions are written. (In Codex, use the `$` skill picker — see
+Install below.)
 
 | Skill | What it does | Invoke |
 |---|---|---|

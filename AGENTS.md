@@ -59,7 +59,7 @@ silently misses a skill. Update all of them in the same change, and add the
 
 ## Conventions
 
-- Skills are written to be reached by explicit invocation, `handoff` excepted; nothing in the frontmatter enforces that, so the guard is description wording. Mechanics and the description-writing rules live in `.agents/invocation.md`.
+- Skills are written to be reached by explicit invocation, with no exceptions; nothing in the frontmatter enforces that, so the guard is description wording. Mechanics and the description-writing rules live in `.agents/invocation.md`.
 - Each meaning lives once per skill. Don't restate a rule across description, body, tables, and checklists — keep it where it governs behaviour. Prose that wouldn't change the agent's behaviour if deleted gets deleted.
 - In procedural skills where steps can fail or branch, end each step on a checkable "done when".
 - Skills are self-contained: a `SKILL.md` body never references another skill by name. Posture skills coordinate through capability-based ownership declarations instead — each states what it owns and what it defers (breadth, instrument, teardown, spend, interaction) so any combination resolves without the skills knowing about each other. Sole exception: a `description:` field may name a sibling skill purely for trigger disambiguation (e.g. drawio vs excalidraw) — such pointers degrade harmlessly when the sibling isn't installed.
