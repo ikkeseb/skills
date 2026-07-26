@@ -4,6 +4,28 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.9.0 — 2026-07-26
+
+- **The dirty-tree gate called clean trees dirty.** `codex-worker.sh` read
+  `git status --porcelain 2>&1`, so any warning on stderr — a flaky fsmonitor
+  hook is the common one — was folded into the porcelain output and refused
+  write-capable runs against a perfectly clean tree. Reproduced on an empty
+  repo. stdout and stderr are now separate, and a nonzero git exit is the only
+  thing treated as an error.
+- The gate now sees what it claims to. `--no-optional-locks` keeps preflight
+  from taking an index lock in someone else's repo, and explicit
+  `--untracked-files=normal --ignore-submodules=none` stop repo config from
+  hiding untracked files or dirty submodules from it.
+- New `unsafe_git_state` failure class for trees that read clean but cannot be
+  written safely: an in-progress merge, rebase, cherry-pick, revert or bisect,
+  and index entries marked `skip-worktree` or `assume-unchanged`, which hide
+  changes from the clean check. A write run during a paused bisect previously
+  passed the gate outright.
+- Untracked files still block write runs, deliberately. Letting them through
+  was considered and rejected: a worker that overwrites a pre-existing
+  untracked file leaves the name list unchanged, so the loss is invisible in
+  the after-diff and unrecoverable.
+
 ## 0.8.6 — 2026-07-26
 
 - `README.md` still promised that `probe` reports "version drift against the

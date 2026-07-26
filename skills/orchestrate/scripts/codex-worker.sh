@@ -507,16 +507,53 @@ cmd_run() {
   if [ "$in_git" = true ]; then
     base_sha="$(git -C "$workspace" rev-parse HEAD 2>/dev/null || true)"
     [ -n "$base_sha" ] || fail_json git_error "cannot resolve HEAD in $workspace" "$run_dir"
-    local porcelain
-    porcelain="$(git -C "$workspace" status --porcelain 2>&1)" \
-      || fail_json git_error "git status failed in $workspace: $porcelain" "$run_dir"
-    [ -z "$porcelain" ] || dirty_before=true
     if [ -n "$expected_sha" ] && [ "$base_sha" != "$expected_sha" ]; then
       fail_json base_sha_mismatch \
         "HEAD is $base_sha, expected $expected_sha — workspace moved" "$run_dir"
     fi
-    if [ "$sandbox" = "workspace-write" ] && [ "$dirty_before" = true ]; then
-      fail_json dirty_worktree "workspace-write requires a clean tree" "$run_dir"
+    # stdout and stderr stay separate: a warning on stderr — a flaky fsmonitor
+    # hook is the common one — used to be folded into the porcelain output and
+    # read as a dirty tree, refusing write runs against a clean one.
+    # --no-optional-locks keeps preflight from taking an index lock in someone
+    # else's repo. The two explicit flags stop repo config from hiding
+    # untracked files or dirty submodules from a gate whose job is to see them.
+    local st_out="$run_dir/tmp/git-status.out"
+    local st_err="$run_dir/tmp/git-preflight.err"
+    local st_rc=0
+    git --no-optional-locks -C "$workspace" status --porcelain=v1 \
+      --untracked-files=normal --ignore-submodules=none \
+      >"$st_out" 2>"$st_err" || st_rc=$?
+    [ "$st_rc" -eq 0 ] || fail_json git_error \
+      "git status failed in $workspace (exit $st_rc): $(tail -c 500 "$st_err")" "$run_dir"
+    [ ! -s "$st_out" ] || dirty_before=true
+
+    if [ "$sandbox" = "workspace-write" ]; then
+      [ "$dirty_before" = false ] || fail_json dirty_worktree \
+        "workspace-write requires a clean tree, untracked files included" "$run_dir"
+      # An index entry marked skip-worktree (S) or assume-unchanged (lowercase)
+      # is invisible to status, which would make the clean verdict above a lie.
+      local flags ls_rc=0
+      flags="$(git --no-optional-locks -C "$workspace" ls-files --cached -v 2>>"$st_err")" \
+        || ls_rc=$?
+      [ "$ls_rc" -eq 0 ] || fail_json git_error \
+        "git ls-files failed in $workspace (exit $ls_rc): $(tail -c 500 "$st_err")" "$run_dir"
+      if printf '%s\n' "$flags" | grep -qE '^([a-z]|S) '; then
+        fail_json unsafe_git_state \
+          "workspace-write refused: index carries skip-worktree or assume-unchanged entries, which hide changes from the clean check" \
+          "$run_dir"
+      fi
+      # Committing on top of a paused merge, rebase or bisect corrupts it.
+      local gitstate state_path
+      for gitstate in MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD BISECT_LOG \
+                      rebase-merge rebase-apply sequencer; do
+        state_path="$(git -C "$workspace" rev-parse --path-format=absolute \
+          --git-path "$gitstate" 2>/dev/null)" || continue
+        if [ -e "$state_path" ]; then
+          fail_json unsafe_git_state \
+            "workspace-write refused during an in-progress git operation ($gitstate)" \
+            "$run_dir"
+        fi
+      done
     fi
   fi
 

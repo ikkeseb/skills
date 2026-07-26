@@ -254,6 +254,13 @@ the orchestrator:
 - `timeout`, `codex_failed`, `schema`, `slots_exhausted` — judgment call;
   read `run_dir` evidence before deciding.
 - `dirty_worktree` — a write run against a dirty tree was refused; see gates.
+  Untracked files count: an untracked file the worker overwrites is invisible
+  in the after-diff, so there is no attribution to recover.
+- `unsafe_git_state` — the tree reads clean but the repo cannot be written to
+  safely: an in-progress merge/rebase/cherry-pick/revert/bisect, or index
+  entries marked `skip-worktree` / `assume-unchanged`, which hide changes from
+  the clean check. Not retryable and not a lane outage; finish or abort the
+  git operation, or give the worker a throwaway worktree.
 - `usage` — the dispatch itself is malformed (bad flag, unreadable prompt or
   schema, strict-mode lint rejection, non-empty run dir). Fix the call. Never
   retried: nothing ran, and no `run_dir` evidence exists.
