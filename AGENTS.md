@@ -14,6 +14,8 @@ Each skill lives in `skills/<name>/` with a `SKILL.md` whose YAML frontmatter (`
 
 The plugin also ships subagent definitions from top-level `agents/` (auto-discovered; not governed by the manifest's `skills` list). Bump the plugin `version` whenever shipped content changes — it is the update/cache key for installs. The `version` fields in `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` are one repository-wide release version: keep them equal and bump both in the same commit.
 
+`agents/codex-worker.md` resolves its helper script through a list of candidate paths, because the plugin-root placeholder is only rewritten for plugin installs and nothing else about the deployment is fixed. After editing that list, run `sh skills/orchestrate/scripts/check-helper-resolution.sh` — it extracts the block from the agent file and resolves it from foreign cwds under simulated deployments. Run it from outside this repo at least once: a session rooted here is the one condition under which a broken candidate list still works.
+
 The repo is also a Codex CLI plugin: Codex reads `.claude-plugin/marketplace.json` for the marketplace, but `.codex-plugin/plugin.json` takes precedence over `.claude-plugin/plugin.json` as the plugin manifest — its narrower `skills` list is what Codex advertises to the model (the whole repo is still copied into the consumer's cache; the list filters exposure, not download).
 
 ## Maintainer-local workspace

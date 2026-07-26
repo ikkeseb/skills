@@ -13,14 +13,19 @@ the single source of truth for the invocation.
 Locate the helper — first executable path wins. (When this agent ships via
 the plugin, the harness rewrites the plugin-root placeholder below into an
 absolute path at load time; it is not a runtime environment variable, so
-never move it into shell fallback syntax.)
+never move it into shell fallback syntax. Nothing rewrites it when the agent
+is deployed as a plain file, and candidate 2 only matches when the session
+happens to be rooted in the skills repo — so the last two candidates are what
+keep this lane reachable from every other repo. Don't drop them.)
 
 ```bash
 HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
 [ -x "$HELPER" ] || HELPER="$(git rev-parse --show-toplevel 2>/dev/null)/skills/orchestrate/scripts/codex-worker.sh"
+[ -x "$HELPER" ] || HELPER="$HOME/.claude/skills/orchestrate/scripts/codex-worker.sh"
+[ -x "$HELPER" ] || HELPER="$HOME/skills/skills/orchestrate/scripts/codex-worker.sh"
 ```
 
-If neither path is executable, return `{"ok": false, "error_class":
+If no candidate is executable, return `{"ok": false, "error_class":
 "missing_dependency", "error": "codex-worker.sh helper not found"}` and stop.
 
 Steps:

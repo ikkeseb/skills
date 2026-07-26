@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.8.3 — 2026-07-26
+
+- Fix `codex-worker`: the subagent could only find its helper script from a
+  session rooted in this repo, so the whole Codex lane returned
+  `missing_dependency` from every other repo. Neither existing candidate
+  covered the symlink deployment — `CLAUDE_PLUGIN_ROOT` is rewritten for
+  plugin installs only, and `git rev-parse --show-toplevel` returns the
+  session's repo. Two candidates added: the deployed skill symlink
+  (`$HOME/.claude/skills/orchestrate/…`) and a `$HOME/skills` backstop.
+- New `skills/orchestrate/scripts/check-helper-resolution.sh`: resolves the
+  candidate list as extracted from the agent file, from foreign cwds under
+  simulated deployment shapes. Verified to fail on the pre-fix list.
+
 ## 0.8.2 — 2026-07-25
 
 - Revert the `handoff` model-invocation carve-out from 0.7.4. Its Codex marker
