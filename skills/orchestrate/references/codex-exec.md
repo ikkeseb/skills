@@ -302,6 +302,12 @@ Known signals when reading `stderr.log` on 0.144.x:
   `--workspace` pointing at that worktree. Never share a writing checkout;
   the helper also holds an exclusive per-workspace lock during write runs as
   a backstop.
+- That worktree isolates the working tree, not the repository: `.git` is
+  shared, so hooks and `--local` config stay common state — `git worktree add`
+  runs the repo's own `post-checkout` hook before any worker starts — and a
+  tracked symlink pointing outside the repo is materialized verbatim, so a
+  write through it reaches live state with nothing in the worktree's `status`
+  or `diff`. Isolation bounds the blast radius; it is not a sandbox.
 - The helper refuses `workspace-write` on a dirty tree and on non-git
   workspaces, and re-reads git state (and the CLI version) after any queue
   wait, immediately before launch. `--expected-base-sha` is mandatory for
@@ -311,6 +317,22 @@ Known signals when reading `stderr.log` on 0.144.x:
   read the actual `git diff` (and untracked files) in the worktree before the
   workflow's worktree cleanup can discard it, and let the main loop apply or
   merge changes sequentially.
+- A *lossy* clean filter (`.gitattributes` `filter=`, e.g. one stripping
+  volatile keys from a config file) breaks both the gate and that after-diff,
+  reproducibly. Git compares *filtered* content, so `git diff` never shows a
+  write inside the stripped region, and `git status` shows it only when the
+  byte length changes — a bare ` M` against an empty diff. That `M` is what
+  the gate refuses on, so such a repo blocks every write run until someone
+  `git add`s the file. It looks like stale stat data and is not: git takes a
+  size shortcut and never runs the filter.
+- The length-preserving case is the dangerous one — invisible to gate and
+  after-diff alike, and it survives `checkout`, `restore`, `stash` and
+  `reset --hard`, so the worker's change is discarded with the worktree
+  rather than merged. To see it, neutralise the driver
+  (`git -c filter.<name>.clean=cat diff`, sound only where the filter has no
+  smudge side) or compare the file against `git show HEAD:<path>`. Injective
+  filters, `filter=lfs` among them, never do this: the blindness needs a
+  many-to-one clean transform.
 
 ## Billing guard
 

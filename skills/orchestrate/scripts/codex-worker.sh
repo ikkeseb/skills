@@ -93,6 +93,14 @@ require_jq() {
 
 is_pos_int() { case "${1:-}" in ''|0|*[!0-9]*) return 1 ;; *) return 0 ;; esac; }
 
+# One-line, bounded, printable-ASCII excerpt of a git listing, for embedding in
+# a refusal message. Non-ASCII bytes become '?' so a path in any encoding still
+# yields an encodable message.
+dirt_excerpt() {
+  head -n 20 "$1" 2>/dev/null | tr '\n' ';' | LC_ALL=C tr -c '\40-\176' '?' \
+    | cut -c 1-300
+}
+
 resolve_codex() {
   # Invoke the binary directly: user shells may wrap `codex` in a function
   # that injects extra profile/config flags, which must never reach workers.
@@ -528,8 +536,15 @@ cmd_run() {
     [ ! -s "$st_out" ] || dirty_before=true
 
     if [ "$sandbox" = "workspace-write" ]; then
-      [ "$dirty_before" = false ] || fail_json dirty_worktree \
-        "workspace-write requires a clean tree, untracked files included" "$run_dir"
+      if [ "$dirty_before" = true ]; then
+        # Name the paths. A bare refusal makes the caller re-derive the tree
+        # state by hand in someone else's repo; the porcelain it already read
+        # is the whole answer. Bounded and forced to printable ASCII so an
+        # exotic path cannot produce an unencodable message.
+        fail_json dirty_worktree \
+          "workspace-write requires a clean tree, untracked files included: $(dirt_excerpt "$st_out")" \
+          "$run_dir"
+      fi
       # An index entry marked skip-worktree (S) or assume-unchanged (lowercase)
       # is invisible to status, which would make the clean verdict above a lie.
       local flags ls_rc=0
@@ -537,9 +552,12 @@ cmd_run() {
         || ls_rc=$?
       [ "$ls_rc" -eq 0 ] || fail_json git_error \
         "git ls-files failed in $workspace (exit $ls_rc): $(tail -c 500 "$st_err")" "$run_dir"
-      if printf '%s\n' "$flags" | grep -qE '^([a-z]|S) '; then
+      local marked
+      marked="$(printf '%s\n' "$flags" | grep -E '^([a-z]|S) ' || true)"
+      if [ -n "$marked" ]; then
+        printf '%s\n' "$marked" > "$run_dir/tmp/git-marked.out"
         fail_json unsafe_git_state \
-          "workspace-write refused: index carries skip-worktree or assume-unchanged entries, which hide changes from the clean check" \
+          "workspace-write refused: index carries skip-worktree or assume-unchanged entries, which hide changes from the clean check: $(dirt_excerpt "$run_dir/tmp/git-marked.out")" \
           "$run_dir"
       fi
       # Committing on top of a paused merge, rebase or bisect corrupts it.

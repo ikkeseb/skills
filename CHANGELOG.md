@@ -4,6 +4,37 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.9.1 — 2026-07-26
+
+- **Write refusals now name the paths.** `dirty_worktree`, and the
+  skip-worktree/assume-unchanged form of `unsafe_git_state`, carried no
+  payload, so a caller refused in someone else's repo had to re-derive the
+  tree state by hand — the reason one such refusal cost three rounds of
+  cross-repo diagnosis. Both messages now carry a bounded, printable-ASCII
+  excerpt of the git listing the gate already read.
+- **The clean-filter blind spot, measured rather than reasoned.** Under a
+  lossy `.gitattributes` `filter=`, git compares *filtered* content: `git
+  diff` never shows a write inside a stripped region, and `git status` shows
+  it only when the byte length changes — as a bare `M` against an empty diff,
+  which is exactly what the gate refuses on. Such a repo therefore blocks
+  every write run until the file is re-added, and the refusal looks like stale
+  stat data without being it. A length-preserving write is worse: invisible to
+  gate and after-diff alike, and it survives `checkout`, `restore`, `stash`
+  and `reset --hard`, so it is discarded with the worktree instead of merged.
+  Injective filters, `filter=lfs` among them, never do this. Both directions
+  reproduced before being written down.
+- **Worktree isolation is now stated in the skill body, and honestly
+  bounded.** `orchestrate`'s always-loaded body never said a writing worker
+  gets its own worktree — the rule lived only in the on-demand Codex
+  reference, so a Claude-lane writing stage never met it. It now also says
+  why: a repo whose files are symlinked into `~/.claude/` or `~/.config/` *is*
+  live system state, so a worker writing there reconfigures the running
+  harness with nothing for a tree-state check to catch. The reference records
+  what the isolation does not cover — `.git` stays shared, so hooks and
+  `--local` config are common state (`git worktree add` runs the repo's own
+  `post-checkout` hook), and a tracked symlink pointing outside the repo is
+  materialized verbatim.
+
 ## 0.9.0 — 2026-07-26
 
 - **The dirty-tree gate called clean trees dirty.** `codex-worker.sh` read

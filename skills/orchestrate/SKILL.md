@@ -160,6 +160,14 @@ main loop. Small edits are not delegated.
   what got only a scan — an unreviewed remainder is a declared gap, not a
   silent one. A failed writing worker's partial changes are inspected before
   any cleanup discards them.
+- **A writing worker gets its own worktree.** Two writing stages never share a
+  checkout, and none is aimed at the tree you are working in: a dotfiles-style
+  repo whose files are symlinked into `~/.claude/` or `~/.config/` *is* live
+  system state, so a worker writing there reconfigures the running harness
+  with nothing for a tree-state check to catch. The isolation is partial —
+  `.git` stays shared, and a tracked symlink pointing outside the repo is
+  materialized verbatim — so it bounds blast radius without removing the need
+  to read the diff.
 - **One job, one delivery owner — chosen at dispatch, never switched.**
   A wrapper may deliver a result only while it stays strictly foreground:
   one blocking call, no interim "waiting" turn, until the worker exits. Any
