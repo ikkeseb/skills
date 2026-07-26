@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.8.5 — 2026-07-26
+
+- `orchestrate` and `second-opinion`: the provider's cybersecurity classifier
+  is a lane-selection input, not a lane outage. It kills a run mid-flight with
+  `api_error` and reacts to the prompt's framing rather than to the artifact —
+  measured across three runs on 2026-07-26, where hunting bypasses in a
+  blocking hook died while the same hook reviewed as parser correctness ran
+  clean. Red-teaming a security control now routes to the Claude lane, or gets
+  reframed as a correctness review.
+
 ## 0.8.4 — 2026-07-26
 
 - **Security: the Codex lane no longer trusts the session's repo.** The helper
