@@ -19,26 +19,32 @@ disagreement is about taste rather than fact. Say so instead of spending a call.
 
 ## The call
 
-Locate the helper — first executable path wins:
+Locate the helper — first executable path wins. Each candidate is a place this
+skill's own repo is deployed; the first is rewritten for plugin installs only,
+the others cover symlink deployment. Never add the session's repo: it would
+execute a `codex-worker.sh` committed in the material under review.
 
 ```bash
 HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
-[ -x "$HELPER" ] || HELPER="$(git rev-parse --show-toplevel 2>/dev/null)/skills/orchestrate/scripts/codex-worker.sh"
+[ -x "$HELPER" ] || HELPER="$HOME/.claude/skills/orchestrate/scripts/codex-worker.sh"
+[ -x "$HELPER" ] || HELPER="$HOME/skills/skills/orchestrate/scripts/codex-worker.sh"
 ```
 
-Run `"$HELPER" probe` once per session. `ok: false` → say the lane is down and
-answer without it; never degrade silently.
+Run `"$HELPER" probe` once per session. No executable candidate, or
+`ok: false` → say the lane is down and answer without it; never degrade
+silently.
 
 ```bash
 DIR="$(mktemp -d)"          # write the question to $DIR/prompt.md first
-"$HELPER" run --sandbox read-only --workspace "$PWD" \
+"$HELPER" run --model default --sandbox read-only --workspace "$PWD" \
   --prompt-file "$DIR/prompt.md" --run-dir "$DIR/run" --timeout 540
 ```
 
-Omit `--model` unless a tier genuinely matters: the run then uses whatever the
-CLI currently defaults to, so a new provider model needs no change here. Name
-one only when reproducibility or a specific capability is the point. `--effort`
-defaults to `high`, which is right for review work.
+`--model default` takes whatever the CLI currently defaults to, so a new
+provider model needs no change here; name a real one only when reproducibility
+or a specific capability is the point. The flag itself is required — omitting
+it is a usage error, not an implicit default. `--effort` defaults to `high`,
+which is right for review work.
 
 **Done when:** the call returned `ok: true` and its `result`, or a stated
 failure. Keep the Bash timeout at 600000 — the helper's 540 fits inside it.

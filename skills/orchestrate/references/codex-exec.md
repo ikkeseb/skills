@@ -16,10 +16,15 @@ dropped a flag sailed through.
 
 ## Preflight
 
+`"$HELPER"` throughout this file is the helper path resolved by the candidate
+list in `SKILL.md` § Two worker lanes. Never write the path as a bare relative
+`scripts/…`: it would resolve against the session's cwd, which is the repo
+being worked on, not the one shipping this skill.
+
 Run once per session before the first Codex-lane stage:
 
 ```bash
-scripts/codex-worker.sh probe        # auth + flag contract, no model call
+"$HELPER" probe                      # auth + flag contract, no model call
 ```
 
 Returns `{ok, codex_version, authenticated, contract_ok, missing_flags}`. On
@@ -32,7 +37,7 @@ Flag presence proves the CLI still *accepts* the invocation, not that it still
 *behaves* the same. After a Codex upgrade you care about, close that gap:
 
 ```bash
-scripts/codex-worker.sh verify       # one tiny billed read-only run, ~20s
+"$HELPER" verify                     # one tiny billed read-only run, ~20s
 ```
 
 It exercises the real `run` path and asserts the whole envelope — contract,
@@ -42,7 +47,7 @@ recipe ritual to perform.
 ## Running a worker
 
 ```bash
-scripts/codex-worker.sh run \
+"$HELPER" run \
   [--model gpt-5.6-terra]              # omit to take the CLI's built-in
                                        #   default — note runs pass
                                        #   --ignore-user-config, so this is
@@ -136,7 +141,9 @@ session's agent list — plugin installs namespace it as
 which carries no agents) spawn a default agent as the adapter — sonnet at
 low effort is right for the relay — with this verified prompt (fill the
 UPPERCASE slots; keep the rules verbatim, each guards an observed failure
-mode; for write workers swap in the write-gate flags below):
+mode; for write workers swap in the write-gate flags below). `HELPER_ABS_PATH`
+is `"$HELPER"` expanded — the adapter is a separate session that resolves
+nothing for itself, so substitute the literal path, never the variable:
 
 ```
 You are a one-shot Codex-lane adapter. Do EXACTLY this, nothing else:

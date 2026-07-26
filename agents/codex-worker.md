@@ -10,20 +10,24 @@ to run one Codex worker and relay its result. You never solve the task
 yourself, never edit files, and never invoke `codex` directly — the helper is
 the single source of truth for the invocation.
 
-Locate the helper — first executable path wins. (When this agent ships via
-the plugin, the harness rewrites the plugin-root placeholder below into an
-absolute path at load time; it is not a runtime environment variable, so
-never move it into shell fallback syntax. Nothing rewrites it when the agent
-is deployed as a plain file, and candidate 2 only matches when the session
-happens to be rooted in the skills repo — so the last two candidates are what
-keep this lane reachable from every other repo. Don't drop them.)
+Locate the helper — first executable path wins. Every candidate is a place
+this repo's own content is deployed. (When this agent ships via the plugin,
+the harness rewrites the plugin-root placeholder below into an absolute path
+at load time; it is not a runtime environment variable, so never move it into
+shell fallback syntax. Nothing rewrites it when the agent is deployed as a
+plain file, which is what the last two candidates cover.)
 
 ```bash
 HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
-[ -x "$HELPER" ] || HELPER="$(git rev-parse --show-toplevel 2>/dev/null)/skills/orchestrate/scripts/codex-worker.sh"
 [ -x "$HELPER" ] || HELPER="$HOME/.claude/skills/orchestrate/scripts/codex-worker.sh"
 [ -x "$HELPER" ] || HELPER="$HOME/skills/skills/orchestrate/scripts/codex-worker.sh"
 ```
+
+**Never add the session's repo as a candidate.** `git rev-parse
+--show-toplevel` names the repo being worked on, so a `skills/orchestrate/
+scripts/codex-worker.sh` committed there would be executed with this
+session's privileges — arbitrary code from the material under review. It was
+a candidate until 0.8.4 and was removed for exactly that reason.
 
 If no candidate is executable, return `{"ok": false, "error_class":
 "missing_dependency", "error": "codex-worker.sh helper not found"}` and stop.

@@ -4,6 +4,31 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.8.4 — 2026-07-26
+
+- **Security: the Codex lane no longer trusts the session's repo.** The helper
+  candidate list included `$(git rev-parse --show-toplevel)/skills/orchestrate/
+  scripts/codex-worker.sh` — the repo being *worked on*. Any repo shipping an
+  executable file at that path would have had it run with the session's
+  privileges, on nothing more than a preflight probe: arbitrary code execution
+  from the material under review. Reproduced against a throwaway repo, then
+  removed. Every surviving candidate is a location this repo's own content is
+  deployed to. Found by a Codex review of the 0.8.3 fix.
+- Complete the 0.8.3 fix, which reached only the subagent. `orchestrate` had
+  no resolution at all — `SKILL.md` and `references/codex-exec.md` wrote the
+  helper as a bare relative path, which resolves against the session's cwd —
+  and `second-opinion` carried a verbatim copy of the old two-candidate list.
+  All three surfaces now share one list, kept identical by the check below.
+- `second-opinion`: `--model default` is required, not optional. The skill
+  told the model to omit the flag; the helper rejects that as a usage error,
+  so every call made by the book failed on the first try.
+- `check-helper-resolution.sh`: names the three surfaces explicitly rather
+  than discovering them by grep (a reindented anchor would have silently
+  dropped a file from coverage), fails on an undeclared fourth copy, models
+  the plugin placeholder as literal text substitution rather than an
+  environment variable, and adds two canaries that plant a hostile helper in
+  the session repo and require it to lose.
+
 ## 0.8.3 — 2026-07-26
 
 - Fix `codex-worker`: the subagent could only find its helper script from a

@@ -86,9 +86,20 @@ helper's envelope — not prose to re-parse.
   never hand-roll `codex` commands in prompts. Read
   `references/codex-exec.md` before authoring the first Codex-lane stage.
 
-Codex-lane preflight: run `scripts/codex-worker.sh probe` once per session
-before first use; `codex-exec.md` owns what each outcome means and how to
-degrade. Done when: the response states which lanes were available.
+Codex-lane preflight: resolve the helper, then run `"$HELPER" probe` once per
+session before first use; `codex-exec.md` owns what each outcome means and how
+to degrade. Each candidate is a place this skill's own repo is deployed — the
+first is rewritten for plugin installs only, the others cover symlink
+deployment, and without them the lane is unreachable from every repo but this
+one. Never add the session's repo as a candidate: it would execute a
+`codex-worker.sh` committed in the material under review. Done when: the
+response states which lanes were available.
+
+```bash
+HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
+[ -x "$HELPER" ] || HELPER="$HOME/.claude/skills/orchestrate/scripts/codex-worker.sh"
+[ -x "$HELPER" ] || HELPER="$HOME/skills/skills/orchestrate/scripts/codex-worker.sh"
+```
 
 ## Verification coverage
 
