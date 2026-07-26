@@ -4,6 +4,13 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.8.6 — 2026-07-26
+
+- `README.md` still promised that `probe` reports "version drift against the
+  pinned, verified codex-cli series". The pin was removed in 0.8.0 and
+  replaced by a flag-surface contract; the README kept describing the old
+  gate. Corrected.
+
 ## 0.8.5 — 2026-07-26
 
 - `orchestrate` and `second-opinion`: the provider's cybersecurity classifier

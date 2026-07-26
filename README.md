@@ -78,8 +78,9 @@ twice. Route verified with codex-cli 0.144.5.
 The `orchestrate` skill's Codex worker lane needs the
 [Codex CLI](https://github.com/openai/codex) installed and logged in
 (`codex login`). Without it the skill runs Claude-only and says so; the
-helper's `probe` subcommand reports auth and version drift against the
-pinned, verified codex-cli series.
+helper's `probe` subcommand reports auth plus whether the installed CLI still
+advertises every flag the runner passes — the recipe gates on that flag
+surface, not on a pinned version.
 
 The plugin install also ships the lane's adapter subagent (exposed as
 `ikkeseb-skills:codex-worker`). Symlink installs carry skills only — no
