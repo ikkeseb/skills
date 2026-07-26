@@ -523,12 +523,28 @@ cmd_run() {
     # hook is the common one — used to be folded into the porcelain output and
     # read as a dirty tree, refusing write runs against a clean one.
     # --no-optional-locks keeps preflight from taking an index lock in someone
-    # else's repo. The two explicit flags stop repo config from hiding
-    # untracked files or dirty submodules from a gate whose job is to see them.
+    # else's repo. The explicit flags stop repo config from hiding untracked
+    # files or dirty submodules from a gate whose job is to see them — and the
+    # two -c overrides close the same hole through a third knob the flags don't
+    # name. --untracked-files=normal is the mode that consults the untracked
+    # cache, core.untrackedCache is settable per repo or globally, and
+    # --no-optional-locks suppresses the index write that would refresh a stale
+    # one, so this call could neither see the dirt nor repair the staleness.
+    # Observed once in the field (2026-07-26, ~/the-vault): this invocation
+    # reported none of three newly created files while -uall, ls-files --others
+    # and add -A --dry-run all saw them; overriding either core.untrackedCache
+    # or core.fsmonitor restored the truth, and the window then self-healed.
+    # Which of the two carried the staleness is unresolved and a lab repro did
+    # not reproduce it, so both are disabled rather than guessing. Cost is one
+    # full lstat walk per gated dispatch — the right price for admitting a
+    # writing worker, since an overwritten pre-existing untracked file leaves
+    # the name list unchanged and is unrecoverable from the after-diff.
     local st_out="$run_dir/tmp/git-status.out"
     local st_err="$run_dir/tmp/git-preflight.err"
     local st_rc=0
-    git --no-optional-locks -C "$workspace" status --porcelain=v1 \
+    git --no-optional-locks -C "$workspace" \
+      -c core.untrackedCache=false -c core.fsmonitor=false \
+      status --porcelain=v1 \
       --untracked-files=normal --ignore-submodules=none \
       >"$st_out" 2>"$st_err" || st_rc=$?
     [ "$st_rc" -eq 0 ] || fail_json git_error \

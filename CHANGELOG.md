@@ -4,6 +4,24 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.9.2 — 2026-07-26
+
+- **The write gate no longer trusts `core.untrackedCache` or `core.fsmonitor`.**
+  Its preflight asks for `--untracked-files=normal`, which is the mode that
+  consults the untracked cache, while `--no-optional-locks` suppresses the index
+  write that would refresh a stale one — so the call could neither see cached-away
+  dirt nor repair the staleness, and `core.untrackedCache` is settable per repo or
+  globally. Observed once in the field: the exact preflight invocation reported
+  none of three newly created files in a repo where `-uall`, `ls-files --others`
+  and `add -A --dry-run` all saw them, and overriding either knob restored the
+  truth before the window self-healed. Which knob carried it is unresolved, and a
+  lab reproduction attempt failed, so the preflight now disables both rather than
+  guessing. The refused-state matters because it is the loss 0.9.0 declined to
+  accept: a worker that overwrites a pre-existing untracked file leaves the name
+  list unchanged, so nothing in the after-diff can recover it. Cost is one full
+  lstat walk per gated dispatch. Verified across four workspace states, and the
+  clean case ran a real `workspace-write` worker end to end (`ok: true`).
+
 ## 0.9.1 — 2026-07-26
 
 - **Write refusals now name the paths.** `dirty_worktree`, and the
