@@ -4,6 +4,24 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.9.5 — 2026-07-28
+
+- **`model-map` calibrated from field data — the items 0.7.6 deferred pending
+  usage.** A `fable` delegate row (intelligence 9, taste 9, cost 2: best of
+  all delegates at reading underspecified intent, strong frontend, occasional
+  shortcut habit); seat-selection guidance (fable is the observed best seat,
+  Sonnet 5 a serviceable budget seat, and a mid-session `/model` switch is how
+  a seat is handed over); a cross-lane cost recalibration (fable ≈ 2× opus;
+  opus above every codex-lane model except sol @ max; sol cheaper than
+  sonnet); and a sol overengineering note (adds unrequested validation and
+  hardening unless prompts bound it explicitly).
+- **`model-map` now carries a score-provenance rule.** Aliases re-point
+  silently, so a harness update hands a row's scores to a model that never
+  earned them — exactly what happened when Opus 5 arrived behind the `opus`
+  alias with a vendor-reported bump and no field scores of its own (since
+  field-confirmed). Every score change now names the resolved model, date,
+  and evidence type.
+
 ## 0.9.4 — 2026-07-28
 
 - **Close three instruction contradictions left in 0.9.3.** `second-opinion`

@@ -2,9 +2,10 @@
 
 Read once before the first delegation of an orchestrated run. Roles and
 fallbacks are the contract. The cost/intelligence/taste scores are calibrated
-working values under active tuning (higher = better/cheaper within its own
-lane's quota) — they encode routing judgment, not benchmarks; adjust them
-when experience disagrees.
+working values under active tuning (higher = better/cheaper; since the
+2026-07-28 recalibration the cost column ranks across lanes, not within them)
+— they encode routing judgment, not benchmarks; adjust them when experience
+disagrees.
 
 ## The senior seat
 
@@ -18,14 +19,28 @@ work, not judgment.
 delegate table (an opus session delegating to `opus`, say), seat and delegate
 share blind spots. That does not by itself add a verification pass — but when
 verification *is* triggered, it changes who may perform it: see the routing
-rules.
+rules. Any claude-lane seat over claude-lane delegates is this case;
+verification routes to the codex lane as usual.
+
+**Seat selection.** The skill still never selects the seat, but field
+experience now informs the choice, and a mid-session `/model` switch before
+invoking this skill is how a seat is handed over — starting an opus session
+and then giving the seat to another model is exactly that. Observed
+(field, 2026-07-28): `fable` (Fable 5) is the best seat — strongest of any
+model at reading intent, goals and orchestration, with strong frontend
+judgment — at roughly twice opus's price, and with one known cost: an
+occasional shortcut habit, so a fable seat applies the verification and
+senior-review rules to its own conclusions instead of trusting itself.
+`sonnet` (Sonnet 5) is a serviceable budget seat for orchestration — a seat
+strength that does not extend to its delegate niche, which stays narrow.
 
 ## The delegate table
 
 | model | lane | cost | intelligence | taste | default effort | default role | fallback |
 |---|---|---:|---:|---:|---|---|---|
-| `opus` | claude | 5 | 9 | 8 | high/xhigh | Real-coding workhorse; best taste among delegates — user-facing surface (UI, copy, API shape) build-out | gpt-5.6-sol |
-| gpt-5.6-sol | codex | 5 | 8–9 | 6 | high/xhigh | Heavy implementation, root-cause work | `opus` |
+| `fable` | claude | 2 | 9 | 9 | high/xhigh | Priciest row, reserved: fuzzy-intent and highest-stakes user-facing work, where reading underspecified goals is the bottleneck. Occasional shortcut habit — its output still gets acceptance criteria and review | `opus` |
+| `opus` | claude | 4 | 9 | 8 | high/xhigh | Real-coding workhorse — user-facing surface (UI, copy, API shape) build-out | gpt-5.6-sol |
+| gpt-5.6-sol | codex | 6 | 8–9 | 6 | high/xhigh | Heavy implementation, root-cause work. Scope prompts tightly — see the overengineering note | `opus` |
 | gpt-5.6-sol @ max | codex | 3 | 9–10 | 6 | max | Adversarial verification, independent second opinion on critical work | `opus` @ xhigh |
 | gpt-5.6-terra | codex | 7 | 7–8 | 6 | high | Broad fan-out workhorse (recon, parallel analysis, bulk transforms) | `opus` |
 | `sonnet` | claude | 5 | 6 | 7 | high | Narrow niche: only when opus is overkill and the task needs more taste than the cheap tier offers | `opus` |
@@ -33,11 +48,12 @@ rules.
 | `haiku` | claude | 10 | 4 | 5 | — | Never use — off-limits even for mechanical relay/adapter stages; luna covers this tier | gpt-5.6-luna |
 
 **The two lanes are named differently, and the difference matters.** Claude-lane
-rows are *harness aliases* (`opus`, `sonnet`, `haiku`) — the values the Agent
-tool's `model` parameter accepts — which resolve to whatever version the
+rows are *harness aliases* (`fable`, `opus`, `sonnet`, `haiku`) — the values the
+Agent tool's `model` parameter accepts — which resolve to whatever version the
 installed Claude Code points them at. A harness update therefore re-points a row
 silently, with no change in this repo: observed 2026-07-25 under Claude Code
-2.1.219, `opus` resolves to Opus 5. Codex-lane rows are *exact model IDs* passed
+2.1.219, `opus` resolves to Opus 5; observed 2026-07-28, `fable` resolves to
+Fable 5. Codex-lane rows are *exact model IDs* passed
 straight through to `codex -m` by the worker helper; they do not resolve to
 anything and go stale loudly (a wrong ID fails as `config`).
 
@@ -63,6 +79,28 @@ nested delegation the orchestrator doesn't control.
 
 ## Calibration notes
 
+- **Score provenance** (rule, 2026-07-28): aliases re-point silently, so a
+  score is only as trustworthy as its provenance. Every score change here
+  names the resolved model that earned it, the date, and the evidence type
+  (field vs vendor-reported). When a harness update re-points an alias, the
+  row's scores are *inherited, not earned* — treat them as unverified until
+  field use confirms them. Not hypothetical: the `opus` row's reputation was
+  earned by the model previously behind the alias, and its 8 → 9 bump was
+  vendor-reported at the very re-point that installed Opus 5 behind it.
+- **fable** (field, 2026-07-28): intelligence 9 — peer of opus — but
+  distinctly better at reading intent, goals and orchestration context; taste
+  9 with particular frontend strength; occasional shortcut habit, so its
+  output is never exempt from acceptance criteria or review. Costs roughly
+  twice opus, hence cost 2.
+- **Cost recalibration** (field, 2026-07-28): the column now ranks across
+  lanes. fable ≈ 2× opus; opus sits well above every codex-lane model except
+  sol @ max, which overtakes it; sol is cheaper than sonnet. Hence fable 2,
+  opus 5 → 4, sol 5 → 6.
+- **sol overengineers when instructions leave room** (field, 2026-07-28): it
+  defaults to adding validation, hardening and safety layers nobody asked
+  for — but follows explicit instructions closely. Prompts to sol state scope
+  and bound the extras ("no validation/hardening beyond the spec") rather
+  than trusting its defaults.
 - **sol vs opus**: no established capability ordering — treat them as peers.
   The reason to pair them on hard problems (one implements, the other verifies)
   is *vendor independence*, not a presumed edge either way. Doubling down on
@@ -74,7 +112,9 @@ nested delegation the orchestrator doesn't control.
   intelligence moved 8 → 9 on 2026-07-25 (Opus 5, vendor-reported: roughly
   double its predecessor's Frontier-Bench at unchanged token price, and
   markedly stronger at verifying its own work rather than declaring a symptom
-  fix done). Taste deliberately stayed at 8 — benchmarks do not measure the
+  fix done) — that entry violated this rule at the time; field-confirmed
+  2026-07-28, Opus 5 holds 9 on use, so the bump now stands on evidence.
+  Taste deliberately stayed at 8 — benchmarks do not measure the
   repo-specific judgment that column tracks. Cost stays a tariff/quota score;
   do not silently redefine it as cost-per-successful-task.
 - The lanes bill separate subscriptions, so one lane throttling rarely means
