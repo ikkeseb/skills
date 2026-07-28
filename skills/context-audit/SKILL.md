@@ -111,6 +111,14 @@ Rules of thumb the table can't hold:
 - **Don't over-split.** Create a skill only when the domain is genuinely separable *and*
   low-hit-rate. Below ~10–15 lines, the frontmatter plus "which place is this rule in?"
   overhead outweighs the content — leave it static.
+- **Dedup across always-on layers.** Audit the whole always-on stack as one surface —
+  global `~/.claude/CLAUDE.md`, parent-directory files, the project file. A rule stated
+  in two layers pays attention twice and drifts independently: keep it in the narrowest
+  layer that covers its scope, delete the other copy.
+- **Enforcement-superseded prose.** A rule a hook or other deterministic mechanism
+  already enforces is scaffolding, not policy — delete it or shrink it to a one-line
+  pointer. Keep prose only where it must work *ahead* of the block (e.g. steering the
+  agent away from wasted work a PreToolUse denial would only catch at the end).
 
 ## Guardrails are sacred
 

@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.9.7 — 2026-07-28
+
+- **`context-audit` gains two passes from the instruction-file trim campaign:**
+  dedup across the always-on layer stack (global / parent / project files
+  audited as one surface), and enforcement-superseded prose (rules a hook
+  already enforces deterministically shrink to a one-line pointer or get
+  deleted).
+
 ## 0.9.6 — 2026-07-28
 
 - **`orchestrate` run reports account for each delegate's resolved model and
