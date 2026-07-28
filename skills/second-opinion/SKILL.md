@@ -65,8 +65,10 @@ latter.
 
 ## Write the question properly
 
-This is the whole skill. The worker starts empty and sees only the prompt plus
-a read-only checkout — it has none of this session's reasoning.
+This is the whole skill. The worker has none of this session's reasoning. It
+sees the prompt and read-only checkout, but also the machine's user-level
+instruction file; write the question so its task-local requirements override
+any ambient house style.
 
 - Paste the actual artifact (the diff, the design, the claim). A path alone
   makes it guess what mattered.

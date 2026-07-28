@@ -27,10 +27,11 @@ Run once per session before the first Codex-lane stage:
 "$HELPER" probe                      # auth + flag contract, no model call
 ```
 
-Returns `{ok, codex_version, authenticated, contract_ok, missing_flags}`. On
-`ok: false` the lane is down: route everything to the Claude lane and say so in
-the response — never degrade silently. `contract_ok: false` names the flags that
-disappeared; read-only workers may proceed (state it), and the helper refuses
+Returns `{ok, codex_version, authenticated, contract_ok, missing_flags}`.
+Missing Codex, `authenticated: false`, or an empty `codex_version` means the
+lane is down: route everything to the Claude lane and say so in the response —
+never degrade silently. `contract_ok: false` alone is not an outage: name the
+flags that disappeared and let read-only workers proceed; the helper refuses
 write-capable runs until the invocation is fixed.
 
 Flag presence proves the CLI still *accepts* the invocation, not that it still

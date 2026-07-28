@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.9.4 — 2026-07-28
+
+- **Close three instruction contradictions left in 0.9.3.** `second-opinion`
+  no longer claims its worker sees only the prompt and checkout; the Codex-lane
+  preflight no longer calls every `ok: false` an outage immediately before
+  exempting flag-contract drift; and `orchestrate` now names output volume,
+  rather than repeating output shape as format.
+
 ## 0.9.3 — 2026-07-28
 
 - **Delegated workers are not blank slates, on either lane.** `orchestrate`'s

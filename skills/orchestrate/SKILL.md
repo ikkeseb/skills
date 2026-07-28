@@ -153,7 +153,7 @@ main loop. Small edits are not delegated.
   lanes a worker is handed the machine's user-level instruction file, content
   this repo neither controls nor sees (measured 2026-07-28 on each lane). Treat
   that as ambient drift rather than context — where a stage's output shape,
-  scope, or format matters, the prompt states it instead of inheriting a house
+  scope, or volume matters, the prompt states it instead of inheriting a house
   rule the dispatcher never read.
 - **Senior review is mandatory.** Check every result against its acceptance
   criteria — read the diff, not the worker's summary. "Done" from a worker is
