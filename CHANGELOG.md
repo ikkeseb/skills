@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.9.6 — 2026-07-28
+
+- **`orchestrate` run reports account for each delegate's resolved model and
+  effort.** The operator sees what each stage actually ran with, not just the
+  dispatch-side pin — pairs with 0.9.5's score-provenance rule (resolved
+  model, not alias; say so when resolution can't be verified).
+- **`second-opinion` pasted-artifact prompts forbid filesystem probing.** A
+  worker reviewing a pasted artifact otherwise spends its budget on probes
+  the read-only sandbox rejects — a field run burned its full 540s timeout
+  collecting refusals before producing nothing.
+
 ## 0.9.5 — 2026-07-28
 
 - **`model-map` calibrated from field data — the items 0.7.6 deferred pending

@@ -71,7 +71,11 @@ instruction file; write the question so its task-local requirements override
 any ambient house style.
 
 - Paste the actual artifact (the diff, the design, the claim). A path alone
-  makes it guess what mattered.
+  makes it guess what mattered. When the artifact is pasted rather than
+  present in the checkout, add "answer from this prompt alone; do not probe
+  the filesystem" — without that line the worker spends its budget on probes
+  the sandbox rejects, and can burn the whole timeout collecting refusals
+  before producing nothing.
 - State the decision it should pressure-test, and what you already believe.
 - Ask it to argue the strongest case *against* your position, not to grade it.
   "Is this good?" returns agreement; "where does this break?" returns signal.

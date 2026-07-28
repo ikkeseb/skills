@@ -126,7 +126,11 @@ truncation reads as full coverage in the result.
   session starts fresh.
 
 Open the first response with the marker `[orchestrate]` /
-`[orchestrate sustained]`. No prescribed output format beyond that.
+`[orchestrate sustained]`. When reporting a run, account for each delegated
+stage's model and effort as it actually ran — the resolved model, not the
+alias, per the provenance rule in `references/model-map.md`; if the Claude
+lane's resolution can't be verified this session, give the alias and say so.
+No prescribed output format beyond that.
 
 ## The split
 
