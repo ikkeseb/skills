@@ -147,9 +147,14 @@ main loop. Small edits are not delegated.
 ## The contract
 
 - **Good instructions are the senior deliverable.** Every delegated stage
-  carries its spec and acceptance criteria in the prompt. Workers start empty
-  — pass the skills, project context, and prior decisions they need, or they
-  drift.
+  carries its spec and acceptance criteria in the prompt. Workers start empty of
+  *this session's* context — pass the skills, project context, and prior
+  decisions they need, or they drift. They are not empty of their own: on both
+  lanes a worker is handed the machine's user-level instruction file, content
+  this repo neither controls nor sees (measured 2026-07-28 on each lane). Treat
+  that as ambient drift rather than context — where a stage's output shape,
+  scope, or format matters, the prompt states it instead of inheriting a house
+  rule the dispatcher never read.
 - **Senior review is mandatory.** Check every result against its acceptance
   criteria — read the diff, not the worker's summary. "Done" from a worker is
   a claim, not evidence. Never relay raw worker output.

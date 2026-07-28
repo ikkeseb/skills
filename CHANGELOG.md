@@ -4,6 +4,48 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.9.3 — 2026-07-28
+
+- **Delegated workers are not blank slates, on either lane.** `orchestrate`'s
+  contract said workers start empty; measured on both lanes, a worker arrives
+  carrying the machine's user-level instruction file. On the Codex lane
+  `--ignore-user-config` scopes to `config.toml` — its own help text says so —
+  so `$CODEX_HOME/AGENTS.md` still loads: verified in an empty non-git
+  workspace where the worker quoted that file back unprompted, with
+  `project_doc_max_bytes=0` failing to suppress it and repointing `CODEX_HOME`
+  breaking auth, so no flag exists for it. On the Claude lane the user-level
+  `CLAUDE.md` arrives in the subagent's startup context, confirmed by a
+  zero-tool subagent quoting two sections of it verbatim. The consequence is
+  not cosmetic: an inherited output ceiling or house style can narrow a stage's
+  result with nothing in the envelope to show for it, so the contract now tells
+  prompts to state the output shape, scope and volume a stage needs rather than
+  inherit a rule the dispatcher never read.
+
+- **`second-opinion` no longer calls the lane down on a flag-contract drift.**
+  Probe's `ok` is auth ∧ version ∧ no-missing-flags, so a single dropped
+  optional flag flipped it false and the skill refused a lane that works. The
+  helper gates only `workspace-write` runs on that contract and this call is
+  always read-only, so `contract_ok: false` alone now proceeds and names the
+  missing flags; real outages (no helper, `codex_missing`, unauthenticated, no
+  version) still degrade loudly.
+
+- **`second-opinion` documents its blocking call and two ambiguities in it.**
+  The foreground call was reviewed against moving it to background dispatch and
+  deliberately kept: stdout is a `cat` of the same atomically written
+  `result.json`, so foreground already receives the authoritative envelope with
+  fewer moving parts, and blocking is what makes a missed harvest impossible.
+  What was missing is now stated — that the call blocks and the user is told
+  before it starts, that the run dir holds an identical envelope when stdout
+  comes back truncated or garbled, and that `--timeout` is a total deadline
+  including worker-slot queue wait, so a `timeout` is not evidence the question
+  was too big.
+
+- **The pinning rule now argues the model half.** `model-map.md` justified
+  pinning `effort` against the Workflow tool's own guidance but left `model`
+  unargued, while that tool documents the opposite default. Omitting it
+  inherits the seat's model, manufacturing the same-family collision the
+  verification rule exists to avoid.
+
 ## 0.9.2 — 2026-07-26
 
 - **The write gate no longer trusts `core.untrackedCache` or `core.fsmonitor`.**

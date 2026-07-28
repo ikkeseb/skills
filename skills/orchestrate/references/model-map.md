@@ -103,8 +103,11 @@ nested delegation the orchestrator doesn't control.
   cross-provider, same-provider, or none.
 - **Pin `{model, effort}` on every delegated call.** An omitted `effort`
   inherits the session's setting, which is a per-session, per-machine choice
-  that will not be what the stage needs. Explicit pinning is what makes a
-  delegated stage reproducible across machines and sessions.
+  that will not be what the stage needs. An omitted *model* inherits the seat's,
+  which manufactures the same-family collision the verification rule exists to
+  avoid — so the Workflow tool's own "default to omitting it" advice for `model`
+  is overridden here, exactly as its effort advice is below. Explicit pinning is
+  what makes a delegated stage reproducible across machines and sessions.
 - **Effort by kind of work, not by price:**
   - `high` — default for substantive delegated work (implementation, analysis,
     review).

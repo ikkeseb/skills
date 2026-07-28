@@ -30,9 +30,16 @@ HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
 [ -x "$HELPER" ] || HELPER="$HOME/skills/skills/orchestrate/scripts/codex-worker.sh"
 ```
 
-Run `"$HELPER" probe` once per session. No executable candidate, or
-`ok: false` → say the lane is down and answer without it; never degrade
-silently.
+Run `"$HELPER" probe` once per session. No executable candidate,
+`codex_missing`, `authenticated: false`, or an empty `codex_version` → the lane
+is down: say so and answer without it, never silently. But `ok: false` caused by
+`contract_ok: false` alone is not an outage — the helper gates only write runs
+on the flag contract, and this call is always read-only — so proceed and name
+the flags that went missing.
+
+The call blocks the session until the worker returns; one blocking call is what
+keeps delivery in one place. Say so in a line before dispatching, so the pause
+reads as work rather than a hang.
 
 ```bash
 DIR="$(mktemp -d)"          # write the question to $DIR/prompt.md first
@@ -49,6 +56,12 @@ which is right for review work.
 **Done when:** the call returned `ok: true` and its `result`, or a stated
 failure. Keep the Bash timeout at 600000 — the helper's 540 fits inside it.
 A question needing longer than that is a delegation job, not a second opinion.
+Stdout and `--run-dir`'s `result.json` are the same envelope printed from the
+same file, so read the file when stdout comes back truncated or garbled — never
+re-run the call to get a clean copy. `--timeout` is a *total* deadline that
+includes waiting for a free worker slot, so a `timeout` failure can mean the
+slots were busy rather than the question being too big — don't report it as the
+latter.
 
 ## Write the question properly
 

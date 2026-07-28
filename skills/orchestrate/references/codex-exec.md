@@ -102,6 +102,15 @@ process spawning**, so a read-only worker cannot run tests, linters, or even
 use `workspace-write` in a throwaway worktree; keep `read-only` for pure
 read-and-reason work, and don't ask a read-only worker to execute gates.
 
+The worker is also not a blank slate, and no flag makes it one.
+`--ignore-user-config` scopes to `config.toml` (its own help text says so), so
+`$CODEX_HOME/AGENTS.md` is still loaded — measured 2026-07-28 in an empty
+non-git workspace, where the worker quoted that file back unprompted.
+`project_doc_max_bytes=0` does not suppress it, and repointing `CODEX_HOME`
+breaks auth. An inherited output ceiling or house style can therefore narrow a
+stage's result with nothing in the envelope to show for it, so prompts for
+exhaustive work state their own volume expectation.
+
 Worker runtime is task-shaped and not reliably predictable — a max-effort
 verification mandate has been observed running 86 tool steps over 14+
 minutes. Don't tune `--timeout` per role; leave headroom (the 3600 default is
