@@ -51,9 +51,8 @@ Add the repo as a marketplace, then install the plugin (ships every skill above)
 ### Codex CLI
 
 The same repo installs as a Codex plugin. It exposes only the Codex-supported
-skills — the ones carrying an `agents/openai.yaml`, per
-`.agents/adr/0001-agent-agnostic-repo.md`: `agents-md-convert`, `handoff`,
-`pretty-pdf`, `verify-claims`.
+skills — the ones carrying an `agents/openai.yaml`: `agents-md-convert`,
+`handoff`, `pretty-pdf`, `verify-claims`.
 
 ```bash
 codex plugin marketplace add ikkeseb/skills

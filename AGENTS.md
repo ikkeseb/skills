@@ -4,7 +4,7 @@ Agent instructions for this repository.
 
 ## Instruction source
 
-`AGENTS.md` is canonical for every harness. `CLAUDE.md` is a one-line import adapter (`@AGENTS.md`) so Claude Code loads this file; Codex CLI reads it natively. Edit here, never in `CLAUDE.md`. Repo-level agent conventions (invocation axis, ADRs) live in `.agents/`.
+`AGENTS.md` is canonical for every harness. `CLAUDE.md` is a one-line import adapter (`@AGENTS.md`) so Claude Code loads this file; Codex CLI reads it natively. Edit here, never in `CLAUDE.md`.
 
 This is a skills repository — a collection of agent skills published as a Claude Code plugin (`ikkeseb-skills`) via `.claude-plugin/plugin.json`, with selected skills also usable from Codex CLI.
 
@@ -61,7 +61,9 @@ silently misses a skill. Update all of them in the same change, and add the
 
 ## Conventions
 
-- Skills are written to be reached by explicit invocation, with no exceptions; nothing in the frontmatter enforces that, so the guard is description wording. Mechanics and the description-writing rules live in `.agents/invocation.md`.
+- Skills are written to be reached by explicit invocation (`/name` in Claude Code, the `$` picker in Codex), with no exceptions; nothing in the frontmatter enforces that, so the guard is description wording: descriptions say what the skill does and when to reach for it, never activation bait. `handoff` briefly carried a model-invokable carve-out (0.7.4–0.8.1); reverted — don't reintroduce one without a decision that says so.
+- `disable-model-invocation: true` is banned repo-wide: on current Claude Code it hides the skill from the model entirely, and since a typed `/name` is executed by the model calling the Skill tool, the skill becomes uninvocable even by explicit slash command (upstream anthropics/claude-code #26251, #38969, #43875; field-confirmed 2026-07-22). Consumer-side `skillOverrides` cannot un-hide it. Per-machine trigger tuning belongs in consumer settings, not this repo: `name-only` keeps a skill invocable with near-zero ambient context; avoid `user-invocable-only`, which re-triggers the same bug.
+- A Codex-supported user-invoked skill carries `policy.allow_implicit_invocation: false` in its `agents/openai.yaml` — the Codex-side expression of the same convention.
 - Each meaning lives once per skill. Don't restate a rule across description, body, tables, and checklists — keep it where it governs behaviour. Prose that wouldn't change the agent's behaviour if deleted gets deleted.
 - In procedural skills where steps can fail or branch, end each step on a checkable "done when".
 - Skills are self-contained: a `SKILL.md` body never references another skill by name. Posture skills coordinate through capability-based ownership declarations instead — each states what it owns and what it defers (breadth, instrument, teardown, spend, interaction) so any combination resolves without the skills knowing about each other. Sole exception: a `description:` field may name a sibling skill purely for trigger disambiguation (e.g. drawio vs excalidraw) — such pointers degrade harmlessly when the sibling isn't installed.
