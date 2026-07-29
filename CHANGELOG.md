@@ -4,6 +4,28 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.9.9 — 2026-07-30
+
+- **`drawio`, `excalidraw` and `context-audit` are now Codex-supported —
+  shipped as-is, not ported.** Each gains an `agents/openai.yaml` marker and
+  joins the `.codex-plugin` skills list (7 of 13 skills Codex-exposed). The
+  one body change: `drawio`'s reference-fetch failure branch said "stop",
+  which under Codex's no-network default sandbox refused the skill's main
+  task deterministically; it now falls back to the inline skeleton and rules
+  and skips CDN-dependent visual verification. `excalidraw` and
+  `context-audit` ship unchanged — rendering was already an opt-in follow-up,
+  and `context-audit`'s subject stays Claude Code context whichever harness
+  runs it (its marker prompt says so). The 2026-07-30 port review's heavier
+  bar (body neutralisation, mandatory validators, four-shape path-resolution
+  proof) was deliberately set aside for this repo's single-maintainer,
+  interactive-TUI usage profile; second opinion gpt-5.6-sol @ max concurred,
+  and found the drawio stop-line as the one release-blocking defect.
+- **`.agents/` is gone from the public root.** The invocation conventions
+  folded into `AGENTS.md` § Conventions; the agent-agnostic-repo ADR retired
+  to the maintainer workspace with a dated amendment relaxing the
+  "marker only after verified port" bar to ship-as-is + fix-on-friction.
+  Historical CHANGELOG references to `.agents/` paths stay as written.
+
 ## 0.9.8 — 2026-07-29
 
 - **`model-map` pinning rule restated per stage, with the instrument

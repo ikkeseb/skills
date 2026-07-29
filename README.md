@@ -1,6 +1,6 @@
 # skills
 
-Claude Code skills I use day-to-day, published as a plugin. Four of them also
+Claude Code skills I use day-to-day, published as a plugin. Seven of them also
 work in Codex CLI. Pick what you need, ignore the rest.
 
 ## Skills
@@ -18,6 +18,7 @@ Install below.)
 | **[drawio](skills/drawio)** | Native `.drawio` XML that opens straight in app.diagrams.net. | `/drawio` |
 | **[verify-claims](skills/verify-claims)** | Fact-checks prose against traceable sources and returns a classified table. | `/verify-claims` |
 | **[agents-md-convert](skills/agents-md-convert)** | Audits, converts, or repairs repository instruction scopes so `AGENTS.md` is canonical and `CLAUDE.md` stays a one-line import adapter. | `/agents-md-convert` |
+| **[context-audit](skills/context-audit)** | Audits a bloated `CLAUDE.md` and proposes a leaner context structure, for you to apply by hand. | `/context-audit` |
 | **[full-send](skills/full-send)** | Posture: resources are authorized — fan out subagents freely, then converge. | `/full-send` · `/full-send sustained` |
 | **[max-effort](skills/max-effort)** | Posture: high-stakes work gets adversarial review, not a rubber stamp. | `/max-effort` · `/max-effort sustained` |
 | **[afk](skills/afk)** | Posture: unattended runs — no clarifying questions, low blast radius, audit trail in the conversation. | `/afk` |
@@ -32,7 +33,6 @@ rather than translate.
 | **[second-opinion](skills/second-opinion)** | One read-only Codex call on work that already exists, answered as a synthesis rather than a relay. Vendor independence without the delegation ceremony. | `/second-opinion` |
 | **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes mechanical work to worker models: Claude agents, plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
 | **[suggest-loop](skills/suggest-loop)** | Turns a repo's documented verification gate into ready-to-paste `/loop` prompts with stop conditions baked in. | `/suggest-loop` |
-| **[context-audit](skills/context-audit)** | Audits a bloated `CLAUDE.md` and proposes a leaner context structure, for you to apply by hand. | `/context-audit` |
 
 Each skill folder contains its `SKILL.md`; a few add a README for
 install-specific notes (e.g. `excalidraw`'s optional PNG renderer).
@@ -52,7 +52,11 @@ Add the repo as a marketplace, then install the plugin (ships every skill above)
 
 The same repo installs as a Codex plugin. It exposes only the Codex-supported
 skills — the ones carrying an `agents/openai.yaml`: `agents-md-convert`,
-`handoff`, `pretty-pdf`, `verify-claims`.
+`context-audit`, `drawio`, `excalidraw`, `handoff`, `pretty-pdf`,
+`verify-claims`. The three added in 0.9.9 ship their Claude bodies as-is —
+`drawio` and `excalidraw` degrade gracefully where the sandbox denies network
+or exec (no visual render loop), and `context-audit`'s subject stays Claude
+Code context whichever harness runs it.
 
 ```bash
 codex plugin marketplace add ikkeseb/skills
