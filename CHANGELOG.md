@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.9.8 — 2026-07-29
+
+- **`model-map` pinning rule restated per stage, with the instrument
+  constraint that motivated it:** the plain Agent tool exposes `model` but no
+  `effort`, so a plain one-off Agent dispatch silently inherits the session
+  effort and cannot satisfy the effort pin (field, 2026-07-29 — a dispatched
+  worker had to be killed and re-dispatched as a single-stage Workflow purely
+  to pin effort). Effort-sensitive one-off stages route through a single-stage
+  Workflow or an agent definition that pins effort; an agent definition's
+  frontmatter now explicitly counts as supplying the `effort` pin.
+
 ## 0.9.7 — 2026-07-28
 
 - **`context-audit` gains two passes from the instruction-file trim campaign:**

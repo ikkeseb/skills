@@ -141,13 +141,22 @@ nested delegation the orchestrator doesn't control.
   same-lane verification is *degraded coverage*: usable when the other lane is
   down, but stated as degraded, never implied away. Report coverage honestly:
   cross-provider, same-provider, or none.
-- **Pin `{model, effort}` on every delegated call.** An omitted `effort`
-  inherits the session's setting, which is a per-session, per-machine choice
-  that will not be what the stage needs. An omitted *model* inherits the seat's,
-  which manufactures the same-family collision the verification rule exists to
-  avoid — so the Workflow tool's own "default to omitting it" advice for `model`
-  is overridden here, exactly as its effort advice is below. Explicit pinning is
-  what makes a delegated stage reproducible across machines and sessions.
+- **Pin `{model, effort}` on every delegated stage.** Put each pin on the call
+  itself where the instrument supports it; an agent definition's frontmatter
+  may supply `effort` instead. An `effort` omitted from both inherits the
+  session's setting, which is a per-session, per-machine choice that will not
+  be what the stage needs. An omitted *model* inherits the seat's, which
+  manufactures the same-family collision the verification rule exists to
+  avoid — so the Workflow tool's own "default to omitting it" advice for
+  `model` is overridden here, exactly as its effort advice is below. Explicit
+  pinning is what makes a delegated stage reproducible across machines and
+  sessions.
+  Instrument constraint (field, 2026-07-29; re-check when the installed
+  harness's tool schema changes): the plain Agent tool exposes `model` but no
+  `effort`, so a plain one-off Agent dispatch cannot satisfy the effort pin.
+  Route such a stage through a single-stage Workflow (`agent()` accepts
+  `effort`) or an agent definition that pins effort. This constrains the
+  dispatch instrument, not one-off delegation itself.
 - **Effort by kind of work, not by price:**
   - `high` — default for substantive delegated work (implementation, analysis,
     review).

@@ -26,7 +26,7 @@ where the main loop starts the worker helper and harvests its run dir per
 the lane's delivery contract — dispatch-and-harvest is delegation mechanics,
 not main-loop labor. Doing the work itself in the main loop is legitimate
 only as that explicitly declared sequential fallback, never silent drift.
-Every delegated call pins `{model, effort}` explicitly and returns typed
+Every delegated stage pins `{model, effort}` explicitly and returns typed
 data — Workflow stages via the `schema` option, Codex stages via the
 helper's envelope — not prose to re-parse.
 
