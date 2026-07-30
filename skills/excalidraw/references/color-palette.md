@@ -8,10 +8,11 @@
 
 | Mode   | Background Color |
 |--------|-----------------|
-| Light  | `#ffffff`        |
-| Dark   | `#1e1e2e`        |
+| Dark (default) | `#000000` |
+| Light | `#ffffff` |
 
-Default to light. Use dark when the user requests it or when the diagram is primarily technical/code-heavy.
+Default to dark. Use light when the user requests it or the destination
+requires a white page.
 
 ---
 
@@ -86,12 +87,24 @@ For code snippets, data examples, and concrete evidence inside technical diagram
 
 ---
 
-## Dark Canvas Adjustments
+## Dark Canvas Tokens
 
-When using `viewBackgroundColor: "#1e1e2e"`:
+The builder applies these exact pairs when `theme` is `dark`.
 
-- Shape fills become slightly more saturated and darker (reduce lightness ~15%)
-- Shape strokes become lighter for contrast
-- Use dark-canvas text colors from the hierarchy table above
-- Evidence artifacts keep the same dark backgrounds (they already contrast well)
-- Structural lines use `#64748b` instead of `#475569`
+| Semantic Purpose | Fill | Stroke |
+|---|---|---|
+| Primary / Neutral | `#1e3a5f` | `#93c5fd` |
+| Secondary | `#312e81` | `#c7d2fe` |
+| Tertiary | `#273449` | `#94a3b8` |
+| Start / Trigger | `#78350f` | `#fbbf24` |
+| End / Success | `#064e3b` | `#6ee7b7` |
+| Warning / Error | `#7f1d1d` | `#fca5a5` |
+| Decision | `#713f12` | `#fde68a` |
+| AI / LLM | `#4c1d95` | `#c4b5fd` |
+| External / API | `#0c4a6e` | `#7dd3fc` |
+| Data / Storage | `#14532d` | `#86efac` |
+| User / Human | `#831843` | `#f9a8d4` |
+| Inactive / Disabled | `#334155` | `#94a3b8` |
+
+Evidence artifacts keep their existing dark backgrounds. Structural lines use
+`#64748b` rather than `#475569`.

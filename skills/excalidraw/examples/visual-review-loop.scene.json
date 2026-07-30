@@ -1,0 +1,133 @@
+{
+  "title": "A diagram is not done when the JSON parses",
+  "subtitle": "Build → validate → render → inspect → correct. Handoff only after the pixels survive review.",
+  "roughness": 1,
+  "sections": [
+    {
+      "id": "make-zone",
+      "title": "Construct",
+      "x": 50,
+      "y": 135,
+      "width": 570,
+      "height": 260,
+      "tone": "tertiary"
+    },
+    {
+      "id": "prove-zone",
+      "title": "Prove",
+      "x": 670,
+      "y": 135,
+      "width": 720,
+      "height": 260,
+      "tone": "tertiary"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "brief",
+      "text": "Visual brief",
+      "shape": "ellipse",
+      "x": 90,
+      "y": 220,
+      "width": 170,
+      "height": 90,
+      "tone": "start"
+    },
+    {
+      "id": "scene",
+      "text": "Inspectable scene spec",
+      "shape": "rectangle",
+      "x": 360,
+      "y": 210,
+      "width": 210,
+      "height": 110,
+      "tone": "primary"
+    },
+    {
+      "id": "validate",
+      "text": "Bindings + geometry",
+      "shape": "rectangle",
+      "x": 720,
+      "y": 210,
+      "width": 200,
+      "height": 110,
+      "tone": "data"
+    },
+    {
+      "id": "inspect",
+      "text": "Pixels read cleanly?",
+      "shape": "diamond",
+      "x": 1010,
+      "y": 190,
+      "width": 220,
+      "height": 150,
+      "tone": "decision"
+    },
+    {
+      "id": "handoff",
+      "text": "Editable artifact",
+      "shape": "ellipse",
+      "x": 1280,
+      "y": 220,
+      "width": 170,
+      "height": 90,
+      "tone": "success"
+    }
+  ],
+  "edges": [
+    {
+      "id": "brief-to-scene",
+      "from": "brief",
+      "to": "scene"
+    },
+    {
+      "id": "scene-to-validate",
+      "from": "scene",
+      "to": "validate",
+      "label": "build"
+    },
+    {
+      "id": "validate-to-inspect",
+      "from": "validate",
+      "to": "inspect",
+      "label": "render"
+    },
+    {
+      "id": "inspect-to-handoff",
+      "from": "inspect",
+      "to": "handoff",
+      "label": "yes"
+    }
+  ],
+  "lines": [
+    {
+      "id": "correction-loop",
+      "arrow": true,
+      "curved": true,
+      "points": [[1120, 350], [1120, 465], [465, 465], [465, 330]],
+      "strokeColor": "#f87171",
+      "strokeStyle": "dashed"
+    }
+  ],
+  "texts": [
+    {
+      "id": "correction-label",
+      "text": "No: fix the layout, then render again",
+      "x": 605,
+      "y": 430,
+      "width": 430,
+      "fontSize": 17,
+      "color": "#f87171"
+    },
+    {
+      "id": "status-note",
+      "text": "Structural checks do not prove native pixels",
+      "x": 510,
+      "y": 525,
+      "width": 540,
+      "fontSize": 22,
+      "color": "#94a3b8",
+      "textAlign": "center"
+    }
+  ]
+}

@@ -1,209 +1,178 @@
 ---
 name: excalidraw
-description: Generate hand-drawn-style `.excalidraw` JSON diagrams for relationships, flows, architectures, and system structure. For editable draw.io/diagrams.net files use the drawio skill; for numerical charts use a charting tool.
+description: Generate editable `.excalidraw` diagrams for relationships, flows, architectures, and system structure, with structural validation and visual review. For editable draw.io/diagrams.net files use the drawio skill; for numerical charts use a charting tool.
 ---
 
-# Excalidraw Diagram Creator
-
-## Environment Detection
-
-This skill works in both Claude Code and Claude Chat.
-
-**Claude Code** (`~/.claude/skills/excalidraw/` or `<project>/.claude/skills/excalidraw/`): Generate the `.excalidraw` JSON and deliver it, then offer opt-in follow-ups (see Design Process Step 7).
-
-**Claude Chat** (`/mnt/skills/user/excalidraw/`): Create the `.excalidraw` JSON file and save to `/mnt/user-data/outputs/`. The user opens it in [excalidraw.com](https://excalidraw.com) or the Excalidraw desktop app. No render loop — get it right by following the methodology carefully.
-
-## Core Philosophy
-
-**Diagrams should ARGUE, not DISPLAY.**
-
-A diagram is a visual argument showing relationships, causality, and flow that words alone can't express. The shape should BE the meaning.
-
-**The Isomorphism Test**: Remove all text. Does the structure alone communicate the concept? If not, redesign.
-
-**The Education Test**: Could someone learn something concrete, or does it just label boxes? Good diagrams teach.
-
----
-
-## Depth Assessment (Do This First)
-
-### Simple / Conceptual
-Use abstract shapes when explaining mental models, the audience doesn't need technical specifics, or the concept IS the abstraction.
-
-### Comprehensive / Technical
-Use concrete examples when diagramming a real system, the diagram will teach or explain, the audience needs to understand what things actually look like, or you're showing how technologies integrate.
-
-**For technical diagrams, include evidence artifacts** — see the Evidence Artifacts section.
-
----
-
-## Design Process
-
-### Step 1: Understand Deeply
-For each concept, ask: What does it DO? What relationships exist? What's the core transformation? What would someone need to SEE?
-
-### Step 2: Map Concepts to Patterns
-
-| If the concept...              | Use this pattern                                    |
-|-------------------------------|-----------------------------------------------------|
-| Spawns multiple outputs        | **Fan-out** — radial arrows from center              |
-| Combines inputs into one       | **Convergence** — funnel, arrows merging             |
-| Has hierarchy/nesting          | **Tree** — lines + free-floating text                |
-| Is a sequence of steps         | **Timeline** — line + dots + labels                  |
-| Loops or improves continuously | **Spiral/Cycle** — arrow returning to start          |
-| Is an abstract state/context   | **Cloud** — overlapping ellipses                     |
-| Transforms input to output     | **Assembly line** — before → process → after         |
-| Compares two things            | **Side-by-side** — parallel with contrast            |
-| Separates into phases          | **Gap/Break** — visual separation between sections   |
-
-### Step 3: Ensure Variety
-Each major concept uses a different visual pattern. No uniform cards or grids.
-
-### Step 4: Sketch the Flow
-Mentally trace how the eye moves. There should be a clear visual story.
-
-### Step 5: Generate JSON
-Only now create the Excalidraw elements. For large diagrams, build section-by-section (see below).
-
-### Step 6: Deliver
-Check that every `containerId`, `boundElements`, and arrow `startBinding`/`endBinding` reference points at an existing element ID, then save the `.excalidraw` file and tell the user where it lives. The methodology is the verification — do **not** auto-render (Chromium cold-start is slow enough to be rude without permission); rendering is an opt-in follow-up the user requests.
-
-### Step 7: Offer Follow-Ups (Claude Code only)
-In one short prompt, offer to render a PNG or open the diagram in Excalidraw. See `references/follow-ups.md` for exact wording, commands, and flags. Skip in Claude Chat — the user already has the file via the chat UI.
-
----
-
-## Evidence Artifacts
-
-Concrete examples that prove accuracy and help viewers learn. Include in technical diagrams.
-
-| Artifact Type        | When to Use                       | How to Render                                       |
-|---------------------|-----------------------------------|-----------------------------------------------------|
-| Code snippets        | APIs, integrations, implementation | Dark rect + syntax-colored text                     |
-| Data/JSON examples   | Schemas, payloads, formats         | Dark rect + green text                              |
-| Event sequences      | Protocols, workflows, lifecycles   | Timeline (line + dots + labels)                     |
-| UI mockups           | Showing actual output              | Nested rectangles mimicking real UI                 |
-| API/method names     | Real function calls, endpoints     | Use actual names from docs, not placeholders         |
-
-**Key principle**: Show what things actually look like, not just what they're called.
-
----
-
-## Multi-Zoom Architecture
-
-Comprehensive diagrams operate at multiple zoom levels:
-
-**Level 1 — Summary Flow**: Simplified overview of the full pipeline. Often at top or bottom.
-
-**Level 2 — Section Boundaries**: Labeled regions grouping related components. Visual "rooms".
-
-**Level 3 — Detail Inside Sections**: Evidence artifacts, code snippets, concrete examples. Where educational value lives.
-
-For comprehensive diagrams, include all three levels.
-
----
-
-## Container vs. Free-Floating Text
-
-Default to free-floating text. Add containers only when they serve a purpose.
-
-| Use a Container When...                    | Use Free-Floating Text When...            |
-|-------------------------------------------|-------------------------------------------|
-| It's the focal point of a section          | It's a label or description               |
-| It needs visual grouping with other elements | It's supporting detail or metadata        |
-| Arrows need to connect to it               | It describes something nearby             |
-| The shape itself carries meaning            | Typography alone creates sufficient hierarchy |
-| It represents a distinct "thing"            | It's a section title or annotation        |
-
-**The container test**: For each boxed element, ask "Would this work as free-floating text?" If yes, remove the container. Aim for <30% of text elements inside containers.
-
----
-
-## Large Diagram Strategy
-
-For diagrams with ~50+ elements, build section-by-section (one section per edit) to stay
-under output limits and preserve layout quality. Namespace `seed` values by section so IDs
-stay legible — section 1 uses `100xxx`, section 2 `200xxx`, and so on. After all sections
-are built, review the whole for cross-section arrow bindings and spacing balance.
-
----
-
-## Shape Meaning
-
-| Concept Type                  | Shape                          | Why                        |
-|------------------------------|--------------------------------|----------------------------|
-| Labels, descriptions, details | **none** (free-floating text)  | Typography creates hierarchy|
-| Section titles, annotations   | **none** (free-floating text)  | Font size/weight is enough  |
-| Markers on a timeline          | small `ellipse` (10-20px)      | Visual anchor, not container|
-| Start, trigger, input          | `ellipse`                      | Soft, origin-like           |
-| End, output, result            | `ellipse`                      | Completion, destination     |
-| Decision, condition            | `diamond`                      | Classic decision symbol     |
-| Process, action, step          | `rectangle`                    | Contained action            |
-| Abstract state, context        | overlapping `ellipse`          | Fuzzy, cloud-like           |
-| Hierarchy node                 | lines + text (no boxes)        | Structure through lines     |
-
----
-
-## Layer Order (Z-Index)
-
-In Excalidraw, **array position is z-index**. Earlier elements render behind, later elements render on top. There's no separate `zIndex` field — order in the `elements` array IS the layering.
-
-Build elements in this order so layering stays correct without post-hoc reshuffling:
-
-1. **Background structure** — section dividers, region rectangles, large grouping shapes
-2. **Primary shapes** — rectangles, ellipses, diamonds for main concepts
-3. **Arrows and lines** — connections between shapes
-4. **Free-floating text** — labels, annotations, captions on top
-
-When labels look clipped by arrows, or arrows pass behind shapes that should sit in front, the fix is array reordering — not coordinates.
-
----
-
-## Color, Aesthetics & Layout
-
-**Colors**: Read `references/color-palette.md` before generating any diagram. Every color choice comes from there.
-
-**Roughness**: `0` for clean/modern (default), `1` for hand-drawn/informal.
-
-**Stroke width**: `1` thin/elegant, `2` bold/standard (default), `4` extra bold (sparingly). These are Excalidraw's UI presets.
-
-**Opacity**: Always `100`. Use color, size, and stroke width for hierarchy instead.
-
-**Hierarchy through scale**: Hero 300×150, Primary 180×90, Secondary 120×60, Small 60×40.
-
-**Whitespace = importance**: Most important element gets 200px+ of empty space around it.
-
-**Flow direction**: Left→right or top→bottom for sequences, radial for hub-and-spoke.
-
-**Connections**: Position alone doesn't show relationships. If A relates to B, there must be an arrow.
-
-**Layout fixes beat arrow gymnastics**: If an arrow needs a tortured curve or hand-placed waypoints to clear an obstacle, the layout is wrong, not the arrow. Move the box. Straight or gently curved arrows mean the spatial story is clear; bezier acrobatics mean it isn't.
-
----
-
-## Text Rules
-
-The JSON `text` property contains ONLY readable words. No formatting codes.
-
-```json
-{ "id": "myElement1", "text": "Start", "originalText": "Start" }
+# Excalidraw diagram creator
+
+Produce a native `.excalidraw` file that explains a relationship, plus an
+inspection of the native canvas. The workflow is the same in Claude Code and
+Codex.
+
+## Quality contract
+
+A diagram moves through four distinct states:
+
+1. **Structurally valid** — JSON, numbers, IDs, files, and reciprocal bindings
+   pass the validator.
+2. **Layout previewed** — the lightweight renderer exposes obvious geometry
+   defects but does not prove native rendering.
+3. **Visually approved** — inspect pixels from an official Excalidraw surface
+   and correct clipping, overlap, weak hierarchy, ambiguous flow, and edge
+   crowding.
+4. **Handed off** — the editable artifact and its verification state are clear
+   to the user.
+
+Never collapse these states into “done.” Native inspection is required before
+normal delivery. If the environment cannot render the official canvas,
+deliver only when useful and say `structurally valid, native visually
+unverified`.
+
+## Tooling
+
+The dependency-free Node CLI lives at `scripts/excalidraw.mjs`. Resolve
+`<skill-root>` from this `SKILL.md`; never assume the session working
+directory or a particular install shape.
+
+```bash
+node <skill-root>/scripts/excalidraw.mjs build diagram.scene.json diagram.excalidraw
+node <skill-root>/scripts/excalidraw.mjs validate diagram.excalidraw
+node <skill-root>/scripts/excalidraw.mjs check diagram.excalidraw diagram.layout.png
 ```
 
-Settings: `fontSize: 16`, `fontFamily: 3`, `textAlign: "center"`, `verticalAlign: "middle"`
+`check` writes lightweight SVG and PNG layout diagnostics without network or
+third-party packages. It deliberately exits `2`: these pixels are not native.
+Continue in an available official Excalidraw app or browser surface. Import the
+file with **File → Open** in a fresh canvas, zoom to fit, and capture the whole
+canvas plus dense crops. Ask before loading sensitive content into
+excalidraw.com. If no official surface is available, report
+`structurally valid, layout previewed, native visually unverified`.
 
----
+For a new diagram, read `references/scene-spec.md` before writing the compact
+scene JSON. Read `references/color-palette.md` only for dark mode, custom
+colors, or rebranding.
 
-## JSON Structure
+## Workflow
 
-```json
-{
-  "type": "excalidraw",
-  "version": 2,
-  "source": "https://excalidraw.com",
-  "elements": [...],
-  "appState": { "viewBackgroundColor": "#ffffff", "gridSize": 20 },
-  "files": {}
-}
-```
+### 1. Write the visual brief
 
-See `references/element-templates.md` for copy-paste JSON templates per element type.
+State, in two or three lines:
+
+- the claim the diagram should make;
+- the intended reading order;
+- the evidence or detail that makes the claim credible.
+
+Choose one dominant flow: left-to-right, top-to-bottom, radial, or cyclic.
+Done when the intended eye path can be described without naming coordinates.
+
+### 2. Choose the depth
+
+Use the simple path when the diagram has roughly 12 or fewer nodes, one flow
+direction, and few cross-region edges. Use the complex path for dense text,
+multiple regions, cross-region relationships, or more than roughly 12 nodes.
+
+- **Simple:** one scene specification, one build, one native overview.
+- **Complex:** sketch regions first, add one region at a time, validate after
+  each addition, then inspect both the overview and local crops near 100%.
+  Prefer an overview plus focused companion diagrams over a canvas wider than
+  3600px or taller than 2600px.
+
+Done when every planned region and cross-region edge has a reason to exist.
+
+### 3. Lay out the scene specification
+
+Write explicit coordinates in a `.scene.json` file. This file is the
+inspectable layout contract: keep IDs semantic, whitespace visible, and routes
+intentional. Do not jump straight to verbose native elements.
+
+Use:
+
+- position and scale for hierarchy;
+- free text for titles, annotations, and supporting detail;
+- containers only for real entities, decisions, or grouping;
+- evidence artifacts such as actual commands, payloads, method names, or
+  miniature UI where technical specificity teaches something.
+
+If most text is boxed or most nodes look like uniform cards, the diagram is
+probably displaying an inventory rather than making an argument. Different
+shapes must encode different meanings, not decorative variety.
+
+Done when the specification itself makes overlap, crowded margins, and
+tortured routes easy to spot.
+
+### 4. Build and validate
+
+Run `build`, then `validate`. Treat validator errors as blockers. Treat
+geometry warnings as review prompts: fix real overlap or crossings, but do not
+distort a clear layout merely to silence a false positive.
+
+The builder creates native Excalidraw JSON with:
+
+- a black canvas and Excalifont by default;
+- Cascadia only when a text item is explicitly code;
+- wrapped, reciprocally bound node labels;
+- reciprocally bound arrows;
+- straight or curved routed arrows and structural lines;
+- deterministic IDs, seeds, and element order;
+- semantic palette defaults.
+
+If the scene specification cannot express one necessary element, edit the
+native JSON after building. This escape hatch preserves the full Excalidraw
+vocabulary: frames, freedraw, images, unusual boxes, and advanced line
+geometry. Validate again. Done when validation reports `STRUCTURALLY VALID`
+and every warning is either fixed or visibly harmless.
+
+### 5. Render and inspect
+
+Run `check` for early geometry feedback, then import the native file into an
+official Excalidraw surface. Inspect that canvas at full size. For complex
+diagrams also inspect crops containing dense text, edge junctions, curved
+segments, and canvas boundaries.
+
+Ask these adversarial questions:
+
+- Is any text clipped, stacked, too small, or visually detached from its
+  subject?
+- Do labels collide with arrows or shapes?
+- Does any arrow cross an unrelated node, point ambiguously, or exit the
+  canvas?
+- Is the reading order obvious within three seconds?
+- Is the most important relationship visually dominant?
+- Are margins balanced, including the right and bottom edges?
+- Does the diagram still communicate when skimmed without reading every word?
+
+Correct the scene specification, rebuild, and re-import until the answers hold.
+For high-impact diagrams or a repeat failure, ask an independent reviewer to
+critique the native pixels, not the source JSON. Done only after inspecting
+the final native canvas.
+
+### 6. Deliver safely
+
+Deliver the `.excalidraw` file and the approved native screenshot or export.
+Name the exact status: `structurally valid and natively visually approved`, or
+the truthful degraded status.
+
+To continue editing, use Excalidraw's **File → Open** or drag the file onto a
+fresh canvas. Never put a full scene on the clipboard for paste into an
+existing canvas: Excalidraw merges pasted elements with cached content, so the
+result is not deterministic.
+
+Done when the user has a native editable artifact, a preview, and an honest
+verification statement.
+
+## Visual grammar
+
+| Meaning | Default representation |
+|---|---|
+| Start, trigger, actor | Ellipse |
+| Process, system, concrete thing | Rectangle |
+| Decision or condition | Diamond |
+| End, result, output | Ellipse |
+| Region or phase | One light background section |
+| Relationship or sequence | Bound arrow |
+| Detail, annotation, section title | Free text |
+| Code, command, payload | Monospace free text or one dark evidence block |
+
+Prefer moving nodes over adding route points. Straight or gently routed edges
+show that the spatial story works; arrow gymnastics usually expose a layout
+problem.

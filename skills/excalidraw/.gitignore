@@ -1,7 +1,4 @@
-__pycache__/
-*.pyc
-*.pyo
-.venv/
-venv/
+*.layout.svg
+*.layout.png
 *.png
 !examples/*.png

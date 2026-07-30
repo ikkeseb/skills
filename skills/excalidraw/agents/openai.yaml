@@ -1,6 +1,6 @@
 interface:
   display_name: "Excalidraw"
-  short_description: "Create a hand-drawn-style .excalidraw diagram"
-  default_prompt: "Use $excalidraw to produce an .excalidraw diagram file for the topic at hand."
+  short_description: "Build and visually verify an .excalidraw diagram"
+  default_prompt: "Use $excalidraw to build, validate, render, inspect, and deliver an editable .excalidraw diagram for the topic at hand."
 policy:
   allow_implicit_invocation: false
