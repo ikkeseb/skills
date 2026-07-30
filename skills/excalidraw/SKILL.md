@@ -42,11 +42,7 @@ node <skill-root>/scripts/excalidraw.mjs check diagram.excalidraw diagram.layout
 
 `check` writes lightweight SVG and PNG layout diagnostics without network or
 third-party packages. It deliberately exits `2`: these pixels are not native.
-Continue in an available official Excalidraw app or browser surface. Import the
-file with **File → Open** in a fresh canvas, zoom to fit, and capture the whole
-canvas plus dense crops. Ask before loading sensitive content into
-excalidraw.com. If no official surface is available, report
-`structurally valid, layout previewed, native visually unverified`.
+Step 5 covers how to reach an official surface from there.
 
 For a new diagram, read `references/scene-spec.md` before writing the compact
 scene JSON. Read `references/color-palette.md` only for dark mode, custom
@@ -125,9 +121,20 @@ and every warning is either fixed or visibly harmless.
 ### 5. Render and inspect
 
 Run `check` for early geometry feedback, then import the native file into an
-official Excalidraw surface. Inspect that canvas at full size. For complex
-diagrams also inspect crops containing dense text, edge junctions, curved
-segments, and canvas boundaries.
+official Excalidraw surface, in this order:
+
+1. any Playwright-based browser automation available in the session, driving
+   `excalidraw.com` — headed when the user is present, headless when not;
+2. manual import by the user in an ordinary browser;
+3. neither available — stop at the degraded status, which is an honest end
+   state rather than a failure.
+
+Read `references/native-inspection.md` for the import recipe, the confirmation
+step that separates a rendered canvas from an imported scene, and what to ask
+before sending a diagram to excalidraw.com.
+
+Inspect that canvas at full size. For complex diagrams also inspect crops
+containing dense text, edge junctions, curved segments, and canvas boundaries.
 
 Ask these adversarial questions:
 

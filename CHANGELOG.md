@@ -4,6 +4,18 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.10.1 — 2026-07-30
+
+- **`excalidraw` now says how to reach an official surface, not just that one
+  is required.** Step 5 carries an explicit ladder — a Playwright-based
+  browser surface already available in the session, then manual import, then
+  the degraded status as an honest end state — and a new
+  `references/native-inspection.md` holds the import recipe, the check that
+  separates a rendered canvas from an imported scene, and the per-invocation
+  consent wording for sending a diagram to excalidraw.com. Nothing is bundled
+  or installed; a session without a browser surface still stops at
+  `native visually unverified`.
+
 ## 0.10.0 — 2026-07-30
 
 - **`excalidraw` now treats native inspected pixels as the release gate in
