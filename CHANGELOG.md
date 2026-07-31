@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.10.2 — 2026-07-31
+
+- **`drawio`'s optional render tier no longer reads as Playwright-only.** It
+  now names whatever browser automation the session already has — Playwright,
+  a Chrome integration, a browser MCP server — and keeps the Playwright load
+  call as the concrete example rather than the requirement. Behaviour is
+  unchanged where Playwright is present; what changes is that a session
+  holding only a Chrome surface no longer reads the whole tier as unavailable.
+  Brings the wording in line with the ladder `excalidraw` already carries.
+
 ## 0.10.1 — 2026-07-30
 
 - **`excalidraw` now says how to reach an official surface, not just that one
