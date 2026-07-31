@@ -23,14 +23,12 @@ The repo is also a Codex CLI plugin: Codex reads `.claude-plugin/marketplace.jso
 If a `local/` directory exists here, you are on a maintainer machine: read
 `local/STATUS.md` before starting work. It carries release state plus active
 and parked leads, so you don't re-propose something already decided.
-`local/AGENTS.md` governs everything under it. `local/` is gitignored, so a
-clone or plugin install simply won't have it — skip this when it's absent.
-Never run `git clean -x` variants in this repo; they delete it.
-
-`local/` is its own nested private git repo (`ikkeseb/skills-local`), not a
-submodule — its git state is fully independent of the parent's. "Both repos"
-on a maintainer machine means this repo **and** `local/`: pull, status and
-commit operations asked for without a named target apply to both.
+`local/AGENTS.md` governs everything under it. It is a separate nested git
+repo, not a submodule, so a git ask that doesn't name a target ("pull both
+repos", "pull skills and local") covers this repo *and* `local/`. `local/` is
+gitignored, so a clone or plugin install simply won't have it — skip this
+section when it's absent. Never run `git clean -x` variants in this repo;
+they delete it.
 
 ## Adding or renaming a skill
 
