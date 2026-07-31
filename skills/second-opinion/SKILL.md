@@ -84,6 +84,17 @@ any ambient house style.
   artifact the subject and ask for failure modes, never for bypasses.
 - Name what is out of scope, or it will redesign things you did not ask about.
 
+## A second round, when it earns one
+
+Only when new evidence turned up — a file the worker could not see, a
+measurement, a constraint you had not stated. Make it a **fresh call**: paste
+round 1 as an explicit artifact beside the new evidence and ask whether it
+changes the conclusion. Continuing the worker's own thread is not available
+(runs are `--ephemeral`) and would not be better anyway — a fresh call keeps
+the anchor visible instead of buried in hidden history. Never re-ask on
+disagreement alone: a model that reverses under pressure has told you nothing,
+and you are the interested party deciding what counts as evidence.
+
 ## Answer, don't relay
 
 Read the result and form your own view. Say where it changed your mind, where

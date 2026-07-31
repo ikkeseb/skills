@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.10.3 — 2026-07-31
+
+- **`second-opinion` gains a follow-up rule.** A second round is a fresh call
+  with round 1 pasted as an explicit artifact beside the new evidence — never a
+  re-ask on disagreement alone, and never a continuation of the worker's own
+  thread. Closes a gap the skill left open: the lane runs `--ephemeral`, so
+  continuation was already impossible, but nothing said what a legitimate
+  follow-up looks like or why a fresh call is the better shape.
+
 ## 0.10.2 — 2026-07-31
 
 - **`drawio`'s optional render tier no longer reads as Playwright-only.** It
