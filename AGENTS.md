@@ -27,6 +27,11 @@ and parked leads, so you don't re-propose something already decided.
 clone or plugin install simply won't have it — skip this when it's absent.
 Never run `git clean -x` variants in this repo; they delete it.
 
+`local/` is its own nested private git repo (`ikkeseb/skills-local`), not a
+submodule — its git state is fully independent of the parent's. "Both repos"
+on a maintainer machine means this repo **and** `local/`: pull, status and
+commit operations asked for without a named target apply to both.
+
 ## Adding or renaming a skill
 
 These must stay in sync:
