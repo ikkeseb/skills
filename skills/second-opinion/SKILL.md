@@ -48,13 +48,17 @@ helper and temp-dir paths from that call, then write the question to
 substitute those recorded literal paths into the background command:
 
 ```bash
+: "second-opinion MODEL@EFFORT — TOPIC"
 HELPER_ABS_PATH run --model gpt-5.6-sol --sandbox read-only --workspace WORKSPACE \
   --prompt-file PROMPT_FILE --run-dir RUN_DIR
 ```
 
 Here `PROMPT_FILE` and `RUN_DIR` are the literal absolute paths
 `<temp-dir>/prompt.md` and `<temp-dir>/run`; `WORKSPACE` is the literal current
-workspace.
+workspace. The leading `:` line is a no-op label: the shell UI lists a
+background job by its command's first line, so fill in the actual model,
+effort, and a short topic slug — that line is what a human sees while the job
+runs.
 
 Start that command with the Bash tool's background mode; do not append `&`
 inside the command. Record the task ID and output-file path Bash returns. The
@@ -70,7 +74,9 @@ Harvest once when the background job reaches a terminal state:
    accept the payload only on `ok: true`.
 2. No parseable `result.json` → read the background task's recorded output
    file. Failures before the helper establishes its run dir, plus an
-   interrupted runner, can only write their envelope there.
+   interrupted runner, can only write their envelope there. The file mixes
+   the helper's stderr start banner with stdout — the envelope is the JSON
+   line, not the whole file.
 3. Neither contains one parseable envelope → report `codex_failed` with the
    recorded job state and run-dir evidence. Never redispatch just to recover
    delivery.

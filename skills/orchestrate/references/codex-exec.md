@@ -126,8 +126,11 @@ Pick by expected runtime, at dispatch, and never switch owners mid-job:
 **Background dispatch + run-dir harvest — the default.** Any run that *may*
 exceed ~8 minutes (max-effort work, verification mandates, real repo audits —
 in practice most Codex-lane stages) is dispatched by the main loop itself:
-mint the run dir, start the helper with the Bash tool's `run_in_background`,
-and harvest `RUN_DIR/result.json` — the helper's full envelope, written
+mint the run dir, start the helper with the Bash tool's `run_in_background`
+(begin the command with a no-op label line — `: "STAGE MODEL@EFFORT — TOPIC"` —
+the shell UI lists a background job by its command's first line, so name the
+job there instead of leading with a temp-path assignment), and harvest
+`RUN_DIR/result.json` — the helper's full envelope, written
 atomically at termination — accepting the payload only on `ok: true` (the
 verdict lives in the envelope, never in `final.json`, which is just the raw
 model payload). The main loop owns delivery from the start; no adapter agent

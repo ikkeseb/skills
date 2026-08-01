@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.10.6 — 2026-08-02
+
+- **Background Codex jobs are now identifiable in the shell UI.** Dispatch
+  commands in `second-opinion` and orchestrate's codex-exec reference begin
+  with a no-op label line (`: "second-opinion MODEL@EFFORT — TOPIC"`) — the
+  shell list shows a job by its command's first line, which used to be a
+  temp-path assignment. `codex-worker.sh` additionally prints a one-line
+  start banner to stderr (model, effort, sandbox, run dir) so a running job's
+  output view shows what is running instead of "No output available"; stdout
+  remains the clean envelope channel, verified by the helper self-test.
+
 ## 0.10.5 — 2026-08-01
 
 - **Background reviews gain a fresh/stale contract** in `second-opinion` and

@@ -486,6 +486,12 @@ cmd_run() {
   mkdir -p "$run_dir/tmp"
   FAIL_RUN_DIR="$run_dir"
 
+  # Start banner on stderr: stdout is the envelope channel and stays clean,
+  # but a background task's combined output file — and a human peeking at a
+  # running job — should see what is running before the terminal envelope.
+  printf '[codex-worker] start model=%s effort=%s sandbox=%s run-dir=%s\n' \
+    "$model" "$effort" "$sandbox" "$run_dir" >&2
+
   # --timeout is the TOTAL wall-clock deadline, queue wait included: a
   # foreground caller sizing its tool timeout against --timeout must not be
   # blindsided by a long slot wait that starts before the run clock does.
