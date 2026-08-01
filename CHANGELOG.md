@@ -4,6 +4,18 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.10.4 — 2026-08-01
+
+- **`second-opinion` no longer kills a live review to fit Claude Code's
+  foreground Bash ceiling.** The caller now starts the existing helper as one
+  background job with an orchestrator-minted run dir, gives the worker its
+  normal one-hour safety ceiling, and harvests the atomic result envelope
+  exactly once. Field evidence invalidated the old 540-second policy: one
+  failed call stayed at `turn.started` until the wrapper deadline, while its
+  successful fresh call legitimately stayed at the same two-event prefix for
+  236 seconds. JSONL state changes are diagnostic evidence, never a heartbeat
+  or kill authority.
+
 ## 0.10.3 — 2026-07-31
 
 - **`second-opinion` gains a follow-up rule.** A second round is a fresh call

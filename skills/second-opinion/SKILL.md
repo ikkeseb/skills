@@ -37,15 +37,43 @@ is down: say so and answer without it, never silently. But `ok: false` caused by
 on the flag contract, and this call is always read-only — so proceed and name
 the flags that went missing.
 
-The call blocks the session until the worker returns; one blocking call is what
-keeps delivery in one place. Say so in a line before dispatching, so the pause
-reads as work rather than a hang.
+Run the helper as one background Bash job owned by the current session. This is
+execution plumbing, not delegation: mint the durable paths before dispatch,
+record the background-job handle, and do not end the session before exactly one
+terminal harvest. Say in a line that the independent review has started.
+
+Create the private temp dir in a foreground tool call, record the absolute
+helper and temp-dir paths from that call, then write the question to
+`<temp-dir>/prompt.md`. Shell variables do not survive between tool calls, so
+substitute those recorded literal paths into the background command:
 
 ```bash
-DIR="$(mktemp -d)"          # write the question to $DIR/prompt.md first
-"$HELPER" run --model default --sandbox read-only --workspace "$PWD" \
-  --prompt-file "$DIR/prompt.md" --run-dir "$DIR/run" --timeout 540
+HELPER_ABS_PATH run --model default --sandbox read-only --workspace WORKSPACE \
+  --prompt-file PROMPT_FILE --run-dir RUN_DIR
 ```
+
+Here `PROMPT_FILE` and `RUN_DIR` are the literal absolute paths
+`<temp-dir>/prompt.md` and `<temp-dir>/run`; `WORKSPACE` is the literal current
+workspace.
+
+Start that command with the Bash tool's background mode; do not append `&`
+inside the command. Record the task ID and output-file path Bash returns. The
+main session is the sole delivery owner. It may do other useful work while the
+review runs; otherwise wait for Claude Code's terminal task notification.
+Never poll output as a liveness test: `events.jsonl` contains state changes,
+not a heartbeat, and a live high-effort review can remain at `turn.started`
+for minutes.
+
+Harvest once when the background job reaches a terminal state:
+
+1. `<temp-dir>/run/result.json` parses as an envelope → it is authoritative;
+   accept the payload only on `ok: true`.
+2. No parseable `result.json` → read the background task's recorded output
+   file. Failures before the helper establishes its run dir, plus an
+   interrupted runner, can only write their envelope there.
+3. Neither contains one parseable envelope → report `codex_failed` with the
+   recorded job state and run-dir evidence. Never redispatch just to recover
+   delivery.
 
 `--model default` takes whatever the CLI currently defaults to, so a new
 provider model needs no change here; name a real one only when reproducibility
@@ -53,15 +81,12 @@ or a specific capability is the point. The flag itself is required — omitting
 it is a usage error, not an implicit default. `--effort` defaults to `high`,
 which is right for review work.
 
-**Done when:** the call returned `ok: true` and its `result`, or a stated
-failure. Keep the Bash timeout at 600000 — the helper's 540 fits inside it.
-A question needing longer than that is a delegation job, not a second opinion.
-Stdout and `--run-dir`'s `result.json` are the same envelope printed from the
-same file, so read the file when stdout comes back truncated or garbled — never
-re-run the call to get a clean copy. `--timeout` is a *total* deadline that
-includes waiting for a free worker slot, so a `timeout` failure can mean the
-slots were busy rather than the question being too big — don't report it as the
-latter.
+**Done when:** the one background job was harvested exactly once and yielded
+`ok: true` plus its `result`, or a stated failure. The helper's default one-hour
+deadline is a safety ceiling for the worker slot, not a hang detector; it is a
+*total* deadline that includes waiting for a free slot. A `timeout` can therefore
+mean queue contention or a long provider-side recovery, not that the question
+was too big. Quiet JSONL is never kill authority.
 
 ## Write the question properly
 
