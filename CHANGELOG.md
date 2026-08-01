@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.10.7 — 2026-08-02
+
+- **orchestrate's freshness bullet no longer demands a diff hash
+  unconditionally.** "Base SHA plus diff hash" was impossible to follow when
+  no diff was embedded; now "plus a diff hash when a diff was embedded",
+  matching second-opinion's wording. Found by an end-to-end verification run
+  of the 0.10.5–0.10.6 changes through the skill itself.
+
 ## 0.10.6 — 2026-08-02
 
 - **Background Codex jobs are now identifiable in the shell UI.** Dispatch

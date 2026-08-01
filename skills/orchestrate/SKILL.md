@@ -188,8 +188,9 @@ main loop. Small edits are not delegated.
 - **Record what was reviewed; declare freshness at harvest.** The target may
   legitimately keep moving while a review or verification worker runs — that
   is not a reason to gate dispatch. At dispatch, record the reviewed
-  artifact's identity (the prompt packet; for repo state, base SHA plus diff
-  hash). At harvest, declare the result fresh, stale, or unknown before any
+  artifact's identity (the prompt packet; for repo state, base SHA, plus a
+  diff hash when a diff was embedded). At harvest, declare the result fresh,
+  stale, or unknown before any
   finding is used. A stale review is not discarded wholesale: keep findings
   untouched by the change, revalidate the ones that depend on changed
   material against the current artifact.
