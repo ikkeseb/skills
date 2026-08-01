@@ -4,6 +4,21 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.10.5 — 2026-08-01
+
+- **Background reviews gain a fresh/stale contract** in `second-opinion` and
+  `orchestrate`. Field signal (a backgrounded xhigh review harvested against a
+  diff superseded minutes after dispatch) showed the dangerous cost is not the
+  wasted run but stale findings that look fresh. Dispatch stays ungated; the
+  dispatcher records the reviewed artifact's identity, and harvest declares
+  fresh, stale, or unknown before findings are used. Stale reviews keep their
+  unaffected findings; only findings depending on changed material are
+  revalidated.
+- **`second-opinion` pins `gpt-5.6-sol`** instead of `--model default`
+  (maintainer hand-tracks vendor releases), accepts free-form per-call
+  effort/model overrides in the invocation, and fails loudly on an invalid
+  model or effort rather than silently falling back.
+
 ## 0.10.4 — 2026-08-01
 
 - **`second-opinion` no longer kills a live review to fit Claude Code's

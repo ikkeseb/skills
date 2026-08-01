@@ -48,7 +48,7 @@ helper and temp-dir paths from that call, then write the question to
 substitute those recorded literal paths into the background command:
 
 ```bash
-HELPER_ABS_PATH run --model default --sandbox read-only --workspace WORKSPACE \
+HELPER_ABS_PATH run --model gpt-5.6-sol --sandbox read-only --workspace WORKSPACE \
   --prompt-file PROMPT_FILE --run-dir RUN_DIR
 ```
 
@@ -75,11 +75,23 @@ Harvest once when the background job reaches a terminal state:
    recorded job state and run-dir evidence. Never redispatch just to recover
    delivery.
 
-`--model default` takes whatever the CLI currently defaults to, so a new
-provider model needs no change here; name a real one only when reproducibility
-or a specific capability is the point. The flag itself is required — omitting
-it is a usage error, not an implicit default. `--effort` defaults to `high`,
-which is right for review work.
+The review is of what was dispatched, not of what exists at harvest. The
+prompt file in the temp dir preserves the reviewed packet; when the subject is
+repo state, also record the base SHA (plus a diff hash if a diff was embedded)
+at dispatch. At harvest, before using any finding, declare the review fresh,
+stale, or unknown: fresh when the subject is unchanged since dispatch, stale
+when it has moved, unknown when that cannot be determined. A stale review is
+not discarded wholesale — keep findings untouched by the change, and
+revalidate the ones that depend on changed material against the current
+artifact (or dispatch a fresh review).
+
+The pinned model is the maintainer's current pick for review work — update it
+here when a better one ships, don't route around it. `--effort` defaults to
+`high`, which is right for most questions. The invocation may override either
+in free form: an effort token ("on xhigh", "med max") maps to `--effort`, a
+model name to `--model`, read with conversational judgment — when the reading
+is doubtful, ask rather than guess. An invalid model or effort fails the run
+loudly; never fall back silently to another value.
 
 **Done when:** the one background job was harvested exactly once and yielded
 `ok: true` plus its `result`, or a stated failure. The helper's default one-hour

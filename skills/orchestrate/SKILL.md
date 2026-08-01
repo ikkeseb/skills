@@ -185,6 +185,14 @@ main loop. Small edits are not delegated.
   durable locator (run dir, task id) *before* dispatch and owns polling,
   terminal-state detection, harvest, and stray cleanup. Wrappers never
   babysit, and idle is never an ownership-transfer event.
+- **Record what was reviewed; declare freshness at harvest.** The target may
+  legitimately keep moving while a review or verification worker runs — that
+  is not a reason to gate dispatch. At dispatch, record the reviewed
+  artifact's identity (the prompt packet; for repo state, base SHA plus diff
+  hash). At harvest, declare the result fresh, stale, or unknown before any
+  finding is used. A stale review is not discarded wholesale: keep findings
+  untouched by the change, revalidate the ones that depend on changed
+  material against the current artifact.
 - **Idle is not done — idle routes to evidence.** Agent and teammate idle
   notifications are scheduler state, not completion evidence. A stage is
   complete only when it has returned a result and the relevant diff or
