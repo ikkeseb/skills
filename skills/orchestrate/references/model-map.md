@@ -42,9 +42,9 @@ strength that does not extend to its delegate niche, which stays narrow.
 | `opus` | claude | 4 | 9 | 8 | high/xhigh | Real-coding workhorse — user-facing surface (UI, copy, API shape) build-out | gpt-5.6-sol |
 | gpt-5.6-sol | codex | 6 | 8–9 | 6 | high/xhigh | Heavy implementation, root-cause work. Scope prompts tightly — see the overengineering note | `opus` |
 | gpt-5.6-sol @ max | codex | 3 | 9–10 | 6 | max | Adversarial verification, independent second opinion on critical work | `opus` @ xhigh |
-| gpt-5.6-terra | codex | 7 | 7–8 | 6 | high | Broad fan-out workhorse (recon, parallel analysis, bulk transforms) | `opus` |
-| `sonnet` | claude | 5 | 6 | 7 | high | Narrow niche: only when opus is overkill and the task needs more taste than the cheap tier offers | `opus` |
-| gpt-5.6-luna | codex | 9 | 5–6 | 5 | low/medium | THE cheap tier: extraction, classification, sanity checks | gpt-5.6-terra |
+| gpt-5.6-terra | codex | 8 | 7–8 | 6 | high; xhigh/max when it writes | Broad fan-out workhorse (recon, parallel analysis, bulk transforms) and small reviews / simple well-specified coding — first stop below sol; try before luna for anything that is actual code or review | `opus` |
+| `sonnet` | claude | 5 | 6 | 7 | high | Essentially orchestration-only (budget conductor seat, see seat selection) — not an execution lane; as a delegate, effectively never picked | `opus` |
+| gpt-5.6-luna | codex | 10 | 5–6 | 5 | high; xhigh/max when it writes | Bottom usable tier: extraction, classification, sanity checks — very simple, tightly specified tasks only; prefer terra when the task is code or review | gpt-5.6-terra |
 | `haiku` | claude | 10 | 4 | 5 | — | Never use — off-limits even for mechanical relay/adapter stages; luna covers this tier | gpt-5.6-luna |
 
 **The two lanes are named differently, and the difference matters.** Claude-lane
@@ -72,8 +72,9 @@ swaps the model underneath a running request without telling the orchestrator;
 that is a pitfall, not a routing option, and it lives in the skill body.
 
 Effort support varies per model and is enforced server-side (a bad value
-returns a clear `api_error`; fix the call). Observed: luna accepts
-none/low/medium/high/xhigh — no minimal, no max; sol and terra accept max.
+returns a clear `api_error`; fix the call). Observed: sol, terra and luna all
+accept max — luna's max support field-verified 2026-08-02 through the worker
+helper, superseding an earlier observation that it topped out at xhigh.
 Codex-lane `ultra` exists on some models but is off-limits: it can introduce
 nested delegation the orchestrator doesn't control.
 
@@ -105,9 +106,24 @@ nested delegation the orchestrator doesn't control.
   The reason to pair them on hard problems (one implements, the other verifies)
   is *vendor independence*, not a presumed edge either way. Doubling down on
   one buys correlated blind spots.
-- **sonnet** costs near opus in practice for similar results, which is why its
-  niche is narrow. Whether that niche still exists is an open question, not a
-  settled one.
+- **sonnet** costs near opus in practice for similar results. The open
+  question about its delegate niche is settled (field, 2026-08-02): it has
+  none — sonnet's only remaining role is the budget conductor seat noted under
+  seat selection.
+- **GPT-5.6 price cut** (vendor, announced 2026-08-01, effective 2026-07-30):
+  luna −80% ($0.20/$1.20 per M in/out), terra −20% ($2/$12). The cut also
+  reduces Codex-subscription credit consumption, so it applies in this setup's
+  billing, not just the API. Hence terra cost 7 → 8 and luna 9 → 10 — luna now
+  undercuts haiku on raw tariff. The same announcement's capability claims
+  (luna rivaling frontier models) are vendor benchmarks and adopted nowhere:
+  intelligence scores move on field evidence only.
+- **Cheap-tier effort compensation** (field, 2026-08-02): terra and luna earn
+  their keep at *higher* effort than their price suggests — high for read-only
+  work, xhigh/max when they write or execute. The price cut makes this cheap:
+  luna at max is still a fraction of sol at medium. Both remain
+  delegation-eligible but deliberately underused until their task-class
+  boundaries are clearer; the common precondition is a tight spec from the
+  seat plus verification where the result matters.
 - Score changes need usage evidence, not launch benchmarks. `opus`
   intelligence moved 8 → 9 on 2026-07-25 (Opus 5, vendor-reported: roughly
   double its predecessor's Frontier-Bench at unchanged token price, and

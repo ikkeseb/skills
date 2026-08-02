@@ -4,6 +4,18 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.10.8 — 2026-08-02
+
+- **Model map recalibrated for the GPT-5.6 price cut** (luna −80%, terra
+  −20%, effective 2026-07-30, also reflected in Codex subscription credits):
+  terra cost 7 → 8 and gains small reviews / simple well-specified coding,
+  tried before luna; luna cost 9 → 10 with default effort raised to
+  high (xhigh/max on writes); sonnet's delegate niche settled as none —
+  orchestration seat only. Luna's `max` effort support field-verified through
+  the worker helper, superseding the earlier xhigh ceiling. New calibration
+  note: cheap-tier delegates run at higher effort than their price suggests,
+  under tight specs plus verification.
+
 ## 0.10.7 — 2026-08-02
 
 - **orchestrate's freshness bullet no longer demands a diff hash
