@@ -569,8 +569,14 @@ cmd_run() {
       fi
       # An index entry marked skip-worktree (S) or assume-unchanged (lowercase)
       # is invisible to status, which would make the clean verdict above a lie.
+      # Same fsmonitor/untracked-cache override as the status call above: a
+      # global core.fsmonitor=true can hang this command past the run deadline,
+      # which is only checked after synchronous git calls return (reproduced
+      # 2026-08-03: --timeout 2 stuck at 4 s; 0.01 s with the override).
       local flags ls_rc=0
-      flags="$(git --no-optional-locks -C "$workspace" ls-files --cached -v 2>>"$st_err")" \
+      flags="$(git --no-optional-locks -C "$workspace" \
+        -c core.untrackedCache=false -c core.fsmonitor=false \
+        ls-files --cached -v 2>>"$st_err")" \
         || ls_rc=$?
       [ "$ls_rc" -eq 0 ] || fail_json git_error \
         "git ls-files failed in $workspace (exit $ls_rc): $(tail -c 500 "$st_err")" "$run_dir"

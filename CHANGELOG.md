@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.10.9 — 2026-08-03
+
+- **codex-worker.sh: fsmonitor override extended to the write-gate's
+  `ls-files` call.** A global `core.fsmonitor=true` could hang the skip-worktree
+  check past the run deadline (checked only after synchronous git calls); the
+  preceding `git status` already carried the override. Regression-verified
+  against a `fsmonitor=true` repo: the gate now completes in under 2 s and
+  still refuses skip-worktree state. Field origin: dotfiles coordination note
+  2026-08-02, reproduced in a vault follow-up 2026-08-03.
+
 ## 0.10.8 — 2026-08-02
 
 - **Model map recalibrated for the GPT-5.6 price cut** (luna −80%, terra
