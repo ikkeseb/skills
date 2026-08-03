@@ -20,7 +20,11 @@ Exclude: opinions ("this is simpler"), recommendations, questions, hypotheses al
 
 ## Process
 
-For each claim, try sources in order:
+First split the target into the smallest independently verifiable claims. A
+sentence that asserts multiple facts becomes multiple rows; one supported clause
+must not make an unsupported neighbor look verified.
+
+For each atomic claim, try sources in order:
 
 1. **Workspace files** — cite as `file:line`
 2. **Session context** — tool output, fetches, or doc lookups already done this session
@@ -36,7 +40,12 @@ Classify each claim:
 
 ## Special cases
 
-- **Session facts** ("I created X", "I ran Y", "the test passed") → verify against this session's tool-call history. ❌ contradicted if the call never happened. This is the most common confabulation mode — don't skip it.
+- **Session facts** ("I created X", "I ran Y", "the test passed") → verify against
+  the visible session tool history and, when cheap, the resulting artifact or
+  repository state. Use ❌ contradicted only when complete evidence affirmatively
+  disagrees. If history may be compacted, truncated, inherited, or otherwise
+  incomplete, an absent call is ❓ unverified — absence from an incomplete record
+  is not proof that the action never happened.
 - **Predictions / estimates** ("this will take 2h", "Y will break under load") → list in a short `[N/A — predictive]` block after the retract list, not inside the table.
 - **Tautologies** (path the user just named, file they pointed at) → omit.
 
@@ -54,9 +63,14 @@ Optimize for human scanability. Three parts, in order:
 |---|---|---|---|
 | ✅ | "the API is called X" | `src/api.ts:42` | direct match |
 | ❓ | "X is the fastest framework" | — | no benchmark in workspace, no lookup match |
-| ❌ | "released in 2024" | webfetch (vendor docs) | docs say 2023 |
+| ❌ | "released in 2024" | [Vendor release notes § v2.0](https://vendor.example/releases/v2) | docs say 2023 |
 
-Quote claims naturally. Sources should be specific (`file:line`, tool + what was fetched) — not just "websearch". The `note` column is for the *why* behind the classification, in human language.
+Quote claims naturally. Every source needs a precise locator: `path:line` for a
+workspace file; the command or named tool call plus its relevant result for
+session evidence; or a direct page title and URL (with section/anchor when
+available) for external material. "websearch", "vendor docs", and a bare tool
+name are not sources. The `note` column is for the *why* behind the
+classification, in human language.
 
 **3. Retract list** — one section below the table, only ❓ and ❌ rows. Quote the original sentence and say plainly what's wrong or missing. No automatic rewrites — the user decides what to strike or qualify.
 

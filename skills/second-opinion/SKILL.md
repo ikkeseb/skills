@@ -9,20 +9,16 @@ description: >-
 
 # second-opinion
 
-One read-only Codex call against work that is already in front of you. The
-value is *vendor independence* — a different model family has different blind
-spots. It is not a quality upgrade, and a confident answer from it is still a
-claim.
+Use one read-only Codex call to pressure-test existing work. Its value is an
+independent model family with different blind spots, not automatic authority.
+Do not spend the call on lookups, work that does not exist yet, or taste.
 
-Wrong tool when: the question is a lookup, the work does not exist yet, or the
-disagreement is about taste rather than fact. Say so instead of spending a call.
+## Run the review
 
-## The call
-
-Locate the helper — first executable path wins. Each candidate is a place this
-skill's own repo is deployed; the first is rewritten for plugin installs only,
-the others cover symlink deployment. Never add the session's repo: it would
-execute a `codex-worker.sh` committed in the material under review.
+Locate this skill bundle's helper; first executable path wins. The plugin-root
+candidate is rewritten for Claude Code plugin installs, while the other two
+cover symlink deployments. Keep them exact. Never search the session repo,
+which could execute code from the material under review.
 
 ```bash
 HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
@@ -30,120 +26,93 @@ HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
 [ -x "$HELPER" ] || HELPER="$HOME/skills/skills/orchestrate/scripts/codex-worker.sh"
 ```
 
-Run `"$HELPER" probe` once per session. No executable candidate,
-`codex_missing`, `authenticated: false`, or an empty `codex_version` → the lane
-is down: say so and answer without it, never silently. But `ok: false` caused by
-`contract_ok: false` alone is not an outage — the helper gates only write runs
-on the flag contract, and this call is always read-only — so proceed and name
-the flags that went missing.
+Run `"$HELPER" probe` once per session. No executable helper,
+`codex_missing`, `authenticated: false`, or empty `codex_version` means the
+lane is down: state that and continue without it. `contract_ok: false` alone
+is not an outage for this read-only call; proceed, naming the missing flags.
 
-Run the helper as one background Bash job owned by the current session. This is
-execution plumbing, not delegation: mint the durable paths before dispatch,
-record the background-job handle, and do not end the session before exactly one
-terminal harvest. Say in a line that the independent review has started.
-
-Create the private temp dir in a foreground tool call, record the absolute
-helper and temp-dir paths from that call, then write the question to
-`<temp-dir>/prompt.md`. Shell variables do not survive between tool calls, so
-substitute those recorded literal paths into the background command:
+In a foreground Bash call, create a private temp directory and record its
+literal absolute path plus the helper path. Write a self-contained question to
+`<temp-dir>/prompt.md`. Shell variables do not survive tool calls, so replace
+every placeholder below with the recorded literal path:
 
 ```bash
 : "second-opinion MODEL@EFFORT — TOPIC"
-HELPER_ABS_PATH run --model gpt-5.6-sol --sandbox read-only --workspace WORKSPACE \
-  --prompt-file PROMPT_FILE --run-dir RUN_DIR
+HELPER_ABS_PATH run --model gpt-5.6-sol --effort high --sandbox read-only \
+  --workspace WORKSPACE --prompt-file PROMPT_FILE --run-dir RUN_DIR
 ```
 
-Here `PROMPT_FILE` and `RUN_DIR` are the literal absolute paths
-`<temp-dir>/prompt.md` and `<temp-dir>/run`; `WORKSPACE` is the literal current
-workspace. The leading `:` line is a no-op label: the shell UI lists a
-background job by its command's first line, so fill in the actual model,
-effort, and a short topic slug — that line is what a human sees while the job
-runs.
+`PROMPT_FILE` is `<temp-dir>/prompt.md`, `RUN_DIR` is `<temp-dir>/run`, and
+`WORKSPACE` is the current workspace. The no-op first line is the visible
+Claude Code background-job label; name the actual model, effort, and topic.
 
-Start that command with the Bash tool's background mode; do not append `&`
-inside the command. Record the task ID and output-file path Bash returns. The
-main session is the sole delivery owner. It may do other useful work while the
-review runs; otherwise wait for Claude Code's terminal task notification.
-Never poll output as a liveness test: `events.jsonl` contains state changes,
-not a heartbeat, and a live high-effort review can remain at `turn.started`
-for minutes.
+Start this as one Bash background job using the tool's background mode, never
+an appended `&`. Record the returned task ID and output-file path, announce
+that the independent review started, and retain delivery ownership in the
+main session. This is execution plumbing, not delegated delivery; do not end
+the session before its terminal harvest. Useful local work may continue
+meanwhile. Otherwise wait for Claude Code's terminal-task notification. Never
+poll output for liveness:
+`events.jsonl` records transitions, not heartbeats, and a healthy high-effort
+run may sit at `turn.started` for minutes.
 
-Harvest once when the background job reaches a terminal state:
+Harvest exactly once after the job is terminal:
 
-1. `<temp-dir>/run/result.json` parses as an envelope → it is authoritative;
-   accept the payload only on `ok: true`.
-2. No parseable `result.json` → read the background task's recorded output
-   file. Failures before the helper establishes its run dir, plus an
-   interrupted runner, can only write their envelope there. The file mixes
-   the helper's stderr start banner with stdout — the envelope is the JSON
-   line, not the whole file.
-3. Neither contains one parseable envelope → report `codex_failed` with the
-   recorded job state and run-dir evidence. Never redispatch just to recover
+1. Parse `<temp-dir>/run/result.json`. It is the authoritative envelope; use
+   `result` only when `ok: true`.
+2. If that file is absent or invalid, inspect the recorded background output.
+   Failures before run-dir creation and interrupted runners can report only
+   there. The file combines a stderr banner with stdout; locate its JSON
+   envelope rather than parsing the whole file.
+3. If neither location contains an envelope, report `codex_failed` with the
+   recorded job state and run-dir evidence. Never redispatch merely to recover
    delivery.
 
-The review is of what was dispatched, not of what exists at harvest. The
-prompt file in the temp dir preserves the reviewed packet; when the subject is
-repo state, also record the base SHA (plus a diff hash if a diff was embedded)
-at dispatch. At harvest, before using any finding, declare the review fresh,
-stale, or unknown: fresh when the subject is unchanged since dispatch, stale
-when it has moved, unknown when that cannot be determined. A stale review is
-not discarded wholesale — keep findings untouched by the change, and
-revalidate the ones that depend on changed material against the current
-artifact (or dispatch a fresh review).
+The helper's one-hour total deadline includes queueing. A `timeout` may mean
+slot contention or provider recovery; quiet JSONL never authorizes killing the
+job. Done means the single job was harvested once and produced `ok: true` plus
+`result`, or its failure was stated transparently.
 
-The pinned model is the maintainer's current pick for review work — update it
-here when a better one ships, don't route around it. `--effort` defaults to
-`high`, which is right for most questions. The invocation may override either
-in free form: an effort token ("on xhigh", "med max") maps to `--effort`, a
-model name to `--model`, read with conversational judgment — when the reading
-is doubtful, ask rather than guess. An invalid model or effort fails the run
-loudly; never fall back silently to another value.
+## Preserve review identity
 
-**Done when:** the one background job was harvested exactly once and yielded
-`ok: true` plus its `result`, or a stated failure. The helper's default one-hour
-deadline is a safety ceiling for the worker slot, not a hang detector; it is a
-*total* deadline that includes waiting for a free slot. A `timeout` can therefore
-mean queue contention or a long provider-side recovery, not that the question
-was too big. Quiet JSONL is never kill authority.
+The reviewed subject is the dispatch packet, not whatever exists at harvest.
+The prompt file preserves that packet. For repo state, also record the base SHA
+and, when embedding a diff, its hash before dispatch.
 
-## Write the question properly
+Before using a finding, classify the review as **fresh** when the subject is
+unchanged, **stale** when it moved, or **unknown** when identity cannot be
+established. A stale review may still contain unaffected findings; recheck any
+finding that depends on changed material against the current artifact, or earn
+a new call.
 
-This is the whole skill. The worker has none of this session's reasoning. It
-sees the prompt and read-only checkout, but also the machine's user-level
-instruction file; write the question so its task-local requirements override
-any ambient house style.
+The command pins the maintainer's current review model and `high` effort;
+update that pin here when the preferred review model changes. Explicit user
+wording may override either: effort language maps to `--effort`, and a model
+name maps to `--model`. Use conversational judgment; ask if the reading is
+ambiguous. Invalid values must fail loudly—never substitute a different model
+or effort silently.
 
-- Paste the actual artifact (the diff, the design, the claim). A path alone
-  makes it guess what mattered. When the artifact is pasted rather than
-  present in the checkout, add "answer from this prompt alone; do not probe
-  the filesystem" — without that line the worker spends its budget on probes
-  the sandbox rejects, and can burn the whole timeout collecting refusals
-  before producing nothing.
-- State the decision it should pressure-test, and what you already believe.
-- Ask it to argue the strongest case *against* your position, not to grade it.
-  "Is this good?" returns agreement; "where does this break?" returns signal.
-  On security-adjacent work this framing is also what gets through: the
-  provider's classifier kills runs that read as an attack, so make the
-  artifact the subject and ask for failure modes, never for bypasses.
-- Name what is out of scope, or it will redesign things you did not ask about.
+## Write a useful question
 
-## A second round, when it earns one
+The worker receives only the prompt, a read-only checkout, and machine-level
+instructions. Make task-local requirements explicit enough to override
+ambient house style:
 
-Only when new evidence turned up — a file the worker could not see, a
-measurement, a constraint you had not stated. Make it a **fresh call**: paste
-round 1 as an explicit artifact beside the new evidence and ask whether it
-changes the conclusion. Continuing the worker's own thread is not available
-(runs are `--ephemeral`) and would not be better anyway — a fresh call keeps
-the anchor visible instead of buried in hidden history. Never re-ask on
-disagreement alone: a model that reverses under pressure has told you nothing,
-and you are the interested party deciding what counts as evidence.
+- Include the artifact or relevant excerpt, not only a path. For prompt-only
+  material, say: "answer from this prompt alone; do not probe the filesystem."
+- State the decision, your current belief, and the strongest counter-case you
+  want tested. Ask where it breaks, not whether it is good.
+- For security-adjacent reviews, keep the artifact as subject and request
+  failure modes, never bypass instructions.
+- Name exclusions so the reviewer does not redesign unrelated work.
 
-## Answer, don't relay
+Make a second call only for genuinely new evidence: paste the first result and
+new evidence into a fresh prompt, then ask whether the conclusion changes.
+Runs are ephemeral, and disagreement alone does not earn another call.
 
-Read the result and form your own view. Say where it changed your mind, where
-you are overruling it and why, and where you both agree — agreement between two
-model families is weak evidence, not proof. Where it makes a factual claim about
-the codebase, check the file before repeating it.
+## Synthesize
 
-Never paste the worker's output as the answer. If it produced nothing usable,
-say that plainly rather than dressing up a thin result.
+The main agent owns the answer. Check codebase claims against the files, then
+say what changed your view, what you reject and why, and where both reviewers
+agree. Cross-model agreement remains weak evidence, not proof. Never relay the
+worker output as the answer; if it produced nothing useful, say so plainly.

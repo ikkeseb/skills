@@ -42,11 +42,13 @@ node <skill-root>/scripts/excalidraw.mjs check diagram.excalidraw diagram.layout
 
 `check` writes lightweight SVG and PNG layout diagnostics without network or
 third-party packages. It deliberately exits `2`: these pixels are not native.
-Step 5 covers how to reach an official surface from there.
+Set `EXCALIDRAW_BROWSER_PATH` only when the local browser is outside standard
+install locations and `PATH`. Step 5 covers how to reach an official surface
+from there.
 
 For a new diagram, read `references/scene-spec.md` before writing the compact
-scene JSON. Read `references/color-palette.md` only for dark mode, custom
-colors, or rebranding.
+scene JSON. Read `references/color-palette.md` for custom colors or rebranding,
+then inspect its single source `references/palette.json` for exact tokens.
 
 ## Workflow
 

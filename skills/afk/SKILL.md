@@ -38,9 +38,21 @@ Decisions are made and logged, not deferred. Calibrate by blast radius:
 
 ### Blast radius — principle, not exhaustive list
 
-- **Forbidden** (stop + log, don't proceed): destructive, irreversible, or externally-visible operations. E.g. force-push to main, prod deploys, external messages (Slack/email/PR comments), dropping data, overwriting uncommitted work Claude didn't author.
-- **Pre-authorized** (proceed): local and reversible work. E.g. edits, tests/build/lint, local commits, scratch files.
-- **Gray area** (proceed with thorough logging): everything between — feature-branch pushes, draft PRs, dependency installs, multi-file refactors.
+AFK changes the interaction cadence, not the user's authorization. Activating it
+never grants permission for an operation the current task did not already
+authorize; repository rules and normal tool approvals still apply.
+
+- **Proceed when in scope**: local, reversible work needed for the authorized
+  task, such as reads, edits, tests/build/lint, scratch files, and multi-file
+  refactors.
+- **Authority-bound**: commits, dependency installs or lockfile changes, pushes,
+  pull requests, deploys, external messages, destructive operations, and changes
+  outside the task's stated scope. Proceed only when the user's task already
+  authorizes that action. Otherwise defer it, or use `[AFK BLOCKED]` when the
+  core task cannot continue without it.
+- **Never infer escalation from silence**: unattended time, a picked token budget,
+  or a broad request for autonomy is not consent for a materially different or
+  externally visible action.
 
 ### Proactive scope expansion within blast rules
 

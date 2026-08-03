@@ -1,0 +1,73 @@
+{
+  "canvas": {
+    "dark": "#000000",
+    "light": "#ffffff"
+  },
+  "semantic": {
+    "light": {
+      "primary": { "fill": "#dbeafe", "stroke": "#1e40af" },
+      "secondary": { "fill": "#e0e7ff", "stroke": "#3730a3" },
+      "tertiary": { "fill": "#f1f5f9", "stroke": "#475569" },
+      "start": { "fill": "#fef3c7", "stroke": "#b45309" },
+      "success": { "fill": "#d1fae5", "stroke": "#047857" },
+      "warning": { "fill": "#fee2e2", "stroke": "#b91c1c" },
+      "decision": { "fill": "#fde68a", "stroke": "#92400e" },
+      "ai": { "fill": "#ede9fe", "stroke": "#6d28d9" },
+      "external": { "fill": "#e0f2fe", "stroke": "#0369a1" },
+      "data": { "fill": "#f0fdf4", "stroke": "#15803d" },
+      "human": { "fill": "#fce7f3", "stroke": "#be185d" },
+      "inactive": { "fill": "#f1f5f9", "stroke": "#94a3b8" }
+    },
+    "dark": {
+      "primary": { "fill": "#1e3a5f", "stroke": "#93c5fd" },
+      "secondary": { "fill": "#312e81", "stroke": "#c7d2fe" },
+      "tertiary": { "fill": "#273449", "stroke": "#94a3b8" },
+      "start": { "fill": "#78350f", "stroke": "#fbbf24" },
+      "success": { "fill": "#064e3b", "stroke": "#6ee7b7" },
+      "warning": { "fill": "#7f1d1d", "stroke": "#fca5a5" },
+      "decision": { "fill": "#713f12", "stroke": "#fde68a" },
+      "ai": { "fill": "#4c1d95", "stroke": "#c4b5fd" },
+      "external": { "fill": "#0c4a6e", "stroke": "#7dd3fc" },
+      "data": { "fill": "#14532d", "stroke": "#86efac" },
+      "human": { "fill": "#831843", "stroke": "#f9a8d4" },
+      "inactive": { "fill": "#334155", "stroke": "#94a3b8" }
+    }
+  },
+  "text": {
+    "light": {
+      "title": "#0f172a",
+      "subtitle": "#64748b",
+      "body": "#1e293b"
+    },
+    "dark": {
+      "title": "#f8fafc",
+      "subtitle": "#cbd5e1",
+      "body": "#f1f5f9"
+    }
+  },
+  "evidence": {
+    "code": { "background": "#1e293b", "text": "#e2e8f0" },
+    "data": { "background": "#1e293b", "text": "#4ade80" },
+    "command": { "background": "#0f172a", "text": "#38bdf8" }
+  },
+  "syntax": {
+    "keyword": "#c084fc",
+    "string": "#4ade80",
+    "number": "#fb923c",
+    "comment": "#64748b",
+    "function": "#38bdf8",
+    "type": "#fbbf24"
+  },
+  "lines": {
+    "light": {
+      "structural": "#475569",
+      "marker": "#3b82f6",
+      "divider": "#cbd5e1"
+    },
+    "dark": {
+      "structural": "#64748b",
+      "marker": "#3b82f6",
+      "divider": "#cbd5e1"
+    }
+  }
+}

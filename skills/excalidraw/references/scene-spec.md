@@ -57,7 +57,7 @@ node <skill-root>/scripts/excalidraw.mjs build review-loop.scene.json review-loo
 | `title`, `subtitle` | Optional free-floating heading and explanatory line. |
 | `titleX`, `titleY` | Heading origin; defaults to `60`, `40`. |
 | `theme` | `dark` (default) or `light`. |
-| `canvasBackground` | Optional exact canvas color; defaults to `#000000`. |
+| `canvasBackground` | Optional exact canvas color; defaults to the selected theme's canvas token (`dark` or `light`). |
 | `roughness` | `0` clean or `1` hand-drawn; defaults to `1`. |
 | `sections` | Optional visual regions behind nodes. |
 | `nodes` | Meaning-bearing shapes with optional bound labels. |
@@ -168,8 +168,9 @@ known. Use `color`, `textAlign`, and `verticalAlign` sparingly.
 `primary`, `secondary`, `tertiary`, `start`, `success`, `warning`,
 `decision`, `ai`, `external`, `data`, `human`, and `inactive`.
 
-The semantic dark palette is the default. Read `color-palette.md` when custom
-colors or light mode are needed.
+The semantic dark palette is the default. Read `color-palette.md` for usage
+rules and `palette.json` for exact tokens when custom colors, light mode, or
+rebranding are needed.
 
 ## Escape hatch
 

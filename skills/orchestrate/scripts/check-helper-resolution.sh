@@ -52,6 +52,22 @@ tmp=$(mktemp -d) || exit 1
 trap 'rm -rf "$tmp"' EXIT INT TERM
 fails=0
 
+# Git for Windows emulates `ln -s` by copying unless native symlinks are
+# enabled. The deployment cases below specifically test symlink resolution;
+# without a real link they otherwise produce four misleading path failures.
+symlink_target="$tmp/symlink-probe-target"
+symlink_link="$tmp/symlink-probe-link"
+mkdir -p "$symlink_target"
+if ! ln -s "$symlink_target" "$symlink_link" 2>/dev/null || [ ! -L "$symlink_link" ]; then
+  case "$(uname -s 2>/dev/null || true)" in
+    MINGW*|MSYS*|CYGWIN*)
+      echo "FAIL: this check needs real Windows symlinks; start a new shell with MSYS=winsymlinks:nativestrict (and enable Windows Developer Mode if creation is denied), then rerun it" >&2 ;;
+    *)
+      echo "FAIL: this check needs working symbolic-link support" >&2 ;;
+  esac
+  exit 1
+fi
+
 # Every line of the candidate list, wherever it sits and whatever markdown
 # wraps it. Anchored on the first candidate; stops at the first line that is
 # neither an assignment nor a fallback.

@@ -1,99 +1,66 @@
 ---
 name: orchestrate
-description: Delegation posture — the main loop keeps everything critical (design, spec, review, integration) and routes mechanical execution to worker models, primarily through dynamic Workflow scripts, across Claude and Codex lanes. Single-task or sustained for the session.
+description: Delegation posture — the main loop keeps design, specification, review, and integration while routing tightly specified execution through Claude Code and Codex workers. Single-task or sustained for the session.
 ---
 
 # orchestrate
 
-Posture for how the main loop spends itself. Main-loop attention is the
-scarce premium resource — spend it on judgment, never on labor. What stays
-senior and what delegates is defined in The split below; mechanical execution
-routes to worker models per `references/model-map.md` (read it once before
-the first delegation of a run).
+Main-loop attention is the scarce resource: spend it on judgment, not labor.
+The split below decides what delegates. Before the first delegation of a run,
+read `references/model-map.md` once for model, effort, fallback, and
+verification routing.
 
-## The instrument
+## Instrument
 
-**Dynamic Workflow scripts are the primary instrument.** Invoking
-`/orchestrate` is the explicit opt-in the Workflow tool requires. One-off
-subagents or agent teams are a judgment call for work a workflow fits poorly
-(e.g. a single delegated stage with nothing to fan out). And when delegation
-itself is a poor fit, push back: say so and propose running sequentially in
-the main loop instead of forcing the ceremony.
+Dynamic Workflow scripts are the primary Claude Code instrument; invoking
+`/orchestrate` is the explicit opt-in the Workflow tool requires. A one-off
+subagent or agent team is appropriate when a workflow fits poorly. If the task
+is too small or ambiguous to delegate well, state the sequential fallback and
+do it in the main loop.
 
-Worker invocations run inside delegated stages (Workflow `agent()` calls or
-subagents), with one standing exception: Codex-lane background dispatch,
-where the main loop starts the worker helper and harvests its run dir per
-the lane's delivery contract — dispatch-and-harvest is delegation mechanics,
-not main-loop labor. Doing the work itself in the main loop is legitimate
-only as that explicitly declared sequential fallback, never silent drift.
-Every delegated stage pins `{model, effort}` explicitly and returns typed
-data — Workflow stages via the `schema` option, Codex stages via the
-helper's envelope — not prose to re-parse.
+Workers run inside delegated stages. The standing exception is a background
+Codex worker: the main loop may dispatch the helper and later harvest its run
+directory because those are delivery mechanics, not delegated labor. Every
+stage pins `{model, effort}` and returns typed data: Workflow stages use
+`schema`; Codex stages use the helper envelope.
 
-## Instrument pitfalls (field-observed)
+### Field guards
 
-- **Workflow `args` may arrive JSON-stringified** despite being passed as an
-  object. Open scripts that consume structured `args` with
-  `if (typeof args === 'string') args = JSON.parse(args)` — or hardcode the
-  values as constants.
-- **Workflow resume caches on `(prompt, opts)` only.** Fixing a file the
-  prompt merely *references* (schema file, prompt file, data file) is
-  invisible to the cache: resume replays the stale failure. Bust it by
-  editing the stage prompt (e.g. a `[dispatch v2 — <what changed>]` marker),
-  and mint attempt-suffixed run dirs/paths so no two attempts share disk
-  state.
-- **Schema-valid is not real.** A schema-forced recon/inventory stage can
-  return syntactically valid placeholder output. Put an anti-stub clause in
-  the prompt ("placeholder values are a failed task; reconcile your count
-  against a raw `rg -c` run and state both numbers") and sanity-check result
-  sizes in the main loop before consuming.
-- **Plugin commands with `disable-model-invocation` can't be invoked at all.**
-  The flag hides the skill from the model, so even a user-typed slash command
-  fails — the run goes through the model's Skill tool, which cannot see it.
-  When the user has explicitly asked for that pass, run the command's
-  documented underlying script directly via Bash with the same arguments,
-  and say that's what happened.
-- **A provider can swap the model underneath a running request.** Safety
-  classifiers reroute flagged requests to a different model mid-session with
-  no error and no signal — on current Claude Code, security work that moves
-  from source-code analysis into binary scanning, penetration testing, or
-  exploit generation is the known trigger. Partition security work *before*
-  dispatch: source-code vulnerability recon may be delegated with an
-  explicitly source-only scope; the other three are not dispatched to a lane
-  that will silently reroute them, but routed to an instrument that supports
-  them or reported as unsupported. When diagnosing anomalous output from a
-  security stage, treat a classifier swap as one unverified hypothesis among
-  several — a quality drop is not evidence that it happened.
-- **Naming a one-off subagent silently disables result delivery.** An
-  anonymous Agent-tool dispatch returns its result to the main loop on its
-  own; passing `name` switches it into addressable "teammate" mode, where it
-  is tracked outside that path entirely (invisible to `TaskList` and
-  `TaskOutput`) and delivery depends on the *agent itself* choosing to call
-  `SendMessage({to: "main"})`. The dispatcher cannot force that from its
-  side — field-confirmed: a named agent finished a trivial task in seconds,
-  never sent the message, and met a direct `SendMessage` asking for its
-  result with nothing but further `idle_notification`s. So never pass `name`
-  to a one-off dispatch; reserve names for genuinely multi-turn addressable
-  work, where the mailbox is the point.
+- Workflow `args` may arrive as a JSON string. Parse it before structured use,
+  or hardcode the values.
+- Workflow resume keys on `(prompt, opts)`, not referenced files. After fixing
+  an input file, change the stage prompt and use an attempt-specific run path
+  before resuming.
+- Schema validity does not prove substantive output. Prompts reject
+  placeholders and require a raw-count reconciliation; the main loop checks
+  result size before use.
+- On current Claude Code, `disable-model-invocation` can hide a skill even from
+  a user-typed slash command. If the user explicitly requested that command,
+  run its documented underlying script and disclose the fallback.
+- A provider may silently reroute security requests. Delegate only explicitly
+  source-only vulnerability recon to a lane susceptible to this; route binary
+  scanning, penetration testing, and exploit generation elsewhere or report
+  them unsupported. Treat a suspected reroute as unverified without evidence.
+- Naming a one-off Agent dispatch changes it into an addressable teammate and
+  may suppress automatic result delivery. Keep one-offs anonymous; use names
+  only when mailbox-based, multi-turn collaboration is intentional.
 
-## Two worker lanes
+## Worker lanes
 
-- **Claude lane**: Workflow `agent()` calls — the `opus` alias at high effort
-  is the default workhorse. Claude-lane calls name aliases, never versioned
-  model strings; the map explains why.
-- **Codex lane**: OpenAI models through the Codex CLI. All invocation
-  mechanics live in `scripts/codex-worker.sh` — the single source of truth;
-  never hand-roll `codex` commands in prompts. Read
-  `references/codex-exec.md` before authoring the first Codex-lane stage.
+Both lanes are supported execution paths:
 
-Codex-lane preflight: resolve the helper, then run `"$HELPER" probe` once per
-session before first use; `codex-exec.md` owns what each outcome means and how
-to degrade. Each candidate is a place this skill's own repo is deployed — the
-first is rewritten for plugin installs only, the others cover symlink
-deployment, and without them the lane is unreachable from every repo but this
-one. Never add the session's repo as a candidate: it would execute a
-`codex-worker.sh` committed in the material under review. Done when: the
-response states which lanes were available.
+- **Claude Code:** Workflow `agent()` calls. Use harness aliases, not versioned
+  Claude model IDs. `opus` at high effort is the default workhorse.
+- **Codex:** OpenAI models through `scripts/codex-worker.sh`, the sole source of
+  invocation mechanics. Never hand-roll `codex` commands in prompts. Read
+  `references/codex-exec.md` before the first Codex stage.
+
+Before first Codex use, resolve the helper and run `"$HELPER" probe` once for
+the session. `codex-exec.md` defines every outcome and degradation path. These
+three candidates are deployment locations for this skill: the first is
+rewritten by plugin installs, and the other two cover symlink deployments.
+Never add the session repo as a candidate; that could execute material under
+review. Done when the response states which lanes were available.
 
 ```bash
 HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
@@ -101,122 +68,79 @@ HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
 [ -x "$HELPER" ] || HELPER="$HOME/skills/skills/orchestrate/scripts/codex-worker.sh"
 ```
 
-## Verification coverage
+## Verification and spend
 
-Verification is risk-triggered and the verifier must not share the producer's
-model family — including the seat's own. Both rules, and how to report degraded
-coverage, live in the routing rules in `references/model-map.md`.
+Verification is risk-triggered, and its verifier cannot share the producer's
+model family, including the senior seat's. Routing and honest degraded-coverage
+reporting live in `references/model-map.md`.
 
-## Spend
+The session posture owns total spend. In Workflow scripts, use `budget.total`
+to detect a target and `budget.remaining()` to guard iterative stages. Treat
+the session workflow-size guideline as a ceiling. If a stage limits coverage
+(top-N, sampling, no retry), `log()` what it omitted.
 
-The session's posture sets how much may be spent; this skill only says how to
-respect it. In Workflow scripts the `budget` global is the mechanism —
-`budget.total` is null when no target was set, and `budget.remaining()` is what
-a loop-until-budget stage guards on. Respect the session's workflow size
-guideline as a real ceiling, not a suggestion. Where a run bounds its own
-coverage (top-N, sampling, no-retry), `log()` what was dropped: silent
-truncation reads as full coverage in the result.
+## Modes and reporting
 
-## Modes
+- `/orchestrate <task>` — single task.
+- `/orchestrate sustained` — session posture. It ends only on an explicit stop
+  signal in any language; questions and redirects do not end it. A new session
+  starts fresh.
 
-- `/orchestrate <task>` — single-task.
-- `/orchestrate sustained` — session posture. Only an explicit user signal
-  drops it (`orchestrate off`, `stop orchestrate`, or any unambiguous stop
-  signal in any language); mid-session questions or redirects don't. New
-  session starts fresh.
-
-Open the first response with the marker `[orchestrate]` /
-`[orchestrate sustained]`. When reporting a run, account for each delegated
-stage's model and effort as it actually ran — the resolved model, not the
-alias, per the provenance rule in `references/model-map.md`; if the Claude
-lane's resolution can't be verified this session, give the alias and say so.
-No prescribed output format beyond that.
+Open with `[orchestrate]` or `[orchestrate sustained]`. In the final report,
+account for every delegated stage's actual model and effort. For Claude aliases,
+report the resolved model when verified; otherwise report the alias and say the
+resolution is unknown.
 
 ## The split
 
-**Delegate** what can be specced tightly enough that a wrong interpretation
-gets caught by review or tests: implementation against a written spec,
-migrations, repetitive edits, test-writing against defined behavior,
-recon/search sweeps, boilerplate. Frontend is no exception — the main loop
-designs and specs it, then the mechanical build-out delegates like anything
-else.
+**Delegate** work whose interpretation is bounded by a written specification
+and detectable by review or tests: implementation, migrations, repetitive
+edits, behavior-defined tests, recon/search, and boilerplate. Frontend follows
+the same rule: the main loop designs and specifies; workers build.
 
-**Keep** anything where the decision ripples: design, architecture,
-API/schema shape, naming, tradeoffs, ambiguous requirements,
-security-sensitive calls — and always final review and integration.
+**Keep** decisions with downstream consequences: design, architecture,
+API/schema shape, naming, tradeoffs, ambiguous requirements, security-sensitive
+judgment, final review, and integration.
 
-**Floor:** if writing the spec takes longer than doing the work, do it in the
-main loop. Small edits are not delegated.
+**Floor:** if specifying the work costs more than doing it, keep it. Do not
+delegate small edits.
 
-## The contract
+## Delegation contract
 
-- **Good instructions are the senior deliverable.** Every delegated stage
-  carries its spec and acceptance criteria in the prompt. Workers start empty of
-  *this session's* context — pass the skills, project context, and prior
-  decisions they need, or they drift. They are not empty of their own: on both
-  lanes a worker is handed the machine's user-level instruction file, content
-  this repo neither controls nor sees (measured 2026-07-28 on each lane). Treat
-  that as ambient drift rather than context — where a stage's output shape,
-  scope, or volume matters, the prompt states it instead of inheriting a house
-  rule the dispatcher never read.
-- **Senior review is mandatory.** Check every result against its acceptance
-  criteria — read the diff, not the worker's summary. "Done" from a worker is
-  a claim, not evidence. Never relay raw worker output.
-  When the diff is too large to read whole, review is *prioritised*, never
-  skipped: cover every file the acceptance criteria name, every deletion, and
-  everything security- or data-shape-sensitive, and enumerate untracked and
-  generated files rather than reading them. State what got full review and
-  what got only a scan — an unreviewed remainder is a declared gap, not a
-  silent one. A failed writing worker's partial changes are inspected before
-  any cleanup discards them.
-- **A writing worker gets its own worktree.** Two writing stages never share a
-  checkout, and none is aimed at the tree you are working in: a dotfiles-style
-  repo whose files are symlinked into `~/.claude/` or `~/.config/` *is* live
-  system state, so a worker writing there reconfigures the running harness
-  with nothing for a tree-state check to catch. The isolation is partial —
-  `.git` stays shared, and a tracked symlink pointing outside the repo is
-  materialized verbatim — so it bounds blast radius without removing the need
-  to read the diff.
-- **One job, one delivery owner — chosen at dispatch, never switched.**
-  A wrapper may deliver a result only while it stays strictly foreground:
-  one blocking call, no interim "waiting" turn, until the worker exits. Any
-  job that outlives its wrapper's turn (backgrounded, server-tracked,
-  detached) is main-loop-harvest from the start: the main loop records a
-  durable locator (run dir, task id) *before* dispatch and owns polling,
-  terminal-state detection, harvest, and stray cleanup. Wrappers never
-  babysit, and idle is never an ownership-transfer event.
-- **Record what was reviewed; declare freshness at harvest.** The target may
-  legitimately keep moving while a review or verification worker runs — that
-  is not a reason to gate dispatch. At dispatch, record the reviewed
-  artifact's identity (the prompt packet; for repo state, base SHA, plus a
-  diff hash when a diff was embedded). At harvest, declare the result fresh,
-  stale, or unknown before any
-  finding is used. A stale review is not discarded wholesale: keep findings
-  untouched by the change, revalidate the ones that depend on changed
-  material against the current artifact.
-- **Idle is not done — idle routes to evidence.** Agent and teammate idle
-  notifications are scheduler state, not completion evidence. A stage is
-  complete only when it has returned a result and the relevant diff or
-  on-disk artifact has been inspected. On idle without a result, go straight
-  to ground truth (the recorded locator, job state, workspace diff) — never
-  ping the wrapper to resume delivery. The inverse guard stays: a state
-  file claiming "running" is not liveness either — verify the PID and log
-  freshness before waiting on it.
-- **Pipeline, don't idle.** Workflows run in the background — while one runs,
-  spec the next piece in the main loop.
+- **The specification is the senior deliverable.** Each stage receives the
+  needed project context, decisions, acceptance criteria, and output bounds.
+  Workers also inherit machine-level instructions this repo cannot inspect;
+  treat those as ambient drift and state anything outcome-critical explicitly.
+- **Senior review is mandatory.** Compare the result and diff with the
+  acceptance criteria; never relay a worker summary as evidence. If a diff is
+  too large for full review, cover every named file, deletion, and
+  security/data-shape-sensitive change; enumerate generated and untracked
+  files; and declare what received only a scan. Inspect partial changes from a
+  failed writer before cleanup.
+- **Writers use isolated worktrees.** Writing stages never share a checkout or
+  write into the main-loop tree. Repos symlinked into live configuration count
+  as live system state. Worktrees still share `.git`, and tracked external
+  symlinks remain external, so inspect the diff.
+- **Choose one delivery owner at dispatch and never switch.** A wrapper owns a
+  strictly foreground blocking call. Anything backgrounded or server-tracked
+  is main-loop-harvest from the start: record its durable locator before
+  dispatch, then own polling, terminal-state detection, harvest, and cleanup.
+  Idle never transfers ownership.
+- **Record identity at dispatch; declare freshness at harvest.** Record the
+  prompt packet and, for repo state, base SHA plus any embedded diff hash.
+  Classify a result as fresh, stale, or unknown before using it. Preserve stale
+  findings unaffected by later changes and revalidate affected ones.
+- **Idle is not completion.** Completion requires a returned result plus
+  inspection of the relevant artifact or diff. On idle without a result, check
+  the durable locator, job state, workspace diff, PID, and log freshness; do
+  not ping a wrapper to resume delivery.
+- **Pipeline rather than wait.** While a worker runs, the main loop specifies
+  the next piece.
 
-## With other active postures
+## Other postures
 
-orchestrate owns the instrument, the role split, and worker/provider
-selection; it defers everything else.
-
-- **Breadth**: if an active posture authorizes wide exploration, it governs
-  how many approaches or rounds — explored through workflows, per this
-  posture.
-- **Review**: final review and integration are main-loop work and never
-  delegate. Producing *evidence* for a review — an independent adversarial
-  pass, a second opinion — does delegate, per the routing rules; what cannot
-  be delegated is the judgment that acts on it.
-- **Unattended sessions**: never ask — default to single-task, log it, and
-  keep workflow spend within the session's declared budget and blast-radius
-  rules.
+This skill owns the instrument, role split, and worker/provider selection; it
+defers breadth, interaction, teardown, and spend policy. Final judgment remains
+main-loop work, while independent evidence for that judgment may delegate.
+During unattended work, default this skill to single-task, log that choice, and
+stay within the session's budget and blast-radius rules.

@@ -1,39 +1,15 @@
 #!/usr/bin/env node
 
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, dirname, extname, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { basename, dirname, extname, isAbsolute, resolve, win32 as win32Path } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-const PALETTE = {
-  primary: { fill: "#dbeafe", stroke: "#1e40af" },
-  secondary: { fill: "#e0e7ff", stroke: "#3730a3" },
-  tertiary: { fill: "#f1f5f9", stroke: "#475569" },
-  start: { fill: "#fef3c7", stroke: "#b45309" },
-  success: { fill: "#d1fae5", stroke: "#047857" },
-  warning: { fill: "#fee2e2", stroke: "#b91c1c" },
-  decision: { fill: "#fde68a", stroke: "#92400e" },
-  ai: { fill: "#ede9fe", stroke: "#6d28d9" },
-  external: { fill: "#e0f2fe", stroke: "#0369a1" },
-  data: { fill: "#f0fdf4", stroke: "#15803d" },
-  human: { fill: "#fce7f3", stroke: "#be185d" },
-  inactive: { fill: "#f1f5f9", stroke: "#94a3b8" },
-};
-
-const DARK_PALETTE = {
-  primary: { fill: "#1e3a5f", stroke: "#93c5fd" },
-  secondary: { fill: "#312e81", stroke: "#c7d2fe" },
-  tertiary: { fill: "#273449", stroke: "#94a3b8" },
-  start: { fill: "#78350f", stroke: "#fbbf24" },
-  success: { fill: "#064e3b", stroke: "#6ee7b7" },
-  warning: { fill: "#7f1d1d", stroke: "#fca5a5" },
-  decision: { fill: "#713f12", stroke: "#fde68a" },
-  ai: { fill: "#4c1d95", stroke: "#c4b5fd" },
-  external: { fill: "#0c4a6e", stroke: "#7dd3fc" },
-  data: { fill: "#14532d", stroke: "#86efac" },
-  human: { fill: "#831843", stroke: "#f9a8d4" },
-  inactive: { fill: "#334155", stroke: "#94a3b8" },
-};
+const PALETTE_TOKENS = readJson(
+  fileURLToPath(new URL("../references/palette.json", import.meta.url)),
+);
+const PALETTE = PALETTE_TOKENS.semantic.light;
+const DARK_PALETTE = PALETTE_TOKENS.semantic.dark;
 
 const SUPPORTED_TYPES = new Set([
   "arrow",
@@ -69,7 +45,11 @@ function readJson(path) {
 }
 
 function writeJson(path, value) {
-  writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  try {
+    writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  } catch (error) {
+    fail(`Could not write JSON to ${path}: ${error.message}`);
+  }
 }
 
 function finite(value) {
@@ -98,7 +78,7 @@ function commonElement(id, type, x, y, width, height, style = {}) {
     width,
     height,
     angle: number(style.angle, 0),
-    strokeColor: style.strokeColor ?? "#1e293b",
+    strokeColor: style.strokeColor ?? PALETTE_TOKENS.text.light.body,
     backgroundColor: style.backgroundColor ?? "transparent",
     fillStyle: style.fillStyle ?? "solid",
     strokeWidth: number(style.strokeWidth, 2),
@@ -180,7 +160,7 @@ function makeText({
   width,
   fontSize = 20,
   fontFamily = 5,
-  color = "#1e293b",
+  color = PALETTE_TOKENS.text.light.body,
   textAlign = "left",
   verticalAlign = "top",
   containerId = null,
@@ -277,11 +257,14 @@ function compileScene(spec) {
   }
   const elements = [];
   const shapes = new Map();
+  const nodes = new Map();
   const dark = spec.theme !== "light";
+  const theme = dark ? "dark" : "light";
+  const themeText = PALETTE_TOKENS.text[theme];
   const defaultRoughness = number(spec.roughness, 1);
   const defaultFont = 5;
-  const titleColor = dark ? "#f8fafc" : "#0f172a";
-  const bodyColor = dark ? "#f1f5f9" : "#1e293b";
+  const titleColor = themeText.title;
+  const bodyColor = themeText.body;
 
   const numericFields = [
     [spec, ["roughness", "titleX", "titleY"], "root"],
@@ -358,7 +341,7 @@ function compileScene(spec) {
         y: number(spec.titleY, 40) + 48,
         fontSize: 18,
         fontFamily: defaultFont,
-        color: dark ? "#cbd5e1" : "#64748b",
+        color: themeText.subtitle,
       }),
     );
   }
@@ -439,6 +422,7 @@ function compileScene(spec) {
     if (type !== "rectangle") shape.roundness = null;
     elements.push(shape);
     shapes.set(id, shape);
+    nodes.set(id, shape);
 
     if (node.text) {
       const fontSize = number(node.fontSize, node.code ? 16 : 20);
@@ -469,10 +453,10 @@ function compileScene(spec) {
   const edgeLabels = [];
   for (const edge of spec.edges ?? []) {
     const id = String(edge.id ?? `${edge.from ?? "source"}-to-${edge.to ?? "target"}`);
-    const source = shapes.get(edge.from);
-    const target = shapes.get(edge.to);
+    const source = nodes.get(edge.from);
+    const target = nodes.get(edge.to);
     if (!source || !target) {
-      errors.push(`Edge ${id} references missing node: ${edge.from} -> ${edge.to}.`);
+      errors.push(`Edge ${id} must connect existing nodes: ${edge.from} -> ${edge.to}.`);
       continue;
     }
     const start = anchor(source, target);
@@ -551,7 +535,7 @@ function compileScene(spec) {
         Math.max(...xs) - Math.min(...xs),
         Math.max(...ys) - Math.min(...ys),
         {
-          strokeColor: line.strokeColor ?? "#475569",
+          strokeColor: line.strokeColor ?? PALETTE_TOKENS.lines[theme].structural,
           strokeWidth: number(line.strokeWidth, 2),
           strokeStyle: line.strokeStyle ?? "solid",
           roughness: number(line.roughness, defaultRoughness),
@@ -605,7 +589,7 @@ function compileScene(spec) {
     source: "https://excalidraw.com",
     elements,
     appState: {
-      viewBackgroundColor: spec.canvasBackground ?? (dark ? "#000000" : "#ffffff"),
+      viewBackgroundColor: spec.canvasBackground ?? PALETTE_TOKENS.canvas[theme],
       theme: dark ? "dark" : "light",
       gridSize: null,
     },
@@ -761,8 +745,11 @@ function validateScene(scene) {
       const binding = element[key];
       if (!binding) continue;
       const target = byId.get(binding.elementId);
-      if (!target) errors.push(`${element.id}.${key} references missing ${binding.elementId}.`);
-      else if (!(target.boundElements ?? []).some((entry) => entry.id === element.id && entry.type === "arrow")) {
+      if (!target) {
+        errors.push(`${element.id}.${key} references missing ${binding.elementId}.`);
+      } else if (target.customData?.excalidrawSkill?.role === "section") {
+        errors.push(`${element.id}.${key} must bind to a node, not section ${target.id}.`);
+      } else if (!(target.boundElements ?? []).some((entry) => entry.id === element.id && entry.type === "arrow")) {
         errors.push(`${element.id}.${key} is not reciprocally bound from ${target.id}.`);
       }
     }
@@ -858,11 +845,11 @@ function renderText(element) {
   const tspans = lines
     .map((line, index) => `<tspan x="${x}" dy="${index ? lineHeight : 0}">${escapeXml(line)}</tspan>`)
     .join("");
-  return `<text x="${x}" y="${y}" fill="${escapeXml(element.strokeColor ?? "#1e293b")}" font-family="${escapeXml(family)}" font-size="${fontSize}" text-anchor="${anchor}" dominant-baseline="alphabetic">${tspans}</text>`;
+  return `<text x="${x}" y="${y}" fill="${escapeXml(element.strokeColor ?? PALETTE_TOKENS.text.light.body)}" font-family="${escapeXml(family)}" font-size="${fontSize}" text-anchor="${anchor}" dominant-baseline="alphabetic">${tspans}</text>`;
 }
 
 function renderShape(element) {
-  const stroke = escapeXml(element.strokeColor ?? "#1e293b");
+  const stroke = escapeXml(element.strokeColor ?? PALETTE_TOKENS.text.light.body);
   const fill = escapeXml(element.backgroundColor ?? "transparent");
   const strokeWidth = number(element.strokeWidth, 2);
   const dash = dashArray(element.strokeStyle);
@@ -889,7 +876,7 @@ function renderLine(element) {
   const absolute = element.points.map(([x, y]) => [element.x + x, element.y + y]);
   const markerStart = element.startArrowhead ? ' marker-start="url(#arrow-start)"' : "";
   const markerEnd = element.endArrowhead ? ' marker-end="url(#arrow-end)"' : "";
-  const attributes = `fill="none" stroke="${escapeXml(element.strokeColor ?? "#475569")}" stroke-width="${number(element.strokeWidth, 2)}" stroke-dasharray="${dashArray(element.strokeStyle)}" stroke-linecap="round" stroke-linejoin="round"${markerStart}${markerEnd}`;
+  const attributes = `fill="none" stroke="${escapeXml(element.strokeColor ?? PALETTE_TOKENS.lines.light.structural)}" stroke-width="${number(element.strokeWidth, 2)}" stroke-dasharray="${dashArray(element.strokeStyle)}" stroke-linecap="round" stroke-linejoin="round"${markerStart}${markerEnd}`;
   if (element.roundness && absolute.length > 2) {
     let path = `M ${absolute[0][0]} ${absolute[0][1]}`;
     for (let index = 1; index < absolute.length - 1; index += 1) {
@@ -927,7 +914,7 @@ function renderSvg(scene, padding = 48) {
   const scale = Math.min(1, 1800 / layoutWidth, 1200 / layoutHeight);
   const width = Math.max(1, Math.min(1800, Math.ceil(layoutWidth * scale)));
   const height = Math.max(1, Math.min(1200, Math.ceil(layoutHeight * scale)));
-  const background = scene.appState?.viewBackgroundColor ?? "#ffffff";
+  const background = scene.appState?.viewBackgroundColor ?? PALETTE_TOKENS.canvas.light;
   const body = live
     .map((element) => {
       if (element.type === "text") return renderText(element);
@@ -981,36 +968,80 @@ function commandPath(command) {
   }
 }
 
-function findChrome() {
-  const candidates =
-    process.platform === "win32"
+function browserCandidates(platform = process.platform, env = process.env) {
+  const explicit = env.EXCALIDRAW_BROWSER_PATH ? [env.EXCALIDRAW_BROWSER_PATH] : [];
+  if (platform === "win32") {
+    const local = env.LOCALAPPDATA
       ? [
-          "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-          "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-          "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-          "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+          win32Path.join(env.LOCALAPPDATA, "Google", "Chrome", "Application", "chrome.exe"),
+          win32Path.join(env.LOCALAPPDATA, "Microsoft", "Edge", "Application", "msedge.exe"),
+          win32Path.join(env.LOCALAPPDATA, "Chromium", "Application", "chrome.exe"),
         ]
-      : process.platform === "darwin"
-        ? [
-            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-            "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-            "/Applications/Chromium.app/Contents/MacOS/Chromium",
-          ]
-        : ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "microsoft-edge"];
+      : [];
+    const programRoots = [
+      env.ProgramFiles ?? "C:\\Program Files",
+      env["ProgramFiles(x86)"] ?? "C:\\Program Files (x86)",
+    ];
+    const installed = programRoots.flatMap((root) => [
+      win32Path.join(root, "Google", "Chrome", "Application", "chrome.exe"),
+      win32Path.join(root, "Microsoft", "Edge", "Application", "msedge.exe"),
+      win32Path.join(root, "Chromium", "Application", "chrome.exe"),
+    ]);
+    return [
+      ...explicit,
+      ...local,
+      ...installed,
+      "chrome.exe",
+      "chrome",
+      "msedge.exe",
+      "msedge",
+      "chromium.exe",
+      "chromium",
+    ];
+  }
+  if (platform === "darwin") {
+    return [
+      ...explicit,
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+      "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    ];
+  }
+  return [
+    ...explicit,
+    "google-chrome",
+    "google-chrome-stable",
+    "chromium",
+    "chromium-browser",
+    "microsoft-edge",
+  ];
+}
+
+function findBrowser({
+  platform = process.platform,
+  env = process.env,
+  fileExists = existsSync,
+  locate = commandPath,
+} = {}) {
+  const candidates = browserCandidates(platform, env);
   for (const candidate of candidates) {
-    if (existsSync(candidate)) return candidate;
-    const located = commandPath(candidate);
+    if (fileExists(candidate)) return candidate;
+    const absolute = platform === "win32" ? win32Path.isAbsolute(candidate) : isAbsolute(candidate);
+    if (absolute) continue;
+    const located = locate(candidate);
     if (located) return located;
   }
   return null;
 }
 
-function pngFromSvg(svgPath, pngPath, dimensions) {
-  const browser = findChrome();
+function pngFromSvg(svgPath, pngPath, dimensions, options = {}) {
+  const browser = options.browser ?? findBrowser(options);
   if (!browser) return { ok: false, reason: "Chrome, Chromium, or Edge was not found." };
   const width = Math.max(1, Math.ceil(dimensions.width));
   const height = Math.max(1, Math.ceil(dimensions.height));
-  const result = spawnSync(
+  const spawn = options.spawn ?? spawnSync;
+  const fileExists = options.fileExists ?? existsSync;
+  const result = spawn(
     browser,
     [
       "--headless=new",
@@ -1023,7 +1054,7 @@ function pngFromSvg(svgPath, pngPath, dimensions) {
     ],
     { encoding: "utf8" },
   );
-  if (result.status !== 0 || !existsSync(pngPath)) {
+  if (result.status !== 0 || !fileExists(pngPath)) {
     return {
       ok: false,
       reason: (result.stderr || result.stdout || `browser exited ${result.status}`).trim(),
@@ -1046,50 +1077,69 @@ Status vocabulary:
 `);
 }
 
-const [command, inputArg, outputArg] = process.argv.slice(2);
-if (!command || command === "--help" || command === "-h") {
-  usage();
-  process.exit(0);
-}
-if (!inputArg) fail(`${command} needs an input path.`);
-const input = resolve(inputArg);
-
-if (command === "build") {
-  const scene = compileScene(readJson(input));
-  const output = resolve(outputArg ?? outputPath(input, ".excalidraw"));
-  const result = validateScene(scene);
-  reportValidation(output, result);
-  if (result.errors.length) process.exit(1);
-  writeJson(output, scene);
-  console.log(`BUILT: ${output}`);
-  process.exit(0);
-}
-
-const scene = readJson(input);
-const validation = validateScene(scene);
-reportValidation(input, validation);
-if (validation.errors.length) process.exit(1);
-if (command === "validate") process.exit(0);
-
-const preview = renderSvg(scene);
-const svgPath =
-  command === "preview"
-    ? resolve(outputArg ?? outputPath(input, ".svg"))
-    : outputPath(input, ".layout.svg");
-writeFileSync(svgPath, preview.svg, "utf8");
-console.log(`LAYOUT PREVIEW SVG: ${svgPath} (${Math.ceil(preview.width)}x${Math.ceil(preview.height)})`);
-if (command === "preview") process.exit(0);
-
-if (command === "check") {
-  const layoutPngPath = resolve(outputArg ?? outputPath(input, ".layout.png"));
-  const layoutPng = pngFromSvg(svgPath, layoutPngPath, preview);
-  if (layoutPng.ok) {
-    console.warn(`LAYOUT PREVIEW PNG: ${layoutPngPath} (${layoutPng.width}x${layoutPng.height})`);
-  } else {
-    console.warn(`Layout PNG unavailable: ${layoutPng.reason}`);
+function main(args = process.argv.slice(2)) {
+  const [command, inputArg, outputArg] = args;
+  if (!command || command === "--help" || command === "-h") {
+    usage();
+    process.exit(0);
   }
-  console.warn("NATIVE VISUALLY UNVERIFIED: import the .excalidraw file into an official Excalidraw surface and inspect those pixels.");
-  process.exit(2);
+  if (!inputArg) fail(`${command} needs an input path.`);
+  const input = resolve(inputArg);
+
+  if (command === "build") {
+    const scene = compileScene(readJson(input));
+    const output = resolve(outputArg ?? outputPath(input, ".excalidraw"));
+    const result = validateScene(scene);
+    if (result.errors.length) {
+      reportValidation(output, result);
+      process.exit(1);
+    }
+    writeJson(output, scene);
+    reportValidation(output, result);
+    console.log(`BUILT: ${output}`);
+    process.exit(0);
+  }
+
+  const scene = readJson(input);
+  const validation = validateScene(scene);
+  reportValidation(input, validation);
+  if (validation.errors.length) process.exit(1);
+  if (command === "validate") process.exit(0);
+
+  const preview = renderSvg(scene);
+  const svgPath =
+    command === "preview"
+      ? resolve(outputArg ?? outputPath(input, ".svg"))
+      : outputPath(input, ".layout.svg");
+  writeFileSync(svgPath, preview.svg, "utf8");
+  console.log(`LAYOUT PREVIEW SVG: ${svgPath} (${Math.ceil(preview.width)}x${Math.ceil(preview.height)})`);
+  if (command === "preview") process.exit(0);
+
+  if (command === "check") {
+    const layoutPngPath = resolve(outputArg ?? outputPath(input, ".layout.png"));
+    const layoutPng = pngFromSvg(svgPath, layoutPngPath, preview);
+    if (layoutPng.ok) {
+      console.warn(`LAYOUT PREVIEW PNG: ${layoutPngPath} (${layoutPng.width}x${layoutPng.height})`);
+    } else {
+      console.warn(`Layout PNG unavailable: ${layoutPng.reason}`);
+    }
+    console.warn("NATIVE VISUALLY UNVERIFIED: import the .excalidraw file into an official Excalidraw surface and inspect those pixels.");
+    process.exit(2);
+  }
+
+  fail(`Unknown command "${command}". Run with --help.`);
 }
 
-fail(`Unknown command "${command}". Run with --help.`);
+const invokedPath = process.argv[1] ? resolve(process.argv[1]) : null;
+const modulePath = fileURLToPath(import.meta.url);
+let invokedDirectly = invokedPath === modulePath;
+if (invokedPath && !invokedDirectly) {
+  try {
+    invokedDirectly = realpathSync.native(invokedPath) === realpathSync.native(modulePath);
+  } catch {
+    // Fall back to the resolved path comparison when either path cannot be canonicalized.
+  }
+}
+if (invokedDirectly) main();
+
+export { browserCandidates, findBrowser, pngFromSvg };

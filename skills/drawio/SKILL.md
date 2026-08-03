@@ -5,57 +5,39 @@ description: Generate a native `.drawio` (mxGraphModel XML) diagram — flowchar
 
 # Draw.io Diagram Creator
 
-Produce a native `.drawio` file (mxGraphModel XML) that opens directly in [app.diagrams.net](https://app.diagrams.net), fully editable. XML-only by design — no PNG/SVG/PDF export (that needs draw.io Desktop, intentionally unused here; export from the app via **File → Export as**).
-
-> XML reference adapted from [`jgraph/drawio-mcp`](https://github.com/jgraph/drawio-mcp) (Apache-2.0), fetched at runtime — not vendored.
+Produce a native `.drawio` file (mxGraphModel XML) that opens directly in [app.diagrams.net](https://app.diagrams.net), fully editable. The editable XML is the required deliverable; never replace it with a PNG, SVG, or PDF. A local draw.io Desktop installation may be used for native inspection or an explicitly requested derivative export.
 
 ## Steps
 
-1. **Fetch the reference first** (WebFetch) — it carries the reasoning budget, rigid grid, styles, edge routing, swimlanes, layers, and dark mode, so you don't re-derive mechanics from memory (URL pinned to a commit so upstream drift can't silently change the skill): `https://raw.githubusercontent.com/jgraph/drawio-mcp/2e49443f5109590aeebd30bd9ccd2e4c10c9ee44/shared/xml-reference.md`. Done when: the reference content is loaded. If the fetch fails (offline, or a network-sandboxed session — Codex CLI's default), say the reference was unavailable and continue anyway: the skeleton and rules below carry the load-bearing mechanics; keep the layout conservative and skip the CDN-dependent visual verification.
-2. **Generate** uncompressed mxGraphModel XML (raw XML opens fine — no base64/deflate packing needed).
-3. **Write** it to `<descriptive-name>.drawio` (lowercase-with-hyphens), in the cwd unless told otherwise.
-4. **Report** the absolute path and how to open it: drag the file onto app.diagrams.net, or **File → Open from → Device**.
+1. **Read the bundled XML essentials** in [`references/xml-essentials.md`](references/xml-essentials.md). It is the complete offline contract for ordinary nodes, edges, labels, geometry, and pages. Done when: the chosen document structure and ID scheme are clear.
+2. **Generate** uncompressed mxGraphModel XML. Prefer the `mxfile` wrapper for a native named page; raw `mxGraphModel` is valid for a single page. Keep the layout conservative when no visual inspection will be available. Done when: every intended relationship is represented by an edge and the file remains editable XML.
+3. **Write** it to `<descriptive-name>.drawio` (lowercase-with-hyphens), in the cwd unless told otherwise. Done when: the file exists at the reported path.
+4. **Validate structurally** with `node <skill-root>/scripts/validate-drawio.mjs <file.drawio>`. Resolve `<skill-root>` from this `SKILL.md`; never assume the session working directory or a particular Claude Code/Codex install shape. Fix every error before delivery. If Node is unavailable, perform the checks in the bundled reference manually and report that deterministic validation was unavailable. Done when: the validator passes, or the final report names the degraded manual-only check.
+5. **Inspect natively when available.** Prefer a local draw.io/diagrams.net application or another already-available native renderer that does not disclose the artifact externally. For complex or edge-label-heavy diagrams, use the optional visual workflow below if permission and tooling allow it. Done when: the diagram was inspected, or the final report clearly limits assurance to structural validation.
+6. **Report** the absolute path, validation performed, visual-inspection status, and how to open it: drag the file onto app.diagrams.net, or **File → Open from → Device**.
+
+For advanced shapes, swimlanes, layers, edge routing, or theme work, the pinned upstream [`drawio-mcp` XML reference](https://raw.githubusercontent.com/jgraph/drawio-mcp/2e49443f5109590aeebd30bd9ccd2e4c10c9ee44/shared/xml-reference.md) is optional depth. Fetch it only when the task needs those features and network access is already allowed; ordinary generation never depends on it.
 
 ## Design quality
 
 A diagram should argue, not just label boxes — strip the text and the structure alone should still carry the concept. Every real relationship gets an edge; position alone doesn't show a connection, so if A depends on B, draw the line. Build hierarchy through size and whitespace — make the important node bigger and give it room — not through decorative color or borders. And if an edge needs tortured routing (hand-placed waypoints, a curve bent around an obstacle) to reach its target, the layout is wrong, not the edge: move the node so the line runs straight.
 
-## Required skeleton
-
-```xml
-<mxGraphModel adaptiveColors="auto">
-  <root>
-    <mxCell id="0"/>
-    <mxCell id="1" parent="0"/>
-  </root>
-</mxGraphModel>
-```
-
-Both `id="0"` and `id="1"` are mandatory — a missing layer renders blank. Diagram cells use `parent="1"`.
-
-## Well-formedness (any of these → blank or corrupt diagram)
-
-- No XML comments (`<!-- -->`) anywhere in the file.
-- Escape `&amp;` `&lt;` `&gt;` `&quot;` in attribute values.
-- Unique `id` on every `mxCell`.
-- Every edge cell needs a child `<mxGeometry relative="1" as="geometry"/>` — a self-closing edge renders nothing.
-
-## Label placement on edges (common silent defect)
-
-Two labelled edges leaving the same node (e.g. Yes/No off a decision) default to mid-edge
-labels that can stack and collide. Anchor each label along its edge instead: set `x` on the
-**edge's own** `mxGeometry` (`relative="1"`), where `x` runs `-1` (at source) → `0` (middle)
-→ `1` (at target) — e.g. `<mxGeometry relative="1" x="-0.8" as="geometry"/>` pins the label
-near the source node. Add `labelBackgroundColor=#ffffff;` to the edge style so labels stay
-legible where they cross lines.
-
 ## Visual verification (optional — catches what XML review can't)
 
-The well-formedness checks above are the cheap tier (no browser). Routing and label defects,
+The bundled structural validator is the cheap tier (no browser). Routing and label defects,
 though, never show up in the XML — only in the render — and rendering costs a browser
-cold-start, so reach for it on complex or edge-label-heavy diagrams, not every file. Use
-whatever browser automation the session already has — Playwright, a Chrome integration, a
-browser MCP server — and render with the official viewer (same engine as app.diagrams.net):
+cold-start, so reach for it on complex or edge-label-heavy diagrams, not every file.
+
+Before putting a diagram into app.diagrams.net, its CDN viewer, or any other external web
+surface, ask for permission for **that artifact** if it may contain internal, personal, or
+otherwise non-public information. Do not treat permission for another diagram as reusable.
+Without permission, do not load the XML into the external page: deliver the validated file
+and report `structural validation only; external visual inspection not authorized`. A local
+native renderer that does not transmit the artifact does not need this consent.
+
+When authorized, use whatever browser automation the session already has — Playwright, a
+Chrome integration, a browser MCP server — and render with the official viewer (same engine
+as app.diagrams.net):
 
 - Build an HTML page with
   `<div class="mxgraph" data-mxgraph='{"xml":"<escaped-xml>","page":N,"resize":true,"nav":false}'></div>`

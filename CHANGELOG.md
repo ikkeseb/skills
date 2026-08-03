@@ -4,6 +4,35 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.11.0 — 2026-08-03
+
+- **Orchestration is smaller and its Codex lane is harder to misuse.** The
+  first-load orchestration instructions are substantially shorter without
+  changing the model map. The worker now requires an explicit model or
+  `default` sentinel, bypasses shell wrappers, reports every write dependency,
+  and makes `result.json` the sole authoritative terminal envelope. A
+  provider-free black-box suite covers its Claude-facing invocation flags,
+  result envelopes, provider failure and write gates. The Claude transport adapter now
+  uses `opus` at low effort; `sonnet` remains reserved for the rare conductor
+  seat defined by the unchanged routing table.
+- **Context and unattended workflows preserve reach and authority.**
+  `context-audit` now measures the target's actual Claude/Codex invocation
+  policy before moving mandatory rules. `afk` cannot grant commit, install,
+  push or PR authority; `suggest-loop` requires both a measurable result and a
+  hard run bound; `verify-claims` handles incomplete session history honestly;
+  `handoff` verifies the new handoff before best-effort cleanup.
+- **Artifact skills gain deterministic and visual gates with less context.**
+  `pretty-pdf` moves executable CSS to an asset, loads one document template,
+  and requires page rendering plus inspection. `drawio` gains an offline XML
+  reference and validator and asks before external web inspection.
+  `excalidraw` makes its palette machine-readable and tests theme defaults,
+  section-edge rejection, browser discovery and render failure behavior.
+- **Repository validation matches the repository.** A single check covers
+  skill/manifest inventories, explicit Codex invocation metadata, Bash syntax,
+  runner and diagram tests, helper resolution, Claude marketplace and plugin
+  validation, and diff hygiene. README inventory is split by harness and
+  shipped shell files are pinned to LF.
+
 ## 0.10.9 — 2026-08-03
 
 - **codex-worker.sh: fsmonitor override extended to the write-gate's

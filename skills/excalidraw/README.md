@@ -38,7 +38,9 @@ codex plugin add ikkeseb-skills@ikkeseb
 The only runtime requirement is Node.js 18 or newer. Structural validation and
 layout SVG have no external dependencies or network calls. A locally installed
 Chrome, Chromium, or Edge can also rasterize the layout diagnostic. The skill
-does not install or bundle a browser or a heavyweight Excalidraw runtime.
+checks an explicit `EXCALIDRAW_BROWSER_PATH`, per-user and system Windows
+installs, and common browser names on `PATH`. It does not install or bundle a
+browser or a heavyweight Excalidraw runtime.
 
 ## Use
 
@@ -70,5 +72,6 @@ Do not paste whole-scene JSON into an existing canvas; paste merges with
 cached content.
 
 Methodology lives in [`SKILL.md`](SKILL.md), the compact input format in
-[`references/scene-spec.md`](references/scene-spec.md), and semantic colors in
-[`references/color-palette.md`](references/color-palette.md).
+[`references/scene-spec.md`](references/scene-spec.md), semantic color usage in
+[`references/color-palette.md`](references/color-palette.md), and the exact
+runtime tokens in [`references/palette.json`](references/palette.json).

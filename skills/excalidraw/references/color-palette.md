@@ -1,110 +1,48 @@
-# Color Palette & Brand Style
+# Color palette and brand style
 
-**Single source of truth for all colors.** Edit this file to rebrand — everything else in the skill is universal methodology.
+`palette.json` is the single source of truth for every default color. The
+builder reads it at runtime; this guide owns only semantic usage. Edit the JSON
+to rebrand, then run the bundled test so both themes and structural lines are
+checked. Do not copy token values into this file or the builder.
 
----
+## Canvas and themes
 
-## Canvas Background
+Default to the dark theme. Use light when the user requests it or the
+destination requires a white page. Each theme owns its canvas, text,
+structural-line, and semantic shape tokens in `palette.json`; an explicit
+`canvasBackground` overrides only the canvas token.
 
-| Mode   | Background Color |
-|--------|-----------------|
-| Dark (default) | `#000000` |
-| Light | `#ffffff` |
+## Semantic shapes
 
-Default to dark. Use light when the user requests it or the destination
-requires a white page.
+Colors encode meaning, not decoration. Each purpose has a fill/stroke pair;
+always keep the darker stroke and lighter fill relationship where the theme
+allows it.
 
----
+| Token | Use |
+|---|---|
+| `primary` | Default or neutral shapes |
+| `secondary` | Supporting shapes and secondary paths |
+| `tertiary` | Background grouping and low emphasis |
+| `start` | Entry points and initiators |
+| `success` | Completion, output, or result |
+| `warning` | Failures, resets, or danger states |
+| `decision` | Branch points and conditionals |
+| `ai` | Model interactions and AI components |
+| `external` | Third-party systems and integrations |
+| `data` | Databases, files, and stores |
+| `human` | User actions and manual steps |
+| `inactive` | Disabled elements; pair with a dashed stroke |
 
-## Shape Colors (Semantic)
+## Text hierarchy
 
-Colors encode meaning, not decoration. Each semantic purpose has a fill/stroke pair.
+Use the theme's `title`, `subtitle`, and `body` tokens for free-floating text.
+Node labels also use `body` unless the scene explicitly supplies `textColor`.
+Use evidence colors only for concrete code, data, or command artifacts; use
+the syntax tokens inside those blocks when highlighting improves recognition.
 
-| Semantic Purpose    | Fill        | Stroke      | When to Use                        |
-|--------------------|-------------|-------------|-------------------------------------|
-| Primary / Neutral   | `#dbeafe`   | `#1e40af`   | Default for most shapes             |
-| Secondary           | `#e0e7ff`   | `#3730a3`   | Supporting shapes, secondary paths  |
-| Tertiary            | `#f1f5f9`   | `#475569`   | Background grouping, low emphasis   |
-| Start / Trigger     | `#fef3c7`   | `#b45309`   | Entry points, initiators            |
-| End / Success       | `#d1fae5`   | `#047857`   | Completion, output, result          |
-| Warning / Error     | `#fee2e2`   | `#b91c1c`   | Failures, resets, danger states     |
-| Decision            | `#fde68a`   | `#92400e`   | Branch points, conditionals         |
-| AI / LLM            | `#ede9fe`   | `#6d28d9`   | AI components, model interactions   |
-| External / API      | `#e0f2fe`   | `#0369a1`   | Third-party systems, integrations   |
-| Data / Storage      | `#f0fdf4`   | `#15803d`   | Databases, files, data stores       |
-| User / Human        | `#fce7f3`   | `#be185d`   | User actions, manual steps          |
-| Inactive / Disabled | `#f1f5f9`   | `#94a3b8`   | Use dashed stroke                   |
+## Lines
 
-**Rule**: Always pair a darker stroke with a lighter fill for contrast.
-
----
-
-## Text Colors (Hierarchy)
-
-Free-floating text uses color to create visual hierarchy without containers.
-
-| Level         | Light Canvas | Dark Canvas  | Use For                             |
-|---------------|-------------|-------------|--------------------------------------|
-| Title          | `#0f172a`   | `#f1f5f9`   | Section headings, major labels       |
-| Subtitle       | `#1e40af`   | `#93c5fd`   | Subheadings, secondary labels        |
-| Body / Detail  | `#64748b`   | `#94a3b8`   | Descriptions, annotations, metadata  |
-| On light fills | `#1e293b`   | —           | Text inside light-colored shapes     |
-| On dark fills  | `#f8fafc`   | —           | Text inside dark-colored shapes      |
-
----
-
-## Evidence Artifact Colors
-
-For code snippets, data examples, and concrete evidence inside technical diagrams.
-
-| Artifact Type    | Background  | Text Color                         |
-|-----------------|-------------|-------------------------------------|
-| Code snippet     | `#1e293b`   | `#e2e8f0` (base), syntax-colored   |
-| JSON / data      | `#1e293b`   | `#4ade80` (green)                   |
-| Command / CLI    | `#0f172a`   | `#38bdf8` (sky blue)               |
-
-### Syntax Colors (for code snippets)
-
-| Token Type  | Color      |
-|------------|------------|
-| Keyword     | `#c084fc`  |
-| String      | `#4ade80`  |
-| Number      | `#fb923c`  |
-| Comment     | `#64748b`  |
-| Function    | `#38bdf8`  |
-| Type        | `#fbbf24`  |
-
----
-
-## Stroke & Line Colors
-
-| Element                                   | Color                                          |
-|------------------------------------------|------------------------------------------------|
-| Arrows                                    | Source element's stroke color                   |
-| Structural lines (dividers, trees, timelines) | `#475569` (slate)                            |
-| Marker dots (fill + stroke)               | `#3b82f6` (blue)                               |
-| Dashed dividers                           | `#cbd5e1` (light slate)                        |
-
----
-
-## Dark Canvas Tokens
-
-The builder applies these exact pairs when `theme` is `dark`.
-
-| Semantic Purpose | Fill | Stroke |
-|---|---|---|
-| Primary / Neutral | `#1e3a5f` | `#93c5fd` |
-| Secondary | `#312e81` | `#c7d2fe` |
-| Tertiary | `#273449` | `#94a3b8` |
-| Start / Trigger | `#78350f` | `#fbbf24` |
-| End / Success | `#064e3b` | `#6ee7b7` |
-| Warning / Error | `#7f1d1d` | `#fca5a5` |
-| Decision | `#713f12` | `#fde68a` |
-| AI / LLM | `#4c1d95` | `#c4b5fd` |
-| External / API | `#0c4a6e` | `#7dd3fc` |
-| Data / Storage | `#14532d` | `#86efac` |
-| User / Human | `#831843` | `#f9a8d4` |
-| Inactive / Disabled | `#334155` | `#94a3b8` |
-
-Evidence artifacts keep their existing dark backgrounds. Structural lines use
-`#64748b` rather than `#475569`.
+Bound arrows inherit the source node's stroke by default. Unbound dividers,
+trees, timelines, and feedback paths use the active theme's `structural`
+token. Use `marker` for marker dots and `divider` for deliberately faint or
+dashed separators.

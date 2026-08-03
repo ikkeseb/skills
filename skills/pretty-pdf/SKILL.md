@@ -1,86 +1,122 @@
 ---
 name: pretty-pdf
 description: >-
-  Create visually polished, professionally designed PDFs with weasyprint (HTML+CSS → PDF) —
+  Create visually polished, professionally designed PDFs with WeasyPrint (HTML+CSS to PDF) —
   reports, letters, invoices, CVs — from new content or by re-typesetting a docx. Not for
-  reading, merging, splitting, or form-filling existing PDFs (use the default pdf skill),
+  reading, merging, splitting, or form-filling existing PDFs (use the default PDF skill),
   fillable AcroForm output, or quick throwaway PDFs.
 ---
 
-# Pretty PDF — Beautiful PDF Creation
+# Pretty PDF
 
-## Core Approach
+Build a semantic HTML document, render it with the bundled CSS asset, and verify the final PDF
+page by page. Preserve source meaning and factual content; design must improve reading, not edit
+the substance silently.
 
-HTML + CSS → PDF via weasyprint:
+## Render contract
+
+Resolve this skill's directory and pass `assets/base.css` to WeasyPrint without loading or
+copying its full contents into model context. Put only document-specific font, palette, spacing,
+and component overrides in `override_css`.
 
 ```python
-import weasyprint
-weasyprint.HTML(string=html_content).write_pdf(output_path)
+from pathlib import Path
+from weasyprint import CSS, HTML
+from weasyprint.text.fonts import FontConfiguration
+
+skill_dir = Path("/absolute/path/to/pretty-pdf")
+source_dir = Path("/absolute/path/to/document-assets")
+output_path = Path("/absolute/path/to/output.pdf")
+
+font_config = FontConfiguration()
+stylesheets = [
+    CSS(filename=skill_dir / "assets" / "base.css", font_config=font_config),
+]
+if override_css:
+    stylesheets.append(CSS(
+        string=override_css,
+        base_url=source_dir,
+        font_config=font_config,
+    ))
+
+document = HTML(
+    string=html_content,
+    base_url=source_dir,
+).render(
+    stylesheets=stylesheets,
+    font_config=font_config,
+)
+document.write_pdf(output_path)
+page_count = len(document.pages)
 ```
 
-If `import weasyprint` fails, see `references/setup.md` for install instructions per
-platform. For batch rendering (multiple PDFs in one session), reuse a `FontConfiguration` —
-see the Weasyprint Technical Notes in `references/base-styles.md`.
+If rendering an HTML file instead, `HTML(filename=html_path)` infers the file's directory as the
+relative-asset base. With an in-memory string, always pass an absolute `base_url`. Keep relative
+images and fonts inside the task's trusted asset directory; use absolute paths or data URIs only
+when no useful common base exists.
+
+If WeasyPrint is unavailable, read `references/setup.md`. Reuse one `FontConfiguration` for
+all HTML and CSS objects in a batch.
 
 ## Workflow
 
-1. **Read the source content first.** What kind of document is this — clinical summary,
-   personal letter, recipe, quarterly report, CV? Tone, audience, density, and reading context
-   drive every design choice that follows. Don't pick fonts or palette before you've read it.
-   Also weigh the reader relationship: a known reader (doctor, colleague, friend) lets the
-   document assume shared context and lean personal; an unknown reader (application, public
-   report) wants more formality and self-explanation.
-2. **Read `references/base-styles.md`** — the full CSS system, font pairings keyed to content
-   cues, and color palettes.
-3. **Read `references/templates.md`** — HTML templates for common document types.
-4. **Read `references/gotchas.md` when it applies:** the source is a docx with images (`§2` —
-   Word crops live in `document.xml`, not the media file; extracting the raw image loses them
-   silently) or the document has long code blocks that will span pages (`§1` — a page footer
-   pulled into a multi-page `<pre>` breaks copy/paste). Empirical traps with tidy fixes.
-5. **Pick the five axes via the Anti-Convergence Rule below**, then copy the full `<style>`
-   block from `base-styles.md` and swap the `@import` and CSS variables for your picks.
-6. Choose a template from `references/templates.md`, or build from scratch.
-7. Write semantic HTML — `<h1>`, `<h2>`, `<p>`, `<table>`, `<blockquote>`, etc. Set
-   `<html lang="...">` so hyphenation works.
-8. Test page breaks with the `.page-break` and `.no-break` utility classes.
-9. **Images:** use absolute paths or base64 data URIs — relative paths don't resolve.
-10. **Save the final PDF to an absolute output path** (the user's Downloads folder, or wherever
-    they specify) via `weasyprint.HTML(...).write_pdf(absolute_path)`. Relative paths resolve
-    from the current working directory, rarely what the user wants.
+1. Read the source completely. Identify document type, audience, reader relationship, tone,
+   density, and reading context before choosing a visual treatment.
+2. Read `references/base-styles.md` and choose the five axes below from the content.
+3. Read exactly one matching template:
+   - report or business document: `references/templates/report.md`
+   - formal or personal letter: `references/templates/letter.md`
+   - medical or clinical summary: `references/templates/medical.md`
+   - invoice or financial summary: `references/templates/invoice.md`
+   - CV or resume: `references/templates/cv.md`
+   - one-page brief: `references/templates/one-pager.md`
+   - journal, travel log, or personal document: `references/templates/personal.md`
+   - technical specification: `references/templates/technical.md`
 
-## Design Philosophy
+   Skip templates and build from scratch when none fits. Do not read all templates to browse.
+4. Read only the applicable section of `references/gotchas.md`:
+   - §1 for long code blocks that may span pages;
+   - §2 for docx sources containing images or crops;
+   - §3 for a literary drop cap or a `float_layout` render failure.
+5. Write semantic HTML and set `<html lang="...">` for hyphenation. Use the base CSS asset plus
+   a small override; do not inline the entire base stylesheet.
+6. Render to the user's requested absolute output path. Treat missing fonts, images, or fetch
+   warnings as defects, not harmless log noise.
+7. Create a temporary preview directory and render every PDF page to an image. Prefer an available
+   PDF renderer; with Poppler:
+   `pdftoppm -png -r 144 "<absolute-output.pdf>" "<preview-dir>/page"`. Confirm the image count
+   matches `page_count` from the final WeasyPrint render.
+8. Open and inspect every final page image with the harness's image-capable reader. Check:
+   - clipped, overlapping, or missing content;
+   - awkward page breaks, stranded headings, sparse final pages, and broken tables;
+   - inconsistent margins, hierarchy, alignment, colors, and image treatment;
+   - unreadably small text, code, captions, or footers;
+   - font fallback, replacement glyphs, and incorrect crops.
+9. Correct the HTML or override CSS, rerender the PDF and all page images, then inspect every page
+   again. Repeat until the final render passes.
+10. Deliver the PDF and state what was verified. If PDF-to-image rendering or image inspection was
+    unavailable, say **generated but not visually verified**, explain the missing capability, and
+    do not describe the result as polished or verified.
 
-The goal is PDFs that look typeset by someone who cares — between a well-designed book
-interior and a premium consulting firm's deliverables.
+The workflow is done when the source is preserved, the final PDF exists at the intended absolute
+path, every final page has been visually inspected, and no known layout defect remains.
 
-### Core Principles
+## Design selection
 
-- **Typography IS the design.** Distinctive, characterful font choices — not safe defaults. Pair a
-  display font with a body font that creates tension and interest. This alone gets you 80% of the way.
-- **Whitespace is a feature.** Generous margins, breathing room between sections, no cramming.
-- **Restraint over decoration.** One dominant accent with sharp contrast outperforms a timid,
-  evenly-distributed palette. Commit to a cohesive aesthetic.
+Typography carries the design; whitespace creates hierarchy; decoration stays restrained. Use one
+dominant accent and make every choice serve the document.
 
-### Anti-Convergence Rule (critical)
+Guard against convergence: do not reach for Inter Tight + Slate because they are already present.
+Choose each axis from the source. If fewer than three axes move off their fallback, check whether
+that is genuine fit or reflex; similar content may legitimately produce a similar design.
 
-The failure this guards against is **reaching for the default without reading the content** —
-shipping Inter Tight + Slate on every document regardless of what it says. The cure is fit, not
-novelty: choose each axis *from* the content, using the cue tables below and in `base-styles.md`.
-The CSS system gives you five independent axes to fit with — if you've moved fewer than 3 off
-their defaults, check whether that's genuine fit or just reflex.
+| Axis | Fallback | Choose by content |
+|---|---|---|
+| Font pairing | Inter Tight | Literary → Cormorant or EB Garamond; clinical → DM Sans; editorial → Fraunces + Work Sans; technical → Space Grotesk + IBM Plex |
+| Palette | Slate | Choose a complete palette block from the design reference or build a coherent custom one |
+| Header | `.header-typeset` | `.header-minimal`, `.header-side-rule`, `.header-centered`, `.header-large-numeral`, or the loud `.header-bar` |
+| Type scale | Editorial | `body class="scale-compact"` or `body class="scale-generous"` |
+| Edge weight | Standard | `body class="edges-hairline"` or `body class="edges-chunky"` |
 
-#### The five axes
-
-| Axis | Default (fallback) | Pick by content |
-|------|---------|------------|
-| Font pairing | Inter Tight (clean sans, single-family) | Read content first. Letter/literary → Cormorant or EB Garamond. Clinical → DM Sans. Editorial → Fraunces+Work Sans. Tech → Space Grotesk+IBM Plex. Full table in `base-styles.md`. |
-| Palette | Slate | One of 8 in `base-styles.md` — each overrides 5-7 vars (chrome/borders/bg move together) |
-| Header | `.header-typeset` (pure-type, quiet) | `.header-minimal`, `.header-side-rule`, `.header-centered`, `.header-large-numeral` (sparingly), `.header-bar` (sparingly, loudest) |
-| Type scale | Editorial | `body class="scale-compact"` (denser) or `body class="scale-generous"` (more breathing room) |
-| Edge weight | Standard | `body class="edges-hairline"` (refined, near-zero radii) or `body class="edges-chunky"` (bold, larger radii) |
-
-A medical summary in DM Sans + Teal + `.header-minimal` + `.scale-compact` + `.edges-hairline`
-naturally looks nothing like a personal letter in Cormorant + Terracotta + `.header-centered`
-+ `.scale-generous` + standard edges — because the content pulled them apart, not a quota. Smoke
-test: if a document came out looking like the last one, ask whether you read its content or
-defaulted. If the content genuinely is similar, similar is the right answer.
+Use `.page-break` deliberately and `.no-break` for components that should stay together, then
+let visual inspection decide whether those constraints improve the actual pagination.

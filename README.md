@@ -1,16 +1,19 @@
 # skills
 
-Claude Code skills I use day-to-day, published as a plugin. Seven of them also
-work in Codex CLI. Pick what you need, ignore the rest.
+Explicitly invoked agent skills for day-to-day work, published as one plugin.
+Claude Code ships the full set; Codex exposes the seven skills marked for both
+harnesses.
 
 ## Skills
 
-Every skill here is meant to be reached by an explicit command rather than
-firing on its own; nothing in Claude Code enforces that, so the guard is how
-the descriptions are written. (In Codex, use the `$` skill picker — see
-Install below.)
+Every skill here is meant to be reached explicitly. Descriptions avoid ambient
+activation because Claude Code's `skillOverrides` do not apply to plugin
+skills; symlink consumers may additionally use name-only exposure. In Codex,
+use the `$` skill picker.
 
-| Skill | What it does | Invoke |
+### Claude Code and Codex
+
+| Skill | What it does | Claude Code |
 |---|---|---|
 | **[handoff](skills/handoff)** | Compacts the session into a handoff file plus a paste-ready snippet — for switching machines or briefing another agent. | `/handoff` |
 | **[pretty-pdf](skills/pretty-pdf)** | PDFs that look designed rather than auto-generated (HTML + CSS via weasyprint). | `/pretty-pdf` |
@@ -18,24 +21,26 @@ Install below.)
 | **[drawio](skills/drawio)** | Native `.drawio` XML that opens straight in app.diagrams.net. | `/drawio` |
 | **[verify-claims](skills/verify-claims)** | Fact-checks prose against traceable sources and returns a classified table. | `/verify-claims` |
 | **[agents-md-convert](skills/agents-md-convert)** | Audits, converts, or repairs repository instruction scopes so `AGENTS.md` is canonical and `CLAUDE.md` stays a one-line import adapter. | `/agents-md-convert` |
-| **[context-audit](skills/context-audit)** | Audits a bloated `CLAUDE.md` and proposes a leaner context structure, for you to apply by hand. | `/context-audit` |
-| **[full-send](skills/full-send)** | Posture: resources are authorized — fan out subagents freely, then converge. | `/full-send` · `/full-send sustained` |
-| **[max-effort](skills/max-effort)** | Posture: high-stakes work gets adversarial review, not a rubber stamp. | `/max-effort` · `/max-effort sustained` |
-| **[afk](skills/afk)** | Posture: unattended runs — no clarifying questions, low blast radius, audit trail in the conversation. | `/afk` |
+| **[context-audit](skills/context-audit)** | Audits instruction reach and proposes a leaner context structure without stranding mandatory rules. | `/context-audit` |
 
-### Claude-only by design
+In Codex, invoke the same seven skills through the `$` picker.
 
-Their substance is Claude Code machinery, so porting them would mistranslate
-rather than translate.
+### Claude Code only
+
+These are intentionally omitted from the Codex manifest; their contracts rely
+on Claude Code session, agent, or loop behavior.
 
 | Skill | What it does | Invoke |
 |---|---|---|
+| **[full-send](skills/full-send)** | Posture: resources are authorized — fan out subagents freely, then converge. | `/full-send` · `/full-send sustained` |
+| **[max-effort](skills/max-effort)** | Posture: high-stakes work gets adversarial review, not a rubber stamp. | `/max-effort` · `/max-effort sustained` |
+| **[afk](skills/afk)** | Posture: unattended runs with a bounded blast radius and an audit trail in the conversation. | `/afk` |
 | **[second-opinion](skills/second-opinion)** | One read-only Codex call on work that already exists, answered as a synthesis rather than a relay. Vendor independence without the delegation ceremony. | `/second-opinion` |
 | **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes mechanical work to worker models: Claude agents, plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
 | **[suggest-loop](skills/suggest-loop)** | Turns a repo's documented verification gate into ready-to-paste `/loop` prompts with stop conditions baked in. | `/suggest-loop` |
 
-Each skill folder contains its `SKILL.md`; a few add a README for
-install-specific notes (e.g. `excalidraw`'s render-and-inspect pipeline).
+Each skill folder contains its `SKILL.md`; Excalidraw also carries setup notes
+for its render-and-inspect pipeline.
 
 ## Install
 
@@ -57,8 +62,8 @@ skills — the ones carrying an `agents/openai.yaml`: `agents-md-convert`,
 or exec. `excalidraw` uses the same dependency-free builder, validator, and
 layout diagnostic in both harnesses, then requires an official Excalidraw
 surface for native visual approval; without one it reports the artifact as
-visually unverified. `context-audit`'s subject stays Claude Code context
-whichever harness runs it.
+visually unverified. `context-audit` audits the target's effective instruction
+reach across Claude Code and Codex, whichever harness runs it.
 
 ```bash
 codex plugin marketplace add ikkeseb/skills
@@ -76,13 +81,14 @@ codex plugin list   # verify the installed version
 
 If you previously symlinked skills from this repo into `~/.agents/skills/`,
 remove those symlinks before installing — otherwise the same skills load
-twice. Route verified with codex-cli 0.144.5.
+twice.
 
 ### orchestrate's Codex lane
 
-The `orchestrate` skill's Codex worker lane needs the
-[Codex CLI](https://github.com/openai/codex) installed and logged in
-(`codex login`). Without it the skill runs Claude-only and says so; the
+The `orchestrate` skill's optional Codex worker lane needs the
+[Codex CLI](https://github.com/openai/codex), `jq`, and Bash installed, with
+Codex logged in (`codex login`). Without that lane, orchestration continues
+through Claude Code workers and says so; the
 helper's `probe` subcommand reports auth plus whether the installed CLI still
 advertises every flag the runner passes — the recipe gates on that flag
 surface, not on a pinned version.

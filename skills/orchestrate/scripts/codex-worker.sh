@@ -5,12 +5,11 @@
 # prompts.
 #
 # Usage:
-#   codex-worker.sh run --prompt-file <file>
-#       [--model <model>]  omitted -> the CLI's built-in default. Note this is
-#                          NOT the user's config.toml default: runs pass
-#                          --ignore-user-config by design. Omit it when the
-#                          caller wants whatever the provider currently ships;
-#                          name one when the tier actually matters.
+#   codex-worker.sh run --model <model|default> --prompt-file <file>
+#       --model <model|default>  required. `default` explicitly selects the
+#                                CLI's built-in model (NOT config.toml, which
+#                                --ignore-user-config bypasses); name a model
+#                                when the tier or reproducibility matters.
 #       [--effort <level>]  passed through; the server rejects what a model
 #                           does not support        (default: high)
 #       [--sandbox read-only|workspace-write]               (default: read-only)
@@ -26,6 +25,8 @@
 #   codex-worker.sh verify    end-to-end smoke test (one tiny billed run)
 #
 # Output: exactly one JSON object on stdout. Everything else goes to stderr.
+# Dependencies: Bash and jq for every command; Codex for probe/run/verify;
+# git plus shasum or sha256sum for workspace-write runs.
 set -euo pipefail
 
 # The recipe's real dependency is this flag surface, not a version number.
@@ -60,6 +61,7 @@ ensure_slot_root() {
 }
 
 SLOT_DIR="" WS_LOCK="" CODEX_PID="" VERIFY_TMP=""
+CODEX_BIN="" WORKSPACE_HASH_BIN="" WORKSPACE_HASH_KIND=""
 # Script-scope, not `local`: the EXIT trap fires after the function returns, so
 # a function-local would be unbound there and `set -u` would abort the run.
 verify_cleanup() { [ -z "${VERIFY_TMP:-}" ] || rm -rf "$VERIFY_TMP"; }
@@ -104,8 +106,31 @@ dirt_excerpt() {
 resolve_codex() {
   # Invoke the binary directly: user shells may wrap `codex` in a function
   # that injects extra profile/config flags, which must never reach workers.
-  CODEX_BIN="$(command -v codex || true)"
+  # `command -v` still returns a same-name shell function; `type -P` forces a
+  # PATH search and therefore preserves the direct-executable contract.
+  CODEX_BIN="$(type -P codex || true)"
   [ -n "$CODEX_BIN" ] || fail_json codex_missing "codex binary not found on PATH"
+}
+
+resolve_workspace_hash() {
+  # shasum is present in Git for Windows and preserves the lock-key format
+  # used by existing installs. sha256sum is an explicit portable fallback.
+  WORKSPACE_HASH_BIN="$(type -P shasum || true)"
+  if [ -n "$WORKSPACE_HASH_BIN" ]; then
+    WORKSPACE_HASH_KIND=shasum
+    return 0
+  fi
+  WORKSPACE_HASH_BIN="$(type -P sha256sum || true)"
+  if [ -n "$WORKSPACE_HASH_BIN" ]; then
+    WORKSPACE_HASH_KIND=sha256sum
+    return 0
+  fi
+  WORKSPACE_HASH_KIND=""
+  return 1
+}
+
+workspace_hash() {
+  "$WORKSPACE_HASH_BIN"
 }
 
 codex_version() { "$CODEX_BIN" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true; }
@@ -264,7 +289,9 @@ acquire_workspace_lock() { # exclusive per-repository lock for writing workers
   ws_root="$(git -C "$1" rev-parse --show-toplevel 2>/dev/null || true)"
   [ -n "$ws_root" ] || fail_json git_error "cannot resolve worktree root for $1"
   local key lock tries=0
-  key="$(printf '%s' "$ws_root" | shasum | cut -c1-16)"
+  resolve_workspace_hash || fail_json missing_dependency \
+    "workspace-write requires shasum or sha256sum on PATH"
+  key="$(printf '%s' "$ws_root" | workspace_hash | cut -c1-16)"
   lock="$SLOT_ROOT/ws-$key"
   while ! mkdir "$lock" 2>/dev/null; do
     # Stale recovery goes through the serialized reclaim protocol; this loop
@@ -282,13 +309,10 @@ acquire_workspace_lock() { # exclusive per-repository lock for writing workers
 # --- probe --------------------------------------------------------------------
 cmd_probe() {
   require_jq
-  CODEX_BIN="$(command -v codex || true)"
-  if [ -z "$CODEX_BIN" ]; then
-    jq -n '{ok: false, error_class: "codex_missing", error: "codex binary not found on PATH"}'
-    return
-  fi
+  resolve_codex
   build_worker_env
-  local version authenticated=false auth_mode=login
+  local version authenticated=false auth_mode=login hash_command=""
+  local git_ready=false hash_ready=false write_ready=false
   version="$(codex_version)"
   if env -i "${WORKER_ENV[@]}" "$CODEX_BIN" login status >/dev/null 2>&1; then
     authenticated=true
@@ -298,15 +322,27 @@ cmd_probe() {
     # verify it — report the mode and trust the key's presence.
     authenticated=true auth_mode=api_key
   fi
+  if type -P git >/dev/null 2>&1; then git_ready=true; fi
+  if resolve_workspace_hash; then
+    hash_command="$WORKSPACE_HASH_KIND"
+    hash_ready=true
+  fi
+  if [ "$git_ready" = true ] && [ "$hash_ready" = true ]; then write_ready=true; fi
   local missing
   missing="$(missing_contract_flags all)"
   jq -n --arg v "$version" --arg missing "$missing" \
     --arg auth_mode "$auth_mode" --argjson auth "$authenticated" \
+    --arg hash_command "$hash_command" --argjson git_ready "$git_ready" \
+    --argjson hash_ready "$hash_ready" --argjson write_ready "$write_ready" \
     '{ok: ($auth and ($v != "") and ($missing == "")),
       codex_version: $v,
       authenticated: $auth, auth_mode: $auth_mode,
       contract_ok: ($missing == ""),
-      missing_flags: (if $missing == "" then [] else ($missing | split(" ")) end)}'
+      missing_flags: (if $missing == "" then [] else ($missing | split(" ")) end),
+      dependencies: {jq: true, git: $git_ready,
+        workspace_hash: $hash_ready,
+        workspace_hash_command: (if $hash_command == "" then null else $hash_command end)},
+      write_ready: $write_ready}'
 }
 
 # --- verify -------------------------------------------------------------------
@@ -461,6 +497,12 @@ cmd_run() {
   case "$sandbox" in read-only|workspace-write) ;; *) fail_json usage "invalid --sandbox: $sandbox" ;; esac
   if [ "$sandbox" = "workspace-write" ] && [ -z "$expected_sha" ]; then
     fail_json usage "--expected-base-sha is required for workspace-write"
+  fi
+  if [ "$sandbox" = "workspace-write" ]; then
+    type -P git >/dev/null 2>&1 \
+      || fail_json missing_dependency "workspace-write requires git on PATH"
+    resolve_workspace_hash \
+      || fail_json missing_dependency "workspace-write requires shasum or sha256sum on PATH"
   fi
 
   local in_git=false

@@ -1,6 +1,6 @@
 ---
 name: suggest-loop
-description: Draft 2–3 paste-ready `/loop` prompts from a repo's documented verification gate, stop conditions baked in — or explain why the work isn't safely loopable. Writes the prompt text only; running loops is `/loop` itself.
+description: Draft 2–3 paste-ready `/loop` prompts from a repo's documented verification gate, with a measurable success stop and hard runtime bound — or explain why the work isn't safely loopable. Writes the prompt text only; running loops is `/loop` itself.
 ---
 
 # suggest-loop
@@ -28,11 +28,16 @@ suggestion — every claim about *how* `/loop` behaves comes from there, not pri
 2. **Match the gate to real work.** A failing suite, a backlog item, a scoped
    feature, a refactor that must stay green. The loop has to be *about*
    something in this repo, not a generic shape.
-3. **Emit an inline `/loop` with the stop condition baked in.** "…stop when the
-   suite is green twice in a row", "…stop when the work-list is empty". Inline is
-   primary. Reach for `.claude/loop.md` only for a loop run *often*; reach for
-   `/goal` only when "done" is judgment-heavy (see the mechanics file). Default
-   to a plain inline `/loop`.
+3. **Bake in two independent stops.** Every suggestion needs both a measurable
+   success stop ("the suite exits 0 twice", "the work-list is empty") and a hard
+   turn or wall-clock cap ("or stop after 10 iterations / 60 minutes, whichever
+   comes first"). Platform expiry is not a substitute for this task-level cap.
+   Default to a prompt-only, self-paced inline `/loop`, because it can stop
+   itself. A fixed interval cannot enforce the cap autonomously; use one only
+   when a human explicitly owns cancellation. On provider variants where
+   prompt-only `/loop` becomes fixed, state that limitation instead of claiming
+   the hard cap is self-enforcing. Reach for `.claude/loop.md` only for a default
+   prompt run often.
 4. **Mark the human/taste-gate explicitly.** Autonomy follows the oracle: where
    correctness is a fact about the world (an exit code, a hash, a measured peak)
    the loop checks itself; where "correct" lives in the user's taste (does it
@@ -51,6 +56,12 @@ suggestion — every claim about *how* `/loop` behaves comes from there, not pri
   human-gated.
 - **No documented signal** — a suggestion would be guessed. Recommend
   documenting the gate instead of inventing one.
+- **No hard cap** — a success signal can remain red forever. Add a turn/time
+  limit or decline.
+
+`suggest-loop` grants no execution authority. Do not add commit, push, pull
+request, dependency-install, deploy, or external-message instructions unless the
+user's current task already authorizes that exact class of action.
 
 When you refuse, that *is* the deliverable — a clear "this isn't loopable, and
 here's the one thing that would make it loopable" beats a plausible-looking loop
@@ -63,10 +74,12 @@ signal** it terminates on, and the **taste-gate line**.
 
 > **Loop 1 — keep the suite green (the clean first loop)**
 > ```
-> /loop run `pnpm test`, fix the single top failure, re-run; commit each green
-> step; stop when `pnpm test` exits 0 twice in a row
+> /loop run `pnpm test`, fix the single top failure, then re-run; stop when
+> `pnpm test` exits 0 twice in a row, or after 10 iterations / 60 minutes,
+> whichever comes first
 > ```
 > - **Hard signal:** exit code of `pnpm test`.
+> - **Hard bound:** 10 iterations or 60 minutes.
 > - **Stays yours:** whether the result *feels* right — animation smoothness,
 >   copy tone, visual polish — the loop never touches those.
 
@@ -74,7 +87,8 @@ signal** it terminates on, and the **taste-gate line**.
 line* from source files ("build the list of X from `a.ts`, then drain it"), not
 from a `STATUS`/backlog doc that may be stale or a list the user never gave. If
 the queue can't self-derive, the loop isn't paste-ready — mark the gap or send it
-to the refusals.
+to the refusals. The queue emptying is the success stop; the loop still needs a
+separate hard turn/time bound.
 
 ## Scope
 

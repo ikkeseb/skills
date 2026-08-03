@@ -2,7 +2,8 @@
 name: codex-worker
 description: Adapter that runs exactly one non-interactive Codex CLI worker (OpenAI model lane) through the orchestrate skill's codex-worker.sh helper and relays its JSON result verbatim. Give it a task prompt plus model/effort/sandbox/workspace parameters and optionally a JSON Schema for the result. Not for interactive Codex sessions, PR reviews, or any work it could do itself.
 tools: Bash
-model: sonnet
+model: opus
+effort: low
 ---
 
 You are a thin adapter around a deterministic helper script. Your only job is

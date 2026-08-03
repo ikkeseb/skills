@@ -14,7 +14,7 @@ Each skill lives in `skills/<name>/` with a `SKILL.md` whose YAML frontmatter (`
 
 The plugin also ships subagent definitions from top-level `agents/` (auto-discovered; not governed by the manifest's `skills` list). Bump the plugin `version` whenever shipped content changes — it is the update/cache key for installs. The `version` fields in `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` are one repository-wide release version: keep them equal and bump both in the same commit.
 
-`agents/codex-worker.md` resolves its helper script through a list of candidate paths, because the plugin-root placeholder is only rewritten for plugin installs and nothing else about the deployment is fixed. After editing that list, run `sh skills/orchestrate/scripts/check-helper-resolution.sh` — it extracts the block from the agent file and resolves it from foreign cwds under simulated deployments. Run it from outside this repo at least once: a session rooted here is the one condition under which a broken candidate list still works.
+`agents/codex-worker.md` resolves its helper script through a list of candidate paths, because the plugin-root placeholder is only rewritten for plugin installs and nothing else about the deployment is fixed. After editing that list, run `MSYS=winsymlinks:nativestrict sh skills/orchestrate/scripts/check-helper-resolution.sh` from outside this repo on Windows (plain Git Bash can copy instead of linking); on macOS/Linux, run the script normally. It extracts the block from the agent file and resolves it from foreign working directories under simulated deployments.
 
 The repo is also a Codex CLI plugin: Codex reads `.claude-plugin/marketplace.json` for the marketplace, but `.codex-plugin/plugin.json` takes precedence over `.claude-plugin/plugin.json` as the plugin manifest — its narrower `skills` list is what Codex advertises to the model (the whole repo is still copied into the consumer's cache; the list filters exposure, not download).
 
@@ -43,19 +43,18 @@ These must stay in sync:
    enumeration in the Install section.
 
 `.claude-plugin/plugin.json` deliberately carries **no** `skills` key: Claude
-Code discovers every `skills/*/SKILL.md` by default, and an explicit list
-neither restricts nor is needed. Verified 2026-07-25 on Claude Code 2.1.220 by
-installing the repo three ways in an isolated `CLAUDE_CONFIG_DIR` — with the
-full 12-entry list, with no list, and with a 3-entry subset — and reading
-`claude plugin details`: all three shipped the same 12 skills. Don't reintroduce
-the key expecting it to exclude anything.
+Code discovers every `skills/*/SKILL.md`; the key neither curates nor restricts
+the shipped set. Do not reintroduce it as an allowlist.
 
-Verify manifest changes with `claude plugin validate . --strict` (it checks the
-manifests, not skill files), and YAML-parse every changed `SKILL.md`
-frontmatter; an unquoted `description:` containing ": " (colon+space) is
-invalid YAML the validator will not catch. `claude plugin details <name>` on a
-test install reports the shipped inventory and its always-on token cost — the
-honest check that a new skill actually ships.
+Run `bash scripts/check-repo.sh` for the repository-wide static and runtime
+checks. On Windows, set `MSYS=winsymlinks:nativestrict` in the parent shell
+before launching Bash. `claude plugin validate . --strict` validates the marketplace surface;
+validate `.claude-plugin/plugin.json` directly as a separate Claude manifest
+check. The repo check enforces this repository's restricted frontmatter shape
+and catches malformed plain descriptions such as an unquoted value containing
+`: `. For a release,
+`claude plugin details <name>` on an isolated test install remains the honest
+check that Claude ships the expected inventory and reports its always-on cost.
 
 The `plugin.json` `description` stays generic (don't enumerate skill names
 there). If any of these drift, users get a misleading README or a plugin that
@@ -65,11 +64,11 @@ silently misses a skill. Update all of them in the same change, and add the
 ## Conventions
 
 - Skills are written to be reached by explicit invocation (`/name` in Claude Code, the `$` picker in Codex), with no exceptions; nothing in the frontmatter enforces that, so the guard is description wording: descriptions say what the skill does and when to reach for it, never activation bait. `handoff` briefly carried a model-invokable carve-out (0.7.4–0.8.1); reverted — don't reintroduce one without a decision that says so.
-- `disable-model-invocation: true` is banned repo-wide: on current Claude Code it hides the skill from the model entirely, and since a typed `/name` is executed by the model calling the Skill tool, the skill becomes uninvocable even by explicit slash command (upstream anthropics/claude-code #26251, #38969, #43875; field-confirmed 2026-07-22). Consumer-side `skillOverrides` cannot un-hide it. Per-machine trigger tuning belongs in consumer settings, not this repo: `name-only` keeps a skill invocable with near-zero ambient context; avoid `user-invocable-only`, which re-triggers the same bug.
+- `disable-model-invocation: true` stays banned until an isolated install canary proves typed `/name` still works with it. The documented user-only behavior has disagreed with the current field result. For symlink deployments, per-machine trigger tuning belongs in consumer settings and `name-only` keeps a skill invocable with near-zero ambient context. Claude Code `skillOverrides` do not affect plugin-shipped skills, so their description wording remains the invocation guard.
 - A Codex-supported user-invoked skill carries `policy.allow_implicit_invocation: false` in its `agents/openai.yaml` — the Codex-side expression of the same convention.
 - Each meaning lives once per skill. Don't restate a rule across description, body, tables, and checklists — keep it where it governs behaviour. Prose that wouldn't change the agent's behaviour if deleted gets deleted.
 - In procedural skills where steps can fail or branch, end each step on a checkable "done when".
-- Skills are self-contained: a `SKILL.md` body never references another skill by name. Posture skills coordinate through capability-based ownership declarations instead — each states what it owns and what it defers (breadth, instrument, teardown, spend, interaction) so any combination resolves without the skills knowing about each other. Sole exception: a `description:` field may name a sibling skill purely for trigger disambiguation (e.g. drawio vs excalidraw) — such pointers degrade harmlessly when the sibling isn't installed.
-- No build, lint, or test step. Content is markdown + YAML.
+- Skills are self-contained: a `SKILL.md` body never depends on another skill's semantics. Posture skills coordinate through capability-based ownership declarations instead — each states what it owns and what it defers (breadth, instrument, teardown, spend, interaction) so any combination resolves without the skills knowing about each other. A `description:` may name a sibling solely for trigger disambiguation. A shared executable may be referenced by path when the plugin ships it and duplicating it would create runtime drift; each consumer still owns its complete behavioral contract.
+- The repository includes executable Bash and Node helpers. Run the checks required by the changed surface; `bash scripts/check-repo.sh` is the aggregate gate.
 - All repository content — every `SKILL.md`, reference file, and this `AGENTS.md` — is written in English, whatever language a session converses in. (A skill's *runtime output* follows the session; the committed artifacts stay English.)
-- Skills publish publicly via the marketplace, so keep content free of PII and sensitive detail, don't personalize instructions (no personal names), and don't hard-wire a skill's logic to a specific private repo. Illustrative example flavor is fine — the bar is "no PII / nothing sensitive," not "never name a project." De-personalize before committing.
+- Skills publish publicly via the marketplace, so keep content free of private or sensitive detail, don't personalize instructions, and don't hard-wire a skill's logic to a specific private repo. Standard public repository attribution is the only identity exception. Illustrative example flavor is fine; de-personalize before committing.

@@ -36,15 +36,28 @@ Make `## Next` executable: lead with the clearest next step, then name any prere
    - In Claude Code, use `$HOME/.claude/handoffs`.
    - In Codex, resolve the Codex home to `$CODEX_HOME` when it is set and non-empty; otherwise use `$HOME/.codex`, then use its `handoffs/` directory.
    Create the selected directory if needed.
-2. Delete only top-level regular `*.md` files in that directory whose modification time is more than 30 days old. Do not recurse, follow symlinks, or delete any other file type.
-3. Save the handoff as `YYYY-MM-DD-HHmm-<slug>.md` using local time and a short kebab-case slug derived from the goal.
-4. Never overwrite a file. If the name already exists, append `-2`, `-3`, and so on before `.md`.
-5. Ensure the saved file contains exactly the handoff Markdown and ends with a newline.
+2. Save the handoff as `YYYY-MM-DD-HHmm-<slug>.md` using local time and a short kebab-case slug derived from the goal.
+3. Never overwrite a file. If the name already exists, append `-2`, `-3`, and so on before `.md`.
+4. Ensure the saved file contains exactly the handoff Markdown and ends with a newline.
+5. Read the new file back and compare it byte-for-byte with the intended content.
+6. Only after that verification, best-effort delete top-level regular `*.md`
+   files in the same directory whose modification time is more than 30 days old.
+   Never recurse, follow symlinks, delete another file type, or delete the file
+   just written. Cleanup failure does not invalidate a verified handoff; report
+   it as a warning rather than claiming cleanup succeeded.
 
-Done when: the file exists at the chosen path with exactly the handoff content — verify by reading it back, so a partial failure anywhere in the sequence is caught before the Reply claims success.
+Done when: the file exists at the chosen path with exactly the handoff content,
+and any cleanup claim reflects what actually happened.
 
 ## Reply
 
-After a successful write, reply with `Saved to <absolute path>. Snip below for cross-context paste:` followed by a four-backtick `markdown` fence containing exactly the saved file content. Add nothing after the fence.
+After a successful write, reply with `Saved to <absolute path>. Snip below for cross-context paste:` followed by a `markdown` fence containing exactly the saved file content. Choose the fence length dynamically: find the longest contiguous run of backticks in the content and use at least one more, with four backticks as the minimum. Add nothing after the closing fence.
 
-If the write fails, do not claim it was saved. State the failure briefly and still return the paste-ready content in the same four-backtick fence.
+For cross-context continuation, recommend opening with `handover: <snippet>` when
+usage guidance is needed. Leading with the literal word `handoff` can invoke this
+skill again.
+
+If the write fails, do not claim it was saved. State the failure briefly and
+still return the paste-ready content using the same dynamic-fence rule. If only
+post-verification cleanup fails, report that warning before the saved-path
+sentence; the write itself remains successful.

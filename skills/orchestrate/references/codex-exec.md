@@ -27,7 +27,14 @@ Run once per session before the first Codex-lane stage:
 "$HELPER" probe                      # auth + flag contract, no model call
 ```
 
-Returns `{ok, codex_version, authenticated, contract_ok, missing_flags}`.
+The helper requires Bash and `jq`; write-capable runs additionally require Git
+and either `shasum` or `sha256sum`. `probe` checks the hash dependency without
+making a model call and returns `{ok, codex_version, authenticated,
+contract_ok, missing_flags, dependencies, write_ready}`. A missing `jq`
+returns `missing_dependency` immediately. `write_ready: false` leaves the
+read-only lane available but means workspace-write calls will fail closed with
+`missing_dependency`.
+
 Missing Codex, `authenticated: false`, or an empty `codex_version` means the
 lane is down: route everything to the Claude lane and say so in the response —
 never degrade silently. `contract_ok: false` alone is not an outage: name the
@@ -49,15 +56,13 @@ recipe ritual to perform.
 
 ```bash
 "$HELPER" run \
-  [--model gpt-5.6-terra]              # omit to take the CLI's built-in
-                                       #   default — note runs pass
-                                       #   --ignore-user-config, so this is
-                                       #   NOT your config.toml model. Omit
-                                       #   when "current provider default" is
-                                       #   what you want; name one when the
-                                       #   tier or reproducibility matters
-                                       #   (the envelope records model:"" for
-                                       #   unpinned runs)
+  --model gpt-5.6-terra                 # REQUIRED. Use literal `default` to
+                                       #   select the CLI's built-in model;
+                                       #   runs pass --ignore-user-config, so
+                                       #   this is NOT config.toml. Name a
+                                       #   model when tier or reproducibility
+                                       #   matters. The envelope records the
+                                       #   explicit model or `default`.
   --prompt-file "$DIR/prompt.md" \
   [--effort high]                      # default high; server rejects values a
                                        #   model doesn't support (clear api_error)
@@ -185,7 +190,10 @@ with a matching Workflow `schema` so the orchestrator gets typed data. But
 treat the run-dir as ground truth even on success: adapters have been
 observed wrapping the JSON in code fences or prose despite the verbatim
 instruction, so when anything about the relayed text is off, parse
-`RUN_DIR/final.json` instead of fighting the relay.
+`RUN_DIR/result.json` and gate on its `ok` verdict instead of fighting the
+relay. Only if that envelope is absent, the helper process is confirmed dead,
+and `events.jsonl` proves `turn.completed` may `final.json` be recovered as a
+degraded payload under the procedure below.
 
 ## Delivery ownership and lost-adapter recovery
 
@@ -241,12 +249,12 @@ shape itself. Fields: `result` (the parsed final message — the payload),
 **The mirror has two holes, and background dispatch must cover them.** The run
 dir is only known to the helper once it exists and passes its gates, so
 failures *before* that point — `usage` (bad flags, unreadable prompt or schema,
-strict-mode lint rejection, non-empty run dir) and `codex_missing` — emit their
-envelope on **stdout only**, with no `run_dir` field and no `result.json`. The
-`interrupted` class (the runner took a termination signal) is likewise
-stdout-only. So a background dispatch always redirects stdout to a file and
-reads it when `result.json` is absent; a missing `result.json` alone does not
-mean the run died.
+strict-mode lint rejection, non-empty run dir), `codex_missing`, and
+`missing_dependency` — emit their envelope on **stdout only**, with no
+`run_dir` field and no `result.json`. The `interrupted` class (the runner took
+a termination signal) is likewise stdout-only. So a background dispatch
+always redirects stdout to a file and reads it when `result.json` is absent; a
+missing `result.json` alone does not mean the run died.
 
 Failure classes and what to do. This is the single retry/fallback policy —
 the adapter agent is strictly one-shot, and every decision below belongs to
