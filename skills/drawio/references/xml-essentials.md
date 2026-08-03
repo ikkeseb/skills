@@ -73,6 +73,9 @@ An edge references existing source and target node IDs and has relative geometry
 - Give every `mxCell` a unique ID within its page.
 - Ensure every `parent`, `source`, and `target` reference resolves within the same page.
 - Do not self-close a vertex or edge cell: its `mxGeometry` child is required.
+- draw.io rewrites a cell that carries custom properties into an `<object>` (or `<UserObject>`)
+  wrapper holding the id plus a single `<mxCell>` child. The validator accepts that shape on
+  re-validation, and the wrapper's id is the one that must be unique and resolvable.
 
 Run the bundled validator after writing:
 

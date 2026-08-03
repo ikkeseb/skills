@@ -9,7 +9,8 @@ carries the detail.
 - **Orchestration is smaller and its Codex lane is harder to misuse.** The
   first-load orchestration instructions are substantially shorter without
   changing the model map. The worker now requires an explicit model or
-  `default` sentinel, bypasses shell wrappers, reports every write dependency,
+  `default` sentinel, bypasses shell wrappers for `codex`, `git`, and `jq` alike,
+  reports every write dependency,
   and makes `result.json` the sole authoritative terminal envelope. A
   provider-free black-box suite covers its Claude-facing invocation flags,
   result envelopes, provider failure and write gates. The Claude transport adapter now
@@ -24,9 +25,13 @@ carries the detail.
 - **Artifact skills gain deterministic and visual gates with less context.**
   `pretty-pdf` moves executable CSS to an asset, loads one document template,
   and requires page rendering plus inspection. `drawio` gains an offline XML
-  reference and validator and asks before external web inspection.
+  reference and validator — accepting the `<object>`/`<UserObject>` wrappers
+  draw.io itself writes — and asks before external web inspection.
   `excalidraw` makes its palette machine-readable and tests theme defaults,
   section-edge rejection, browser discovery and render failure behavior.
+  Upgrade note: scenes built by earlier versions with an arrow bound to a
+  section now fail `validate`/`check` — rebind the arrow to a node; the files
+  themselves still open fine in Excalidraw.
 - **Repository validation matches the repository.** A single check covers
   skill/manifest inventories, explicit Codex invocation metadata, Bash syntax,
   runner and diagram tests, helper resolution, Claude marketplace and plugin

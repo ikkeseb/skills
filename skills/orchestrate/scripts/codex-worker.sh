@@ -62,6 +62,7 @@ ensure_slot_root() {
 
 SLOT_DIR="" WS_LOCK="" CODEX_PID="" VERIFY_TMP=""
 CODEX_BIN="" WORKSPACE_HASH_BIN="" WORKSPACE_HASH_KIND=""
+JQ_BIN="" GIT_BIN=""
 # Script-scope, not `local`: the EXIT trap fires after the function returns, so
 # a function-local would be unbound there and `set -u` would abort the run.
 verify_cleanup() { [ -z "${VERIFY_TMP:-}" ] || rm -rf "$VERIFY_TMP"; }
@@ -73,7 +74,7 @@ LOCK_TOKEN="$$-$RANDOM-$RANDOM"
 FAIL_RUN_DIR=""  # set once the run dir exists; lets every later failure mirror there
 fail_json() { # fail_json <error_class> <message> [run_dir]
   local rd="${3:-$FAIL_RUN_DIR}" out
-  out="$(jq -n --arg class "$1" --arg msg "$2" --arg run_dir "$rd" \
+  out="$("$JQ_BIN" -n --arg class "$1" --arg msg "$2" --arg run_dir "$rd" \
     '{ok: false, error_class: $class, error: $msg}
      + (if $run_dir == "" then {} else {run_dir: $run_dir} end)')"
   # Mirror the verdict into the run dir (atomically) so a harvest that never
@@ -86,8 +87,12 @@ fail_json() { # fail_json <error_class> <message> [run_dir]
   exit 0
 }
 
+# Every command resolves jq here first, so fail_json below always has a binary.
+# Same direct-executable contract as resolve_codex: `command -v` would happily
+# return a same-name shell function exported from the parent environment.
 require_jq() {
-  command -v jq >/dev/null 2>&1 || {
+  JQ_BIN="$(type -P jq || true)"
+  [ -n "$JQ_BIN" ] || {
     printf '{"ok":false,"error_class":"missing_dependency","error":"jq is required"}\n'
     exit 0
   }
@@ -110,6 +115,15 @@ resolve_codex() {
   # PATH search and therefore preserves the direct-executable contract.
   CODEX_BIN="$(type -P codex || true)"
   [ -n "$CODEX_BIN" ] || fail_json codex_missing "codex binary not found on PATH"
+}
+
+# Same reason as resolve_codex, with teeth: every write gate below is a git
+# question, so an exported `git` shell function that lies about the tree would
+# turn the whole gate into a formality. Returns non-zero when git is absent —
+# read-only runs in a non-repo tolerate that, workspace-write does not.
+resolve_git() {
+  GIT_BIN="$(type -P git || true)"
+  [ -n "$GIT_BIN" ]
 }
 
 resolve_workspace_hash() {
@@ -229,7 +243,7 @@ on_signal() {
   kill_worker_group
   release_locks
   trap - EXIT
-  jq -n '{ok: false, error_class: "interrupted", error: "runner received a termination signal"}'
+  "$JQ_BIN" -n '{ok: false, error_class: "interrupted", error: "runner received a termination signal"}'
   exit 1
 }
 
@@ -286,7 +300,7 @@ acquire_workspace_lock() { # exclusive per-repository lock for writing workers
   # Key on the git worktree ROOT, not the caller-supplied path — otherwise
   # /repo and /repo/subdir would get different locks for the same tree.
   local ws_root
-  ws_root="$(git -C "$1" rev-parse --show-toplevel 2>/dev/null || true)"
+  ws_root="$("$GIT_BIN" -C "$1" rev-parse --show-toplevel 2>/dev/null || true)"
   [ -n "$ws_root" ] || fail_json git_error "cannot resolve worktree root for $1"
   local key lock tries=0
   resolve_workspace_hash || fail_json missing_dependency \
@@ -322,7 +336,7 @@ cmd_probe() {
     # verify it — report the mode and trust the key's presence.
     authenticated=true auth_mode=api_key
   fi
-  if type -P git >/dev/null 2>&1; then git_ready=true; fi
+  if resolve_git; then git_ready=true; fi
   if resolve_workspace_hash; then
     hash_command="$WORKSPACE_HASH_KIND"
     hash_ready=true
@@ -330,7 +344,7 @@ cmd_probe() {
   if [ "$git_ready" = true ] && [ "$hash_ready" = true ]; then write_ready=true; fi
   local missing
   missing="$(missing_contract_flags all)"
-  jq -n --arg v "$version" --arg missing "$missing" \
+  "$JQ_BIN" -n --arg v "$version" --arg missing "$missing" \
     --arg auth_mode "$auth_mode" --argjson auth "$authenticated" \
     --arg hash_command "$hash_command" --argjson git_ready "$git_ready" \
     --argjson hash_ready "$hash_ready" --argjson write_ready "$write_ready" \
@@ -360,7 +374,7 @@ cmd_verify() {
   # Nothing to learn from a billed run when the invocation is already known
   # broken — report the contract failure and stop.
   if [ -n "$missing" ]; then
-    jq -n --arg v "$(codex_version)" --arg missing "$missing" \
+    "$JQ_BIN" -n --arg v "$(codex_version)" --arg missing "$missing" \
       '{ok: false, codex_version: $v, contract_ok: false,
         missing_flags: ($missing | split(" ")),
         envelope_ok: false, schema_honoured: false,
@@ -385,7 +399,7 @@ cmd_verify() {
   # One jq pass over the raw stdout: a non-JSON, empty, or multi-document relay
   # degrades to false instead of failing an --argjson under `set -e`, so verify
   # keeps its promise of exactly one JSON object on stdout.
-  verdict="$(printf '%s' "$out" | jq -sR '
+  verdict="$(printf '%s' "$out" | "$JQ_BIN" -sR '
       (try (fromjson? // {}) catch {}) as $_ |
       (. | try fromjson catch {}) as $e |
       {envelope_ok: ($e.ok == true),
@@ -395,7 +409,7 @@ cmd_verify() {
        error: ($e.error // "")}' 2>/dev/null \
     || printf '%s' '{"envelope_ok":false,"schema_honoured":false,"error":"unparseable runner output"}')"
 
-  jq -n --arg v "$(codex_version)" --argjson d "$verdict" \
+  "$JQ_BIN" -n --arg v "$(codex_version)" --argjson d "$verdict" \
     '{ok: ($d.envelope_ok and $d.schema_honoured),
       codex_version: $v, contract_ok: true, missing_flags: [],
       envelope_ok: $d.envelope_ok, schema_honoured: $d.schema_honoured}
@@ -445,7 +459,7 @@ cmd_run() {
   # not resolved — those pass the lint and rely on the server check.
   if [ -n "$schema_file" ]; then
     local schema_lint
-    schema_lint="$(jq -r '
+    schema_lint="$("$JQ_BIN" -r '
       def walk_s($p):
         if type != "object" then empty
         else
@@ -498,15 +512,19 @@ cmd_run() {
   if [ "$sandbox" = "workspace-write" ] && [ -z "$expected_sha" ]; then
     fail_json usage "--expected-base-sha is required for workspace-write"
   fi
+  # Resolved for every run — the repo probe below needs it — but only
+  # workspace-write treats an absent git as fatal.
+  resolve_git || true
   if [ "$sandbox" = "workspace-write" ]; then
-    type -P git >/dev/null 2>&1 \
+    [ -n "$GIT_BIN" ] \
       || fail_json missing_dependency "workspace-write requires git on PATH"
     resolve_workspace_hash \
       || fail_json missing_dependency "workspace-write requires shasum or sha256sum on PATH"
   fi
 
   local in_git=false
-  if git -C "$workspace" rev-parse --git-dir >/dev/null 2>&1; then in_git=true; fi
+  if [ -n "$GIT_BIN" ] \
+     && "$GIT_BIN" -C "$workspace" rev-parse --git-dir >/dev/null 2>&1; then in_git=true; fi
   if [ "$in_git" = false ]; then
     [ "$sandbox" = "read-only" ] || fail_json usage \
       "workspace-write requires a git workspace (worktree per writing worker)"
@@ -561,7 +579,7 @@ cmd_run() {
   # pre-queue state would let the tree move underneath a queued writer.
   local base_sha="" dirty_before=false
   if [ "$in_git" = true ]; then
-    base_sha="$(git -C "$workspace" rev-parse HEAD 2>/dev/null || true)"
+    base_sha="$("$GIT_BIN" -C "$workspace" rev-parse HEAD 2>/dev/null || true)"
     [ -n "$base_sha" ] || fail_json git_error "cannot resolve HEAD in $workspace" "$run_dir"
     if [ -n "$expected_sha" ] && [ "$base_sha" != "$expected_sha" ]; then
       fail_json base_sha_mismatch \
@@ -590,7 +608,7 @@ cmd_run() {
     local st_out="$run_dir/tmp/git-status.out"
     local st_err="$run_dir/tmp/git-preflight.err"
     local st_rc=0
-    git --no-optional-locks -C "$workspace" \
+    "$GIT_BIN" --no-optional-locks -C "$workspace" \
       -c core.untrackedCache=false -c core.fsmonitor=false \
       status --porcelain=v1 \
       --untracked-files=normal --ignore-submodules=none \
@@ -616,7 +634,7 @@ cmd_run() {
       # which is only checked after synchronous git calls return (reproduced
       # 2026-08-03: --timeout 2 stuck at 4 s; 0.01 s with the override).
       local flags ls_rc=0
-      flags="$(git --no-optional-locks -C "$workspace" \
+      flags="$("$GIT_BIN" --no-optional-locks -C "$workspace" \
         -c core.untrackedCache=false -c core.fsmonitor=false \
         ls-files --cached -v 2>>"$st_err")" \
         || ls_rc=$?
@@ -634,7 +652,7 @@ cmd_run() {
       local gitstate state_path
       for gitstate in MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD BISECT_LOG \
                       rebase-merge rebase-apply sequencer; do
-        state_path="$(git -C "$workspace" rev-parse --path-format=absolute \
+        state_path="$("$GIT_BIN" -C "$workspace" rev-parse --path-format=absolute \
           --git-path "$gitstate" 2>/dev/null)" || continue
         if [ -e "$state_path" ]; then
           fail_json unsafe_git_state \
@@ -709,13 +727,13 @@ cmd_run() {
   # malformed line must never prevent the runner from emitting its verdict.
   local turn_completed=false
   if [ -s "$run_dir/events.jsonl" ] \
-     && jq -Rrse '[split("\n")[] | fromjson? | .type] | index("turn.completed") != null' \
+     && "$JQ_BIN" -Rrse '[split("\n")[] | fromjson? | .type] | index("turn.completed") != null' \
           "$run_dir/events.jsonl" >/dev/null 2>&1; then
     turn_completed=true
   fi
   local api_error=""
   if [ -s "$run_dir/events.jsonl" ]; then
-    api_error="$(jq -Rrs \
+    api_error="$("$JQ_BIN" -Rrs \
       '[split("\n")[] | fromjson? | select(.type == "error") | .message][0] // "" | .[0:2000]' \
       "$run_dir/events.jsonl" 2>/dev/null || true)"
   fi
@@ -726,7 +744,7 @@ cmd_run() {
   local result_ok=false
   if [ -n "$schema_file" ]; then
     if [ -s "$run_dir/final.json" ] \
-       && jq -es 'length == 1' "$run_dir/final.json" >/dev/null 2>&1; then
+       && "$JQ_BIN" -es 'length == 1' "$run_dir/final.json" >/dev/null 2>&1; then
       result_ok=true
     fi
   elif [ -s "$run_dir/final.json" ]; then
@@ -754,17 +772,17 @@ cmd_run() {
   # Windows jq cannot open MSYS /proc/<pid>/fd paths, which made the final
   # emission — the delivery step itself — crash after a successful run.
   if [ -n "$schema_file" ]; then
-    jq -c . "$run_dir/final.json" > "$run_dir/result.norm.json" 2>/dev/null \
+    "$JQ_BIN" -c . "$run_dir/final.json" > "$run_dir/result.norm.json" 2>/dev/null \
       || printf 'null\n' > "$run_dir/result.norm.json"
   else
-    jq -Rs . "$run_dir/final.json" > "$run_dir/result.norm.json" 2>/dev/null \
+    "$JQ_BIN" -Rs . "$run_dir/final.json" > "$run_dir/result.norm.json" 2>/dev/null \
       || printf 'null\n' > "$run_dir/result.norm.json"
   fi
   # The full envelope (verdict included) is written atomically into the run
   # dir before it is printed: a harvester that never sees stdout reads
   # result.json and gets the same authoritative ok/error_class verdict, not
   # just the model payload in final.json.
-  jq -n \
+  "$JQ_BIN" -n \
     --argjson ok "$ok" \
     --arg error_class "$error_class" --arg error "$error" \
     --arg model "$model" --arg effort "$effort" --arg sandbox "$sandbox" \

@@ -21,7 +21,7 @@ node scripts/check-repo.mjs
 
 while IFS= read -r -d '' script; do
   bash -n "$script"
-done < <(find skills/orchestrate/scripts -type f -name '*.sh' -print0)
+done < <(git ls-files -z '*.sh')
 
 bash skills/orchestrate/scripts/test-codex-worker.sh
 node skills/drawio/scripts/test-validate-drawio.mjs
@@ -32,5 +32,9 @@ bash skills/orchestrate/scripts/check-helper-resolution.sh
 claude plugin validate . --strict
 claude plugin validate .claude-plugin/plugin.json
 git diff --check
+git diff --check "$(git hash-object -t tree /dev/null)"
 
-printf 'PASS: repository checks completed\n'
+printf 'PASS: static and provider-free checks completed\n'
+printf 'NOT covered: real provider runs, pretty-pdf rendering, native diagram\n'
+printf 'rendering, agents/*.md frontmatter, and plugin install inventory\n'
+printf '(run an isolated "claude plugin details" check for releases).\n'

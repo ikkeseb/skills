@@ -52,11 +52,22 @@ assert.doesNotMatch(
 );
 const workspace = mkdtempSync(join(tmpdir(), "excalidraw-skill-test-"));
 
+// Windows environment keys are case-insensitive (PROGRAMFILES vs ProgramFiles);
+// a plain spread would add a second key and let the real value win in the child.
+function childEnv(overrides) {
+  const masked = new Set(Object.keys(overrides).map((key) => key.toLowerCase()));
+  const env = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (!masked.has(key.toLowerCase())) env[key] = value;
+  }
+  return { ...env, ...overrides };
+}
+
 function run(args, expectedStatus = 0, options = {}) {
   const result = spawnSync(process.execPath, [cli, ...args], {
     cwd: tmpdir(),
     encoding: "utf8",
-    env: { ...process.env, ...options.env },
+    env: options.env ? childEnv(options.env) : { ...process.env },
   });
   assert.equal(
     result.status,
@@ -110,12 +121,27 @@ try {
       ProgramFiles: join(workspace, "program-files"),
       "ProgramFiles(x86)": join(workspace, "program-files-x86"),
       PATH: workspace,
+      EXCALIDRAW_BROWSER_PATH: "",
     },
   });
   assert.match(checkOutput, /LAYOUT PREVIEW SVG/);
-  assert.match(checkOutput, /Layout PNG unavailable/);
+  // Windows re-injects ProgramFiles into child environments, so a real installed
+  // browser may be discovered despite the overrides above. Both branches are valid
+  // here; the no-browser branch is covered deterministically via findBrowser below.
+  assert.match(checkOutput, /LAYOUT PREVIEW PNG|Layout PNG unavailable/);
   assert.match(checkOutput, /NATIVE VISUALLY UNVERIFIED/);
   assert.match(readFileSync(join(workspace, "scene.layout.svg"), "utf8"), /<svg/);
+
+  assert.equal(
+    findBrowser({ fileExists: () => false, locate: () => null }),
+    null,
+    "no candidate on disk and none locatable must resolve to no browser",
+  );
+  const failedPng = pngFromSvg(svg, join(workspace, "missing.png"), { width: 10, height: 10 }, {
+    browser: "fake-browser",
+    spawn: () => ({ status: 1, stdout: "", stderr: "boom" }),
+  });
+  assert.deepEqual(failedPng, { ok: false, reason: "boom" });
 
   const syntheticPng = join(workspace, "synthetic.png");
   let browserInvocation;

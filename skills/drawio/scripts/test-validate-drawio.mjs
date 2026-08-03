@@ -23,7 +23,30 @@ const cells = `
     </mxCell>
   </root>`;
 
+const objectCells = `
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <object id="n1" label="X" myprop="1">
+      <mxCell style="rounded=1" vertex="1" parent="1">
+        <mxGeometry x="0" y="0" width="120" height="60" as="geometry"/>
+      </mxCell>
+    </object>
+    <object id="n2" label="Y">
+      <mxCell style="rounded=1" vertex="1" parent="1">
+        <mxGeometry x="200" y="0" width="120" height="60" as="geometry"/>
+      </mxCell>
+    </object>
+    <object id="n1-to-n2" label="calls" myprop="2">
+      <mxCell style="" edge="1" parent="1" source="n1" target="n2">
+        <mxGeometry relative="1" as="geometry"/>
+      </mxCell>
+    </object>
+  </root>`;
+
 const raw = `<mxGraphModel>${cells}</mxGraphModel>`;
+const objectWrapped = `<mxGraphModel>${objectCells}</mxGraphModel>`;
+const userObjectWrapped = objectWrapped.replace(/<object /g, "<UserObject ").replace(/<\/object>/g, "</UserObject>");
 const wrapped = `<?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="app.diagrams.net" compressed="false">
   <diagram id="page-1" name="Page-1"><mxGraphModel>${cells}</mxGraphModel></diagram>
@@ -41,6 +64,12 @@ assert.deepEqual(validateDocument(raw), { pages: 1, cells: 5 });
 assert.deepEqual(validateDocument(wrapped), { pages: 1, cells: 5 });
 assert.deepEqual(validateDocument(multiPage), { pages: 2, cells: 10 });
 assert.deepEqual(validateDocument(withWaypoint), { pages: 1, cells: 5 });
+assert.deepEqual(validateDocument(objectWrapped), { pages: 1, cells: 5 });
+assert.deepEqual(validateDocument(userObjectWrapped), { pages: 1, cells: 5 });
+assert.deepEqual(
+  validateDocument(wrapped.replace(`<mxGraphModel>${cells}</mxGraphModel>`, objectWrapped)),
+  { pages: 1, cells: 5 },
+);
 
 const invalidCases = [
   ["comment", raw.replace("<root>", "<!-- hidden --><root>"), /comments are not allowed/],
@@ -48,7 +77,11 @@ const invalidCases = [
   ["unknown target", raw.replace('target="b"', 'target="missing"'), /unknown target/],
   ["edge geometry", raw.replace('relative="1" x="-0.25"', 'x="-0.25"'), /relative=1/],
   ["missing layer", raw.replace('<mxCell id="1" parent="0"/>', ""), /missing default layer/],
-  ["unvalidated wrapper", raw.replace("<root>", '<root><object id="ignored"/>'), /unsupported child <object>/],
+  ["unknown root child", raw.replace("<root>", "<root><mxSomething/>"), /unsupported child <mxSomething>/],
+  ["wrapper without mxCell", raw.replace("<root>", '<root><object id="ignored"/>'), /<object> needs exactly one mxCell child/],
+  ["wrapper duplicate id", objectWrapped.replace('id="n2"', 'id="n1"'), /duplicate mxCell id n1/],
+  ["wrapper without id", objectWrapped.replace('id="n1" label="X"', 'label="X"'), /every <object> needs an id/],
+  ["wrapper unknown target", objectWrapped.replace('target="n2"', 'target="missing"'), /unknown target/],
   ["bad entity", raw.replace("A &amp; B", "A & B"), /invalid & entity/],
   ["bad geometry", raw.replace('width="120"', 'width="0"'), /must be positive/],
   ["missing geometry role", raw.replace('as="geometry"', 'as="other"'), /needs as=geometry/],
@@ -81,4 +114,4 @@ try {
   await rm(tempRoot, { recursive: true, force: true });
 }
 
-console.log(`PASS: ${6 + invalidCases.length} draw.io validator cases`);
+console.log(`PASS: ${9 + invalidCases.length} draw.io validator cases`);

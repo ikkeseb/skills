@@ -6,10 +6,27 @@ stylesheet after it.
 
 ## Contents
 
+- [Component classes](#component-classes)
 - [Font pairings](#font-pairings)
 - [Palettes](#palettes)
 - [Optional running section header](#optional-running-section-header)
 - [Technical notes](#technical-notes)
+
+## Component classes
+
+The complete class vocabulary the base stylesheet ships. Use these in the HTML; the templates
+show only a subset.
+
+- **Headers** (pick one): `.header-typeset`, `.header-minimal`, `.header-side-rule`,
+  `.header-centered`, `.header-large-numeral`, `.header-bar`; `.subtitle` inside any of them.
+- **Body scale / edges** (on `<body>`): `.scale-compact`, `.scale-generous`,
+  `.edges-hairline`, `.edges-chunky`.
+- **Layout**: `.two-col`, `.kv-grid` (key–value grid), `.page-break`, `.no-break`.
+- **Callouts**: `.callout`, `.callout-warn`, `.callout-ok`.
+- **Text**: `.lede`, `.meta`, `.muted`, `.smallcaps`, `.uppercase`, `.small`,
+  `.text-center`, `.text-right`.
+- **Blocks**: `pre.code-block` (paged code, see gotchas §1), `table.table-bold`
+  (accent-filled header row), `img.img-rounded`, `.signature`.
 
 ## Font pairings
 

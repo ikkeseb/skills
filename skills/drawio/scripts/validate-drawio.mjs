@@ -149,17 +149,34 @@ function validateGeometry(geometry, label) {
   }
 }
 
+// draw.io wraps a cell in <object>/<UserObject> when it carries custom properties;
+// the wrapper owns the id and holds exactly one <mxCell> child.
+const CELL_WRAPPERS = ["object", "UserObject"];
+
+function collectCells(rootNode, label) {
+  const entries = [];
+  for (const child of rootNode.children) {
+    if (child.name === "mxCell") {
+      entries.push({ id: child.attrs.id, cell: child, owner: "mxCell" });
+    } else if (CELL_WRAPPERS.includes(child.name)) {
+      const inner = directChildren(child, "mxCell");
+      if (inner.length !== 1) fail(`${label}: root: <${child.name}> needs exactly one mxCell child`);
+      entries.push({ id: child.attrs.id, cell: inner[0], owner: child.name });
+    } else {
+      fail(`${label}: root: unsupported child <${child.name}>`);
+    }
+  }
+  return entries;
+}
+
 function validateModel(model, label) {
   requireOnlyChildren(model, ["root"], `${label}: mxGraphModel`);
   const roots = directChildren(model, "root");
   if (roots.length !== 1) fail(`${label}: mxGraphModel must contain exactly one root`);
-  requireOnlyChildren(roots[0], ["mxCell"], `${label}: root`);
-  const cells = directChildren(roots[0], "mxCell");
   const byId = new Map();
 
-  for (const cell of cells) {
-    const id = cell.attrs.id;
-    if (!id) fail(`${label}: every mxCell needs an id`);
+  for (const { id, cell, owner } of collectCells(roots[0], label)) {
+    if (!id) fail(`${label}: every ${owner === "mxCell" ? "mxCell" : `<${owner}>`} needs an id`);
     if (byId.has(id)) fail(`${label}: duplicate mxCell id ${id}`);
     byId.set(id, cell);
   }
@@ -200,13 +217,14 @@ function validateModel(model, label) {
       validateGeometry(geometry[0], `${label}: edge ${id}`);
     }
   }
+
+  return byId.size;
 }
 
 export function validateDocument(xml) {
   const root = parseXml(xml.replace(/^\uFEFF/, ""));
   if (root.name === "mxGraphModel") {
-    validateModel(root, "page 1");
-    return { pages: 1, cells: directChildren(directChildren(root, "root")[0], "mxCell").length };
+    return { pages: 1, cells: validateModel(root, "page 1") };
   }
 
   if (root.name !== "mxfile") fail("root element must be mxfile or mxGraphModel");
@@ -226,8 +244,7 @@ export function validateDocument(xml) {
     requireOnlyChildren(page, ["mxGraphModel"], `page ${index + 1}: diagram`);
     const models = directChildren(page, "mxGraphModel");
     if (models.length !== 1) fail(`page ${index + 1}: diagram must contain exactly one mxGraphModel`);
-    validateModel(models[0], `page ${index + 1}`);
-    cells += directChildren(directChildren(models[0], "root")[0], "mxCell").length;
+    cells += validateModel(models[0], `page ${index + 1}`);
   });
   return { pages: pages.length, cells };
 }

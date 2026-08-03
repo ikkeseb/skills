@@ -188,5 +188,35 @@ assert_same "$tmp/dirty.json" "$run_dir/result.json" \
   'write-gate refusal is recoverable from result.json'
 if [ "$(exec_count)" = "$before" ]; then ok 'write gate never invokes Codex'; else fail 'write gate never invokes Codex'; fi
 
+# Same threat as the codex wrapper above, aimed at the gates themselves: an
+# exported `git` that reports success with no output makes any tree look clean,
+# and an exported `jq` would shape the envelope. Both must be bypassed by the
+# PATH binaries. The functions are exported inside a subshell so this suite's
+# own jq/git assertions keep using the real ones.
+hostile_run() { # stdout-file stderr-file args...
+  local stdout_file="$1" stderr_file="$2"; shift 2
+  (
+    git() { printf '%s\n' HOSTILE-GIT >> "$HOME/hostile-calls"; return 0; }
+    jq()  { printf '%s\n' HOSTILE-JQ >> "$HOME/hostile-calls"; return 0; }
+    export -f git jq
+    HOME="$fake_home" PATH="$test_path" TMPDIR="$tmp" \
+      CODEX_WORKER_MAX_SLOTS=1 CODEX_WORKER_SLOT_WAIT=1 \
+      bash "$helper" "$@"
+  ) > "$stdout_file" 2> "$stderr_file"
+}
+
+before="$(exec_count)"
+run_dir="$tmp/run-hostile"
+hostile_run "$tmp/hostile.json" "$tmp/hostile.err" run \
+  --model default --effort low --sandbox workspace-write --workspace "$repo" \
+  --expected-base-sha "$sha" --prompt-file "$prompt" --run-dir "$run_dir" --timeout 30
+assert_json "$tmp/hostile.json" '.ok == false and .error_class == "dirty_worktree"' \
+  'imported git shell function cannot talk the write gate past a dirty tree'
+if [ ! -e "$fake_home/hostile-calls" ] && [ "$(exec_count)" = "$before" ]; then
+  ok 'imported git and jq shell functions are never invoked'
+else
+  fail 'imported git and jq shell functions are never invoked'
+fi
+
 printf '\n%s checks, %s failures\n' "$((checks + fails))" "$fails"
 exit "$fails"

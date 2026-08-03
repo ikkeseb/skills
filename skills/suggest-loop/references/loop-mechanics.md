@@ -2,7 +2,8 @@
 
 > **Verified 2026-08-03** against the current
 > [Claude Code scheduled-task documentation](https://code.claude.com/docs/en/scheduled-tasks).
-> The docs win if this reference drifts.
+> The docs win if this reference drifts — re-verify against them and bump this
+> datestamp when you do.
 
 Read this before emitting a suggestion. `/loop` is a Claude Code bundled skill
 for recurring prompts inside the current conversation.

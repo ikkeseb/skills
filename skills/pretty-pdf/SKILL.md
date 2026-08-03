@@ -27,6 +27,8 @@ from weasyprint.text.fonts import FontConfiguration
 skill_dir = Path("/absolute/path/to/pretty-pdf")
 source_dir = Path("/absolute/path/to/document-assets")
 output_path = Path("/absolute/path/to/output.pdf")
+html_content = "..."  # the semantic HTML document
+override_css = "..."  # document-specific overrides, or "" for none
 
 font_config = FontConfiguration()
 stylesheets = [
@@ -35,13 +37,14 @@ stylesheets = [
 if override_css:
     stylesheets.append(CSS(
         string=override_css,
-        base_url=source_dir,
+        # CSS() requires a string base_url; it does not coerce Path like HTML() does.
+        base_url=str(source_dir),
         font_config=font_config,
     ))
 
 document = HTML(
     string=html_content,
-    base_url=source_dir,
+    base_url=str(source_dir),
 ).render(
     stylesheets=stylesheets,
     font_config=font_config,

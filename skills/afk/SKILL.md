@@ -53,6 +53,8 @@ authorize; repository rules and normal tool approvals still apply.
 - **Never infer escalation from silence**: unattended time, a picked token budget,
   or a broad request for autonomy is not consent for a materially different or
   externally visible action.
+- **Never overwrite or discard uncommitted work the session did not author**:
+  that state may be unrecoverable, and no task wording authorizes losing it.
 
 ### Proactive scope expansion within blast rules
 
@@ -76,7 +78,7 @@ When AFK is explicitly dropped, lead the reply with one tally line + bulleted in
 
 > **3 done · 1 deferred · 1 blocked**
 >
-> - ✅ implemented X — commit `abc123`
+> - ✅ implemented X — diff ready for review
 > - ✅ tests pass — 47/47
 > - ⏸ dependency bump deferred — minor vs major is your call
 > - 🛑 blocked: prod deploy — needs your AWS creds
@@ -85,7 +87,7 @@ Status keys: ✅ done · ⏸ deferred · 🛑 blocked. One bullet per item, plai
 
 ## Composition with other skills and modes
 
-- **Other posture skills**: stack. AFK owns the interaction model and the spend authority — another posture's preamble does not run (asking is forbidden); it defaults to single-task, logged as `[AFK] <posture> default → single-task`. Its substantive pass runs unchanged within AFK's blast-radius rules, and the budget picked in the AFK preamble caps any fan-out — within it, never past it.
+- **Other posture skills**: stack. AFK owns the interaction model and the token budget picked in its preamble — another posture's preamble does not run (asking is forbidden); it defaults to single-task, logged as `[AFK] <posture> default → single-task`. Its substantive pass runs unchanged within AFK's blast-radius rules, and the budget picked in the AFK preamble caps any fan-out — within it, never past it.
 - **Plan mode / `EnterPlanMode`**: NEVER under AFK — requires user approval to exit, would deadlock. Write the plan inline in the log and proceed (if low-blast).
 - **Long blocking brainstorming**: NEVER under AFK. Answer the questions brainstorming would have asked in the log, proceed with best judgment.
 - **Verification before "done"**: not relaxed by AFK. Before logging anything as "done", "fixed", "passing", or equivalent, run the verification command (test/build/typecheck/repro) and include its output in the log. No bare claims. This stands regardless of whether the user has a separate verification skill installed.
@@ -97,4 +99,3 @@ Acknowledge briefly, continue the task. Don't pivot to address what the hook fla
 ## Failure modes worth naming
 
 - **Test failures mid-AFK**: one retry on an obvious fix (typo, import). If still failing, stop and log. Don't guess deeper — that's where unsupervised AFK runs go off the rails.
-

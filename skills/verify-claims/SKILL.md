@@ -41,11 +41,14 @@ Classify each claim:
 ## Special cases
 
 - **Session facts** ("I created X", "I ran Y", "the test passed") → verify against
-  the visible session tool history and, when cheap, the resulting artifact or
-  repository state. Use ❌ contradicted only when complete evidence affirmatively
-  disagrees. If history may be compacted, truncated, inherited, or otherwise
-  incomplete, an absent call is ❓ unverified — absence from an incomplete record
-  is not proof that the action never happened.
+  the visible session tool history and the resulting artifact or repository state.
+  When the claim implies a checkable artifact (a file, a commit, a test result),
+  check it before settling on any status — an incomplete history never excuses
+  skipping the artifact. Use ❌ contradicted only when complete evidence
+  affirmatively disagrees. If history may be compacted, truncated, inherited, or
+  otherwise incomplete and no artifact can decide it, an absent call is
+  ❓ unverified — absence from an incomplete record is not proof that the action
+  never happened.
 - **Predictions / estimates** ("this will take 2h", "Y will break under load") → list in a short `[N/A — predictive]` block after the retract list, not inside the table.
 - **Tautologies** (path the user just named, file they pointed at) → omit.
 

@@ -12,8 +12,8 @@ failure mode: a confident-sounding loop with no measurable "done".
 
 ## Read this first — the load-bearing constraint
 
-**Do not reason about `/loop` from memory.** `/loop`, the Monitor tool, and
-`/goal` post-date the model's training cutoff; a session reconstructing them from
+**Do not reason about `/loop` from memory.** `/loop` and the Monitor tool
+post-date the model's training cutoff; a session reconstructing them from
 memory gets them wrong (that's why this skill exists). Read
 [`references/loop-mechanics.md`](references/loop-mechanics.md) before emitting any
 suggestion — every claim about *how* `/loop` behaves comes from there, not priors.
@@ -37,7 +37,7 @@ suggestion — every claim about *how* `/loop` behaves comes from there, not pri
    when a human explicitly owns cancellation. On provider variants where
    prompt-only `/loop` becomes fixed, state that limitation instead of claiming
    the hard cap is self-enforcing. Reach for `.claude/loop.md` only for a default
-   prompt run often.
+   prompt you run often.
 4. **Mark the human/taste-gate explicitly.** Autonomy follows the oracle: where
    correctness is a fact about the world (an exit code, a hash, a measured peak)
    the loop checks itself; where "correct" lives in the user's taste (does it

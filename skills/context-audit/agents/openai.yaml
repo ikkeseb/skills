@@ -1,6 +1,6 @@
 interface:
   display_name: "Context Audit"
-  short_description: "Audit a project's CLAUDE.md / Claude Code context architecture"
-  default_prompt: "Use $context-audit to audit this repository's CLAUDE.md and Claude Code context architecture. Analysis-only; the subject is Claude Code context, whatever harness runs the audit."
+  short_description: "Audit a project's instruction and context architecture"
+  default_prompt: "Use $context-audit to audit this repository's instruction and context architecture (CLAUDE.md, AGENTS.md, skills, nested files, hooks). Analysis-only; preserve each rule's effective reach across the target harnesses."
 policy:
   allow_implicit_invocation: false

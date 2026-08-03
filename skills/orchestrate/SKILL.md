@@ -112,7 +112,8 @@ delegate small edits.
   Workers also inherit machine-level instructions this repo cannot inspect;
   treat those as ambient drift and state anything outcome-critical explicitly.
 - **Senior review is mandatory.** Compare the result and diff with the
-  acceptance criteria; never relay a worker summary as evidence. If a diff is
+  acceptance criteria; never relay a worker summary as evidence, and never
+  pass raw worker output to the user as the deliverable. If a diff is
   too large for full review, cover every named file, deletion, and
   security/data-shape-sensitive change; enumerate generated and untracked
   files; and declare what received only a scan. Inspect partial changes from a
