@@ -63,6 +63,7 @@ ensure_slot_root() {
 SLOT_DIR="" WS_LOCK="" CODEX_PID="" VERIFY_TMP=""
 CODEX_BIN="" WORKSPACE_HASH_BIN="" WORKSPACE_HASH_KIND=""
 JQ_BIN="" GIT_BIN=""
+GREP_BIN="" HEAD_BIN="" TAIL_BIN="" TR_BIN="" CUT_BIN="" AWK_BIN=""
 # Script-scope, not `local`: the EXIT trap fires after the function returns, so
 # a function-local would be unbound there and `set -u` would abort the run.
 verify_cleanup() { [ -z "${VERIFY_TMP:-}" ] || rm -rf "$VERIFY_TMP"; }
@@ -100,12 +101,28 @@ require_jq() {
 
 is_pos_int() { case "${1:-}" in ''|0|*[!0-9]*) return 1 ;; *) return 0 ;; esac; }
 
+# Same direct-executable contract as resolve_codex/resolve_git, for the text
+# tools that shape gate verdicts and diagnostics: an exported same-name shell
+# function could otherwise blank the contract-flag probe, hide skip-worktree
+# entries from the marked-index grep, or rewrite error classification. These
+# tools cannot clean a dirty tree, so this closes verdict integrity, not the
+# write gate itself. Remaining bare utilities (ps, find, ls, date, seq, id,
+# mktemp, coreutils file ops) are accepted surface. Call after require_jq.
+resolve_text_tools() {
+  local t bin
+  for t in grep head tail tr cut awk; do
+    bin="$(type -P "$t" || true)"
+    [ -n "$bin" ] || fail_json missing_dependency "$t not found on PATH"
+    printf -v "${t^^}_BIN" '%s' "$bin"
+  done
+}
+
 # One-line, bounded, printable-ASCII excerpt of a git listing, for embedding in
 # a refusal message. Non-ASCII bytes become '?' so a path in any encoding still
 # yields an encodable message.
 dirt_excerpt() {
-  head -n 20 "$1" 2>/dev/null | tr '\n' ';' | LC_ALL=C tr -c '\40-\176' '?' \
-    | cut -c 1-300
+  "$HEAD_BIN" -n 20 "$1" 2>/dev/null | "$TR_BIN" '\n' ';' \
+    | LC_ALL=C "$TR_BIN" -c '\40-\176' '?' | "$CUT_BIN" -c 1-300
 }
 
 resolve_codex() {
@@ -147,7 +164,7 @@ workspace_hash() {
   "$WORKSPACE_HASH_BIN"
 }
 
-codex_version() { "$CODEX_BIN" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true; }
+codex_version() { "$CODEX_BIN" --version 2>/dev/null | "$GREP_BIN" -oE '[0-9]+\.[0-9]+\.[0-9]+' | "$HEAD_BIN" -1 || true; }
 
 # Prints the flags the installed CLI no longer advertises. $1 selects the set:
 # "always" (gates writes) or "all" (probe reporting). Empty output means the
@@ -165,18 +182,18 @@ missing_contract_flags() {
   [ "$scope" != "all" ] || exec_set="$ALWAYS_EXEC_FLAGS $CONDITIONAL_EXEC_FLAGS"
 
   if ! help_exec="$("$CODEX_BIN" exec --help 2>&1)"; then
-    printf '%s' "$(printf '%s' "$exec_set" | tr -s '[:space:]' ' ')"
+    printf '%s' "$(printf '%s' "$exec_set" | "$TR_BIN" -s '[:space:]' ' ')"
     return
   fi
   if ! help_root="$("$CODEX_BIN" --help 2>&1)"; then
-    printf '%s' "$(printf '%s' "$ALWAYS_ROOT_FLAGS" | tr -s '[:space:]' ' ')"
+    printf '%s' "$(printf '%s' "$ALWAYS_ROOT_FLAGS" | "$TR_BIN" -s '[:space:]' ' ')"
     return
   fi
   for f in $exec_set; do
-    printf '%s' "$help_exec" | grep -qE -- "(^|[^[:alnum:]_-])$f([^[:alnum:]_-]|$)" || out="$out $f"
+    printf '%s' "$help_exec" | "$GREP_BIN" -qE -- "(^|[^[:alnum:]_-])$f([^[:alnum:]_-]|$)" || out="$out $f"
   done
   for f in $ALWAYS_ROOT_FLAGS; do
-    printf '%s' "$help_root" | grep -qE -- "(^|[^[:alnum:]_-])$f([^[:alnum:]_-]|$)" || out="$out $f"
+    printf '%s' "$help_root" | "$GREP_BIN" -qE -- "(^|[^[:alnum:]_-])$f([^[:alnum:]_-]|$)" || out="$out $f"
   done
   printf '%s' "${out# }"
 }
@@ -202,8 +219,8 @@ build_worker_env() {
 }
 
 # --- locks --------------------------------------------------------------------
-lock_owner_pid()   { cut -d' ' -f1 "$1/owner" 2>/dev/null || true; }
-lock_owner_token() { cut -d' ' -f2 "$1/owner" 2>/dev/null || true; }
+lock_owner_pid()   { "$CUT_BIN" -d' ' -f1 "$1/owner" 2>/dev/null || true; }
+lock_owner_token() { "$CUT_BIN" -d' ' -f2 "$1/owner" 2>/dev/null || true; }
 
 release_lock_dir() { # only the token holder may delete a lock
   [ -n "$1" ] && [ -d "$1" ] || return 0
@@ -216,7 +233,7 @@ release_locks() {
 
 list_descendants() { # $1 = pid; prints every descendant pid
   local kids k
-  kids="$(ps -ax -o pid=,ppid= 2>/dev/null | awk -v p="$1" '$2 == p {print $1}')"
+  kids="$(ps -ax -o pid=,ppid= 2>/dev/null | "$AWK_BIN" -v p="$1" '$2 == p {print $1}')"
   for k in $kids; do
     printf '%s\n' "$k"
     list_descendants "$k"
@@ -305,7 +322,7 @@ acquire_workspace_lock() { # exclusive per-repository lock for writing workers
   local key lock tries=0
   resolve_workspace_hash || fail_json missing_dependency \
     "workspace-write requires shasum or sha256sum on PATH"
-  key="$(printf '%s' "$ws_root" | workspace_hash | cut -c1-16)"
+  key="$(printf '%s' "$ws_root" | workspace_hash | "$CUT_BIN" -c1-16)"
   lock="$SLOT_ROOT/ws-$key"
   while ! mkdir "$lock" 2>/dev/null; do
     # Stale recovery goes through the serialized reclaim protocol; this loop
@@ -323,6 +340,7 @@ acquire_workspace_lock() { # exclusive per-repository lock for writing workers
 # --- probe --------------------------------------------------------------------
 cmd_probe() {
   require_jq
+  resolve_text_tools
   resolve_codex
   build_worker_env
   local version authenticated=false auth_mode=login hash_command=""
@@ -367,6 +385,7 @@ cmd_probe() {
 # re-verifying the recipe by hand.
 cmd_verify() {
   require_jq
+  resolve_text_tools
   resolve_codex
   local dir out missing verdict
   missing="$(missing_contract_flags all)"
@@ -419,6 +438,7 @@ cmd_verify() {
 # --- run ----------------------------------------------------------------------
 cmd_run() {
   require_jq
+  resolve_text_tools
   resolve_codex
   is_pos_int "$MAX_SLOTS" || fail_json usage "CODEX_WORKER_MAX_SLOTS must be a positive integer"
   is_pos_int "$SLOT_WAIT_SECS" || fail_json usage "CODEX_WORKER_SLOT_WAIT must be a positive integer"
@@ -614,7 +634,7 @@ cmd_run() {
       --untracked-files=normal --ignore-submodules=none \
       >"$st_out" 2>"$st_err" || st_rc=$?
     [ "$st_rc" -eq 0 ] || fail_json git_error \
-      "git status failed in $workspace (exit $st_rc): $(tail -c 500 "$st_err")" "$run_dir"
+      "git status failed in $workspace (exit $st_rc): $("$TAIL_BIN" -c 500 "$st_err")" "$run_dir"
     [ ! -s "$st_out" ] || dirty_before=true
 
     if [ "$sandbox" = "workspace-write" ]; then
@@ -639,9 +659,9 @@ cmd_run() {
         ls-files --cached -v 2>>"$st_err")" \
         || ls_rc=$?
       [ "$ls_rc" -eq 0 ] || fail_json git_error \
-        "git ls-files failed in $workspace (exit $ls_rc): $(tail -c 500 "$st_err")" "$run_dir"
+        "git ls-files failed in $workspace (exit $ls_rc): $("$TAIL_BIN" -c 500 "$st_err")" "$run_dir"
       local marked
-      marked="$(printf '%s\n' "$flags" | grep -E '^([a-z]|S) ' || true)"
+      marked="$(printf '%s\n' "$flags" | "$GREP_BIN" -E '^([a-z]|S) ' || true)"
       if [ -n "$marked" ]; then
         printf '%s\n' "$marked" > "$run_dir/tmp/git-marked.out"
         fail_json unsafe_git_state \
@@ -759,10 +779,10 @@ cmd_run() {
   else
     error_class=codex_failed
     local diag
-    diag="$api_error $(tail -c 2000 "$run_dir/stderr.log" 2>/dev/null || true)"
-    if printf '%s' "$diag" | grep -qiE '401|unauthorized|not logged in'; then error_class=auth
-    elif printf '%s' "$diag" | grep -qiE '429|rate.?limit|usage.?limit|quota'; then error_class=rate_limit
-    elif printf '%s' "$diag" | grep -qiE 'unsupported_value|invalid_request|config|invalid value|unexpected argument'; then error_class=config
+    diag="$api_error $("$TAIL_BIN" -c 2000 "$run_dir/stderr.log" 2>/dev/null || true)"
+    if printf '%s' "$diag" | "$GREP_BIN" -qiE '401|unauthorized|not logged in'; then error_class=auth
+    elif printf '%s' "$diag" | "$GREP_BIN" -qiE '429|rate.?limit|usage.?limit|quota'; then error_class=rate_limit
+    elif printf '%s' "$diag" | "$GREP_BIN" -qiE 'unsupported_value|invalid_request|config|invalid value|unexpected argument'; then error_class=config
     elif [ "$result_ok" = false ] && [ "$exit_code" -eq 0 ]; then error_class=schema
     fi
     error="exit=$exit_code turn_completed=$turn_completed result_valid=$result_ok"
@@ -791,7 +811,7 @@ cmd_run() {
     --argjson exit_code "$exit_code" --argjson turn_completed "$turn_completed" \
     --arg run_dir "$run_dir" \
     --slurpfile result_doc "$run_dir/result.norm.json" \
-    --arg stderr_tail "$(tail -c 2000 "$run_dir/stderr.log" 2>/dev/null || true)" \
+    --arg stderr_tail "$("$TAIL_BIN" -c 2000 "$run_dir/stderr.log" 2>/dev/null || true)" \
     --arg api_error "$api_error" \
     '{ok: $ok, model: $model, effort: $effort, sandbox: $sandbox,
       workspace: $workspace, base_sha: $base_sha, dirty_before: $dirty_before,

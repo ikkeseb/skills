@@ -46,6 +46,8 @@ content cue, import that pairing in the override stylesheet, and set `--font-ser
 | Warm long-form document | Libre Franklin / Libre Baskerville | `Libre+Franklin:wght@400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400` |
 | Calm or Scandinavian | Familjen Grotesk / Lora | `Familjen+Grotesk:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400` |
 | Editorial, magazine, recipe | Fraunces / Work Sans | `Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Work+Sans:wght@300;400;500;600` |
+| Editorial classic, neutral | Source Sans 3 / Source Serif 4 | `Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400` |
+| Statement, expressive opener | Sora / Bitter | `Sora:wght@400;500;600;700&family=Bitter:ital,wght@0,400;0,500;0,600;0,700;1,400` |
 
 For one-family pairings, create hierarchy with size and weight instead of an artificial family
 change. For code-heavy work, add IBM Plex Mono, JetBrains Mono, or Fira Code.

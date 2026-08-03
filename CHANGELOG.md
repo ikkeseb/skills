@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.11.1 — 2026-08-03
+
+- **The Codex worker's verdict-shaping text tools resolve like its other
+  dependencies.** `grep`, `head`, `tail`, `tr`, `cut`, and `awk` now resolve
+  via `type -P` (the same direct-executable contract as `codex`, `git`, and
+  `jq`), so an exported same-name shell function can no longer blank the
+  contract-flag probe, hide marked index entries, or rewrite error
+  classification. Remaining bare utilities (`ps`, `find`, `ls`, coreutils file
+  ops) are documented accepted surface.
+- **Restored two font pairings that fell out of `pretty-pdf`'s reference in
+  the 0.11.0 rewrite:** Source Sans 3 / Source Serif 4 (editorial classic) and
+  Sora / Bitter (statement opener).
+
 ## 0.11.0 — 2026-08-03
 
 - **Orchestration is smaller and its Codex lane is harder to misuse.** The
