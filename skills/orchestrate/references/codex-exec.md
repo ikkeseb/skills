@@ -28,12 +28,19 @@ Run once per session before the first Codex-lane stage:
 ```
 
 The helper requires Bash and `jq`; write-capable runs additionally require Git
-and either `shasum` or `sha256sum`. `probe` checks the hash dependency without
-making a model call and returns `{ok, codex_version, authenticated,
-contract_ok, missing_flags, dependencies, write_ready}`. A missing `jq`
-returns `missing_dependency` immediately. `write_ready: false` leaves the
-read-only lane available but means workspace-write calls will fail closed with
-`missing_dependency`.
+and either `shasum` or `sha256sum`. `probe` makes no model call and returns
+`{ok, codex_version, authenticated, contract_ok, missing_flags, dependencies,
+sandbox_write, write_ready}`. A missing `jq` returns `missing_dependency`
+immediately. `sandbox_write` is measured, not inferred: probe performs one
+unbilled write inside the real OS sandbox (`codex sandbox`, under the same
+sandbox-implementation pin `run` uses), because dependency presence does not
+prove write capability — on native Windows every write can be rejected while
+git, jq and the hash tool all pass. `true`/`false` are verdicts and `false`
+gates `write_ready`; `null` means the test could not run and gates nothing.
+`write_ready: false` leaves the read-only lane available: route write stages
+to the Claude lane and say so. Missing write dependencies fail closed as
+`missing_dependency`; a write run dispatched despite a denying sandbox fails
+closed as `sandbox_denied` at harvest.
 
 Missing Codex, `authenticated: false`, or an empty `codex_version` means the
 lane is down: route everything to the Claude lane and say so in the response —
@@ -242,9 +249,13 @@ instance validation. Conformance to `--schema-file` is enforced server-side by
 `--output-schema` — so a schema-shaped result is the model's compliance, not a
 local guarantee, and a stage that must not act on malformed data checks the
 shape itself. Fields: `result` (the parsed final message — the payload),
-`base_sha` / `dirty_before` (git state when the run started), `run_dir`
-(events.jsonl + stderr.log for diagnosis), and on failure `error_class` /
-`error` / `api_error`.
+`base_sha` / `dirty_before` (git state when the run started),
+`workspace_changed` (write runs: whether the tree differs after the run,
+taken before the workspace lock is released — `ok: true` with
+`workspace_changed: false` is an empty-handed worker whose summary must not
+be trusted as work done; `null` on read-only runs or when the after-status
+itself failed), `run_dir` (events.jsonl + stderr.log for diagnosis), and on
+failure `error_class` / `error` / `api_error`.
 
 **The mirror has two holes, and background dispatch must cover them.** The run
 dir is only known to the helper once it exists and passes its gates, so
@@ -277,6 +288,11 @@ the orchestrator:
 - `dirty_worktree` — a write run against a dirty tree was refused; see gates.
   Untracked files count: an untracked file the worker overwrites is invisible
   in the after-diff, so there is no attribution to recover.
+- `sandbox_denied` — the OS sandbox degraded underneath a write run and
+  rejected every write, while the CLI still exited 0 with a completed turn.
+  A deterministic environment failure, never a model miss: not retryable on
+  this machine at any tier. Check probe's `sandbox_write`, fix the machine's
+  sandbox setup, or route write stages to the Claude lane.
 - `unsafe_git_state` — the tree reads clean but the repo cannot be written to
   safely: an in-progress merge/rebase/cherry-pick/revert/bisect, or index
   entries marked `skip-worktree` / `assume-unchanged`, which hide changes from
@@ -334,6 +350,17 @@ Known signals when reading `stderr.log` on 0.144.x:
   wait, immediately before launch. `--expected-base-sha` is mandatory for
   write runs so a moved HEAD fails closed (`base_sha_mismatch`) instead of
   running against the wrong state.
+- Native Windows: the helper pins the CLI's elevated sandbox implementation
+  (`--config 'windows.sandbox="elevated"'`) on every run. `--ignore-user-config`
+  would otherwise drop the user's `[windows]` sandbox choice, and with no
+  implementation selected exec has no OS sandbox there — workspace-write
+  silently degrades to read-only + approvals=never, rejecting every write
+  behind an `ok` envelope (measured 2026-08-04, codex 0.146.0). The unelevated
+  implementation is deliberately not used: MSYS/Cygwin child processes crash
+  under its restricted token, and repo tooling is often bash. Inside the
+  sandbox `.git` stays write-denied on Windows, so a write worker edits files
+  but cannot stage or commit — integration is main-loop work anyway; do not
+  ask a Windows write worker to commit.
 - The result JSON proves the worker finished, not that the changes survive:
   read the actual `git diff` (and untracked files) in the worktree before the
   workflow's worktree cleanup can discard it, and let the main loop apply or

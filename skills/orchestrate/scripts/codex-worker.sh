@@ -101,6 +101,23 @@ require_jq() {
 
 is_pos_int() { case "${1:-}" in ''|0|*[!0-9]*) return 1 ;; *) return 0 ;; esac; }
 
+is_windows() { case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*) return 0 ;; *) return 1 ;; esac; }
+
+# Native Windows needs the sandbox implementation pinned: --ignore-user-config
+# also drops the user's `[windows] sandbox` choice, and with no implementation
+# selected `codex exec` has no OS sandbox there — workspace-write silently
+# degrades to read-only + approvals=never, which rejects every write while the
+# envelope still reports ok (field 2026-08-04, codex 0.146.0; stderr shows
+# "patch rejected: writing is blocked by read-only sandbox"). `elevated` over
+# `unelevated` deliberately: under the unelevated restricted token, MSYS/Cygwin
+# child processes (Git Bash tooling) die in shared-memory setup (CreateFileMapping
+# error 5), while the elevated sandbox runs them fine — and a write worker that
+# cannot run the repo's own scripts is half a worker. Machines without the
+# elevated setup degrade loudly: probe's functional write test reports it, and
+# a wedged run is bounded by the total deadline. Passed via --config, which is
+# already in ALWAYS_EXEC_FLAGS, so the contract surface is unchanged.
+WINDOWS_SANDBOX_CONFIG='windows.sandbox="elevated"'
+
 # Same direct-executable contract as resolve_codex/resolve_git, for the text
 # tools that shape gate verdicts and diagnostics: an exported same-name shell
 # function could otherwise blank the contract-flag probe, hide skip-worktree
@@ -337,6 +354,42 @@ acquire_workspace_lock() { # exclusive per-repository lock for writing workers
   printf '%s %s' "$$" "$LOCK_TOKEN" > "$lock/owner"
 }
 
+# Functional write test through the real OS sandbox — dependency presence is
+# not write capability: on native Windows every write can be rejected while
+# git, jq and the hash tool all pass (the degradation WINDOWS_SANDBOX_CONFIG
+# closes). So probe measures the actual write path: one unbilled
+# `codex sandbox` spawn writing a marker file in a throwaway dir, with the
+# same sandbox pin `run` uses. Child process is native per OS (cmd.exe /
+# /bin/sh) so the verdict reflects the sandbox, not MSYS quirks. Verdicts:
+# true (marker written), false (write denied — gates write_ready), null
+# (couldn't measure: no `codex sandbox` output, no shell, spawn failure —
+# reported but NOT gating, so an unmeasurable test cannot rebuild the outage
+# the version pin used to cause).
+SANDBOX_WRITE=null
+probe_sandbox_write() {
+  local dir out child_bin
+  # The shell child is deliberate on Windows too: workers spawn the repo's own
+  # (often bash) tooling, so the probe measures what a worker child would get.
+  child_bin="$(type -P bash || type -P sh || true)"
+  [ -n "$child_bin" ] || return 0
+  local -a args=(sandbox -c 'sandbox_mode="workspace-write"')
+  ! is_windows || args+=(-c "$WINDOWS_SANDBOX_CONFIG")
+  args+=(-- "$child_bin" -c \
+    'echo probe > sbx-probe.txt && echo WROTE || echo DENIED')
+  dir="$(mktemp -d)" || return 0
+  # Bounded when a timeout binary exists; a missing one keeps probe usable.
+  local -a tmo=()
+  local tbin; tbin="$(type -P timeout || true)"
+  [ -z "$tbin" ] || tmo=("$tbin" 60)
+  out="$( (cd "$dir" && env -i "${WORKER_ENV[@]}" \
+    ${tmo[@]+"${tmo[@]}"} "$CODEX_BIN" "${args[@]}") 2>/dev/null || true)"
+  case "$out" in
+    *WROTE*)  [ ! -f "$dir/sbx-probe.txt" ] || SANDBOX_WRITE=true ;;
+    *DENIED*) SANDBOX_WRITE=false ;;
+  esac
+  rm -rf "$dir"
+}
+
 # --- probe --------------------------------------------------------------------
 cmd_probe() {
   require_jq
@@ -359,13 +412,16 @@ cmd_probe() {
     hash_command="$WORKSPACE_HASH_KIND"
     hash_ready=true
   fi
-  if [ "$git_ready" = true ] && [ "$hash_ready" = true ]; then write_ready=true; fi
+  probe_sandbox_write
+  if [ "$git_ready" = true ] && [ "$hash_ready" = true ] \
+     && [ "$SANDBOX_WRITE" != false ]; then write_ready=true; fi
   local missing
   missing="$(missing_contract_flags all)"
   "$JQ_BIN" -n --arg v "$version" --arg missing "$missing" \
     --arg auth_mode "$auth_mode" --argjson auth "$authenticated" \
     --arg hash_command "$hash_command" --argjson git_ready "$git_ready" \
     --argjson hash_ready "$hash_ready" --argjson write_ready "$write_ready" \
+    --argjson sandbox_write "$SANDBOX_WRITE" \
     '{ok: ($auth and ($v != "") and ($missing == "")),
       codex_version: $v,
       authenticated: $auth, auth_mode: $auth_mode,
@@ -374,6 +430,7 @@ cmd_probe() {
       dependencies: {jq: true, git: $git_ready,
         workspace_hash: $hash_ready,
         workspace_hash_command: (if $hash_command == "" then null else $hash_command end)},
+      sandbox_write: $sandbox_write,
       write_ready: $write_ready}'
 }
 
@@ -710,6 +767,9 @@ cmd_run() {
     --json
     --output-last-message "$run_dir/final.json"
   )
+  # See WINDOWS_SANDBOX_CONFIG: without this pin, native Windows exec has no
+  # OS sandbox and workspace-write degrades to rejected-writes-with-ok-envelope.
+  ! is_windows || codex_args+=(--config "$WINDOWS_SANDBOX_CONFIG")
   # `--model default` is an explicit opt-in to the CLI's built-in model, so a
   # lane call needs no repo change when the provider ships a new one. It is a
   # sentinel rather than a plain omission on purpose: a forgotten --model must
@@ -741,6 +801,27 @@ cmd_run() {
   local exit_code=$?
   CODEX_PID=""
   set -e
+  # Post-run tree check for write runs, taken BEFORE the workspace lock is
+  # released so no other writer can own the dirt attributed to this worker.
+  # ok proves the worker completed a turn, not that it did the work: the tree
+  # entered clean, so workspace_changed=false alongside ok=true is an
+  # empty-handed worker the orchestrator must inspect, not trust. null: a
+  # read-only run, or the status call itself failed (never fail the envelope
+  # over diagnostics).
+  local workspace_changed=null
+  if [ "$sandbox" = "workspace-write" ]; then
+    if "$GIT_BIN" --no-optional-locks -C "$workspace" \
+        -c core.untrackedCache=false -c core.fsmonitor=false \
+        status --porcelain=v1 \
+        --untracked-files=normal --ignore-submodules=none \
+        > "$run_dir/tmp/git-status-after.out" 2>/dev/null; then
+      if [ -s "$run_dir/tmp/git-status-after.out" ]; then
+        workspace_changed=true
+      else
+        workspace_changed=false
+      fi
+    fi
+  fi
   release_locks; trap - EXIT INT TERM HUP
 
   # Diagnostics parse tolerantly: a killed run can truncate the JSONL, and a
@@ -774,6 +855,13 @@ cmd_run() {
   local ok=false error_class="" error=""
   if [ "$timed_out" = true ]; then
     error_class=timeout; error="worker exceeded the ${timeout_secs}s total deadline (${setup_elapsed}s of it queue wait and gates)"
+  elif [ "$sandbox" = "workspace-write" ] \
+       && "$GREP_BIN" -q 'blocked by read-only sandbox' "$run_dir/stderr.log" 2>/dev/null; then
+    # The OS sandbox degraded underneath a write run: every write was rejected
+    # while the CLI still exits 0 with a completed turn — the envelope must not
+    # call that ok. Deterministic environment failure, never a model miss.
+    error_class=sandbox_denied
+    error="workspace-write degraded to a read-only sandbox (writes rejected) — check probe's sandbox_write and the machine's sandbox setup"
   elif [ "$exit_code" -eq 0 ] && [ "$turn_completed" = true ] && [ "$result_ok" = true ]; then
     ok=true
   else
@@ -808,6 +896,7 @@ cmd_run() {
     --arg model "$model" --arg effort "$effort" --arg sandbox "$sandbox" \
     --arg workspace "$workspace" --arg base_sha "$base_sha" \
     --argjson dirty_before "$dirty_before" \
+    --argjson workspace_changed "$workspace_changed" \
     --argjson exit_code "$exit_code" --argjson turn_completed "$turn_completed" \
     --arg run_dir "$run_dir" \
     --slurpfile result_doc "$run_dir/result.norm.json" \
@@ -815,6 +904,7 @@ cmd_run() {
     --arg api_error "$api_error" \
     '{ok: $ok, model: $model, effort: $effort, sandbox: $sandbox,
       workspace: $workspace, base_sha: $base_sha, dirty_before: $dirty_before,
+      workspace_changed: $workspace_changed,
       result: $result_doc[0],
       exit_code: $exit_code, turn_completed: $turn_completed,
       run_dir: $run_dir, stderr_tail: $stderr_tail}

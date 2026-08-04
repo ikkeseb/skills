@@ -12,6 +12,20 @@ fake_codex() {
     login)
       [ "${2:-}" = status ] && return 0
       return 64 ;;
+    sandbox)
+      # Models `codex sandbox`: line 2 of fake-mode selects the sandbox
+      # behavior — `deny` refuses the write, anything else executes the
+      # probe's child command for real (which writes the marker in cwd).
+      if [ "$(sed -n '2p' "$HOME/fake-mode" 2>/dev/null)" = deny ]; then
+        printf '%s\n' DENIED
+        return 1
+      fi
+      shift
+      while [ $# -gt 0 ] && [ "$1" != -- ]; do shift; done
+      [ "${1:-}" = -- ] || return 64
+      shift
+      "$@"
+      return $? ;;
     exec)
       if [ "${2:-}" = --help ]; then
         printf '%s\n' '--ignore-user-config' '--ephemeral' '--disable' '--config' \
@@ -22,12 +36,15 @@ fake_codex() {
   esac
 
   printf 'EXEC %s\n' "$*" >> "$HOME/fake-calls"
-  local output="" mode
+  local output="" cd_dir="" mode
   while [ $# -gt 0 ]; do
     case "$1" in
       --output-last-message)
         [ $# -ge 2 ] || return 64
         output="$2"; shift 2 ;;
+      --cd)
+        [ $# -ge 2 ] || return 64
+        cd_dir="$2"; shift 2 ;;
       *) shift ;;
     esac
   done
@@ -38,10 +55,24 @@ fake_codex() {
       printf '%s\n' '{"answer":"ok"}' > "$output"
       printf '%s\n' '{"type":"turn.completed"}'
       return 0 ;;
+    success-write)
+      # Like success, but also mutates the workspace (--cd) so the suite can
+      # assert workspace_changed=true attribution.
+      [ -n "$cd_dir" ] && printf '%s\n' delta > "$cd_dir/worker-output.txt"
+      printf '%s\n' '{"answer":"ok"}' > "$output"
+      printf '%s\n' '{"type":"turn.completed"}'
+      return 0 ;;
     rate-limit)
       printf '%s\n' '{"type":"error","message":"429 rate limit"}'
       printf '%s\n' 'request failed' >&2
       return 1 ;;
+    sandbox-degraded)
+      # Exit 0 + completed turn + payload, but every write was rejected — the
+      # observed native-Windows degradation the envelope must not call ok.
+      printf '%s\n' '{"answer":"ok"}' > "$output"
+      printf '%s\n' '{"type":"turn.completed"}'
+      printf '%s\n' 'ERROR: patch rejected: writing is blocked by read-only sandbox; rejected by user approval settings' >&2
+      return 0 ;;
     missing-result)
       printf '%s\n' '{"type":"turn.completed"}'
       return 0 ;;
@@ -107,13 +138,22 @@ run_worker() { # stdout-file stderr-file args...
 
 probe_out="$tmp/probe.json"
 run_worker "$probe_out" "$tmp/probe.err" probe
-assert_json "$probe_out" '.ok == true and .codex_version == "9.9.9" and .contract_ok == true and .dependencies.jq == true and .dependencies.git == true and .dependencies.workspace_hash == true and .write_ready == true' \
-  'probe reports CLI, contract, and write dependencies'
+assert_json "$probe_out" '.ok == true and .codex_version == "9.9.9" and .contract_ok == true and .dependencies.jq == true and .dependencies.git == true and .dependencies.workspace_hash == true and .sandbox_write == true and .write_ready == true' \
+  'probe reports CLI, contract, write dependencies, and a measured sandbox write'
 if [ ! -e "$fake_home/wrapper-calls" ]; then
   ok 'PATH executable bypasses the imported codex shell function'
 else
   fail 'PATH executable bypasses the imported codex shell function'
 fi
+
+# A sandbox that rejects workspace writes must gate write_ready even though
+# every dependency passes — the exact false-green that shipped a doomed write
+# worker on native Windows.
+printf '%s\n%s\n' success deny > "$fake_home/fake-mode"
+run_worker "$tmp/probe-deny.json" "$tmp/probe-deny.err" probe
+assert_json "$tmp/probe-deny.json" '.sandbox_write == false and .write_ready == false and .dependencies.git == true and .dependencies.workspace_hash == true' \
+  'denied sandbox write gates write_ready despite healthy dependencies'
+printf '%s\n' success > "$fake_home/fake-mode"
 
 prompt="$tmp/prompt.md"
 schema="$tmp/schema.json"
@@ -147,6 +187,15 @@ case "$actual_call" in
   *'--model '*) fail 'default sentinel omits the CLI --model flag' ;;
   *) ok 'default sentinel omits the CLI --model flag' ;;
 esac
+# The Windows sandbox pin is platform-conditional: present on native Windows
+# (MSYS/MINGW/Cygwin), absent elsewhere.
+case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) want_pin=yes ;; *) want_pin=no ;; esac
+case "$actual_call" in *'windows.sandbox'*) has_pin=yes ;; *) has_pin=no ;; esac
+if [ "$want_pin" = "$has_pin" ]; then
+  ok "windows.sandbox pin matches the platform (expected: $want_pin)"
+else
+  fail "windows.sandbox pin matches the platform (expected: $want_pin)"
+fi
 
 printf '%s\n' rate-limit > "$fake_home/fake-mode"
 run_dir="$tmp/run-rate-limit"
@@ -217,6 +266,38 @@ if [ ! -e "$fake_home/hostile-calls" ] && [ "$(exec_count)" = "$before" ]; then
 else
   fail 'imported git and jq shell functions are never invoked'
 fi
+
+# workspace_changed attribution on clean-tree write runs: an untouched tree
+# reports false (the empty-handed-worker signal), a mutated one reports true.
+# Read-only runs stay null — asserted on the earlier schema-success envelope.
+assert_json "$tmp/success.json" '.workspace_changed == null' \
+  'read-only run reports workspace_changed null'
+HOME="$fake_home" git -C "$repo" checkout -q -- tracked.txt
+printf '%s\n' success > "$fake_home/fake-mode"
+run_dir="$tmp/run-write-clean"
+run_worker "$tmp/write-clean.json" "$tmp/write-clean.err" run \
+  --model default --effort low --sandbox workspace-write --workspace "$repo" \
+  --expected-base-sha "$sha" --prompt-file "$prompt" --run-dir "$run_dir" --timeout 30
+assert_json "$tmp/write-clean.json" '.ok == true and .dirty_before == false and .workspace_changed == false' \
+  'write run with an untouched tree reports workspace_changed false'
+printf '%s\n' success-write > "$fake_home/fake-mode"
+run_dir="$tmp/run-write-mutated"
+run_worker "$tmp/write-mutated.json" "$tmp/write-mutated.err" run \
+  --model default --effort low --sandbox workspace-write --workspace "$repo" \
+  --expected-base-sha "$sha" --prompt-file "$prompt" --run-dir "$run_dir" --timeout 30
+assert_json "$tmp/write-mutated.json" '.ok == true and .workspace_changed == true' \
+  'write run that mutates the workspace reports workspace_changed true'
+
+# A degraded OS sandbox rejects every write while the CLI still exits 0 with a
+# completed turn; the envelope must fail closed instead of reporting ok.
+rm -f "$repo/worker-output.txt"
+printf '%s\n' sandbox-degraded > "$fake_home/fake-mode"
+run_dir="$tmp/run-sandbox-degraded"
+run_worker "$tmp/sandbox-degraded.json" "$tmp/sandbox-degraded.err" run \
+  --model default --effort low --sandbox workspace-write --workspace "$repo" \
+  --expected-base-sha "$sha" --prompt-file "$prompt" --run-dir "$run_dir" --timeout 30
+assert_json "$tmp/sandbox-degraded.json" '.ok == false and .error_class == "sandbox_denied" and .turn_completed == true' \
+  'write run under a degraded sandbox fails closed as sandbox_denied'
 
 printf '\n%s checks, %s failures\n' "$((checks + fails))" "$fails"
 exit "$fails"

@@ -38,7 +38,7 @@ strength that does not extend to its delegate niche, which stays narrow.
 
 | model | lane | cost | intelligence | taste | default effort | default role | fallback |
 |---|---|---:|---:|---:|---|---|---|
-| `fable` | claude | 2 | 9 | 9 | high/xhigh | Priciest row, reserved: fuzzy-intent and highest-stakes user-facing work, where reading underspecified goals is the bottleneck. Occasional shortcut habit — its output still gets acceptance criteria and review | `opus` |
+| `fable` | claude | 2 | 9 | 9 | medium/high | Priciest row, reserved: fuzzy-intent and highest-stakes user-facing work, where reading underspecified goals is the bottleneck. Occasional shortcut habit — its output still gets acceptance criteria and review | `opus` |
 | `opus` | claude | 4 | 9 | 8 | high/xhigh | Real-coding workhorse — user-facing surface (UI, copy, API shape) build-out | gpt-5.6-sol |
 | gpt-5.6-sol | codex | 6 | 8–9 | 6 | high/xhigh | Heavy implementation, root-cause work. Scope prompts tightly — see the overengineering note | `opus` |
 | gpt-5.6-sol @ max | codex | 3 | 9–10 | 6 | max | Adversarial verification, independent second opinion on critical work | `opus` @ xhigh |
@@ -75,6 +75,8 @@ Effort support varies per model and is enforced server-side (a bad value
 returns a clear `api_error`; fix the call). Observed: sol, terra and luna all
 accept max — luna's max support field-verified 2026-08-02 through the worker
 helper, superseding an earlier observation that it topped out at xhigh.
+`fable` supports medium and high only (field, 2026-08-04) — never pin it
+above high.
 Codex-lane `ultra` exists on some models but is off-limits: it can introduce
 nested delegation the orchestrator doesn't control.
 

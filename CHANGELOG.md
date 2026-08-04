@@ -4,6 +4,26 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.11.2 — 2026-08-04
+
+- **The Codex write lane works on native Windows.** `--ignore-user-config`
+  also dropped the user's `[windows] sandbox` choice, and with no sandbox
+  implementation selected, `codex exec` degraded `workspace-write` to
+  read-only + approvals=never — every write rejected behind an `ok` envelope.
+  The worker now pins `windows.sandbox="elevated"` on native Windows
+  (unelevated deliberately avoided: MSYS/Cygwin children crash under its
+  restricted token).
+- **`probe` measures write capability instead of inferring it.** New
+  `sandbox_write` field from one unbilled write through the real OS sandbox
+  (`codex sandbox`); a denial gates `write_ready`, an unmeasurable test
+  reports `null` and gates nothing.
+- **Empty-handed and sandbox-degraded write runs are visible.** New
+  `workspace_changed` envelope field (post-run tree state, taken under the
+  workspace lock); a write run whose stderr proves sandbox degradation fails
+  closed as the new `sandbox_denied` error class instead of reporting `ok`.
+- **Model map:** `fable` effort is medium/high only — xhigh removed from its
+  row.
+
 ## 0.11.1 — 2026-08-03
 
 - **The Codex worker's verdict-shaping text tools resolve like its other
