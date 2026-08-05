@@ -4,6 +4,24 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.11.3 — 2026-08-05
+
+Two field guards from orchestrate runs, drained from the vault coordination
+inbox (2026-08-05 note):
+
+- **Model map:** informal Codex model names resolve through the delegate
+  table, and an ID missing there is read from `~/.codex/config.toml` — never
+  guessed or transcribed from speech (a dictated `sol-5.6` failed as `config`;
+  the real ID is `gpt-5.6-sol`).
+- **Orchestrate field guard:** Workflow `isolation: 'worktree'` has been
+  observed basing worktrees on session-start HEAD, so mid-session stages can
+  miss same-session commits; when those matter, the main loop creates the
+  worktree itself at current HEAD and passes the path. Also noted: in-repo
+  worktree hosting (`.claude/worktrees/`) needs a test-glob exclusion.
+
+The same note's Windows write-lane signal was rejected as already shipped in
+0.11.2 (measured write probe, `sandbox_denied`, `workspace_changed`).
+
 ## 0.11.2 — 2026-08-04
 
 - **The Codex write lane works on native Windows.** `--ignore-user-config`

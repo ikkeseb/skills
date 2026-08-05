@@ -44,6 +44,15 @@ stage pins `{model, effort}` and returns typed data: Workflow stages use
 - Naming a one-off Agent dispatch changes it into an addressable teammate and
   may suppress automatic result delivery. Keep one-offs anonymous; use names
   only when mailbox-based, multi-turn collaboration is intentional.
+- Workflow `isolation: 'worktree'` has been observed basing the worktree on
+  session-start HEAD, not current HEAD (twice, 2026-08-05): a mid-session
+  stage misses commits landed earlier in the same session and its diff needs
+  a 3-way merge. When intra-session commits matter, create the worktree in
+  the main loop at current HEAD (`git worktree add` plus dependency install)
+  and pass the agent that path. Codex write runs fail a stale base closed via
+  `--expected-base-sha`. Worktrees hosted inside the repo are visible to repo
+  tooling — exclude paths like `.claude/worktrees/` from test globs or the
+  suite double-counts.
 
 ## Worker lanes
 

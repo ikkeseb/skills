@@ -55,7 +55,11 @@ silently, with no change in this repo: observed 2026-07-25 under Claude Code
 2.1.219, `opus` resolves to Opus 5; observed 2026-07-28, `fable` resolves to
 Fable 5. Codex-lane rows are *exact model IDs* passed
 straight through to `codex -m` by the worker helper; they do not resolve to
-anything and go stale loudly (a wrong ID fails as `config`).
+anything and go stale loudly (a wrong ID fails as `config`). Informal names
+resolve through this table, and an ID missing here is read from
+`~/.codex/config.toml` — never guessed or transcribed from speech (field,
+2026-08-05: dictated `sol-5.6` failed as `config`; the real ID is
+`gpt-5.6-sol`).
 
 Write the alias in Claude-lane calls. Versioned Claude IDs (`claude-opus-5`)
 are real and are what settings and the API use, but they are the wrong choice
