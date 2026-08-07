@@ -4,6 +4,21 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.11.4 — 2026-08-07
+
+Codex worker: a broken OS sandbox no longer hides behind a healthy envelope
+(field 2026-08-07, codex 0.146.1 on Windows — the sandbox setup helper failed
+to launch for every exec while probe reported `write_ready: true` and a
+read-only run returned `ok: true` answered from the prompt alone):
+
+- **Probe gates on wholesale sandbox failure.** `codex sandbox` dying with a
+  sandbox-failure signature on stderr now yields `sandbox_write: false`
+  (gating), no longer the non-gating null reserved for unmeasurable probes.
+- **Runs fail closed on a dead exec layer.** A helper-launch failure in the
+  worker's stderr log classifies the run as `sandbox_denied` for every sandbox
+  mode, read-only included. Matched against the CLI's own tracing, not tool
+  output, so a worker merely reading about the failure cannot trip it.
+
 ## 0.11.3 — 2026-08-05
 
 Two field guards from orchestrate runs, drained from the vault coordination

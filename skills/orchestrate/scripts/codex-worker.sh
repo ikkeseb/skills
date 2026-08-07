@@ -361,8 +361,9 @@ acquire_workspace_lock() { # exclusive per-repository lock for writing workers
 # `codex sandbox` spawn writing a marker file in a throwaway dir, with the
 # same sandbox pin `run` uses. Child process is native per OS (cmd.exe /
 # /bin/sh) so the verdict reflects the sandbox, not MSYS quirks. Verdicts:
-# true (marker written), false (write denied — gates write_ready), null
-# (couldn't measure: no `codex sandbox` output, no shell, spawn failure —
+# true (marker written), false (write denied, or the sandbox itself failed
+# wholesale — both gate write_ready), null (couldn't measure: no `codex
+# sandbox` output and no sandbox-failure signature, no shell, spawn failure —
 # reported but NOT gating, so an unmeasurable test cannot rebuild the outage
 # the version pin used to cause).
 SANDBOX_WRITE=null
@@ -382,10 +383,17 @@ probe_sandbox_write() {
   local tbin; tbin="$(type -P timeout || true)"
   [ -z "$tbin" ] || tmo=("$tbin" 60)
   out="$( (cd "$dir" && env -i "${WORKER_ENV[@]}" \
-    ${tmo[@]+"${tmo[@]}"} "$CODEX_BIN" "${args[@]}") 2>/dev/null || true)"
+    ${tmo[@]+"${tmo[@]}"} "$CODEX_BIN" "${args[@]}") 2>"$dir/sbx-stderr.txt" || true)"
   case "$out" in
     *WROTE*)  [ ! -f "$dir/sbx-probe.txt" ] || SANDBOX_WRITE=true ;;
     *DENIED*) SANDBOX_WRITE=false ;;
+    *) # No child verdict at all. A wholesale sandbox failure on stderr is a
+       # MEASURED broken sandbox, not an unmeasurable probe, so it gates like
+       # DENIED (field 2026-08-07, codex 0.146.1: sandbox helper unlaunchable,
+       # every exec failed, probe still reported a healthy write lane).
+       # Anything else stays null: unmeasurable, deliberately non-gating.
+       ! "$GREP_BIN" -q 'sandbox failed' "$dir/sbx-stderr.txt" 2>/dev/null \
+         || SANDBOX_WRITE=false ;;
   esac
   rm -rf "$dir"
 }
@@ -855,6 +863,15 @@ cmd_run() {
   local ok=false error_class="" error=""
   if [ "$timed_out" = true ]; then
     error_class=timeout; error="worker exceeded the ${timeout_secs}s total deadline (${setup_elapsed}s of it queue wait and gates)"
+  elif "$GREP_BIN" -q 'orchestrator_helper_launch_failed' "$run_dir/stderr.log" 2>/dev/null; then
+    # The OS sandbox could not launch its helper, so command spawns failed
+    # while the CLI still completed the turn — the model answers from the
+    # prompt alone and the envelope would read ok. Applies to read-only runs
+    # too (the field case). Matched against codex's own stderr tracing, never
+    # tool output, so a worker merely reading about this failure cannot trip
+    # it. Deterministic environment failure, never a model miss.
+    error_class=sandbox_denied
+    error="sandbox exec layer down: the OS sandbox helper failed to launch, so command spawns were rejected — check probe's sandbox_write and the machine's sandbox helper installation"
   elif [ "$sandbox" = "workspace-write" ] \
        && "$GREP_BIN" -q 'blocked by read-only sandbox' "$run_dir/stderr.log" 2>/dev/null; then
     # The OS sandbox degraded underneath a write run: every write was rejected
