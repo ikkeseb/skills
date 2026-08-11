@@ -41,10 +41,11 @@ re-verified against the source before landing):
   and one unit; the Claude-side invocation check names its mechanisms; the
   support matrix reaches the read-back.
 
-Known open question (deliberately unchanged): `context-audit` still ships no
-`allowed-tools` restriction backing its analysis-only promise — pending a
-decision and an isolated-install canary, matching the repo's rule for untested
-frontmatter mechanisms.
+Resolved during the release: `context-audit` deliberately ships no
+`allowed-tools` backing its analysis-only promise, because the field
+pre-approves tools rather than restricting them (verified against the vendor
+skills documentation) — it cannot express that guarantee, so the promise stays
+prose-enforced. The finding is now a repo convention in `AGENTS.md`.
 
 ## 0.11.4 — 2026-08-07
 
