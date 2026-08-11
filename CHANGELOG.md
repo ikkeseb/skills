@@ -4,6 +4,48 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.12.0 — 2026-08-11
+
+Four skills tightened after a fresh-eyes audit (isolated cross-family ideal
+design for verify-claims; per-skill cold reviews for the rest; every finding
+re-verified against the source before landing):
+
+- **verify-claims:** the description no longer disambiguates against a
+  nonexistent `verify` skill; a coverage line keeps the tally honest when an
+  evidence tier is unavailable (offline sessions), the lookup budget runs out,
+  or a directory target is partially audited; claims are judged *as worded*
+  (imprecise-but-close is ❌ with the correction, ambiguous terms are ❓ with
+  the gap named); ✅ requires a source in a position to know; negative and
+  universal claims need scope coverage; session checks may be cheaply re-run
+  (settling current state, not past actions); empty/invalid targets and
+  unattended large targets have defined behavior.
+- **handoff:** the reply is now a fixed four-part contract with a defined slot
+  for the `handover:` recommendation and cleanup reporting on success, not
+  only on failure; the disclaimer's placement and English-verbatim status are
+  explicit; readback verification has a mismatch branch instead of promising
+  an infeasible byte comparison; `$CLAUDE_CONFIG_DIR` is respected
+  symmetrically with `$CODEX_HOME`, with a defined fallback for unknown
+  harnesses; the 30-day pruning is declared in every user-facing description.
+- **suggest-loop:** the output spec now matches its own example (four fields,
+  including the hard bound and its self-paced assumption); refusals have a
+  defined block shape; caps are sized to the gate's measured runtime, with a
+  no-progress stop; a target-establishing step opens the recipe; the
+  memory-distrust rationale no longer depends on a training-cutoff claim that
+  newer models falsify; the duplicated Scope section and the `.claude/loop.md`
+  aside are gone.
+- **context-audit:** "target harness" is derived from repo evidence, not
+  assumption; the no-op verdict has its own output contract; the SCOPE axis is
+  pure reach with sacred/dead as flags, restoring the claimed orthogonality;
+  enforcement-superseded deletion is scoped to non-critical rules (critical
+  guardrails keep prose plus enforcement); hit-rate gets an estimation method
+  and one unit; the Claude-side invocation check names its mechanisms; the
+  support matrix reaches the read-back.
+
+Known open question (deliberately unchanged): `context-audit` still ships no
+`allowed-tools` restriction backing its analysis-only promise — pending a
+decision and an isolated-install canary, matching the repo's rule for untested
+frontmatter mechanisms.
+
 ## 0.11.4 — 2026-08-07
 
 Codex worker: a broken OS sandbox no longer hides behind a healthy envelope

@@ -16,15 +16,24 @@ unreachable indirection is a regression.
 
 Do not classify or move a rule until its current and proposed reach are known:
 
-1. Identify every target harness and its canonical instruction file. Read `CLAUDE.md`,
-   `AGENTS.md`, import adapters, parent/global instructions, and every file they require.
+1. Identify every target harness and its canonical instruction file. The target-harness
+   set comes from evidence, not assumption: harness artifacts present in the repo
+   (`CLAUDE.md`, `AGENTS.md`, import adapters, harness manifests, hooks or settings)
+   plus any harness the user names. No artifact and no mention → not a target;
+   ambiguous → ask. Read the canonical files, adapters, parent/global instructions, and
+   every file they require. Done when the harness list and its evidence can be stated in
+   the read-back.
 2. Determine each harness's effective skill invocation policy from the installed skill
    metadata and user/project settings. Check, rather than infer, whether skills are
    model-invoked or explicit/name-only. In Codex, inspect
-   `policy.allow_implicit_invocation` where present. In Claude Code, inspect the effective
-   skill settings and frontmatter. Do not change invocation policy as part of the audit.
-3. Record which mechanisms each target harness actually supports. If policy or support
-   cannot be proven, treat skills as explicit and use the least-capable shared contract.
+   `policy.allow_implicit_invocation` where present. In Claude Code, inspect skill
+   frontmatter (`disable-model-invocation`, `user-invocable`) and effective settings
+   (`skillOverrides` — noting they do not affect plugin-shipped skills). Do not change
+   invocation policy as part of the audit. Done when each harness's policy is proven or
+   marked unknown.
+3. Record which mechanisms each target harness actually supports; this support matrix
+   belongs in the read-back. If policy or support cannot be proven, treat skills as
+   explicit and use the least-capable shared contract.
 4. For a shared project, identify one canonical source plus any harness adapters. Do not
    duplicate the same rule merely to serve both harnesses.
 
@@ -41,16 +50,21 @@ Apply these reachability rules:
 
 Mandatory always-on rules stay in canonical root instructions. Mandatory directory rules
 may move to nested instructions only after verifying that every target harness loads them.
-Optional procedures may move to skills. Claude Code hooks may enforce critical operations,
-but they supplement rather than replace cross-harness instructions.
+Optional procedures may move to skills.
 
 ## When to run — and when to stop
 
 Run a full audit only when it pays back. Gauge two things:
 
 - **Irrelevance fraction** — what share of the file a *typical* session never uses.
-- **Session-hit-rate per domain** — a cluster touched in ~5% of sessions is a great
-  move-out candidate; one touched in ~60% is not.
+- **Session-hit-rate per domain** — rate it high/med/low from observable proxies:
+  git-log touch frequency of the domain's files, the share of the tree it covers, any
+  session history the user offers. A cluster touched in few sessions (roughly ~5%) is a
+  great move-out candidate; one touched in most (~60%) is not. State the proxy used; if
+  none is available, mark the rate unknown and say the verdict is weakened by it.
+
+A repo with no instruction files at all is not an audit target — say so and offer a
+bootstrap proposal instead of a restructuring.
 
 If the file is already lean and mostly relevant every session, **say so and stop** —
 splitting adds indirection for no attention gain. Raw line count is a weak proxy: a
@@ -62,17 +76,17 @@ nudge, not a law.)
 
 1. **Read** the complete instruction stack identified above.
 2. **Map** the folder structure, domains, target harnesses, and effective loading policy.
-3. **Classify** each rule on type and scope, then mark it mandatory or optional.
+3. **Classify** each rule on type and scope, then mark it mandatory or optional. Done
+   when every live rule carries type, scope, flags, and mandatory/optional.
 4. **Place** each rule in the cheapest location that preserves its required reach.
 5. **Draft** ready-to-review canonical instructions, adapters, nested files, skills, and
-   hook configuration as applicable.
+   hook configuration as applicable. Done when every moved rule appears in a draft.
 6. **Verdict** against the worth-it test above. A no-op is a useful result.
 
 ## Classify on two axes
 
 Type and scope are **orthogonal** — every rule has both. Scope narrows the candidate
-locations; mandatory versus optional reach selects among them. A flat sort mis-files
-things.
+locations; mandatory versus optional reach selects among them.
 
 **Axis 1 — TYPE (what kind of content):**
 
@@ -85,9 +99,12 @@ things.
 | Knowledge | Background facts about the domain / architecture |
 
 **Axis 2 — SCOPE (drives placement):** Universal · Domain (task-type) · Domain
-(directory) · Sacred invariant · Dead/stale. One *Guardrail* can be Universal, Domain,
-or Sacred. Its required reach still determines whether it stays static, moves to verified
-nested instructions, or becomes an optional skill procedure with added enforcement.
+(directory). Two flags ride alongside scope without replacing it: **sacred** (a
+guardrail whose loss causes regressions — see Guardrails) and **dead/stale** (no live
+rule; a deletion candidate whatever its scope — it needs no further classification, its
+proposed location is delete/archive). A live rule's required reach still determines
+whether it stays static, moves to verified nested instructions, or becomes an optional
+skill procedure with added enforcement.
 
 ## Placement
 
@@ -119,9 +136,11 @@ Rules of thumb the table can't hold:
   global `~/.claude/CLAUDE.md`, parent-directory files, the project file. A rule stated
   in two layers pays attention twice and drifts independently: keep it in the narrowest
   layer that covers its scope, delete the other copy.
-- **Enforcement-superseded prose.** If a deterministic mechanism enforces a rule for
-  every target harness, delete duplicate prose or shrink it to a one-line pointer. Keep
-  prose where another harness still needs it or where it must steer work before a block.
+- **Enforcement-superseded prose.** If a deterministic mechanism enforces a
+  *non-critical* rule for every target harness, delete duplicate prose or shrink it to a
+  one-line pointer. Keep prose where another harness still needs it or where it must
+  steer work before a block. Critical guardrails follow the Guardrails section instead:
+  enforcement supplements their prose, never replaces it.
 
 ## Guardrails are sacred
 
@@ -147,16 +166,21 @@ content in the file — they exist because the agent *will* repeat the mistake w
 
 Present, in order:
 
-1. **Read-back** — list the instruction stack, target harnesses, and evidence for each
-   effective invocation policy. Mark unknowns explicitly.
+1. **Read-back** — list the instruction stack, the target harnesses with their evidence,
+   the mechanism-support matrix, and evidence for each effective invocation policy. Mark
+   unknowns explicitly, and flag broken or unreadable imports as defects.
 2. **Verdict up front** — worth restructuring or leave it? One sentence, then the reasoning.
-3. **Classification table** — each rule → type → scope → mandatory/optional → current
-   reach → proposed location → reach after the move.
+3. **Classification table** — each rule → type → scope (plus sacred/dead flags) →
+   mandatory/optional → current reach → proposed location → reach after the move.
 4. **What a typical session stops loading** — per moved domain, its rough hit-rate
    (high/med/low) and what leaves always-on context. Frame as attention/confusion
    reduction; a token delta is a footnote, not the headline.
 5. **Draft files** — full contents of the canonical instructions, adapters, and each new
    skill, nested file, or hook. Keep each extracted domain self-contained and flag every
    guardrail's new home. Do not invent unsupported cross-harness parity.
-6. **Apply steps** — the exact file operations. **Do not perform them** — this skill
-   proposes; the user reviews and applies.
+6. **Apply steps** — the exact file operations, including any the dedup rule names on
+   user-global files. **Do not perform them** — this skill proposes; the user reviews
+   and applies.
+
+On a leave-it-alone verdict, deliver items 1–2 plus any dead/stale deletions worth
+naming, and stop — no draft files or apply steps for a structure that should not change.

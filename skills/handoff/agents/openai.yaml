@@ -1,6 +1,6 @@
 interface:
   display_name: "Handoff"
-  short_description: "Create a paste-ready task handoff"
+  short_description: "Create a paste-ready task handoff, saved to a handoffs directory chosen per harness (prunes saved handoffs older than 30 days)"
   default_prompt: "Use $handoff to preserve the current task for continuation in a fresh session."
 policy:
   allow_implicit_invocation: false
