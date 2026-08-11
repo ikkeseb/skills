@@ -33,9 +33,13 @@ and either `shasum` or `sha256sum`. `probe` makes no model call and returns
 sandbox_write, write_ready}`. A missing `jq` returns `missing_dependency`
 immediately. `sandbox_write` is measured, not inferred: probe performs one
 unbilled write inside the real OS sandbox (`codex sandbox`, under the same
-sandbox-implementation pin `run` uses), because dependency presence does not
+sandbox-implementation pin *write* runs use — read-only runs are unpinned on
+native Windows, see Write-worker gates), because dependency presence does not
 prove write capability — on native Windows every write can be rejected while
-git, jq and the hash tool all pass. `true`/`false` are verdicts and `false`
+git, jq and the hash tool all pass. A passing probe does not clear the lane
+for later runs: the Windows sandbox has been observed degrading underneath a
+`sandbox_write: true` probe within the minute (2026-08-11), so treat probe as
+necessary, never sufficient, for write dispatch. `true`/`false` are verdicts and `false`
 gates `write_ready`; `null` means the test could not run and gates nothing.
 `write_ready: false` leaves the read-only lane available: route write stages
 to the Claude lane and say so. Missing write dependencies fail closed as
@@ -370,11 +374,19 @@ Known signals when reading `stderr.log` on 0.144.x:
   write runs so a moved HEAD fails closed (`base_sha_mismatch`) instead of
   running against the wrong state.
 - Native Windows: the helper pins the CLI's elevated sandbox implementation
-  (`--config 'windows.sandbox="elevated"'`) on every run. `--ignore-user-config`
+  (`--config 'windows.sandbox="elevated"'`) on **write runs only**
+  (2026-08-11; previously every run). `--ignore-user-config`
   would otherwise drop the user's `[windows]` sandbox choice, and with no
   implementation selected exec has no OS sandbox there — workspace-write
   silently degrades to read-only + approvals=never, rejecting every write
-  behind an `ok` envelope (measured 2026-08-04, codex 0.146.0). The unelevated
+  behind an `ok` envelope (measured 2026-08-04, codex 0.146.0). Read-only
+  runs deliberately go unpinned: engaging the elevated sandbox re-runs its
+  setup whenever the CLI's setup-marker bug is live (the marker is written
+  unreadable by its own owner, upstream issue), which turns every run into a
+  UAC elevation prompt; an unpinned read-only exec is policy-enforced by the
+  CLI rather than the OS — a deliberate trust downgrade for the read lane,
+  measured working (reads succeed, the sandbox never engages, no setup
+  events). Expect UAC prompts only from write runs. The unelevated
   implementation is deliberately not used: MSYS/Cygwin child processes crash
   under its restricted token, and repo tooling is often bash. Inside the
   sandbox `.git` stays write-denied on Windows, so a write worker edits files

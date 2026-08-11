@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.12.2 — 2026-08-11
+
+Orchestrate: the Codex worker helper now pins the Windows elevated sandbox
+implementation on write runs only. Read-only runs go unpinned — no OS sandbox
+engagement, CLI-policy-enforced read-only — because the elevated sandbox's
+setup re-runs on every engagement while the CLI's setup-marker bug is live
+(the marker is written unreadable by its own owner, upstream issue), turning
+every run into a UAC elevation prompt; measured working with zero sandbox
+events. Write runs keep the pin and its UAC cost. `codex-exec.md` documents
+the split and adds a field observation: a passing probe does not clear the
+lane — the Windows sandbox has degraded underneath a `sandbox_write: true`
+probe within the minute.
+
 ## 0.12.1 — 2026-08-11
 
 Orchestrate: routed a field signal from an image-generation relay session

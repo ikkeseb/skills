@@ -777,7 +777,13 @@ cmd_run() {
   )
   # See WINDOWS_SANDBOX_CONFIG: without this pin, native Windows exec has no
   # OS sandbox and workspace-write degrades to rejected-writes-with-ok-envelope.
-  ! is_windows || codex_args+=(--config "$WINDOWS_SANDBOX_CONFIG")
+  # Read-only runs deliberately skip the pin (2026-08-11): engaging the
+  # elevated sandbox re-runs its setup whenever the CLI's setup-marker bug is
+  # live (marker written owner-unreadable), turning every run into a UAC
+  # prompt; an unpinned read-only exec is enforced by the CLI's own policy
+  # instead of the OS — measured working (reads succeed, sandbox never
+  # engages). Write runs keep the pin and its UAC cost.
+  ! is_windows || [ "$sandbox" != workspace-write ] || codex_args+=(--config "$WINDOWS_SANDBOX_CONFIG")
   # `--model default` is an explicit opt-in to the CLI's built-in model, so a
   # lane call needs no repo change when the provider ships a new one. It is a
   # sentinel rather than a plain omission on purpose: a forgotten --model must

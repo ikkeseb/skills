@@ -187,14 +187,15 @@ case "$actual_call" in
   *'--model '*) fail 'default sentinel omits the CLI --model flag' ;;
   *) ok 'default sentinel omits the CLI --model flag' ;;
 esac
-# The Windows sandbox pin is platform-conditional: present on native Windows
-# (MSYS/MINGW/Cygwin), absent elsewhere.
-case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) want_pin=yes ;; *) want_pin=no ;; esac
+# The Windows sandbox pin is platform- AND mode-conditional (2026-08-11):
+# write runs pin it on native Windows; read-only runs never carry it — the
+# elevated sandbox's setup/UAC loop must not tax the read lane. This is a
+# read-only run, so the pin must be absent on every platform.
 case "$actual_call" in *'windows.sandbox'*) has_pin=yes ;; *) has_pin=no ;; esac
-if [ "$want_pin" = "$has_pin" ]; then
-  ok "windows.sandbox pin matches the platform (expected: $want_pin)"
+if [ "$has_pin" = no ]; then
+  ok 'windows.sandbox pin absent on read-only runs'
 else
-  fail "windows.sandbox pin matches the platform (expected: $want_pin)"
+  fail 'windows.sandbox pin absent on read-only runs'
 fi
 
 printf '%s\n' rate-limit > "$fake_home/fake-mode"
@@ -287,6 +288,16 @@ run_worker "$tmp/write-mutated.json" "$tmp/write-mutated.err" run \
   --expected-base-sha "$sha" --prompt-file "$prompt" --run-dir "$run_dir" --timeout 30
 assert_json "$tmp/write-mutated.json" '.ok == true and .workspace_changed == true' \
   'write run that mutates the workspace reports workspace_changed true'
+# Write runs keep the platform-conditional pin: present on native Windows,
+# absent elsewhere.
+actual_call="$(grep '^EXEC ' "$fake_home/fake-calls" | tail -n 1)"
+case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) want_pin=yes ;; *) want_pin=no ;; esac
+case "$actual_call" in *'windows.sandbox'*) has_pin=yes ;; *) has_pin=no ;; esac
+if [ "$want_pin" = "$has_pin" ]; then
+  ok "windows.sandbox pin on write runs matches the platform (expected: $want_pin)"
+else
+  fail "windows.sandbox pin on write runs matches the platform (expected: $want_pin)"
+fi
 
 # A degraded OS sandbox rejects every write while the CLI still exits 0 with a
 # completed turn; the envelope must fail closed instead of reporting ok.
