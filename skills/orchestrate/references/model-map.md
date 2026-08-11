@@ -193,6 +193,12 @@ nested delegation the orchestrator doesn't control.
   documentation is overridden here: it does not know which stages are
   substantive, and current premium models earn their best performance-per-cost
   in the high band, not the low one.
+- **Relay-stage exception** (field, 2026-08-05): a stage whose real labor
+  happens in a *separate* model the worker merely prompts — image generation
+  relayed through a Codex worker is the known case — is pinned to
+  `gpt-5.6-sol` @ `medium`; higher effort buys nothing there. Applies only
+  when the relay target is actually available in the setup, and never to
+  stages that do their own labor.
 - **Never route judgment work to the cheap tier**: luna-class models do
   extraction and mechanical checks; anything requiring a decision goes at
   least one tier up.

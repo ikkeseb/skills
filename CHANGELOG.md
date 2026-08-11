@@ -4,6 +4,20 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.12.1 — 2026-08-11
+
+Orchestrate: routed a field signal from an image-generation relay session
+(2026-08-05) into the references, re-verified end-to-end through the helper
+2026-08-11. `model-map.md` § Routing rules gains a relay-stage exception — a
+worker whose real labor happens in a separate model it merely prompts is
+pinned to `gpt-5.6-sol` @ `medium`, gated on the relay target actually being
+available and never diluting effort-by-kind for stages that do their own
+labor. `codex-exec.md` gains the matching dispatch section: send context and
+intent (the relay develops the final image prompt itself), generation works
+read-only with the image landing in `$CODEX_HOME/generated_images/`, and for
+raster edits the manual pixel-edit fallback is explicitly forbidden (hedged
+prompts steered workers into it).
+
 ## 0.12.0 — 2026-08-11
 
 Four skills tightened after a fresh-eyes audit (isolated cross-family ideal
