@@ -373,6 +373,13 @@ probe_sandbox_write() {
   # (often bash) tooling, so the probe measures what a worker child would get.
   child_bin="$(type -P bash || type -P sh || true)"
   [ -n "$child_bin" ] || return 0
+  if is_windows; then
+    # `type -P` yields an MSYS path (/usr/bin/bash) that the Windows sandbox's
+    # CreateProcessAsUserW cannot resolve ("failed: 2"), turning every probe
+    # into a false write-denied (field 2026-08-12). The sandbox needs the
+    # native Windows path.
+    child_bin="$(cygpath -w "$child_bin" 2>/dev/null || printf '%s' "$child_bin")"
+  fi
   local -a args=(sandbox -c 'sandbox_mode="workspace-write"')
   ! is_windows || args+=(-c "$WINDOWS_SANDBOX_CONFIG")
   args+=(-- "$child_bin" -c \

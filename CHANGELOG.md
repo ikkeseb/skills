@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.12.3 — 2026-08-12
+
+Orchestrate: the Codex worker helper's write probe now converts its shell
+child to a native Windows path (`cygpath -w`) before handing it to
+`codex sandbox`. `type -P bash` yields an MSYS path (`/usr/bin/bash`) that
+the Windows sandbox's `CreateProcessAsUserW` cannot resolve, so every probe
+spawn failed and read as write-denied — a false negative diagnosed in the
+field 2026-08-12 (the identical test through the native path wrote
+successfully). Non-Windows platforms are unchanged.
+
 ## 0.12.2 — 2026-08-11
 
 Orchestrate: the Codex worker helper now pins the Windows elevated sandbox
