@@ -127,6 +127,11 @@ delegate small edits.
   security/data-shape-sensitive change; enumerate generated and untracked
   files; and declare what received only a scan. Inspect partial changes from a
   failed writer before cleanup.
+- **Secrets stay on their owning host.** When a stage may touch live
+  credentials or secrets, its briefing states this boundary explicitly: never
+  copy secret values into local files, prompts, logs, or returned output;
+  inspect them on the owning host and return filtered, non-secret results. A
+  stage that cannot proceed without materializing a value stops and asks.
 - **Writers use isolated worktrees.** Writing stages never share a checkout or
   write into the main-loop tree. Repos symlinked into live configuration count
   as live system state. Worktrees still share `.git`, and tracked external

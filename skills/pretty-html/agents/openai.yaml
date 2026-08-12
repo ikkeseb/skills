@@ -1,0 +1,9 @@
+interface:
+  display_name: pretty-html
+  short_description: >-
+    Produce a polished, self-contained HTML deliverable: single file, light +
+    dark theme with a toggle, generous spacing, print-friendly — briefs,
+    one-pagers, reports, prep docs, or restyling an existing HTML file. Not
+    for web-app frontends, site frameworks, or Markdown notes.
+policy:
+  allow_implicit_invocation: false

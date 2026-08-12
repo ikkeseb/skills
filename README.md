@@ -1,7 +1,7 @@
 # skills
 
 Explicitly invoked agent skills for day-to-day work, published as one plugin.
-Claude Code ships the full set; Codex exposes the seven skills marked for both
+Claude Code ships the full set; Codex exposes the nine skills marked for both
 harnesses.
 
 ## Skills
@@ -17,13 +17,15 @@ use the `$` skill picker.
 |---|---|---|
 | **[handoff](skills/handoff)** | Compacts the session into a handoff file plus a paste-ready snippet — for switching machines or briefing another agent. Prunes saved handoffs older than 30 days. | `/handoff` |
 | **[pretty-pdf](skills/pretty-pdf)** | PDFs that look designed rather than auto-generated (HTML + CSS via weasyprint). | `/pretty-pdf` |
+| **[pretty-html](skills/pretty-html)** | Polished, self-contained HTML deliverables — single file, dual theme with a toggle, print-friendly. | `/pretty-html` |
+| **[history-audit](skills/history-audit)** | Mines the machine's agent-session history for the most common failure modes per model × harness, and proposes instruction lines one by one, each citing the run that earned it. | `/history-audit` |
 | **[excalidraw](skills/excalidraw)** | `.excalidraw` diagrams that explain something instead of just labeling boxes. | `/excalidraw` |
 | **[drawio](skills/drawio)** | Native `.drawio` XML that opens straight in app.diagrams.net. | `/drawio` |
 | **[verify-claims](skills/verify-claims)** | Fact-checks prose against traceable sources — a classified table plus a retract list of unsupported or contradicted claims. | `/verify-claims` |
 | **[agents-md-convert](skills/agents-md-convert)** | Audits, converts, or repairs repository instruction scopes so `AGENTS.md` is canonical and `CLAUDE.md` stays a one-line import adapter. | `/agents-md-convert` |
 | **[context-audit](skills/context-audit)** | Audits instruction reach and proposes a leaner context structure without stranding mandatory rules. | `/context-audit` |
 
-In Codex, invoke the same seven skills through the `$` picker.
+In Codex, invoke the same nine skills through the `$` picker.
 
 ### Claude Code only
 
@@ -57,8 +59,8 @@ Add the repo as a marketplace, then install the plugin (ships every skill above)
 
 The same repo installs as a Codex plugin. It exposes only the Codex-supported
 skills — the ones carrying an `agents/openai.yaml`: `agents-md-convert`,
-`context-audit`, `drawio`, `excalidraw`, `handoff`, `pretty-pdf`,
-`verify-claims`. `drawio` degrades gracefully where the sandbox denies network
+`context-audit`, `drawio`, `excalidraw`, `handoff`, `history-audit`,
+`pretty-html`, `pretty-pdf`, `verify-claims`. `drawio` degrades gracefully where the sandbox denies network
 or exec. `excalidraw` uses the same dependency-free builder, validator, and
 layout diagnostic in both harnesses, then requires an official Excalidraw
 surface for native visual approval; without one it reports the artifact as

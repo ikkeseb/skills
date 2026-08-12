@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TITLE</title>
+<style>
+  /* Theme: every color lives in a custom property. One accent per doc. */
+  :root {
+    --bg: #fafaf8; --card: #ffffff; --ink: #17181c; --muted: #676a72;
+    --accent: #14507a; --accent-soft: #e8f0f6; --line: #e3e4e0;
+    --good: #2e6b46; --good-soft: #ecf4ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0c0e; --card: #16181d; --ink: #e8e8e4; --muted: #979aa1;
+      --accent: #6aa5cc; --accent-soft: #18242d; --line: #2a2c33;
+      --good: #7fb894; --good-soft: #182219;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0c0e; --card: #16181d; --ink: #e8e8e4; --muted: #979aa1;
+    --accent: #6aa5cc; --accent-soft: #18242d; --line: #2a2c33;
+    --good: #7fb894; --good-soft: #182219;
+  }
+  :root[data-theme="light"] {
+    --bg: #fafaf8; --card: #ffffff; --ink: #17181c; --muted: #676a72;
+    --accent: #14507a; --accent-soft: #e8f0f6; --line: #e3e4e0;
+    --good: #2e6b46; --good-soft: #ecf4ee;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.65 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 56px 28px 104px; }
+
+  /* Header: kicker / h1 / lede */
+  .kicker { font-size: 13px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: 32px; margin: 6px 0 10px; line-height: 1.2; letter-spacing: -.01em; }
+  .lede { font-size: 18px; color: var(--muted); max-width: 640px; margin: 0 0 28px; }
+
+  h2 { font-size: 21px; letter-spacing: -.01em; margin: 60px 0 18px;
+    padding-top: 22px; border-top: 1px solid var(--line); }
+  p { margin: 14px 0; }
+  ul { margin: 14px 0; padding-left: 24px; }
+  li { margin: 9px 0; }
+  li::marker { color: var(--muted); }
+  .muted { color: var(--muted); }
+  .small { font-size: 13.5px; }
+
+  /* Fact tiles */
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px; margin: 22px 0; }
+  .fact { background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 16px 18px; }
+  .fact .big { font-size: 24px; font-weight: 700; color: var(--accent); }
+  .fact .lbl { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
+
+  /* Numbered ladder */
+  .ladder { list-style: none; margin: 20px 0; padding: 0; }
+  .ladder li { position: relative; background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 18px 20px 18px 60px; margin: 12px 0; }
+  .ladder .step { position: absolute; left: 17px; top: 18px; width: 28px; height: 28px;
+    border-radius: 50%; background: var(--accent); color: var(--card); font-weight: 700;
+    text-align: center; line-height: 28px; font-size: 14px; }
+  .ladder h3 { margin: 0 0 4px; font-size: 16px; }
+  .ladder p { margin: 0; font-size: 14.5px; color: var(--muted); }
+
+  /* Pills */
+  .pill { display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: .05em;
+    text-transform: uppercase; border-radius: 20px; padding: 2px 10px;
+    margin-left: 8px; vertical-align: middle; background: var(--accent-soft); color: var(--accent); }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+
+  /* Quiet tables */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0;
+    font-size: 15px; line-height: 1.55; }
+  th, td { text-align: left; padding: 12px 14px 12px 0; border-bottom: 1px solid var(--line);
+    vertical-align: top; }
+  td + td, th + th { padding-left: 18px; }
+  th { font-size: 12.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+
+  /* Callout */
+  .callout { background: var(--accent-soft); border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0; padding: 16px 20px; margin: 20px 0; }
+  .callout p { margin: 6px 0; }
+
+  /* Timeline list */
+  .day { list-style: none; margin: 20px 0; padding: 0; border-left: 2px solid var(--line); }
+  .day li { position: relative; padding: 10px 0 10px 26px; }
+  .day li::before { content: ""; position: absolute; left: -6px; top: 19px;
+    width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+  .day b { color: var(--accent); }
+
+  footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--muted); }
+
+  /* Theme toggle */
+  #theme-toggle { position: fixed; top: 14px; right: 14px; z-index: 10; cursor: pointer;
+    background: var(--card); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 50%; width: 36px; height: 36px; font-size: 16px; line-height: 1; }
+
+  @media print {
+    /* Force the light palette even when the toggle chose dark. */
+    :root, :root[data-theme="dark"] {
+      --bg: #ffffff; --card: #ffffff; --ink: #17181c; --muted: #676a72;
+      --accent: #14507a; --accent-soft: #e8f0f6; --line: #e3e4e0;
+      --good: #2e6b46; --good-soft: #ecf4ee;
+    }
+    #theme-toggle { display: none; }
+    .fact, .ladder li, .callout { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<button id="theme-toggle" aria-label="Toggle dark mode">◐</button>
+<script>
+/* Unique per artifact: change the storage key so docs don't share theme state. */
+(function(){var r=document.documentElement,k='CHANGE-ME-theme',s=localStorage.getItem(k);
+if(s)r.dataset.theme=s;
+function dark(){return r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;}
+addEventListener('DOMContentLoaded',function(){
+document.getElementById('theme-toggle').onclick=function(){var d=!dark();
+r.dataset.theme=d?'dark':'light';localStorage.setItem(k,r.dataset.theme);};});})();
+</script>
+<div class="wrap">
+
+<header>
+  <div class="kicker">KICKER · DATE</div>
+  <h1>TITLE</h1>
+  <p class="lede">One-sentence framing of what this document is and why it exists.</p>
+</header>
+
+<h2>Section</h2>
+<p>Body text.</p>
+
+<footer>Footer line · provenance · terms</footer>
+
+</div>
+</body>
+</html>

@@ -4,6 +4,29 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.13.0 — 2026-08-12
+
+Two new skills, both Codex-supported (inventory: 15 skills, 9 on Codex):
+
+- `pretty-html`: polished, self-contained HTML deliverables — single file,
+  dual theme with a persistent toggle, generous spacing, print-friendly —
+  with a bundled starting template. A de-personalized rewrite of a
+  previously personal skill, published here as the canonical version
+  (vault coordination note 2026-08-11).
+- `history-audit`: mines the machine's agent-session history (Claude Code
+  transcripts, Codex session logs) for correction events, counts failure
+  modes per model × harness with deterministic denominators, and proposes
+  instruction lines one by one, each citing its source session. Detects
+  which corpora exist and reports an absent one as unknown, never zero;
+  cross-family verification only when a second lane exists (vault
+  coordination note 2026-08-12).
+
+Orchestrate: the delegation contract gains a secrets boundary — stages that
+may touch live credentials are briefed to never materialize secret values
+into files, prompts, logs, or returned output; inspect on the owning host,
+return filtered results, stop and ask when a value would have to move
+(vault coordination note 2026-08-12, from a homelab field incident).
+
 ## 0.12.3 — 2026-08-12
 
 Orchestrate: the Codex worker helper's write probe now converts its shell

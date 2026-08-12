@@ -1,0 +1,9 @@
+interface:
+  display_name: history-audit
+  short_description: >-
+    Mine this machine's agent-session history (Claude Code, Codex) for the
+    most common failure modes per model × harness, and turn the top patterns
+    into per-line instruction proposals citing the runs that earned them.
+    Not for reviewing code, a single session, or live behavior.
+policy:
+  allow_implicit_invocation: false
