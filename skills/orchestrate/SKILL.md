@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Delegation posture — the main loop keeps design, specification, review, and integration while routing tightly specified execution through Claude Code and Codex workers. Single-task or sustained for the session.
+description: Delegation posture — the main loop keeps design, specification, review, and integration while routing tightly specified execution through Claude Code and Codex workers. One invocation stands for the session — single-task with discretion to re-delegate when it fits, or sustained as the mandatory posture.
 ---
 
 # orchestrate
@@ -90,12 +90,16 @@ the session workflow-size guideline as a ceiling. If a stage limits coverage
 
 ## Modes and reporting
 
-- `/orchestrate <task>` — single task.
-- `/orchestrate sustained` — session posture. It ends only on an explicit stop
-  signal in any language; questions and redirects do not end it. A new session
-  starts fresh.
+- `/orchestrate <task>` — delegate the named task. The invocation also stands
+  for the rest of the session, Workflow opt-in included: when a later task
+  clearly passes the split, route it through this skill again without a fresh
+  invocation. When in doubt, stay in the main loop.
+- `/orchestrate sustained` — session posture: every task goes through the
+  split. It ends only on an explicit stop signal in any language; questions
+  and redirects do not end it. A new session starts fresh.
 
-Open with `[orchestrate]` or `[orchestrate sustained]`. In the final report,
+Open with `[orchestrate]` or `[orchestrate sustained]`, discretionary
+re-entries included. In the final report,
 account for every delegated stage's actual model and effort. For Claude aliases,
 report the resolved model when verified; otherwise report the alias and say the
 resolution is unknown.
@@ -157,5 +161,5 @@ delegate small edits.
 This skill owns the instrument, role split, and worker/provider selection; it
 defers breadth, interaction, teardown, and spend policy. Final judgment remains
 main-loop work, while independent evidence for that judgment may delegate.
-During unattended work, default this skill to single-task, log that choice, and
-stay within the session's budget and blast-radius rules.
+During unattended work, hold the standing discretion to single, logged
+delegations and stay within the session's budget and blast-radius rules.

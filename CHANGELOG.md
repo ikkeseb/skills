@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.14.0 — 2026-08-14
+
+Orchestrate: one explicit invocation now stands for the rest of the session.
+`/orchestrate <task>` still runs the named task, but afterwards the agent may
+route later tasks that clearly pass the split through the skill again without
+a fresh invocation (Workflow opt-in included), announcing each re-entry with
+`[orchestrate]`. `sustained` remains the mandatory session posture; unattended
+work holds the standing discretion to single, logged delegations. Explicit
+invocation stays the only entry point — the skill is still never
+model-triggered from its description.
+
 ## 0.13.0 — 2026-08-12
 
 Two new skills, both Codex-supported (inventory: 15 skills, 9 on Codex):
