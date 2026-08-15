@@ -11,7 +11,7 @@ and prefer bending an existing pattern before inventing from zero.
 
 | Pattern | Hook | Reach for it when | Failure mode |
 |---|---|---|---|
-| Title | `.s1-body` | The opening. Kicker row, huge display title, byline, full-bleed band (drawn art or image). | Cramming an agenda under the title — the overview grid (`G`) is the agenda. |
+| Title | `.s1-body` | The opening. Kicker row, huge display title, byline; optionally a full-bleed image band when a real image exists — otherwise no band. | Decorative filler in the band: unlabeled rails/dots/pseudo-diagrams read as broken content. Also: cramming an agenda under the title — the overview grid (`G`) is the agenda. |
 | Statement | `.statement` | One claim must land on its own. Optional identity-square second line and mono attribution row. | Using it for lists; a statement with three clauses is a numbered-lines slide. |
 | Section divider | `.divider` | Chapter breaks in decks over ~10 slides. Giant mono numeral, title, drawn rule. | Dividing a 6-slide deck — dividers need chapters worth dividing. |
 | Numbered lines | `.room` | 3–5 parallel spoken beats, each a full sentence. Closing line takes the identity square. | Bullets-in-disguise: lines that nobody would say out loud. |

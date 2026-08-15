@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.15.1 — 2026-08-15
+
+pretty-slides: remove the title slide's decorative "drawn band" from the
+engine template. A five-deck blind diversity test showed every agent
+faithfully copying the placeholder art — a rail with unlabeled dots that
+reads as a broken timeline. The hero band is now explicitly optional and
+image-only, and the patterns reference states the rule: decorative filler
+must never mimic data visualization. Lesson recorded: example content in
+a template is normative in practice — agents copy what they see.
+
 ## 0.15.0 — 2026-08-15
 
 New skill `pretty-slides` (inventory: 16 skills, 9 on Codex — Claude Code
