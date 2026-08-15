@@ -4,6 +4,21 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.16.0 — 2026-08-15
+
+New skill `prettier-html` (inventory: 17 skills, 9 on Codex — Claude Code
+only): art-directed single-file HTML pages with editorial ambition. Unlike
+its siblings it deliberately ships no template and no house palette — the
+skill owns a mandatory concept step (content-shaped composition, tested by
+content-swap), calibration ranges with a reuse limit, floor invariants
+(dual art-directed themes, responsive reflow, WCAG AA measured, legible
+print), two robust wiring snippets (theme boot/toggle; reveal-through
+observer that survives jump scrolls), and measured traps. Verified through
+three blind builds plus two real-brief builds across opus and gpt-5.6-sol,
+and a sol@max adversarial review; every fix in the shipped text cites a
+defect one of those runs actually produced. Codex support deferred: both
+Codex-lane builds shipped visual defects their sandbox could not see.
+
 ## 0.15.1 — 2026-08-15
 
 pretty-slides: remove the title slide's decorative "drawn band" from the

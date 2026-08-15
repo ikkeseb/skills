@@ -42,6 +42,7 @@ automation, image inspection) not yet proven under Codex.
 | **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes mechanical work to worker models: Claude agents, plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
 | **[suggest-loop](skills/suggest-loop)** | Turns a repo's documented verification gate into ready-to-paste `/loop` prompts with stop conditions baked in. | `/suggest-loop` |
 | **[pretty-slides](skills/pretty-slides)** | Presentations as one self-contained HTML file — bundled slide engine with keyboard-only navigation and pattern-bound motion, plus a build step that inlines assets. | `/pretty-slides` |
+| **[prettier-html](skills/prettier-html)** | Art-directed single-file HTML pages with editorial ambition — a fresh visual concept per invocation, designed by the session agent against the skill's quality floor. | `/prettier-html` |
 
 Each skill folder contains its `SKILL.md`; Excalidraw also carries setup notes
 for its render-and-inspect pipeline.
