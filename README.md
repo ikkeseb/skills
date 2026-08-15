@@ -30,7 +30,8 @@ In Codex, invoke the same nine skills through the `$` picker.
 ### Claude Code only
 
 These are intentionally omitted from the Codex manifest; their contracts rely
-on Claude Code session, agent, or loop behavior.
+on Claude Code session, agent, or loop behavior, or on tooling (browser
+automation, image inspection) not yet proven under Codex.
 
 | Skill | What it does | Invoke |
 |---|---|---|
@@ -40,6 +41,7 @@ on Claude Code session, agent, or loop behavior.
 | **[second-opinion](skills/second-opinion)** | One read-only Codex call on work that already exists, answered as a synthesis rather than a relay. Vendor independence without the delegation ceremony. | `/second-opinion` |
 | **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes mechanical work to worker models: Claude agents, plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
 | **[suggest-loop](skills/suggest-loop)** | Turns a repo's documented verification gate into ready-to-paste `/loop` prompts with stop conditions baked in. | `/suggest-loop` |
+| **[pretty-slides](skills/pretty-slides)** | Presentations as one self-contained HTML file — bundled slide engine with keyboard-only navigation and pattern-bound motion, plus a build step that inlines assets. | `/pretty-slides` |
 
 Each skill folder contains its `SKILL.md`; Excalidraw also carries setup notes
 for its render-and-inspect pipeline.

@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.15.0 — 2026-08-15
+
+New skill `pretty-slides` (inventory: 16 skills, 9 on Codex — Claude Code
+only for now): presentations as one self-contained HTML file, from a bundled
+engine template plus a build step that inlines fonts and images. Keyboard-only
+navigation, eleven slide patterns with pattern-bound motion (direction-aware
+transitions, plate unveils, drawn rules, count-up numerals, one springing
+identity mark per slide), a re-skinnable token block with a dark editorial
+default, and a deterministic `?qa=1` mode that makes screenshot QA settle.
+The engine is a generalized port of a work-repo deck engine; all
+project-specific content was replaced with a self-documenting example deck.
+Codex support deferred until the QA gate has a proven harness-neutral path.
+
 ## 0.14.0 — 2026-08-14
 
 Orchestrate: one explicit invocation now stands for the rest of the session.

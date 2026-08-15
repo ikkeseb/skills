@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pretty Slides</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='3' y='3' width='10' height='10' fill='%23E5A83B'/%3E%3C/svg%3E">
+<style>
+/* __FONTS_CSS__ */
+
+/* ============================================================
+   pretty-slides engine template (self-contained HTML deck)
+   Engine: pretty-slides from the ikkeseb-skills plugin — MIT
+   license (https://github.com/ikkeseb/skills). Keep this notice
+   in built decks; the deck's own content is yours.
+   The EXAMPLE CONTENT below is a deck about this engine itself —
+   one worked example of every slide pattern. Replace the content,
+   keep the machinery (transitions, fragments, auto-stagger,
+   digit jump, overview grid, progress rail, QA mode).
+   Skin the deck in the token block below; the engine never uses
+   a color or duration outside it.
+   Navigation: arrows/space; digits+Enter jump; G = overview.
+   QA: append ?qa=1 for a deterministic, motion-free render.
+   ============================================================ */
+
+:root {
+  /* ---- color tokens (swap these to re-skin; engine reads only tokens) ---- */
+  --bg:       #0D0D0C;   /* stage */
+  --surface:  #171614;   /* panels, cards */
+  --media-bg: #0A0A09;   /* behind images and diagrams */
+  --ink:      #F0EBE2;   /* primary text */
+  --ink2:     #A79E92;   /* secondary text */
+  --ink3:     #6E675E;   /* muted labels */
+  --line:        rgba(240, 235, 226, 0.14);  /* panel borders, quiet rules */
+  --line-strong: rgba(240, 235, 226, 0.22);  /* dotted separators */
+  --hair:        rgba(240, 235, 226, 0.05);  /* background grid hairlines */
+  --rail-track:  rgba(240, 235, 226, 0.06);  /* progress rail track */
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  --accent:        #2F6B67;   /* continuity: rail, sources, timeline */
+  --accent-strong: #3E8A85;   /* accent on small marks that need contrast */
+  --identity:      #E5A83B;   /* the scalpel: at most one small mark per slide */
+  --code-string:   #C98A5E;   /* string literals in code panels */
+  --sans: system-ui, 'Segoe UI Variable Display', 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+  /* ---- motion tokens (choreography; keep separate from the skin) ---- */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);      /* decisive decelerate */
+  --ease-soft:   cubic-bezier(0.22, 0.61, 0.36, 1);  /* long draws: rails, rules */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);  /* identity mark only */
+  --dur-slide: 480ms;
+  --dur-frag:  420ms;
+  --dur-hero:  560ms;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 16px; line-height: 1.6;
+}
+.mono { font-family: var(--mono); }
+
+/* ---------- stage + slides (direction-aware) ---------- */
+.stage { position: fixed; inset: 0; }
+.slide {
+  position: absolute; inset: 0;
+  padding: 0 3vw;
+  display: flex; flex-direction: column;
+  opacity: 0; visibility: hidden;
+  transform: translateY(14px);
+  transition: opacity var(--dur-slide) var(--ease-out),
+              transform var(--dur-slide) var(--ease-out),
+              visibility 0s linear var(--dur-slide);
+}
+.stage.back .slide { transform: translateY(-14px); }
+.stage.back .slide.active { transform: none; } /* must outrank .stage.back .slide */
+.slide.active {
+  opacity: 1; visibility: visible;
+  transform: none;
+  transition: opacity var(--dur-slide) var(--ease-out) 90ms,
+              transform var(--dur-slide) var(--ease-out) 90ms,
+              visibility 0s;
+}
+/* within an artifact group (same data-group) the shared header must hold
+   still: fade only, no rise, no incoming delay */
+.stage.group-move .slide,
+.stage.group-move.back .slide { transform: none; }
+.stage.group-move .slide.active {
+  transition: opacity var(--dur-slide) var(--ease-out), visibility 0s;
+}
+
+/* fragments: revealed step by step inside the active slide */
+.frag { opacity: 0; transform: translateY(10px); transition: opacity var(--dur-frag) var(--ease-out), transform var(--dur-frag) var(--ease-out); }
+.frag.on { opacity: 1; transform: none; }
+
+/* entrance flavour: image/diagram/code plates are unveiled, not faded —
+   fires from the pattern's normal markup, nothing to opt into */
+.frag.dplate, .frag .dplate, .frag.code, .frag .code, .frag .docmock {
+  clip-path: inset(0 0 100% 0);
+  transform: scale(1.02);
+  transition: clip-path calc(var(--dur-frag) * 1.6) var(--ease-out),
+              transform calc(var(--dur-frag) * 1.6) var(--ease-out),
+              opacity var(--dur-frag) var(--ease-out);
+}
+.frag.on.dplate, .frag.on .dplate, .frag.on.code, .frag.on .code, .frag.on .docmock {
+  clip-path: inset(0 0 0 0);
+  transform: none;
+}
+
+/* entrance flavour: ruled rows draw their line in, then lift the text */
+.rline, .step, .cmp-row { position: relative; }
+.rline::before, .step::before, .cmp-row::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0;
+  border-top: 1px dotted var(--line-strong);
+  transform: scaleX(0); transform-origin: left center;
+  transition: transform calc(var(--dur-frag) * 1.5) var(--ease-soft);
+}
+.frag.on.rline::before, .frag.on.step::before, .frag.on.cmp-row::before,
+.rline:first-child::before, .step:first-child::before { transform: scaleX(1); }
+.rline:first-child::before, .step:first-child::before { border-top: 0; }
+
+/* entrance flavour: the one content identity mark may spring; furniture
+   (kicker brand square, rail tick) never does, and nothing else overshoots */
+.idmark { transform: scale(0.6); transition: transform 380ms var(--ease-spring); }
+.frag.on .idmark { transform: none; }
+
+/* hero stagger on the title slide (plays when the slide activates) */
+.hs { opacity: 0; transform: translateY(12px); transition: opacity var(--dur-hero) var(--ease-out), transform var(--dur-hero) var(--ease-out); }
+.slide.active .hs { opacity: 1; transform: none; }
+.slide.active .hs.d1 { transition-delay: 120ms; }
+.slide.active .hs.d2 { transition-delay: 280ms; }
+.slide.active .hs.d3 { transition-delay: 440ms; }
+.slide.active .hs.d4 { transition-delay: 640ms; }
+
+/* deterministic renders: ?qa=1 and prefers-reduced-motion collapse ALL
+   motion to instant — every animated selector must appear here */
+@media (prefers-reduced-motion: reduce) {
+  .slide, .frag, .frag .dplate, .frag .code, .frag .docmock, .hs, .idmark,
+  .rline::before, .step::before, .cmp-row::before,
+  .tl-rail, .slide.active .tl-rail, .tl-st.frag, .divider-rule,
+  .rail .fill, .rail .tick { transition: none !important; transform: none !important; clip-path: none !important; }
+}
+html.qa .slide, html.qa .frag, html.qa .frag .dplate, html.qa .frag .code,
+html.qa .frag .docmock, html.qa .hs, html.qa .idmark,
+html.qa .rline::before, html.qa .step::before, html.qa .cmp-row::before,
+html.qa .tl-rail, html.qa .tl-st.frag, html.qa .divider-rule,
+html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transform: none !important; clip-path: none !important; }
+
+/* ---------- shared furniture ---------- */
+.kicker {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 26px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em;
+  color: var(--ink2);
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand .sq { width: 10px; height: 10px; background: var(--identity); flex-shrink: 0; }
+.brand .mark { font-weight: 500; font-size: 13px; letter-spacing: 0.18em; color: var(--ink); }
+.kicker .kr { color: var(--ink3); }
+
+.hair-v { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dotted var(--hair); pointer-events: none; }
+.hair-v.one { left: 33.333%; }
+.hair-v.two { left: 66.666%; }
+
+.microlabel { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink3); text-transform: uppercase; }
+
+.sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; padding-top: 5vh; }
+.sec-head h2 { font-weight: 600; font-size: clamp(34px, 3.4vw, 52px); letter-spacing: -0.03em; line-height: 1.08; max-width: 24ch; }
+.sec-tag { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; color: var(--ink3); white-space: nowrap; }
+.sec-tag .rd { color: var(--identity); }
+
+.panel {
+  background: var(--surface); border: 1px solid var(--line);
+  box-shadow: var(--shadow); padding: 26px 28px;
+}
+.panel .plab { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; color: var(--ink3); margin-bottom: 14px; }
+.panel .plab .pin { color: var(--identity); margin-right: 8px; }
+
+/* dark media plate: hairline frame, image bleeds dark-into-dark */
+.dplate { border: 1px solid var(--line); box-shadow: var(--shadow); background: var(--media-bg); overflow: hidden; }
+.dplate img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* pending-asset placeholder */
+.pending {
+  border: 1px dashed var(--line-strong); display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--ink3);
+  text-align: center; padding: 20px;
+}
+
+.foot-note { position: absolute; right: 3vw; bottom: 58px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; color: var(--ink3); }
+.foot-note .rd { color: var(--identity); }
+
+/* ---------- progress rail (bottom) ---------- */
+.rail { position: fixed; left: 0; right: 0; bottom: 0; height: 3px; background: var(--rail-track); z-index: 10; }
+.rail .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--accent); transition: width var(--dur-slide) var(--ease-soft); }
+.rail .tick { position: absolute; top: -2px; width: 2px; height: 7px; background: var(--identity); transition: left var(--dur-slide) var(--ease-soft); }
+.counter {
+  position: fixed; right: 3vw; bottom: 16px; z-index: 10;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink3);
+}
+.counter .cur { color: var(--ink2); }
+.jumpbuf { position: fixed; left: 3vw; bottom: 38px; z-index: 10; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink2); min-height: 1em; }
+.hint { position: fixed; left: 3vw; bottom: 16px; z-index: 10; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--ink3); opacity: 0.7; }
+
+/* ---------- overview grid (G) ---------- */
+.overview {
+  position: fixed; inset: 0; z-index: 20; background: var(--bg);
+  display: none; flex-direction: column; padding: 6vh 6vw; overflow-y: auto;
+}
+.overview.open { display: flex; }
+.overview .ohead { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--ink3); margin-bottom: 3vh; }
+.overview ol { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 4vw; }
+.overview li { border-top: 1px dotted var(--line-strong); }
+.overview button {
+  width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
+  display: flex; gap: 18px; align-items: baseline; padding: 14px 4px;
+  color: var(--ink2); font-family: var(--sans); font-size: clamp(15px, 1.4vw, 19px);
+}
+.overview button:hover { color: var(--ink); }
+.overview button .onum { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--ink3); flex: 0 0 3ch; }
+.overview button:hover .onum { color: var(--identity); }
+
+/* ---------- pattern · title ---------- */
+.s1-body { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.s1-title { margin-top: auto; padding-bottom: 3.4vh; }
+.s1-title h1 { font-weight: 600; font-size: clamp(56px, 7.4vw, 116px); line-height: 1.0; letter-spacing: -0.04em; }
+.s1-sub { margin-top: 14px; font-size: clamp(18px, 1.7vw, 25px); line-height: 1.45; color: var(--ink2); letter-spacing: -0.01em; }
+.s1-byline { margin-top: 18px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; color: var(--ink3); }
+.s1-byline .nm { color: var(--ink2); }
+/* hero band: swap for a full-bleed image (see build.py) or keep the drawn one */
+.s1-art { position: relative; height: 34vh; margin: 0 -3vw; overflow: hidden; border-top: 1px dotted var(--line-strong); }
+.s1-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 55%; display: block; }
+.s1-art::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 30px 40px -20px var(--bg); pointer-events: none; }
+.s1-art .drawn { position: absolute; inset: 0; }
+.s1-art .drawn .rline-art { position: absolute; left: 8vw; right: 8vw; top: 50%; border-top: 3px solid var(--accent); }
+.s1-art .drawn .dot-art { position: absolute; top: calc(50% - 5px); width: 11px; height: 11px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent-strong); }
+.s1-art .drawn .sq-art { position: absolute; top: calc(50% - 24px); width: 9px; height: 9px; background: var(--identity); }
+
+/* ---------- pattern · statement ---------- */
+.statement { display: flex; flex-direction: column; justify-content: center; flex: 1; padding: 0 0 9vh; max-width: 1050px; }
+.statement .sbig { font-weight: 600; font-size: clamp(26px, 2.6vw, 40px); line-height: 1.35; letter-spacing: -0.02em; }
+.statement .sbig em { font-style: normal; color: var(--ink3); }
+.statement .ssec { margin-top: 5vh; font-size: clamp(19px, 1.8vw, 27px); line-height: 1.45; color: var(--ink2); display: flex; gap: 16px; }
+.statement .ssec .sqr { width: 9px; height: 9px; background: var(--identity); flex-shrink: 0; margin-top: calc(0.72em - 5px); }
+.statement .attrib { margin-top: 3vh; font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; color: var(--ink3); }
+
+/* ---------- pattern · section divider ---------- */
+.divider { display: flex; flex-direction: column; justify-content: center; flex: 1; padding: 0 0 9vh; }
+.divider .dnum { font-family: var(--mono); font-weight: 400; font-size: clamp(80px, 11vw, 170px); line-height: 1; color: var(--ink3); letter-spacing: -0.02em; }
+.divider .dtitle { margin-top: 2vh; font-weight: 600; font-size: clamp(30px, 3vw, 46px); letter-spacing: -0.03em; }
+.divider-rule { margin-top: 4vh; border-top: 1px dotted var(--line-strong); transform: scaleX(0); transform-origin: left center; transition: transform 900ms var(--ease-soft) 200ms; }
+.slide.active .divider-rule { transform: scaleX(1); }
+
+/* ---------- pattern · numbered lines ---------- */
+.room { display: flex; flex-direction: column; justify-content: center; flex: 1; padding: 3vh 0 9vh; max-width: 1100px; }
+.room .rline { display: flex; gap: 2.2vw; align-items: baseline; padding: 2.6vh 0; }
+.room .rnum { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; color: var(--ink3); flex: 0 0 4ch; }
+.room .rtxt { font-size: clamp(19px, 1.9vw, 28px); line-height: 1.4; letter-spacing: -0.01em; color: var(--ink); }
+/* the square centers on the first text line: em must track the text size */
+.room .rclose { margin-top: 5vh; display: flex; gap: 16px; font-size: clamp(20px, 2vw, 30px); }
+.room .rclose .sqr { width: 9px; height: 9px; background: var(--identity); flex-shrink: 0; margin-top: calc(0.7em - 5px); }
+.room .rclose .ctxt { font-size: inherit; font-weight: 600; letter-spacing: -0.02em; }
+
+/* ---------- pattern · exchange (prompt/answer panels) ---------- */
+.work { display: flex; gap: 2.4vw; flex: 1; min-height: 0; align-items: flex-start; padding: 6vh 0 9vh; }
+.wcol { display: flex; flex-direction: column; gap: 2.2vh; flex: 1; min-width: 0; }
+.wcol.wr { margin-top: 7vh; } /* answer follows the prompt, reading down-right */
+.prompt-text { font-family: var(--mono); font-size: clamp(14px, 1.15vw, 17px); line-height: 1.75; color: var(--ink); letter-spacing: -0.01em; }
+.answer .arow { display: flex; gap: 14px; padding: 11px 0; border-top: 1px dotted var(--line-strong); font-size: clamp(14px, 1.1vw, 16.5px); line-height: 1.55; }
+.answer .arow:first-of-type { border-top: 0; padding-top: 0; }
+.answer .aterm { font-family: var(--mono); font-size: 0.82em; letter-spacing: 0.04em; color: var(--ink2); flex: 0 0 15ch; padding-top: 2px; }
+.answer .adef { color: var(--ink); }
+.answer .adef em { font-style: normal; color: var(--ink2); }
+.answer .adef .mono { font-size: 0.85em; color: var(--ink2); }
+.source { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.08em; color: var(--ink2); }
+.source .sqr { width: 8px; height: 8px; background: var(--accent-strong); flex-shrink: 0; }
+.source .path { color: var(--ink3); }
+
+/* ---------- pattern · timeline on the rail ---------- */
+.tl { display: flex; flex-direction: column; justify-content: center; flex: 1; padding: 0 0 9vh; }
+.tl-rail { position: relative; height: 3px; background: var(--accent); margin: 9vh 0 0; transform: scaleX(0); transform-origin: left center; transition: transform 1100ms var(--ease-soft); }
+.slide.active .tl-rail { transform: scaleX(1); transition-delay: 300ms; }
+/* stations glide in along the rail, slower than the default fragment reveal */
+.tl-st.frag { transform: translateX(-22px); transition: opacity 750ms var(--ease-out), transform 750ms var(--ease-soft); }
+.tl-st.frag.on { transform: none; } /* later than .frag.on in source, so restate the landing */
+.tl-stations { display: flex; justify-content: space-between; margin-top: -7px; }
+.tl-st { flex: 1; position: relative; padding-right: 2vw; }
+.tl-st .dot { width: 11px; height: 11px; background: var(--bg); border: 2px solid var(--accent-strong); border-radius: 50%; }
+.tl-st.now .dot { border-color: var(--identity); }
+.tl-st .tmon { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--ink3); margin: 2.4vh 0 0.6vh; }
+.tl-st.now .tmon { color: var(--identity); }
+.tl-st .tlab { font-size: clamp(14px, 1.25vw, 18px); line-height: 1.4; color: var(--ink); max-width: 16ch; }
+.tl-under { margin-top: 8vh; font-size: clamp(16px, 1.4vw, 21px); color: var(--ink2); }
+
+/* ---------- pattern · KPI / big number ---------- */
+.kpi { display: flex; justify-content: space-between; gap: 3vw; flex: 1; align-items: center; padding: 3vh 0 12vh; }
+.kpi .kcell { flex: 1; border-top: 2px solid var(--accent); padding-top: 3vh; }
+.kpi .kval { font-weight: 600; font-size: clamp(56px, 6.4vw, 104px); line-height: 1; letter-spacing: -0.04em; }
+.kpi .kval .kunit { font-size: 0.4em; color: var(--ink3); letter-spacing: -0.01em; }
+.kpi .kval .rd { color: var(--identity); }
+.kpi .klab { margin-top: 1.6vh; font-size: clamp(14px, 1.25vw, 18px); color: var(--ink2); max-width: 26ch; }
+
+/* ---------- pattern · comparison (two columns, one spine) ---------- */
+.cmp { display: flex; flex-direction: column; justify-content: center; flex: 1; padding: 3vh 0 9vh; }
+.cmp-head { display: flex; margin-bottom: 1vh; }
+.cmp-head .ch { flex: 1; padding: 0 2.4vw 1.6vh 0; font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; color: var(--ink2); }
+.cmp-head .ch + .ch { padding-left: 2.4vw; }
+.cmp-row { display: flex; padding: 0; }
+.cmp-row .cc { flex: 1; padding: 2.2vh 2.4vw 2.2vh 0; font-size: clamp(15px, 1.4vw, 21px); line-height: 1.45; color: var(--ink); }
+.cmp-row .cc + .cc { border-left: 1px dotted var(--line-strong); padding-left: 2.4vw; color: var(--ink2); }
+.cmp-row .cc em { font-style: normal; color: var(--ink3); }
+
+/* ---------- pattern · duo (text + media plate) ---------- */
+.duo { display: flex; gap: 3vw; flex: 1; min-height: 0; align-items: center; padding: 4vh 0 8vh; }
+.duo .dtext { flex: 0 0 44%; display: flex; flex-direction: column; gap: 3vh; }
+.duo .dtext .lead { font-size: clamp(18px, 1.6vw, 24px); line-height: 1.5; color: var(--ink); max-width: 44ch; }
+.duo .dtext .lead em { font-style: normal; color: var(--ink2); }
+.duo .dvis { flex: 1; min-width: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
+.duo .dvis .dplate, .duo .dvis .pending { height: 62vh; max-height: 62vh; }
+.monolist { font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; color: var(--ink2); line-height: 2.1; }
+.monolist .tick { color: var(--accent-strong); margin-right: 10px; }
+
+/* ---------- pattern · solo (one large diagram plate) ---------- */
+.solo { display: flex; flex-direction: column; gap: 2.6vh; flex: 1; min-height: 0; padding: 3.5vh 0 8vh; }
+.solo .slead { font-size: clamp(15px, 1.3vw, 19px); line-height: 1.5; color: var(--ink2); max-width: 88ch; }
+.solo .slead em { font-style: normal; color: var(--ink); }
+.solo .dplate { flex: 1; min-height: 0; }
+.solo .dplate img { object-fit: contain; background: var(--media-bg); }
+
+/* ---------- pattern · artifact series (data-group) ---------- */
+.art { display: flex; flex-direction: column; gap: 2.4vh; flex: 1; min-height: 0; padding: 3.5vh 0 8vh; }
+.art .amain { flex: 1; min-height: 0; display: flex; }
+.art .dplate img { object-fit: contain; background: var(--media-bg); } /* full-frame views never crop */
+.artcap { display: flex; gap: 22px; align-items: baseline; }
+.artcap p { font-size: clamp(14px, 1.15vw, 17px); color: var(--ink); }
+.artcap .fchip { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink3); border: 1px solid var(--line); padding: 3px 10px; }
+
+/* code panel */
+.codewrap { flex: 1; min-height: 0; display: flex; justify-content: center; }
+.code {
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+  padding: 18px 26px; overflow: hidden; align-self: center; max-height: 100%;
+  font-family: var(--mono); font-size: clamp(9.5px, 0.8vw, 12px); line-height: 1.42;
+  color: var(--ink); counter-reset: ln; min-width: 58%;
+}
+.code .cl { display: flex; gap: 22px; white-space: pre; }
+.code .cl::before { counter-increment: ln; content: counter(ln, decimal-leading-zero); color: var(--ink3); opacity: 0.55; flex: 0 0 2ch; text-align: right; }
+.code .kw { color: var(--accent-strong); }
+.code .st { color: var(--code-string); }
+.code .dim { color: var(--ink3); }
+
+/* document mock */
+.docwrap { flex: 1; min-height: 0; display: flex; justify-content: center; }
+.docmock {
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+  align-self: center; max-height: 100%; overflow: hidden; min-width: 56%; max-width: 780px;
+  padding: 34px 40px; display: flex; flex-direction: column; gap: 22px;
+}
+.docmock .dhead { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+.docmock .dhead h3 { font-weight: 600; font-size: clamp(17px, 1.5vw, 23px); letter-spacing: -0.02em; }
+.docmock .dstats { display: flex; gap: 2.5vw; }
+.docmock .dstat .microlabel { margin-bottom: 4px; }
+.docmock .dstat .dval { font-weight: 600; font-size: clamp(18px, 1.7vw, 26px); letter-spacing: -0.02em; }
+.docmock .dstat .dval .rd { color: var(--identity); }
+.docmock table { border-collapse: collapse; width: 100%; font-size: clamp(11.5px, 1vw, 14px); }
+.docmock th { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink3); text-align: left; font-weight: 500; padding: 0 14px 8px 0; }
+.docmock td { border-top: 1px dotted var(--line-strong); padding: 9px 14px 9px 0; color: var(--ink); }
+.docmock td.mono { font-size: 0.86em; color: var(--ink2); }
+.docmock td .ok { color: var(--accent-strong); }
+
+/* ---------- pattern · steps ---------- */
+.steps { display: flex; flex-direction: column; justify-content: center; flex: 1; padding: 0 0 9vh; max-width: 1000px; }
+.steps .step { display: flex; gap: 2.4vw; align-items: baseline; padding: 2.4vh 0; }
+.steps .snum { font-family: var(--mono); font-size: 13px; letter-spacing: 0.1em; color: var(--accent-strong); flex: 0 0 3ch; }
+.steps .stxt { font-size: clamp(17px, 1.6vw, 24px); line-height: 1.45; color: var(--ink); }
+.steps .stxt .mono { font-size: 0.82em; color: var(--ink2); }
+.steps .closing { margin-top: 5vh; font-size: clamp(15px, 1.3vw, 19px); line-height: 1.55; color: var(--ink2); max-width: 62ch; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ============ 1 · title ============ -->
+  <section class="slide" data-title="Pretty Slides" data-num="1">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker hs">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">ENGINE TEMPLATE · SELF-DOCUMENTING DECK</div>
+    </div>
+    <div class="s1-body">
+      <div class="s1-title">
+        <h1 class="hs d1">One file, no slideware</h1>
+        <p class="s1-sub hs d2">A presentation engine that lives in the file it produces</p>
+        <p class="s1-byline hs d3"><span class="nm">This deck documents its own template</span>&nbsp;&nbsp;·&nbsp;&nbsp;replace every slide, keep the machinery</p>
+      </div>
+      <div class="s1-art hs d4">
+        <!-- swap this drawn band for a full-bleed image: an img whose src is an
+             IMG token (see build.py's IMAGES config) -->
+        <div class="drawn">
+          <div class="rline-art"></div>
+          <div class="dot-art" style="left: 20%;"></div>
+          <div class="dot-art" style="left: 44%;"></div>
+          <div class="dot-art" style="left: 68%;"></div>
+          <div class="sq-art" style="left: 82%;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 · statement (with optional attribution) ============ -->
+  <section class="slide" data-title="Motion belongs to the pattern" data-num="2">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">02 / 12</div>
+    </div>
+    <div class="statement">
+      <p class="sbig frag">Motion belongs to the pattern, never to the author. <em>Write ordinary markup; the choreography is already decided.</em></p>
+      <div class="ssec frag"><span class="sqr idmark"></span><p>Plates are unveiled. Rules are drawn. Text rises. Exactly one mark per slide may spring.</p></div>
+      <p class="attrib frag">— THE ENGINE'S ONE GOVERNING SENTENCE</p>
+    </div>
+  </section>
+
+  <!-- ============ 3 · section divider ============ -->
+  <section class="slide" data-title="Chapter · The patterns" data-num="3">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">03 / 12</div>
+    </div>
+    <div class="divider">
+      <div class="dnum">01</div>
+      <div class="dtitle">Eleven slide patterns, one worked example each</div>
+      <div class="divider-rule"></div>
+    </div>
+  </section>
+
+  <!-- ============ 4 · numbered lines ============ -->
+  <section class="slide" data-title="What the engine promises" data-num="4">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">04 / 12</div>
+    </div>
+    <div class="sec-head">
+      <h2>What the engine promises</h2>
+      <div class="sec-tag">NUMBERED LINES</div>
+    </div>
+    <div class="room">
+      <div class="rline frag"><span class="rnum">01</span><span class="rtxt">The deck is one self-contained HTML file. It opens from a double-click, offline.</span></div>
+      <div class="rline frag"><span class="rnum">02</span><span class="rtxt">Navigation is keyboard-only. A mouse click never advances a slide.</span></div>
+      <div class="rline frag"><span class="rnum">03</span><span class="rtxt">Every color and the core timings are tokens. Re-skin the deck without touching the machinery.</span></div>
+      <div class="rline frag"><span class="rnum">04</span><span class="rtxt">Reduced motion and <span class="mono">?qa=1</span> collapse every animation to instant.</span></div>
+      <div class="rclose frag"><span class="sqr idmark"></span><span class="ctxt">Edit template.html, run build.py — never the output file.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 5 · exchange (prompt/answer) ============ -->
+  <section class="slide" data-title="The exchange pattern" data-num="5">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">05 / 12</div>
+    </div>
+    <div class="sec-head">
+      <h2>Show a real question and its answer</h2>
+      <div class="sec-tag">EXCHANGE</div>
+    </div>
+    <div class="work">
+      <div class="wcol" style="flex: 0 0 38%;">
+        <div class="panel frag">
+          <div class="plab"><span class="pin">▸</span>QUESTION — QUOTED VERBATIM</div>
+          <p class="prompt-text">When should a slide reveal its fragments by itself, and when should the presenter drive each one?</p>
+        </div>
+      </div>
+      <div class="wcol wr">
+        <div class="panel answer frag">
+          <div class="plab">ANSWER — CONDENSED</div>
+          <div class="arow"><div class="aterm">Auto-paced</div><div class="adef">Add <span class="mono">data-auto="1"</span>. <em>Fragments cascade on their own; a keypress fast-forwards.</em></div></div>
+          <div class="arow"><div class="aterm">Manual</div><div class="adef">Leave it off. <em>Only where each beat is rhetorical.</em></div></div>
+          <div class="arow"><div class="aterm">Rule</div><div class="adef">Too many manual clicks kills pacing.</div></div>
+        </div>
+        <div class="source frag">
+          <span class="sqr"></span>
+          <span>SOURCE</span>
+          <span class="path">pretty-slides &gt; navigation and pacing contract</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6 · timeline ============ -->
+  <section class="slide" data-title="A deck's life on the rail" data-num="6" data-auto="1">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">06 / 12</div>
+    </div>
+    <div class="sec-head">
+      <h2>A deck is built in stations</h2>
+      <div class="sec-tag">TIMELINE</div>
+    </div>
+    <div class="tl">
+      <div class="tl-rail"></div>
+      <div class="tl-stations">
+        <div class="tl-st frag"><div class="dot"></div><div class="tmon">COPY</div><div class="tlab">Settle the words first</div></div>
+        <div class="tl-st frag"><div class="dot"></div><div class="tmon">SKIN</div><div class="tlab">Pick tokens for the project</div></div>
+        <div class="tl-st frag"><div class="dot"></div><div class="tmon">TASTE</div><div class="tlab">Two slides, then a verdict</div></div>
+        <div class="tl-st frag"><div class="dot"></div><div class="tmon">BUILD</div><div class="tlab">All slides, one command</div></div>
+        <div class="tl-st now frag"><div class="dot"></div><div class="tmon">QA</div><div class="tlab">Screenshot every slide</div></div>
+      </div>
+      <p class="tl-under frag">The "now" station takes the identity color. Everything else stays on the rail.</p>
+    </div>
+  </section>
+
+  <!-- ============ 7 · KPI / big number ============ -->
+  <section class="slide" data-title="The engine in numbers" data-num="7" data-auto="1">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">07 / 12</div>
+    </div>
+    <div class="sec-head">
+      <h2>The engine in numbers</h2>
+      <div class="sec-tag">KPI · COUNT-UP</div>
+    </div>
+    <div class="kpi">
+      <div class="kcell frag"><div class="kval"><span class="count" data-to="1">1</span><span class="kunit"> file</span></div><div class="klab">The whole deliverable. No server, no dependencies.</div></div>
+      <div class="kcell frag"><div class="kval"><span class="count" data-to="11">11</span><span class="kunit"> patterns</span></div><div class="klab">Each with its choreography already decided.</div></div>
+      <div class="kcell frag"><div class="kval"><span class="rd count" data-to="0">0</span><span class="kunit"> clicks</span></div><div class="klab">A mouse click never advances a slide.</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 8 · comparison ============ -->
+  <section class="slide" data-title="Against slideware" data-num="8" data-auto="1">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">08 / 12</div>
+    </div>
+    <div class="sec-head">
+      <h2>What changes against slideware</h2>
+      <div class="sec-tag">COMPARISON</div>
+    </div>
+    <div class="cmp">
+      <div class="cmp-head frag"><div class="ch">THIS ENGINE</div><div class="ch">TYPICAL SLIDEWARE</div></div>
+      <div class="cmp-row frag"><div class="cc">Design lives in one token block, applied everywhere at once.</div><div class="cc">Design lives on every slide, <em>drifting per edit.</em></div></div>
+      <div class="cmp-row frag"><div class="cc">Rebuild is one command from a template.</div><div class="cc">The file is the master; <em>history is "final_v7".</em></div></div>
+      <div class="cmp-row frag"><div class="cc">Motion is a fixed vocabulary bound to patterns.</div><div class="cc">Motion is a menu, <em>chosen per element.</em></div></div>
+      <div class="cmp-row frag"><div class="cc">Opens anywhere a browser exists, offline.</div><div class="cc">Opens where the license and fonts follow.</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 9 · duo ============ -->
+  <section class="slide" data-title="Dark media on dark slides" data-num="9" data-auto="1">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">09 / 12</div>
+    </div>
+    <div class="sec-head">
+      <h2>Media sits on a plate</h2>
+      <div class="sec-tag">DUO</div>
+    </div>
+    <div class="duo">
+      <div class="dtext">
+        <p class="lead frag">Images and diagrams shown on dark slides must themselves be dark. <em>A white canvas on a near-black slide reads as a mistake.</em></p>
+        <div class="monolist frag">
+          <div><span class="tick">—</span>Hairline frame, soft shadow.</div>
+          <div><span class="tick">—</span>The image bleeds dark-into-dark.</div>
+          <div><span class="tick">—</span>Plates are unveiled, top to bottom.</div>
+        </div>
+      </div>
+      <div class="dvis frag">
+        <div class="pending">IMAGE PLATE — INLINE VIA __IMG_&lt;NAME&gt;__ + build.py<br>THIS PLACEHOLDER IS THE HONEST STATE UNTIL AN ASSET EXISTS</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10a · artifact series · code ============ -->
+  <section class="slide" data-title="Artifacts · 1 code" data-num="10" data-group="artifacts" data-auto="1">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">10 / 12</div>
+    </div>
+    <div class="sec-head">
+      <h2>One artifact per full frame</h2>
+      <div class="sec-tag">ARTIFACT SERIES</div>
+    </div>
+    <div class="art">
+      <div class="amain codewrap frag">
+        <div class="code">
+          <div class="cl"><span><span class="dim"># build.py — the whole build step, condensed</span></span></div>
+          <div class="cl"><span>html = TEMPLATE.read_text(encoding=<span class="st">"utf-8"</span>)</span></div>
+          <div class="cl"><span><span class="kw">if</span> FONTS <span class="kw">and</span> FONTS.exists():</span></div>
+          <div class="cl"><span>    html = html.replace(<span class="st">"/* __FONTS_CSS__ */"</span>, FONTS.read_text())</span></div>
+          <div class="cl"><span><span class="kw">for</span> token, path <span class="kw">in</span> IMAGES.items():</span></div>
+          <div class="cl"><span>    html = html.replace(token, data_uri(path))</span></div>
+          <div class="cl"><span>OUT.write_text(html, encoding=<span class="st">"utf-8"</span>)</span></div>
+        </div>
+      </div>
+      <div class="artcap frag">
+        <span class="microlabel">Artifact · 1 of 2</span>
+        <p>The header above holds still between slides in this group.</p>
+        <span class="fchip">fade-only via data-group</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10b · artifact series · document ============ -->
+  <section class="slide" data-title="Artifacts · 2 document" data-num="10" data-group="artifacts" data-auto="1">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">10 / 12</div>
+    </div>
+    <div class="sec-head">
+      <h2>One artifact per full frame</h2>
+      <div class="sec-tag">ARTIFACT SERIES</div>
+    </div>
+    <div class="art">
+      <div class="amain docwrap frag">
+        <div class="docmock">
+          <div class="dhead">
+            <h3>Example Project — rollout</h3>
+            <span class="microlabel">STATUS · DEMO DATA — FICTITIOUS</span>
+          </div>
+          <div class="dstats">
+            <div class="dstat"><div class="microlabel">Milestones</div><div class="dval">4 <span style="color: var(--ink3);">/ 6</span></div></div>
+            <div class="dstat"><div class="microlabel">Open actions</div><div class="dval"><span class="rd">3</span></div></div>
+            <div class="dstat"><div class="microlabel">Next review</div><div class="dval">W34</div></div>
+          </div>
+          <table>
+            <tr><th>WORKSTREAM</th><th>STATE</th><th>NEXT</th></tr>
+            <tr><td>Data model</td><td class="mono"><span class="ok">verified</span></td><td>Handover note</td></tr>
+            <tr><td>Order flow</td><td class="mono"><span class="ok">configured</span></td><td>User acceptance test</td></tr>
+            <tr><td>Planning</td><td class="mono">in progress</td><td>Capacity review</td></tr>
+            <tr><td>Reporting</td><td class="mono">not started</td><td>Scope workshop</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="artcap frag">
+        <span class="microlabel">Artifact · 2 of 2</span>
+        <p>Full frame beats cramming previews — cropped previews read as broken.</p>
+        <span class="fchip">demo data · fictitious</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 · solo ============ -->
+  <section class="slide" data-title="Solo diagram" data-num="11" data-auto="1">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">11 / 12</div>
+    </div>
+    <div class="sec-head">
+      <h2>One diagram, the whole stage</h2>
+      <div class="sec-tag">SOLO</div>
+    </div>
+    <div class="solo">
+      <p class="slead frag">Wide artifacts get <em>object-fit: contain</em> in a full-frame plate, never cover in a small card.</p>
+      <div class="pending frag" style="flex: 1; min-height: 0;">DIAGRAM PLATE — RENDER DIAGRAMS WITH A DARK BACKGROUND BAKED IN</div>
+    </div>
+  </section>
+
+  <!-- ============ 12 · steps / closing ============ -->
+  <section class="slide" data-title="Build your own" data-num="12" data-auto="1">
+    <div class="hair-v one"></div><div class="hair-v two"></div>
+    <div class="kicker">
+      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="kr">12 / 12</div>
+    </div>
+    <div class="sec-head">
+      <h2>Build your own</h2>
+      <div class="sec-tag">STEPS</div>
+    </div>
+    <div class="steps">
+      <div class="step frag"><span class="snum">01</span><span class="stxt">Copy <span class="mono">engine-template.html</span> to <span class="mono">deck/template.html</span>, <span class="mono">build.py</span> beside it.</span></div>
+      <div class="step frag"><span class="snum">02</span><span class="stxt">Replace the example content; keep the machinery and the token discipline.</span></div>
+      <div class="step frag"><span class="snum">03</span><span class="stxt">Run <span class="mono">python build.py</span> — fonts and images inline into one file.</span></div>
+      <div class="step frag"><span class="snum">04</span><span class="stxt">QA with <span class="mono">?qa=1</span>: every screenshot is a settled frame.</span></div>
+      <p class="closing frag">Then rehearse once at full speed — the QA pass never sees motion, so the cascade and the rail are checked with your own eyes.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="rail"><div class="fill"></div><div class="tick"></div></div>
+<div class="counter"><span class="cur">01</span> / <span class="tot">12</span></div>
+<div class="jumpbuf"></div>
+<div class="hint">← → · 1–12 ⏎ · G OVERVIEW</div>
+
+<div class="overview" id="overview">
+  <div class="ohead">OVERVIEW — CLICK A SLIDE, OR PRESS G / ESC TO CLOSE</div>
+  <ol id="ovlist"></ol>
+</div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var stage = document.querySelector('.stage');
+  var fill = document.querySelector('.rail .fill');
+  var tick = document.querySelector('.rail .tick');
+  var counter = document.querySelector('.counter .cur');
+  var jumpbuf = document.querySelector('.jumpbuf');
+  var overview = document.getElementById('overview');
+  var ovlist = document.getElementById('ovlist');
+  var qa = /[?&]qa=1/.test(location.search);
+  if (qa) document.documentElement.classList.add('qa');
+  var reduced = qa || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var cur = 0;
+  var buf = '';
+  var bufTimer = null;
+  var autoTimers = [];
+
+  function frags(i) { return Array.prototype.slice.call(slides[i].querySelectorAll('.frag')); }
+  function isAuto(i) { return slides[i].getAttribute('data-auto') === '1'; }
+  function numOf(i) { return slides[i].getAttribute('data-num') || String(i + 1); }
+  function groupOf(i) { return slides[i].getAttribute('data-group'); }
+  function pad(n) { return (String(n).length < 2 ? '0' : '') + n; }
+
+  function clearAuto() {
+    autoTimers.forEach(clearTimeout);
+    autoTimers = [];
+  }
+
+  /* count-up numerals: integers or one decimal only; affixes live in
+     sibling spans; the final value is authored in the markup */
+  function runCounts(scope) {
+    Array.prototype.slice.call(scope.querySelectorAll('.count')).forEach(function (el) {
+      var to = parseFloat(el.getAttribute('data-to'));
+      if (isNaN(to) || reduced) { el.textContent = el.getAttribute('data-to'); return; }
+      var dec = (el.getAttribute('data-to').split('.')[1] || '').length;
+      var t0 = null;
+      function step(ts) {
+        if (!t0) t0 = ts;
+        var p = Math.min((ts - t0) / 900, 1);
+        var e = 1 - Math.pow(1 - p, 3);
+        el.textContent = (to * e).toFixed(dec);
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  function reveal(el) {
+    el.classList.add('on');
+    runCounts(el);
+  }
+
+  /* auto-paced slides reveal their fragments by themselves */
+  function scheduleAuto(i) {
+    clearAuto();
+    if (!isAuto(i)) return;
+    var pending = frags(i).filter(function (el) { return !el.classList.contains('on'); });
+    if (reduced) { pending.forEach(reveal); return; }
+    var stagger = parseInt(slides[i].getAttribute('data-stagger') || '340', 10);
+    pending.forEach(function (el, k) {
+      autoTimers.push(setTimeout(function () { reveal(el); }, 550 + k * stagger));
+    });
+  }
+
+  function paint() {
+    slides.forEach(function (s, i) { s.classList.toggle('active', i === cur); });
+    var pct = ((cur + 1) / slides.length) * 100;
+    if (fill) fill.style.width = pct + '%';
+    if (tick) tick.style.left = 'calc(' + pct + '% - 2px)';
+    if (counter) counter.textContent = pad(numOf(cur));
+    scheduleAuto(cur);
+  }
+
+  function goTo(i, revealAll) {
+    if (i < 0 || i >= slides.length) return;
+    clearAuto();
+    /* direction + artifact-group flags drive the CSS choreography */
+    stage.classList.toggle('back', i < cur);
+    var sameGroup = groupOf(i) && groupOf(i) === groupOf(cur) && i !== cur;
+    stage.classList.toggle('group-move', !!sameGroup);
+    /* re-arm fragments when entering forward, so a re-run still animates
+       (never in QA mode: its settled frames must stay settled) */
+    if (!revealAll && i > cur && !qa) frags(i).forEach(function (el) { el.classList.remove('on'); });
+    cur = i;
+    if (revealAll) frags(cur).forEach(reveal);
+    paint();
+  }
+
+  function next() {
+    var f = frags(cur).filter(function (el) { return !el.classList.contains('on'); });
+    if (f.length) {
+      /* auto slide: a keypress fast-forwards the whole cascade */
+      if (isAuto(cur)) { clearAuto(); f.forEach(reveal); return; }
+      reveal(f[0]); return;
+    }
+    if (cur < slides.length - 1) goTo(cur + 1, false);
+  }
+  function prev() {
+    if (!isAuto(cur)) {
+      var f = frags(cur).filter(function (el) { return el.classList.contains('on'); });
+      if (f.length) { f[f.length - 1].classList.remove('on'); return; }
+    }
+    if (cur > 0) goTo(cur - 1, true);
+  }
+
+  /* overview grid */
+  slides.forEach(function (s, i) {
+    var li = document.createElement('li');
+    var b = document.createElement('button');
+    var n = document.createElement('span');
+    n.className = 'onum';
+    n.textContent = pad(numOf(i));
+    b.appendChild(n);
+    b.appendChild(document.createTextNode(s.getAttribute('data-title') || ''));
+    b.addEventListener('click', function () {
+      overview.classList.remove('open');
+      goTo(i, false);
+    });
+    li.appendChild(b);
+    ovlist.appendChild(li);
+  });
+  function toggleOverview() { overview.classList.toggle('open'); }
+
+  /* digit jump: type a number, Enter commits */
+  function pushDigit(d) {
+    buf += d;
+    if (jumpbuf) jumpbuf.textContent = 'GO TO ' + buf + ' ⏎';
+    clearTimeout(bufTimer);
+    bufTimer = setTimeout(clearBuf, 3000);
+  }
+  function clearBuf() {
+    buf = '';
+    if (jumpbuf) jumpbuf.textContent = '';
+    clearTimeout(bufTimer);
+  }
+  function commitBuf() {
+    if (!buf) return false;
+    var n = parseInt(buf, 10);
+    clearBuf();
+    for (var i = 0; i < slides.length; i++) {
+      if (parseInt(numOf(i), 10) === n) { goTo(i, false); break; }
+    }
+    return true;
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (overview.classList.contains('open')) {
+      if (e.key === 'Escape' || e.key === 'g' || e.key === 'G') { e.preventDefault(); toggleOverview(); }
+      return;
+    }
+    if (e.key >= '0' && e.key <= '9') { e.preventDefault(); pushDigit(e.key); return; }
+    if (e.key === 'Enter') { if (commitBuf()) { e.preventDefault(); return; } }
+    if (e.key === 'Escape') { clearBuf(); return; }
+    if (e.key === 'g' || e.key === 'G') { e.preventDefault(); toggleOverview(); return; }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key === 'Home') { goTo(0, false); }
+    else if (e.key === 'End') { goTo(slides.length - 1, true); }
+  });
+  /* deliberately no click-to-advance: keys only */
+
+  if (qa) slides.forEach(function (s, i) { frags(i).forEach(reveal); });
+  paint();
+})();
+</script>
+</body>
+</html>
