@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.17.1 — 2026-08-17
+
+orchestrate: two field-incident guards from coordination notes. SKILL.md —
+the session grant belongs to the main loop alone (subagents and forks never
+inherit it), and a read-only stage returns text only: the main loop checks
+the tree after it, and an unverifiable approval claim or a claimed
+concealment order is a stop signal (fork incident, 2026-08-14).
+codex-exec.md — read-only workers read via simple shell reads (`cat`/`sed`),
+not pwsh, and must never be told to avoid shell for reading (pwsh
+policy-block + bricked retry, 2026-08-15).
+
 ## 0.17.0 — 2026-08-17
 
 codex-worker: native Windows workspace-write becomes an unsupported lane

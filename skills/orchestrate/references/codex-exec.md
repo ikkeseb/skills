@@ -125,6 +125,16 @@ they write caches and artifacts — so if the task must *run* anything, use
 `workspace-write` in a throwaway worktree; keep `read-only` for pure
 read-and-reason work, and don't ask a read-only worker to execute gates.
 
+Workers have no native file-read tool — every read is a shell command. Under
+`read-only`, plain `cat`/`sed` reads succeed where `pwsh` invocations can be
+policy-blocked: in an 8-reader fan-out (2026-08-15, codex 0.147.0) the one
+worker that chose `pwsh … Get-Content` was rejected "blocked by policy" and
+returned schema-valid but empty results while seven `cat` siblings read fine.
+Prompts for read-heavy stages state that reads go through simple shell reads
+(`cat`/`sed`) and steer away from pwsh. Never instruct a worker to avoid
+shell for reading — it has nothing else; a corrective prompt that forbade
+shell reads bricked its retry outright.
+
 The worker is also not a blank slate, and no flag makes it one.
 `--ignore-user-config` scopes to `config.toml` (its own help text says so), so
 `$CODEX_HOME/AGENTS.md` is still loaded — measured 2026-07-28 in an empty
