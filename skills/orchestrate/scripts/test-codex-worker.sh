@@ -5,6 +5,12 @@
 
 set -euo pipefail
 
+# The suite runs under the explicit native-Windows write opt-in so the write
+# path stays exercised on MSYS (probe pin, write gates, degraded-sandbox
+# classification). The fail-closed DEFAULT lane is asserted separately at the
+# end with the variable cleared.
+export CODEX_WORKER_NATIVE_WINDOWS_WRITE=elevated
+
 fake_codex() {
   case "${1:-}" in
     --version) printf '%s\n' 'codex-cli 9.9.9'; return 0 ;;
@@ -187,10 +193,11 @@ case "$actual_call" in
   *'--model '*) fail 'default sentinel omits the CLI --model flag' ;;
   *) ok 'default sentinel omits the CLI --model flag' ;;
 esac
-# The Windows sandbox pin is platform- AND mode-conditional (2026-08-11):
-# write runs pin it on native Windows; read-only runs never carry it — the
-# elevated sandbox's setup/UAC loop must not tax the read lane. This is a
-# read-only run, so the pin must be absent on every platform.
+# The Windows sandbox pin is platform- AND mode-conditional (and since
+# 2026-08-17 gated on the suite's write opt-in): opted-in write runs pin it
+# on native Windows; read-only runs never carry it — the elevated sandbox's
+# setup/UAC loop must not tax the read lane. This is a read-only run, so the
+# pin must be absent on every platform.
 case "$actual_call" in *'windows.sandbox'*) has_pin=yes ;; *) has_pin=no ;; esac
 if [ "$has_pin" = no ]; then
   ok 'windows.sandbox pin absent on read-only runs'
@@ -288,7 +295,8 @@ run_worker "$tmp/write-mutated.json" "$tmp/write-mutated.err" run \
   --expected-base-sha "$sha" --prompt-file "$prompt" --run-dir "$run_dir" --timeout 30
 assert_json "$tmp/write-mutated.json" '.ok == true and .workspace_changed == true' \
   'write run that mutates the workspace reports workspace_changed true'
-# Write runs keep the platform-conditional pin: present on native Windows,
+# Opted-in write runs keep the platform-conditional pin: present on native
+# Windows (under the suite's CODEX_WORKER_NATIVE_WINDOWS_WRITE=elevated),
 # absent elsewhere.
 actual_call="$(grep '^EXEC ' "$fake_home/fake-calls" | tail -n 1)"
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) want_pin=yes ;; *) want_pin=no ;; esac
@@ -309,6 +317,35 @@ run_worker "$tmp/sandbox-degraded.json" "$tmp/sandbox-degraded.err" run \
   --expected-base-sha "$sha" --prompt-file "$prompt" --run-dir "$run_dir" --timeout 30
 assert_json "$tmp/sandbox-degraded.json" '.ok == false and .error_class == "sandbox_denied" and .turn_completed == true' \
   'write run under a degraded sandbox fails closed as sandbox_denied'
+
+# DEFAULT native Windows behavior (opt-in cleared): workspace-write is an
+# unsupported lane that fails closed before invoking Codex, and probe gates
+# write_ready without engaging any sandbox implementation (2026-08-17: the
+# elevated sandbox loops UAC across CODEX_HOMEs; unelevated breaks MSYS
+# children). Only meaningful on native Windows — other platforms keep their
+# write lanes and are covered above.
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    printf '%s\n' success > "$fake_home/fake-mode"
+    before="$(exec_count)"
+    run_dir="$tmp/run-win-write-default"
+    CODEX_WORKER_NATIVE_WINDOWS_WRITE= run_worker \
+      "$tmp/win-default.json" "$tmp/win-default.err" run \
+      --model default --effort low --sandbox workspace-write --workspace "$repo" \
+      --expected-base-sha "$sha" --prompt-file "$prompt" --run-dir "$run_dir" --timeout 30
+    assert_json "$tmp/win-default.json" '.ok == false and .error_class == "unsupported_lane"' \
+      'default native Windows write run fails closed as unsupported_lane'
+    if [ "$(exec_count)" = "$before" ]; then
+      ok 'unsupported write lane never invokes Codex'
+    else
+      fail 'unsupported write lane never invokes Codex'
+    fi
+    CODEX_WORKER_NATIVE_WINDOWS_WRITE= run_worker \
+      "$tmp/win-default-probe.json" "$tmp/win-default-probe.err" probe
+    assert_json "$tmp/win-default-probe.json" '.sandbox_write == false and .write_ready == false' \
+      'default native Windows probe gates write_ready without engaging any sandbox'
+    ;;
+esac
 
 printf '\n%s checks, %s failures\n' "$((checks + fails))" "$fails"
 exit "$fails"

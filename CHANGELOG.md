@@ -4,6 +4,24 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.17.0 — 2026-08-17
+
+codex-worker: native Windows workspace-write becomes an unsupported lane
+that fails closed (`unsupported_lane`) instead of pinning the elevated
+sandbox, and probe no longer engages any Windows sandbox implementation —
+preflight can no longer raise UAC from read-only sessions (second-opinion
+included). Root cause established in upstream source: every elevated setup
+rotates the machine-global sandbox users' passwords and stores them only in
+the invoking CODEX_HOME, so multiple homes/runtimes loop each other through
+UAC setup (openai/codex#36865 is the same loop); the unelevated token kills
+MSYS children (CreateFileMapping error 5, re-measured). Escape hatch
+`CODEX_WORKER_NATIVE_WINDOWS_WRITE=elevated` restores the old pin for a
+deliberately repaired single-home machine. codex-exec.md corrected: the
+read-only sandbox is a write barrier, not an execution barrier (the "blocks
+all process spawning" claim did not survive an upstream source read), and
+the "expect UAC only from write runs" guidance is superseded by "no worker
+lane may raise UAC".
+
 ## 0.16.0 — 2026-08-15
 
 New skill `prettier-html` (inventory: 17 skills, 9 on Codex — Claude Code

@@ -103,20 +103,30 @@ is_pos_int() { case "${1:-}" in ''|0|*[!0-9]*) return 1 ;; *) return 0 ;; esac; 
 
 is_windows() { case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*) return 0 ;; *) return 1 ;; esac; }
 
-# Native Windows needs the sandbox implementation pinned: --ignore-user-config
-# also drops the user's `[windows] sandbox` choice, and with no implementation
-# selected `codex exec` has no OS sandbox there — workspace-write silently
-# degrades to read-only + approvals=never, which rejects every write while the
-# envelope still reports ok (field 2026-08-04, codex 0.146.0; stderr shows
-# "patch rejected: writing is blocked by read-only sandbox"). `elevated` over
-# `unelevated` deliberately: under the unelevated restricted token, MSYS/Cygwin
-# child processes (Git Bash tooling) die in shared-memory setup (CreateFileMapping
-# error 5), while the elevated sandbox runs them fine — and a write worker that
-# cannot run the repo's own scripts is half a worker. Machines without the
-# elevated setup degrade loudly: probe's functional write test reports it, and
-# a wedged run is bounded by the total deadline. Passed via --config, which is
-# already in ALWAYS_EXEC_FLAGS, so the contract surface is unchanged.
+# Native Windows workspace-write is an unsupported lane by default
+# (2026-08-17): every elevated sandbox setup rotates the machine-global
+# sandbox users' passwords and stores them only in the invoking CODEX_HOME,
+# so a second home or runtime on the machine turns each engagement into a
+# logon-failure → UAC-setup loop (confirmed in upstream source,
+# codex-rs windows-sandbox-rs identity.rs/sandbox_users.rs; openai/codex
+# #36865 reports the same loop). The unelevated restricted token is no
+# substitute for write workers: MSYS/Cygwin children die in shared-memory
+# setup (CreateFileMapping error 5, re-measured 2026-08-17), and repo
+# tooling is often bash. Leaving workspace-write unpinned is worse still:
+# --ignore-user-config drops the user's `[windows] sandbox` choice, and with
+# no implementation selected exec has no OS sandbox there — writes silently
+# degrade to rejected-with-ok-envelope (field 2026-08-04, codex 0.146.0;
+# stderr shows "patch rejected: writing is blocked by read-only sandbox").
+# So write runs fail closed (`unsupported_lane`) and write work routes to
+# the Claude lane or a verified macOS/Linux worker. Read-only runs stay
+# unpinned and CLI-policy-enforced — measured working, zero sandbox-log
+# growth. Escape hatch for a deliberately repaired single-home machine:
+# CODEX_WORKER_NATIVE_WINDOWS_WRITE=elevated restores the old elevated pin
+# (an explicit human choice, never a default).
 WINDOWS_SANDBOX_CONFIG='windows.sandbox="elevated"'
+native_windows_write_allowed() {
+  [ "${CODEX_WORKER_NATIVE_WINDOWS_WRITE:-}" = "elevated" ]
+}
 
 # Same direct-executable contract as resolve_codex/resolve_git, for the text
 # tools that shape gate verdicts and diagnostics: an exported same-name shell
@@ -356,11 +366,13 @@ acquire_workspace_lock() { # exclusive per-repository lock for writing workers
 
 # Functional write test through the real OS sandbox — dependency presence is
 # not write capability: on native Windows every write can be rejected while
-# git, jq and the hash tool all pass (the degradation WINDOWS_SANDBOX_CONFIG
-# closes). So probe measures the actual write path: one unbilled
-# `codex sandbox` spawn writing a marker file in a throwaway dir, with the
-# same sandbox pin `run` uses. Child process is native per OS (cmd.exe /
-# /bin/sh) so the verdict reflects the sandbox, not MSYS quirks. Verdicts:
+# git, jq and the hash tool all pass. So probe measures the actual write
+# path the `run` command would use: on native Windows without the elevated
+# opt-in that lane is unsupported and probe gates deterministically without
+# engaging any sandbox; otherwise one unbilled `codex sandbox` spawn writes
+# a marker file in a throwaway dir, with the same sandbox pin `run` uses.
+# Child process is native per OS (cmd.exe / /bin/sh) so the verdict
+# reflects the sandbox, not MSYS quirks. Verdicts:
 # true (marker written), false (write denied, or the sandbox itself failed
 # wholesale — both gate write_ready), null (couldn't measure: no `codex
 # sandbox` output and no sandbox-failure signature, no shell, spawn failure —
@@ -369,8 +381,16 @@ acquire_workspace_lock() { # exclusive per-repository lock for writing workers
 SANDBOX_WRITE=null
 probe_sandbox_write() {
   local dir out child_bin
-  # The shell child is deliberate on Windows too: workers spawn the repo's own
-  # (often bash) tooling, so the probe measures what a worker child would get.
+  # Native Windows default: the write lane is unsupported (policy comment at
+  # WINDOWS_SANDBOX_CONFIG), so gate deterministically WITHOUT engaging any
+  # sandbox implementation. Probing elevated from here was the one path that
+  # raised UAC in read-only sessions (second-opinion preflight included).
+  if is_windows && ! native_windows_write_allowed; then
+    SANDBOX_WRITE=false
+    return 0
+  fi
+  # The shell child is deliberate: workers spawn the repo's own (often bash)
+  # tooling, so the probe measures what a worker child would get.
   child_bin="$(type -P bash || type -P sh || true)"
   [ -n "$child_bin" ] || return 0
   if is_windows; then
@@ -651,6 +671,17 @@ cmd_run() {
   start_ts="$(date +%s)"
   [ "$SLOT_WAIT_SECS" -le "$timeout_secs" ] || SLOT_WAIT_SECS="$timeout_secs"
 
+  # Native Windows workspace-write fails closed before any queue wait — see
+  # the policy comment at WINDOWS_SANDBOX_CONFIG (2026-08-17): elevated loops
+  # UAC across CODEX_HOMEs, unelevated kills MSYS children, unpinned silently
+  # degrades. Read-only stays available; route write stages to the Claude lane.
+  if is_windows && [ "$sandbox" = "workspace-write" ] \
+     && ! native_windows_write_allowed; then
+    fail_json unsupported_lane \
+      "native Windows workspace-write workers are unsupported (elevated sandbox loops UAC across CODEX_HOMEs; unelevated breaks MSYS children) — route write stages to the Claude lane, or set CODEX_WORKER_NATIVE_WINDOWS_WRITE=elevated on a deliberately repaired single-home machine" \
+      "$run_dir"
+  fi
+
   acquire_slot
   [ "$sandbox" != "workspace-write" ] || acquire_workspace_lock "$workspace"
 
@@ -782,14 +813,11 @@ cmd_run() {
     --json
     --output-last-message "$run_dir/final.json"
   )
-  # See WINDOWS_SANDBOX_CONFIG: without this pin, native Windows exec has no
-  # OS sandbox and workspace-write degrades to rejected-writes-with-ok-envelope.
-  # Read-only runs deliberately skip the pin (2026-08-11): engaging the
-  # elevated sandbox re-runs its setup whenever the CLI's setup-marker bug is
-  # live (marker written owner-unreadable), turning every run into a UAC
-  # prompt; an unpinned read-only exec is enforced by the CLI's own policy
-  # instead of the OS — measured working (reads succeed, sandbox never
-  # engages). Write runs keep the pin and its UAC cost.
+  # Native Windows write runs reach this point only under the explicit
+  # CODEX_WORKER_NATIVE_WINDOWS_WRITE=elevated opt-in (the default failed
+  # closed before the queue wait); the opt-in lane keeps the elevated pin
+  # because unpinned workspace-write silently degrades — see the policy
+  # comment at WINDOWS_SANDBOX_CONFIG. Read-only runs never carry the pin.
   ! is_windows || [ "$sandbox" != workspace-write ] || codex_args+=(--config "$WINDOWS_SANDBOX_CONFIG")
   # `--model default` is an explicit opt-in to the CLI's built-in model, so a
   # lane call needs no repo change when the provider ships a new one. It is a

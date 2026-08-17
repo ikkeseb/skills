@@ -32,11 +32,13 @@ and either `shasum` or `sha256sum`. `probe` makes no model call and returns
 `{ok, codex_version, authenticated, contract_ok, missing_flags, dependencies,
 sandbox_write, write_ready}`. A missing `jq` returns `missing_dependency`
 immediately. `sandbox_write` is measured, not inferred: probe performs one
-unbilled write inside the real OS sandbox (`codex sandbox`, under the same
-sandbox-implementation pin *write* runs use — read-only runs are unpinned on
-native Windows, see Write-worker gates), because dependency presence does not
-prove write capability — on native Windows every write can be rejected while
-git, jq and the hash tool all pass. A passing probe does not clear the lane
+unbilled write inside the real OS sandbox (`codex sandbox`), because
+dependency presence does not prove write capability — every write can be
+rejected while git, jq and the hash tool all pass. On native Windows the
+write lane is unsupported by default (see Write-worker gates), so probe
+reports `sandbox_write: false` deterministically without engaging any
+sandbox implementation — preflight never raises UAC, read-only sessions
+included. A passing probe does not clear the lane
 for later runs: the Windows sandbox has been observed degrading underneath a
 `sandbox_write: true` probe within the minute (2026-08-11), so treat probe as
 necessary, never sufficient, for write dispatch. `true`/`false` are verdicts and `false`
@@ -113,10 +115,14 @@ that guard. Suffix an attempt counter into both the run-dir path and the
 dispatch prompt (the prompt edit also busts the resume cache; see the resume
 notes in the orchestrate skill).
 
-Sandbox choice is about execution, not just writes: `read-only` blocks **all
-process spawning**, so a read-only worker cannot run tests, linters, or even
-`node --check` — it can only read and reason. If the task must *run* anything,
-use `workspace-write` in a throwaway worktree; keep `read-only` for pure
+Sandbox choice is a write barrier, not an execution barrier: `read-only`
+denies all writes but does not reliably block process spawning (verified in
+upstream source for the Windows token backend, 2026-08-17 — read-only and
+workspace-write build the same restricted token with different write
+capabilities; an earlier version of this file claimed spawning was blocked).
+A read-only worker still cannot usefully run tests, linters, or builds —
+they write caches and artifacts — so if the task must *run* anything, use
+`workspace-write` in a throwaway worktree; keep `read-only` for pure
 read-and-reason work, and don't ask a read-only worker to execute gates.
 
 The worker is also not a blank slate, and no flag makes it one.
@@ -316,6 +322,10 @@ the orchestrator:
   A deterministic environment failure, never a model miss: not retryable on
   this machine at any tier. Check probe's `sandbox_write`, fix the machine's
   sandbox setup, or route write stages to the Claude lane.
+- `unsupported_lane` — the requested lane does not exist on this platform
+  (today: native Windows workspace-write, see Write-worker gates). Policy,
+  not an outage: never retryable at any tier; route the stage to the Claude
+  lane or a verified worker host and say so.
 - `unsafe_git_state` — the tree reads clean but the repo cannot be written to
   safely: an in-progress merge/rebase/cherry-pick/revert/bisect, or index
   entries marked `skip-worktree` / `assume-unchanged`, which hide changes from
@@ -373,25 +383,32 @@ Known signals when reading `stderr.log` on 0.144.x:
   wait, immediately before launch. `--expected-base-sha` is mandatory for
   write runs so a moved HEAD fails closed (`base_sha_mismatch`) instead of
   running against the wrong state.
-- Native Windows: the helper pins the CLI's elevated sandbox implementation
-  (`--config 'windows.sandbox="elevated"'`) on **write runs only**
-  (2026-08-11; previously every run). `--ignore-user-config`
-  would otherwise drop the user's `[windows]` sandbox choice, and with no
-  implementation selected exec has no OS sandbox there — workspace-write
-  silently degrades to read-only + approvals=never, rejecting every write
-  behind an `ok` envelope (measured 2026-08-04, codex 0.146.0). Read-only
-  runs deliberately go unpinned: engaging the elevated sandbox re-runs its
-  setup whenever the CLI's setup-marker bug is live (the marker is written
-  unreadable by its own owner, upstream issue), which turns every run into a
-  UAC elevation prompt; an unpinned read-only exec is policy-enforced by the
-  CLI rather than the OS — a deliberate trust downgrade for the read lane,
+- Native Windows: workspace-write workers are an **unsupported lane** and
+  fail closed as `unsupported_lane` before dispatch (2026-08-17; previously
+  they pinned `windows.sandbox="elevated"`). The elevated sandbox's users
+  are machine-global, but every elevated setup rotates their passwords and
+  stores them only in the invoking CODEX_HOME — a second home or runtime on
+  the machine turns each engagement into a logon-failure → UAC-setup loop
+  (confirmed in upstream source, codex-rs `windows-sandbox-rs`;
+  openai/codex#36865 reports the same loop). The unelevated implementation
+  is no substitute for write workers: MSYS/Cygwin child processes crash
+  under its restricted token (CreateFileMapping error 5, re-measured
+  2026-08-17), and repo tooling is often bash. Unpinned is worse still:
+  `--ignore-user-config` drops the user's `[windows]` sandbox choice, and
+  with no implementation selected exec has no OS sandbox there —
+  workspace-write silently degrades to read-only + approvals=never,
+  rejecting every write behind an `ok` envelope (measured 2026-08-04, codex
+  0.146.0). Route write stages to the Claude lane or a verified macOS/Linux
+  worker. Read-only runs stay unpinned and policy-enforced by the CLI
+  rather than the OS — a deliberate trust downgrade for the read lane,
   measured working (reads succeed, the sandbox never engages, no setup
-  events). Expect UAC prompts only from write runs. The unelevated
-  implementation is deliberately not used: MSYS/Cygwin child processes crash
-  under its restricted token, and repo tooling is often bash. Inside the
-  sandbox `.git` stays write-denied on Windows, so a write worker edits files
-  but cannot stage or commit — integration is main-loop work anyway; do not
-  ask a Windows write worker to commit.
+  events). No worker lane may raise UAC. Escape hatch:
+  `CODEX_WORKER_NATIVE_WINDOWS_WRITE=elevated` restores the elevated pin on
+  write runs for a deliberately repaired single-CODEX_HOME machine — an
+  explicit human choice, never a default. Under that opt-in `.git` stays
+  write-denied inside the sandbox, so a write worker edits files but cannot
+  stage or commit — integration is main-loop work anyway; do not ask a
+  Windows write worker to commit.
 - The result JSON proves the worker finished, not that the changes survive:
   read the actual `git diff` (and untracked files) in the worktree before the
   workflow's worktree cleanup can discard it, and let the main loop apply or
