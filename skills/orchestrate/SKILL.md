@@ -131,6 +131,12 @@ delegate small edits.
   needed project context, decisions, acceptance criteria, and output bounds.
   Workers also inherit machine-level instructions this repo cannot inspect;
   treat those as ambient drift and state anything outcome-critical explicitly.
+- **Every delegation prompt opens with its lane.** First lines of the prompt
+  body: `model: <id or alias>` / `effort: <level>`, with `(inherited)` when
+  no override is set. The agent row renders a prompt's opening lines, so this
+  makes the lane legible to the user at dispatch and while the stage runs —
+  the final report's lane accounting alone arrives too late to decide trust
+  or ask another lane (field-measured 2026-08-16).
 - **Senior review is mandatory.** Compare the result and diff with the
   acceptance criteria; never relay a worker summary as evidence, and never
   pass raw worker output to the user as the deliverable. If a diff is

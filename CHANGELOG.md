@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.17.2 — 2026-08-17
+
+orchestrate: every delegation prompt opens with `model:` / `effort:` lines
+(marked `(inherited)` when no override), so the lane is legible in the agent
+row at dispatch and while the stage runs — the final report's lane accounting
+alone arrives too late to decide trust or route a second opinion. Drains the
+skills half of the 2026-08-16 lane-visibility coordination note; the
+statusline half was rejected by dotfiles (no per-subagent fields in the JSON
+contract).
+
 ## 0.17.1 — 2026-08-17
 
 orchestrate: two field-incident guards from coordination notes. SKILL.md —
