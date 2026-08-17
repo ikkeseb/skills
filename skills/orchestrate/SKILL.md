@@ -131,12 +131,17 @@ delegate small edits.
   needed project context, decisions, acceptance criteria, and output bounds.
   Workers also inherit machine-level instructions this repo cannot inspect;
   treat those as ambient drift and state anything outcome-critical explicitly.
-- **Every delegation prompt opens with its lane.** First lines of the prompt
-  body: `model: <id or alias>` / `effort: <level>`, with `(inherited)` when
-  no override is set. The agent row renders a prompt's opening lines, so this
-  makes the lane legible to the user at dispatch and while the stage runs —
-  the final report's lane accounting alone arrives too late to decide trust
-  or ask another lane (field-measured 2026-08-16).
+- **The lane is legible at dispatch: label first, prompt header second.** The
+  agent row renders the dispatch label/description, not the prompt body
+  (field-verified 2026-08-17; an earlier claim that opening prompt lines
+  render was wrong for this surface), so every delegation's visible label
+  carries `<model> @ <effort> — <task tag>` — Bash-background dispatches via
+  the no-op label line. The prompt body still opens with `model:` /
+  `effort:` lines, then a blank line and `Task:`, as the worker-side record.
+  Both state the lane requested at dispatch, never a verified one: write
+  resolved values with provenance (`effort: medium (inherited)`), write
+  `unknown` when unresolvable, and update both on any retry at a different
+  tier. A missing label means the lane is unknown, not a default.
 - **Senior review is mandatory.** Compare the result and diff with the
   acceptance criteria; never relay a worker summary as evidence, and never
   pass raw worker output to the user as the deliverable. If a diff is

@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.17.3 — 2026-08-17
+
+orchestrate: lane-visibility convention corrected after live verification —
+the agent row renders the dispatch label/description, not the prompt body,
+so the lane moves into the visible label (`<model> @ <effort> — <task tag>`);
+the prompt-header lines stay as the worker-side record. Second-opinion
+amendments folded in: values are requested-not-verified, resolved with
+provenance (`(inherited)` is provenance, never the value), `unknown` when
+unresolvable, headers updated on cross-tier retries, and a missing label
+means unknown lane, not a default.
+
 ## 0.17.2 — 2026-08-17
 
 orchestrate: every delegation prompt opens with `model:` / `effort:` lines
