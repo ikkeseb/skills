@@ -4,6 +4,24 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.18.0 — 2026-08-18
+
+drawio: bundle `scripts/render-drawio.mjs`, a headless PNG renderer using
+Playwright Chromium plus the official diagrams.net viewer (faithful sketch
+strokes and label placement; multi-page, `--pages`/`--scale`/`--bg` flags,
+compressed-content detection, tolerant Playwright discovery). SKILL.md's
+visual-verification section now calls the script instead of describing a
+hand-rolled viewer page, adds inspection-honesty rules (full-resolution
+first, degraded reporting when the harness limits fidelity, no visible
+image = failed check), and gains an "Opening in a browser" section (raw XML
+is not a rendering bug; `#R` URL route with the Windows command-line-length
+workaround; consent rule applies). excalidraw: scene spec gains an optional
+`"font": "sans"` switch for all non-code text — hand-drawn Excalifont stays
+the default — plus the same inspection-honesty line. Ported from
+improvements field-proven in a downstream clone of these skills; renderer
+and font path re-verified on this machine (real render inspected, both test
+suites green).
+
 ## 0.17.3 — 2026-08-17
 
 orchestrate: lane-visibility convention corrected after live verification —

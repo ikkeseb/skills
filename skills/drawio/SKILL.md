@@ -14,7 +14,7 @@ Produce a native `.drawio` file (mxGraphModel XML) that opens directly in [app.d
 3. **Write** it to `<descriptive-name>.drawio` (lowercase-with-hyphens), in the cwd unless told otherwise. Done when: the file exists at the reported path.
 4. **Validate structurally** with `node <skill-root>/scripts/validate-drawio.mjs <file.drawio>`. Resolve `<skill-root>` from this `SKILL.md`; never assume the session working directory or a particular Claude Code/Codex install shape. Fix every error before delivery. If Node is unavailable, perform the checks in the bundled reference manually and report that deterministic validation was unavailable. Done when: the validator passes, or the final report names the degraded manual-only check.
 5. **Inspect natively when available.** Prefer a local draw.io/diagrams.net application or another already-available native renderer that does not disclose the artifact externally. For complex or edge-label-heavy diagrams, use the optional visual workflow below if permission and tooling allow it. Done when: the diagram was inspected, or the final report clearly limits assurance to structural validation.
-6. **Report** the absolute path, validation performed, visual-inspection status, and how to open it: drag the file onto app.diagrams.net, or **File → Open from → Device**.
+6. **Report** the absolute path, validation performed, visual-inspection status, and how to open it: drag the file onto app.diagrams.net, or **File → Open from → Device** (see "Opening in a browser" below before opening it for the user).
 
 For advanced shapes, swimlanes, layers, edge routing, or theme work, the pinned upstream [`drawio-mcp` XML reference](https://raw.githubusercontent.com/jgraph/drawio-mcp/2e49443f5109590aeebd30bd9ccd2e4c10c9ee44/shared/xml-reference.md) is optional depth. Fetch it only when the task needs those features and network access is already allowed; ordinary generation never depends on it.
 
@@ -35,19 +35,32 @@ Without permission, do not load the XML into the external page: deliver the vali
 and report `structural validation only; external visual inspection not authorized`. A local
 native renderer that does not transmit the artifact does not need this consent.
 
-When authorized, use whatever browser automation the session already has — Playwright, a
-Chrome integration, a browser MCP server — and render with the official viewer (same engine
-as app.diagrams.net):
+When authorized, render with the bundled headless renderer (official viewer engine — same
+as app.diagrams.net, faithful sketch strokes and label placement):
 
-- Build an HTML page with
-  `<div class="mxgraph" data-mxgraph='{"xml":"<escaped-xml>","page":N,"resize":true,"nav":false}'></div>`
-  and `<script src="https://viewer.diagrams.net/js/viewer-static.min.js"></script>`. Escape the
-  XML for a JSON string inside a single-quoted attribute (double quotes and single quotes especially).
-- Load it so the CDN script finishes (Playwright: `page.setContent(html, {waitUntil:
-  'networkidle'})`), wait for `.mxgraph svg`, screenshot **that svg element**, then LOOK at
-  the PNG.
-- Gotchas: don't give the div `display:inline-block` (zero-width container → viewer renders
-  nothing); a transparent body + `omitBackground` yields a transparent PNG; `deviceScaleFactor`
-  sets the export resolution. The viewer JS loads from the CDN at runtime — pin a version (or
-  vendor the file / add Subresource Integrity) if you need reproducibility, offline runs, or
-  supply-chain safety.
+```
+node <skill-root>/scripts/render-drawio.mjs <file.drawio> [--pages a,b] [--scale 2.5] [--bg white]
+```
+
+Then LOOK at the PNGs. Prerequisites: Node + Playwright (or playwright-core) with Chromium,
+and network access to `viewer.diagrams.net` (one JS file). If Playwright is missing, ask
+before installing. Offline fallback when draw.io Desktop is installed:
+`drawio -x -f png -s 2.5 --page-index <N> -o out.png file.drawio`. If neither path is
+available, deliver with structural validation only and say so.
+
+Inspect the full-resolution PNG first — use all the image fidelity your harness gives you.
+If the harness truncates or rejects the image, inspect a downscaled copy for the overview
+plus full-resolution crops of dense areas where possible, and report that visual review was
+resolution-limited. Deliverable exports stay full-resolution regardless. If a read or
+screenshot tool returns no visible image, the inspection did not happen — treat it as a
+failed check, not a pass.
+
+## Opening in a browser
+
+A `.drawio` file opened directly in a browser shows raw XML — that is not a rendering bug.
+What renders it is app.diagrams.net (drag the file in, or **File → Open from → Device**) or
+a `https://app.diagrams.net/#R<url-encoded-xml>` URL. Long `#R` URLs exceed the Windows
+command-line limit (~8k chars) for non-trivial diagrams; work around it with a tiny local
+redirect HTML (`location.replace(longUrl)`) opened via `Start-Process`. Because the
+externally hosted diagrams.net code gains access to the diagram content, the consent rule
+above applies — ask before opening a non-public diagram this way.

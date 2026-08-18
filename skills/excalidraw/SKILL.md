@@ -106,7 +106,9 @@ distort a clear layout merely to silence a false positive.
 
 The builder creates native Excalidraw JSON with:
 
-- a black canvas and Excalifont by default;
+- a black canvas and Excalifont by default (`"font": "sans"` in the scene spec
+  switches all non-code text to a normal sans face — hand-drawn stays the
+  default; switch only when the audience or deliverable clearly calls for it);
 - Cascadia only when a text item is explicitly code;
 - wrapped, reciprocally bound node labels;
 - reciprocally bound arrows;
@@ -137,6 +139,10 @@ before sending a diagram to excalidraw.com.
 
 Inspect that canvas at full size. For complex diagrams also inspect crops
 containing dense text, edge junctions, curved segments, and canvas boundaries.
+
+Inspection means pixels actually reached you. If a read or screenshot tool
+returns no visible image, the inspection did not happen — treat it as a failed
+check and report the honest degraded status, never a pass.
 
 Ask these adversarial questions:
 

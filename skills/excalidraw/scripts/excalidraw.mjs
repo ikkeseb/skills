@@ -262,7 +262,10 @@ function compileScene(spec) {
   const theme = dark ? "dark" : "light";
   const themeText = PALETTE_TOKENS.text[theme];
   const defaultRoughness = number(spec.roughness, 1);
-  const defaultFont = 5;
+  const defaultFont = { hand: 5, sans: 2 }[spec.font] ?? 5;
+  if (spec.font !== undefined && !(spec.font in { hand: 1, sans: 1 })) {
+    fail(`unknown font "${spec.font}" (use "hand" or "sans"; code text uses "code": true per element)`);
+  }
   const titleColor = themeText.title;
   const bodyColor = themeText.body;
 

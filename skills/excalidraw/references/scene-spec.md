@@ -59,6 +59,7 @@ node <skill-root>/scripts/excalidraw.mjs build review-loop.scene.json review-loo
 | `theme` | `dark` (default) or `light`. |
 | `canvasBackground` | Optional exact canvas color; defaults to the selected theme's canvas token (`dark` or `light`). |
 | `roughness` | `0` clean or `1` hand-drawn; defaults to `1`. |
+| `font` | `hand` (Excalifont, default) or `sans` (Helvetica/Arial) for all non-code text. Code text always uses the monospace face via `"code": true` per element. |
 | `sections` | Optional visual regions behind nodes. |
 | `nodes` | Meaning-bearing shapes with optional bound labels. |
 | `edges` | Bound arrows between nodes. |
