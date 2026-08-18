@@ -4,6 +4,11 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.18.2 — 2026-08-18
+
+README: link to the skills.sh listing where all 17 skills can be browsed,
+without presenting its install-count telemetry as a quality signal.
+
 ## 0.18.1 — 2026-08-18
 
 excalidraw: the scene-spec builder now rejects unknown fields as build

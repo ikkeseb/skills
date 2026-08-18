@@ -4,6 +4,8 @@ Explicitly invoked agent skills for day-to-day work, published as one plugin.
 Claude Code ships the full set; Codex exposes the nine skills marked for both
 harnesses.
 
+Browse all 17 skills on [skills.sh](https://skills.sh/ikkeseb/skills).
+
 ## Skills
 
 Every skill here is meant to be reached explicitly. Descriptions avoid ambient
