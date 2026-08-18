@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.18.3 — 2026-08-18
+
+drawio: the save-location default now defers to the repository's agent
+contract (AGENTS.md or equivalent) when it specifies a deliverables
+location, falling back to the cwd otherwise. Found downstream: the bare
+cwd default wrote diagrams into directories a consumer repo's output
+routing actively deletes. excalidraw checked and left unchanged — it
+names no save location, so it already falls through to the repo contract.
+
 ## 0.18.2 — 2026-08-18
 
 README: link to the skills.sh listing where all 17 skills can be browsed,
