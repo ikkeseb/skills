@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.18.1 — 2026-08-18
+
+excalidraw: the scene-spec builder now rejects unknown fields as build
+errors per object type (root, sections, nodes, edges, lines, texts) — a
+typo like `label` for `text` previously built an unlabeled node with zero
+warnings. Malformed collections (`nodes` as an object, a `null` item) fail
+with clean errors instead of raw TypeErrors, and the 0.18.0 font check no
+longer accepts prototype-chain values (`"font": "toString"`). Closed
+vocabulary documented in the scene-spec escape hatch; regression tests for
+all paths; adversarially reviewed key lists against the compiler.
+
 ## 0.18.0 — 2026-08-18
 
 drawio: bundle `scripts/render-drawio.mjs`, a headless PNG renderer using

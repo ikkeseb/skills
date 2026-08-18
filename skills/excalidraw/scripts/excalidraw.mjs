@@ -262,12 +262,26 @@ function compileScene(spec) {
   const theme = dark ? "dark" : "light";
   const themeText = PALETTE_TOKENS.text[theme];
   const defaultRoughness = number(spec.roughness, 1);
-  const defaultFont = { hand: 5, sans: 2 }[spec.font] ?? 5;
-  if (spec.font !== undefined && !(spec.font in { hand: 1, sans: 1 })) {
+  const fontFamilies = { hand: 5, sans: 2 };
+  if (spec.font !== undefined && !Object.hasOwn(fontFamilies, spec.font)) {
     fail(`unknown font "${spec.font}" (use "hand" or "sans"; code text uses "code": true per element)`);
   }
+  const defaultFont = fontFamilies[spec.font] ?? 5;
   const titleColor = themeText.title;
   const bodyColor = themeText.body;
+
+  for (const kind of ["sections", "nodes", "edges", "lines", "texts"]) {
+    const value = spec[kind];
+    if (value === undefined) continue;
+    if (!Array.isArray(value)) {
+      fail(`Scene specification is invalid:\n- root.${kind} must be an array.`);
+    }
+    value.forEach((item, index) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) {
+        fail(`Scene specification is invalid:\n- ${kind}[${index}] must be a JSON object.`);
+      }
+    });
+  }
 
   const numericFields = [
     [spec, ["roughness", "titleX", "titleY"], "root"],
@@ -303,6 +317,40 @@ function compileScene(spec) {
         errors.push(`${context}.${field} must be a finite number.`);
       }
     }
+  }
+
+  // The scene spec is a closed vocabulary (the escape hatch is editing native
+  // JSON after build), so an unrecognized key is always a typo that would
+  // otherwise silently drop content — e.g. "label" instead of "text" builds an
+  // unlabeled node with zero warnings.
+  const knownKeys = {
+    root: ["title", "subtitle", "titleX", "titleY", "theme", "canvasBackground",
+      "roughness", "font", "sections", "nodes", "edges", "lines", "texts"],
+    sections: ["id", "title", "x", "y", "width", "height", "tone",
+      "backgroundColor", "strokeColor", "titleColor", "strokeStyle",
+      "strokeWidth", "roughness", "fontSize"],
+    nodes: ["id", "text", "shape", "x", "y", "width", "height", "tone",
+      "backgroundColor", "strokeColor", "textColor", "strokeStyle",
+      "strokeWidth", "roughness", "fontSize", "padding", "code"],
+    edges: ["id", "from", "to", "label", "labelColor", "labelDx", "labelDy",
+      "fontSize", "route", "curved", "strokeColor", "strokeStyle",
+      "strokeWidth", "roughness", "startArrowhead", "endArrowhead"],
+    lines: ["id", "arrow", "curved", "points", "strokeColor", "strokeStyle",
+      "strokeWidth", "roughness", "startArrowhead", "endArrowhead"],
+    texts: ["id", "text", "x", "y", "width", "fontSize", "code", "color",
+      "textAlign", "verticalAlign", "wrap"],
+  };
+  const checkKeys = (object, kind, context) => {
+    for (const key of Object.keys(object)) {
+      if (!knownKeys[kind].includes(key)) {
+        errors.push(`${context}.${key} is not a scene-spec field (allowed: ${knownKeys[kind].join(", ")}).`);
+      }
+    }
+  };
+  checkKeys(spec, "root", "root");
+  for (const kind of ["sections", "nodes", "edges", "lines", "texts"]) {
+    (Array.isArray(spec[kind]) ? spec[kind] : []).forEach((item, index) =>
+      checkKeys(item, kind, `${kind}[${index}]`));
   }
   for (const [edgeIndex, edge] of (spec.edges ?? []).entries()) {
     for (const [pointIndex, point] of (edge.route ?? []).entries()) {

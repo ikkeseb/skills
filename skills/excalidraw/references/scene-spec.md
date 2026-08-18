@@ -175,6 +175,9 @@ rebranding are needed.
 
 ## Escape hatch
 
-The scene specification covers the common diagram vocabulary. For a shape it
-cannot express, build the nearest scene, then edit the native `.excalidraw`
-JSON. Run `validate` and `check` again after every manual edit.
+The scene specification covers the common diagram vocabulary, and the builder
+rejects any field outside it as a build error (a typo like `label` for `text`
+would otherwise silently drop content). For a shape the spec cannot express,
+build the nearest scene, then edit the native `.excalidraw` JSON — never
+invent extra spec fields. Run `validate` and `check` again after every manual
+edit.

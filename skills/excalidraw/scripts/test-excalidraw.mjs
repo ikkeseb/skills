@@ -297,6 +297,30 @@ try {
   writeFileSync(badNumberPath, JSON.stringify(badNumberSpec), "utf8");
   assert.match(run(["build", badNumberPath], 1), /nodes\[0\]\.x must be a finite number/);
 
+  const typoKeySpec = JSON.parse(readFileSync(example, "utf8"));
+  typoKeySpec.nodes[0].label = typoKeySpec.nodes[0].text;
+  delete typoKeySpec.nodes[0].text;
+  typoKeySpec.nodes[1].w = typoKeySpec.nodes[1].width;
+  delete typoKeySpec.nodes[1].width;
+  typoKeySpec.legend = "unknown root key";
+  const typoKeyPath = join(workspace, "typo-key.scene.json");
+  writeFileSync(typoKeyPath, JSON.stringify(typoKeySpec), "utf8");
+  const typoKeyOutput = run(["build", typoKeyPath], 1);
+  assert.match(typoKeyOutput, /nodes\[0\]\.label is not a scene-spec field/);
+  assert.match(typoKeyOutput, /nodes\[1\]\.w is not a scene-spec field/);
+  assert.match(typoKeyOutput, /root\.legend is not a scene-spec field/);
+
+  const malformedCases = [
+    ["null-item.scene.json", { title: "x", nodes: [null] }, /nodes\[0\] must be a JSON object/],
+    ["non-array.scene.json", { title: "x", nodes: { id: "a" } }, /root\.nodes must be an array/],
+    ["proto-font.scene.json", { title: "x", font: "toString" }, /unknown font "toString"/],
+  ];
+  for (const [name, spec, expected] of malformedCases) {
+    const specPath = join(workspace, name);
+    writeFileSync(specPath, JSON.stringify(spec), "utf8");
+    assert.match(run(["build", specPath], 1), expected);
+  }
+
   const badRouteSpec = JSON.parse(readFileSync(example, "utf8"));
   badRouteSpec.edges[0].route = [["300", 260]];
   const badRoutePath = join(workspace, "bad-route.scene.json");
@@ -364,7 +388,7 @@ try {
   assert.equal(backgroundWidth, viewBoxWidth);
 
   console.log(
-    "PASS: build/write failures, validate, check, PNG path, browser discovery, themes, section edges, scaling, numeric rejection, image files, bindings, IDs, and crossings.",
+    "PASS: build/write failures, validate, check, PNG path, browser discovery, themes, section edges, scaling, numeric and unknown-key rejection, image files, bindings, IDs, and crossings.",
   );
 } finally {
   rmSync(workspace, { recursive: true, force: true });
