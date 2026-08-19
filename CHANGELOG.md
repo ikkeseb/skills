@@ -4,6 +4,26 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.19.0 — 2026-08-19
+
+Hardening pass driven by the skills.sh security audits (Snyk, Socket, Gen
+Agent Trust Hub) plus an internal full-repo review. history-audit: extracts
+are redacted by script before any model reads them, stay in a local scratch
+directory, corpus text is data never instructions, and cross-family
+verification names its provider transfer and asks first — addresses both
+FAIL verdicts. afk: hooks enforcing permission or safety requirements are
+honored, never deferred; description and heading no longer read as
+skip-confirmation directives. orchestrate: the classifier-framing note can
+no longer be read as evasion coaching, the hostile-helper test canary uses a
+neutral marker string, the stale "Two worker lanes" anchor is fixed, and the
+symlink-deploy relay pin is reconciled to opus @ low (matching the
+codex-worker agent). second-opinion: states that prompt material goes to the
+user's own OpenAI account; de-personalized the model-pin wording.
+pretty-slides: the QA server binds 127.0.0.1. Disclosure comments beside the
+three legitimate external touchpoints (diagrams.net viewer, Google Fonts
+import, local-only SVG rasterizer). Removed `skills/shots/` — four stray QA
+screenshots accidentally committed in 0.15.1.
+
 ## 0.18.3 — 2026-08-18
 
 drawio: the save-location default now defers to the repository's agent

@@ -125,6 +125,8 @@ const htmlFor = (pageIdx) => {
   return `<!doctype html><html><head><meta charset="utf-8">
 <style>html,body{margin:0;padding:0;background:${bg};}</style></head>
 <body><div class="mxgraph" data-mxgraph='${cfg}'></div>
+<!-- Official diagrams.net viewer — the only external request this script
+     makes; gated by SKILL.md's per-artifact consent rule. -->
 <script src="https://viewer.diagrams.net/js/viewer-static.min.js"></script>
 </body></html>`;
 };

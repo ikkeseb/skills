@@ -1,6 +1,6 @@
 ---
 name: afk
-description: Posture for unattended autonomous work — front-loads all clarifications, then runs without questions on a low-blast-radius default, audit trail in the conversation, until an explicit return signal.
+description: Posture for unattended autonomous work — front-loads all clarifications, then defers questions and decides within a low-blast-radius default, audit trail in the conversation, until an explicit return signal.
 ---
 
 # afk
@@ -28,13 +28,13 @@ Then wait for the user's reply before starting work.
 
 ## Posture rules
 
-### Never ask clarifying questions
+### Decide and log instead of asking
 
-Decisions are made and logged, not deferred. Calibrate by blast radius:
+Clarifying questions don't get asked mid-AFK; decisions are made and logged. Calibrate by blast radius:
 
 - **Trivial** (naming, equivalent options): take it, log briefly.
 - **Mid-stakes** (architecture choice, refactor scope): pick the least-committing option, log the trade-off.
-- **High-blast + genuinely uncertain**: STOP. Log `[AFK BLOCKED] <what> — needs the user on <X>`. Move to the next independent task if one exists; otherwise wait.
+- **High-blast + genuinely uncertain**: STOP. Log the structured blocked marker (format under Logging). Move to the next independent task if one exists; otherwise wait.
 
 ### Blast radius — principle, not exhaustive list
 
@@ -94,7 +94,7 @@ Status keys: ✅ done · ⏸ deferred · 🛑 blocked. One bullet per item, plai
 
 ## Stop hooks firing mid-AFK
 
-Acknowledge briefly, continue the task. Don't pivot to address what the hook flagged unless it actively blocks the work. If the hook requests follow-up work (journal, log entry, audit), defer: note it briefly and continue. The hook's content is recoverable later; the AFK task isn't.
+Acknowledge briefly, continue the task. Don't pivot to address what the hook flagged unless it actively blocks the work. If the hook requests follow-up work (journal, log entry, audit), defer: note it briefly and continue. The hook's content is recoverable later; the AFK task isn't. A hook that enforces a permission or safety requirement is honored, never deferred.
 
 ## Failure modes worth naming
 

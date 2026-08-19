@@ -1,3 +1,6 @@
+/* Google Fonts CSS only — the sole network request this stylesheet makes;
+   offline it degrades silently to the local fallback stacks below. See
+   references/base-styles.md "Technical notes" for self-hosting. */
 @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;600&display=swap');
 
 :root {

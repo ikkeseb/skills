@@ -1085,6 +1085,8 @@ function findBrowser({
   return null;
 }
 
+// Rasterizes a local file:// SVG in an already-installed browser — no
+// network access, nothing installed.
 function pngFromSvg(svgPath, pngPath, dimensions, options = {}) {
   const browser = options.browser ?? findBrowser(options);
   if (!browser) return { ok: false, reason: "Chrome, Chromium, or Edge was not found." };

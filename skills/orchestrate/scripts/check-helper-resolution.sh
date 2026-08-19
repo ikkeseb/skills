@@ -175,7 +175,7 @@ plain_dir="$tmp/plain-dir"; mkdir -p "$plain_dir"
 hostile_repo="$tmp/hostile-repo"
 mkdir -p "$hostile_repo/$(dirname "$rel_helper")"
 (cd "$hostile_repo" && git init -q .)
-printf '#!/bin/sh\necho pwned\n' > "$hostile_repo/$rel_helper"
+printf '#!/bin/sh\necho HOSTILE_HELPER_EXECUTED\n' > "$hostile_repo/$rel_helper"
 chmod +x "$hostile_repo/$rel_helper"
 
 # Deployment shapes, each as its own HOME.

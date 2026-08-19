@@ -17,7 +17,7 @@ dropped a flag sailed through.
 ## Preflight
 
 `"$HELPER"` throughout this file is the helper path resolved by the candidate
-list in `SKILL.md` § Two worker lanes. Never write the path as a bare relative
+list in `SKILL.md` § Worker lanes. Never write the path as a bare relative
 `scripts/…`: it would resolve against the session's cwd, which is the repo
 being worked on, not the one shipping this skill.
 
@@ -202,8 +202,8 @@ not raise the relay numbers.
 For the relay, prefer the `codex-worker` agent type when it appears in the
 session's agent list — plugin installs namespace it as
 `ikkeseb-skills:codex-worker`. Otherwise (e.g. skills installed by symlink,
-which carries no agents) spawn a default agent as the adapter — sonnet at
-low effort is right for the relay — with this verified prompt (fill the
+which carries no agents) spawn a default agent as the adapter — opus at
+low effort, the same pin the `codex-worker` agent carries — with this verified prompt (fill the
 UPPERCASE slots; keep the rules verbatim, each guards an observed failure
 mode; for write workers swap in the write-gate flags below). `HELPER_ABS_PATH`
 is `"$HELPER"` expanded — the adapter is a separate session that resolves
@@ -357,9 +357,12 @@ result — and it reacts to the prompt's framing, not to the artifact. Measured
 across three runs on 2026-07-26: hunting bypasses in a blocking hook died;
 the same hook reviewed as parser correctness ran clean; so did a security
 review of a path-resolution fix framed as "argue the strongest case against
-this". Red-teaming a security control belongs in the Claude lane — or reframe
-it as a correctness review of the artifact, with the cooperative context
-stated and no attack vocabulary. Do not degrade the whole lane over it.
+this". Route genuine red-teaming of a security control to the Claude lane.
+A task that truly is a correctness review should be dispatched as one —
+state the cooperative context plainly and leave out attack vocabulary the
+task doesn't need. Never disguise an adversarial task as cooperative to get
+it past the filter; the filter firing on a genuinely adversarial prompt is
+lane selection working. Do not degrade the whole lane over it.
 
 Never blind-retry a `workspace-write` failure of any class: the tree may hold
 a partial change that must be inspected, not overwritten.

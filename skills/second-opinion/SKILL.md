@@ -12,6 +12,9 @@ description: >-
 Use one read-only Codex call to pressure-test existing work. Its value is an
 independent model family with different blind spots, not automatic authority.
 Do not spend the call on lookups, work that does not exist yet, or taste.
+The prompt — and whatever material it quotes — goes to the user's own
+OpenAI/Codex account like any other Codex call they run; include only what
+the review needs.
 
 ## Run the review
 
@@ -85,7 +88,7 @@ established. A stale review may still contain unaffected findings; recheck any
 finding that depends on changed material against the current artifact, or earn
 a new call.
 
-The command pins the maintainer's current review model and `high` effort;
+The command pins the current preferred review model and `high` effort;
 update that pin here when the preferred review model changes. Explicit user
 wording may override either: effort language maps to `--effort`, and a model
 name maps to `--model`. Use conversational judgment; ask if the reading is

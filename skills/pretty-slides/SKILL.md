@@ -87,7 +87,7 @@ and drive the real file with whatever browser automation the harness has —
 `playwright-cli` where available:
 
 ```bash
-python -m http.server 4477   # in the deck folder; any free port; run backgrounded, stop it when done
+python -m http.server 4477 --bind 127.0.0.1   # in the deck folder; any free port; localhost only; run backgrounded, stop it when done
 # open http://localhost:4477/deck.html?qa=1 at 1440x810
 # per slide: digits+Enter to jump, screenshot, then LOOK at the render
 ```
