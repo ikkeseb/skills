@@ -1,12 +1,7 @@
 ---
 name: history-audit
-description: >-
-  Mine the user's own agent-session history on this machine (Claude Code
-  transcripts, Codex session logs) for the mistakes agents actually made,
-  counted per model × harness, and turn the top patterns into per-line instruction
-  proposals that each cite the run that earned them. An occasional deliberate
-  audit, not a monitoring loop. Not for reviewing code, a single session, or
-  live behavior.
+description: "Mine this machine's own agent-session history (Claude Code transcripts, Codex logs) for the mistakes agents actually made, counted per model and harness, and propose per-line instruction fixes that each cite the run that earned them. A deliberate occasional audit. Not for reviewing code, a single session, or live behavior."
+disable-model-invocation: true
 ---
 
 # History audit

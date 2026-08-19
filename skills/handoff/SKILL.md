@@ -1,6 +1,7 @@
 ---
 name: handoff
-description: Create and save a concise, paste-ready continuation handoff for resuming the current task in a fresh session. Saves to a handoffs directory chosen per harness and prunes saved handoffs older than 30 days.
+description: "Create and save a paste-ready handoff for continuing the current task in a fresh session. Use when asked to hand off or save continuation context. Saves under the harness's handoffs directory and prunes copies older than 30 days. Not for reading or resuming from a pasted handoff."
+disable-model-invocation: true
 ---
 
 # Handoff

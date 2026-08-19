@@ -1,6 +1,7 @@
 ---
 name: afk
-description: Posture for unattended autonomous work — front-loads all clarifications, then defers questions and decides within a low-blast-radius default, audit trail in the conversation, until an explicit return signal.
+description: "Posture for unattended work. Front-loads clarifications, then defers questions and decides within low-blast-radius defaults, audit trail in the conversation, until an explicit return signal."
+disable-model-invocation: true
 ---
 
 # afk

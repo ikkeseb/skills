@@ -1,10 +1,7 @@
 ---
 name: pretty-pdf
-description: >-
-  Create visually polished, professionally designed PDFs with WeasyPrint (HTML+CSS to PDF) —
-  reports, letters, invoices, CVs — from new content or by re-typesetting a docx. Not for
-  reading, merging, splitting, or form-filling existing PDFs (use the default PDF skill),
-  fillable AcroForm output, or quick throwaway PDFs.
+description: "Create designed PDFs with WeasyPrint (HTML+CSS to PDF): reports, letters, invoices, CVs, or re-typesetting a docx. Not for reading, merging, splitting, or form-filling existing PDFs, fillable forms, or quick throwaway output."
+disable-model-invocation: true
 ---
 
 # Pretty PDF

@@ -1,10 +1,7 @@
 ---
 name: agents-md-convert
-description: >-
-  Audit, convert, or repair a Git repository so AGENTS.md owns agent guidance
-  and CLAUDE.md is a one-line @AGENTS.md adapter. Use for existing root or
-  nested instructions, including partial conversions; does not author guidance
-  from scratch.
+description: "Convert or repair a repo so AGENTS.md owns agent guidance and CLAUDE.md is a one-line adapter. Use on existing instructions, including partial conversions. Not for authoring guidance from scratch or auditing context architecture (context-audit)."
+disable-model-invocation: true
 ---
 
 # agents-md-convert

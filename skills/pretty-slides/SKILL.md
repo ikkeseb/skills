@@ -1,13 +1,7 @@
 ---
 name: pretty-slides
-description: >-
-  Build a presentation as one self-contained HTML file: a bundled slide
-  engine (keyboard-only navigation, pattern-bound motion, full-frame
-  artifact views) plus a build step that inlines fonts and images —
-  re-skinnable through a token block, with a dark editorial default. For
-  talks and decks that stand in for PowerPoint. Not for documents,
-  one-pagers, or reports (pretty-html), print or PDF deliverables
-  (pretty-pdf), or web-app frontends.
+description: "Build a presentation as one self-contained HTML file: bundled slide engine, inlined fonts and images, re-skinnable through a token block. For talks and decks that stand in for PowerPoint. Not for documents (pretty-html), PDFs (pretty-pdf), or web-app frontends."
+disable-model-invocation: true
 ---
 
 # Pretty Slides

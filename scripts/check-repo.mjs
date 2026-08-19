@@ -49,8 +49,18 @@ function validateSkill(skillDir) {
     }
   }
 
-  if (/^disable-model-invocation:/m.test(frontmatter)) {
-    fail(`${label}: disable-model-invocation is banned in this repository`);
+  if (!/^disable-model-invocation: true$/m.test(frontmatter)) {
+    fail(`${label}: missing disable-model-invocation: true (every skill here is explicit-invocation only; canary 2026-08-20 proved typed /name and picker visibility survive the flag)`);
+  }
+
+  // Cross-skill path references (the shared-executable convention) must point
+  // at files that exist, or a selective install breaks silently.
+  for (const ref of text.matchAll(/skills\/([a-z0-9-]+\/[A-Za-z0-9_./-]+\.(?:sh|mjs|js|md|yaml))/g)) {
+    // Deployment candidates like ~/skills/skills/<name>/... double the prefix.
+    const rel = ref[1].startsWith("skills/") ? ref[1].slice("skills/".length) : ref[1];
+    if (!fs.existsSync(path.join(repo, "skills", rel))) {
+      fail(`${label}: references skills/${rel} which does not exist in this repository`);
+    }
   }
 }
 
@@ -61,6 +71,20 @@ const skillDirs = fs.readdirSync(skillsRoot, { withFileTypes: true })
   .sort();
 
 for (const skillDir of skillDirs) validateSkill(skillDir);
+
+// Subagent definitions share the cross-skill path rule.
+const agentsDir = path.join(repo, "agents");
+if (fs.existsSync(agentsDir)) {
+  for (const entry of fs.readdirSync(agentsDir).filter((f) => f.endsWith(".md"))) {
+    const text = read(path.join("agents", entry));
+    for (const ref of text.matchAll(/skills\/([a-z0-9-]+\/[A-Za-z0-9_./-]+\.(?:sh|mjs|js|md|yaml))/g)) {
+      const rel = ref[1].startsWith("skills/") ? ref[1].slice("skills/".length) : ref[1];
+      if (!fs.existsSync(path.join(repo, "skills", rel))) {
+        fail(`agents/${entry}: references skills/${rel} which does not exist in this repository`);
+      }
+    }
+  }
+}
 
 for (const extra of process.argv.slice(2)) {
   const skillDir = path.resolve(extra);

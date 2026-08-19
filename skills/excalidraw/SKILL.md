@@ -1,6 +1,7 @@
 ---
 name: excalidraw
-description: Generate editable `.excalidraw` diagrams for relationships, flows, architectures, and system structure, with structural validation and visual review. For editable draw.io/diagrams.net files use the drawio skill; for numerical charts use a charting tool.
+description: "Create an editable .excalidraw diagram for flows, relationships, and system structure, with structural validation and visual review. Not for draw.io files (drawio) or numerical charts."
+disable-model-invocation: true
 ---
 
 # Excalidraw diagram creator

@@ -1,6 +1,7 @@
 ---
 name: verify-claims
-description: Audit factual claims in prose against traceable sources and classify each as verified, unverified, or contradicted. Checks written assertions, not software behavior.
+description: "Audit factual claims in prose against traceable sources and classify each as verified, unverified, or contradicted. Checks written assertions, not software behavior."
+disable-model-invocation: true
 ---
 
 # verify-claims

@@ -1,10 +1,7 @@
 ---
 name: context-audit
-description: >-
-  Audit a project's instruction and context architecture, including CLAUDE.md,
-  AGENTS.md, skills, nested files, and hooks. Analysis-only: classify the rules,
-  preserve their effective reach across the target harnesses, draft a leaner
-  structure, and give an honest worth-it verdict for the user to apply by hand.
+description: "Audit how a project's instructions and context load across harnesses: CLAUDE.md, AGENTS.md, skills, nested files, hooks. Analysis only, ending in an honest worth-it verdict. Not for mechanical AGENTS.md conversion (agents-md-convert)."
+disable-model-invocation: true
 ---
 
 # Context Audit

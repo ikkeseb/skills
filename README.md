@@ -8,10 +8,10 @@ Browse all 17 skills on [skills.sh](https://skills.sh/ikkeseb/skills).
 
 ## Skills
 
-Every skill here is meant to be reached explicitly. Descriptions avoid ambient
-activation because Claude Code's `skillOverrides` do not apply to plugin
-skills; symlink consumers may additionally use name-only exposure. In Codex,
-use the `$` skill picker.
+Every skill here is reached explicitly: each `SKILL.md` carries
+`disable-model-invocation: true`, so the model never triggers one on its own
+and only `/name` (or the picker) invokes it. In Codex, use the `$` skill
+picker; the nine Codex-supported skills disable implicit invocation there too.
 
 ### Claude Code and Codex
 

@@ -1,11 +1,7 @@
 ---
 name: pretty-html
-description: >-
-  Produce a polished, self-contained HTML deliverable: single file, light +
-  dark theme with a toggle, generous spacing, clean typography,
-  print-friendly — for briefs, one-pagers, meeting notes, reports, and prep
-  docs, or to restyle an existing HTML file. Not for web-app frontends, site
-  frameworks, or Markdown notes.
+description: "Produce a polished, self-contained HTML reading document with light and dark themes: briefs, reports, meeting notes, prep docs, or restyling an existing HTML file. Not for showcase pages (prettier-html), decks (pretty-slides), or web-app frontends."
+disable-model-invocation: true
 ---
 
 # Pretty HTML

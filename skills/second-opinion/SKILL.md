@@ -1,10 +1,7 @@
 ---
 name: second-opinion
-description: >-
-  Ask an OpenAI model, through the Codex CLI, to review work that already
-  exists — a design, a diff, a diagnosis, a claim. Read-only, one call, and the
-  answer comes back synthesized rather than relayed. For running a task on
-  another model rather than reviewing one, use a delegation posture instead.
+description: "Send existing work (a design, diff, diagnosis, or claim) to an OpenAI model through the Codex CLI for one independent read-only review, synthesized back. The work leaves the machine. Not for delegating execution (orchestrate)."
+disable-model-invocation: true
 ---
 
 # second-opinion

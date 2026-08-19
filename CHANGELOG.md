@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.20.0 — 2026-08-20
+
+Invocation enforcement moves from description wording to frontmatter:
+every skill now carries `disable-model-invocation: true`, after a
+2026-08-20 two-machine canary proved typed `/name` and TUI picker
+visibility survive the flag (the July hidden/uninvocable symptom is gone
+on current Claude Code). With ambient routing off, all 17 descriptions
+are rewritten as short trigger contracts: what the skill does, when to
+reach for it, nearest exclusion. check-repo now requires the flag and
+verifies that cross-skill path references (the shared-executable
+convention, e.g. second-opinion's use of orchestrate's codex-worker
+helper) resolve inside the repository.
+
 ## 0.19.0 — 2026-08-19
 
 Hardening pass driven by the skills.sh security audits (Snyk, Socket, Gen

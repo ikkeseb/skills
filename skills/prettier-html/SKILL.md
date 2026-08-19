@@ -1,12 +1,7 @@
 ---
 name: prettier-html
-description: >-
-  Art-direct and build a single-file HTML page with editorial ambition —
-  display-scale typography, visible structure, quiet motion, dual theme —
-  designing a fresh visual concept from the content each time. For pages
-  that deserve design: launches, showcases, announcements, flagship
-  reports. Not for plain reading documents (pretty-html), slide decks
-  (pretty-slides), or web-app frontends.
+description: "Art-direct a single-file HTML page with editorial ambition, designing a fresh visual concept from the content each time: launches, showcases, announcements, flagship reports. Not for plain reading documents (pretty-html), decks (pretty-slides), or web-app frontends."
+disable-model-invocation: true
 ---
 
 # Prettier HTML
