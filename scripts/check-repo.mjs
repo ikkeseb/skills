@@ -49,12 +49,13 @@ function validateSkill(skillDir) {
     }
   }
 
-  // Invocation policy is a per-skill decision (2026-08-20): the flag is
-  // optional, but a present flag must be a well-formed boolean line.
-  for (const line of lines.filter((l) => l.startsWith("disable-model-invocation"))) {
-    if (!/^disable-model-invocation: (true|false)$/.test(line)) {
-      fail(`${label}: malformed disable-model-invocation line (must be exactly "disable-model-invocation: true" or "disable-model-invocation: false")`);
-    }
+  // Banned again (2026-08-20, third time): on current Claude Code the flag
+  // removes the skill from the model's own skill list, and a typed /name is
+  // executed by the model calling the Skill tool, so the skill becomes
+  // uninvocable. User-invoked intent lives in consumer skillOverrides.
+  // See CHANGELOG 0.7.5 and 0.21.1.
+  if (/^\s*['"]?disable-model-invocation['"]?\s*:/m.test(frontmatter)) {
+    fail(`${label}: disable-model-invocation is banned in this repository`);
   }
 
   // Cross-skill path references (the shared-executable convention) must point

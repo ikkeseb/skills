@@ -1,7 +1,6 @@
 ---
 name: drawio
 description: "Create a native .drawio diagram (flowcharts, architectures, ER, sequence, network topologies) that opens directly in app.diagrams.net. Not for hand-drawn style (excalidraw) or numerical charts."
-disable-model-invocation: true
 ---
 
 # Draw.io Diagram Creator

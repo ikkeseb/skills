@@ -1,7 +1,6 @@
 ---
 name: agents-md-convert
 description: "Convert or repair a repo so AGENTS.md owns agent guidance and CLAUDE.md is a one-line adapter. Use on existing instructions, including partial conversions. Not for authoring guidance from scratch or auditing context architecture (context-audit)."
-disable-model-invocation: true
 ---
 
 # agents-md-convert

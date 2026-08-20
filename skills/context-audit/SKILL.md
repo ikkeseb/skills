@@ -1,7 +1,6 @@
 ---
 name: context-audit
 description: "Audit how a project's instructions and context load across harnesses: CLAUDE.md, AGENTS.md, skills, nested files, hooks. Analysis only, ending in an honest worth-it verdict. Not for mechanical AGENTS.md conversion (agents-md-convert)."
-disable-model-invocation: true
 ---
 
 # Context Audit

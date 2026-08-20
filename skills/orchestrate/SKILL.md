@@ -1,7 +1,6 @@
 ---
 name: orchestrate
 description: "Delegation posture: the main loop keeps design, specification, review, and integration while routing tightly specified execution through Claude Code and Codex workers. Single-task or sustained for the session. Not for one quick lookup or a single external review (second-opinion)."
-disable-model-invocation: true
 ---
 
 # orchestrate

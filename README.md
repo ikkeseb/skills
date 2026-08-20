@@ -8,12 +8,16 @@ Browse all 17 skills on [skills.sh](https://skills.sh/ikkeseb/skills).
 
 ## Skills
 
-Invocation policy is decided per skill. Most skills carry
-`disable-model-invocation: true`, so the model never triggers them on its own
-and only `/name` (or the picker) invokes them. `pretty-html` is the current
-exception: its trigger is a deliverable request the model should recognize,
-so it stays model-invokable. In Codex, use the `$` skill picker; the
-Codex-supported skills that disable implicit invocation do so there too.
+Invoke skills explicitly: `/name` in Claude Code, the `$` picker in Codex.
+No SKILL.md carries `disable-model-invocation`: on current Claude Code that
+flag hides the skill from the model and breaks the typed slash command too.
+For a symlink or personal install, keep the model from triggering a skill on
+its own with `skillOverrides: { "<name>": "name-only" }` in your Claude Code
+settings; `pretty-html` is the one skill meant to be model-invoked. For a
+plugin install those overrides do not apply, so the model may route to any
+skill whose description fits; explicit-only enforcement there is unverified.
+Codex-supported skills that should stay explicit set
+`allow_implicit_invocation: false` there.
 
 ### Claude Code and Codex
 

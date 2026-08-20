@@ -1,7 +1,6 @@
 ---
 name: pretty-pdf
 description: "Create designed PDFs with WeasyPrint (HTML+CSS to PDF): reports, letters, invoices, CVs, or re-typesetting a docx. Not for reading, merging, splitting, or form-filling existing PDFs, fillable forms, or quick throwaway output."
-disable-model-invocation: true
 ---
 
 # Pretty PDF

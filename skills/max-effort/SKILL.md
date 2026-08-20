@@ -1,7 +1,6 @@
 ---
 name: max-effort
 description: "Adversarial-review posture for high-stakes or irreversible work: test whether the result answers the real goal and survives attempts to break it. Single-task or sustained for the session."
-disable-model-invocation: true
 ---
 
 # max-effort

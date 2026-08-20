@@ -1,7 +1,6 @@
 ---
 name: prettier-html
 description: "Art-direct a single-file HTML page with editorial ambition, designing a fresh visual concept from the content each time: launches, showcases, announcements, flagship reports. Not for plain reading documents (pretty-html), decks (pretty-slides), or web-app frontends."
-disable-model-invocation: true
 ---
 
 # Prettier HTML

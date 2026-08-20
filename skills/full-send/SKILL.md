@@ -1,7 +1,6 @@
 ---
 name: full-send
 description: "Posture for exploring several independent approaches in parallel and converging on the best result, once resources are authorized. Single-task or sustained for the session."
-disable-model-invocation: true
 ---
 
 # full-send

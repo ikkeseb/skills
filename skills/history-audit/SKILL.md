@@ -1,7 +1,6 @@
 ---
 name: history-audit
 description: "Mine this machine's own agent-session history (Claude Code transcripts, Codex logs) for the mistakes agents actually made, counted per model and harness, and propose per-line instruction fixes that each cite the run that earned them. A deliberate occasional audit. Not for reviewing code, a single session, or live behavior."
-disable-model-invocation: true
 ---
 
 # History audit

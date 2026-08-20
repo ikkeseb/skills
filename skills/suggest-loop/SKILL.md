@@ -1,7 +1,6 @@
 ---
 name: suggest-loop
 description: "Draft up to three paste-ready /loop prompts from a repo's documented verification gate, each with a measurable success stop and a hard turn/time cap, or explain why the work is not safely loopable. Writes prompt text only, never runs loops."
-disable-model-invocation: true
 ---
 
 # suggest-loop

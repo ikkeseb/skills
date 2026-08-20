@@ -1,7 +1,6 @@
 ---
 name: excalidraw
 description: "Create an editable .excalidraw diagram for flows, relationships, and system structure, with structural validation and visual review. Not for draw.io files (drawio) or numerical charts."
-disable-model-invocation: true
 ---
 
 # Excalidraw diagram creator

@@ -1,7 +1,6 @@
 ---
 name: second-opinion
 description: "Send existing work (a design, diff, diagnosis, or claim) to an OpenAI model through the Codex CLI for one independent read-only review, synthesized back. The work leaves the machine. Not for delegating execution (orchestrate)."
-disable-model-invocation: true
 ---
 
 # second-opinion

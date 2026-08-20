@@ -1,7 +1,6 @@
 ---
 name: afk
 description: "Posture for unattended work. Front-loads clarifications, then defers questions and decides within low-blast-radius defaults, audit trail in the conversation, until an explicit return signal."
-disable-model-invocation: true
 ---
 
 # afk

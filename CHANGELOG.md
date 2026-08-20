@@ -4,6 +4,21 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.21.1 — 2026-08-20
+
+`disable-model-invocation` is removed from all 16 SKILL.md files and banned
+again in check-repo, reverting the 0.20.0/0.21.0 policy. The 0.20.0 canary
+measured the wrong properties: TUI picker visibility and headless `/name`
+dispatch both survive the flag, but the interactive model's own skill list
+does not. With the flag present, the 16 skills were absent from that list on
+the home PC (Claude Code 2.1.237) and a typed `/second-opinion` was unknown
+until `/reload-plugins`; the instant the flags left the working tree, all 16
+reappeared in the running session. Same failure as July (0.7.5), same
+upstream issues (#26251, #38969, #43875), still unfixed. User-invoked intent
+stays in consumer `skillOverrides: name-only`; descriptions are unchanged.
+Codex markers (`allow_implicit_invocation: false`) are untouched; the Codex
+"slash exists, body never loads" symptom is a separate open question.
+
 ## 0.21.0 — 2026-08-20
 
 Invocation policy becomes a per-skill decision, superseding 0.20.0's
