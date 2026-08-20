@@ -7,7 +7,7 @@ disable-model-invocation: true
 # Pretty Slides
 
 The deliverable is **one self-contained HTML file** that double-clicks open
-in any browser, offline. It comes from a template plus a tiny build script —
+in any browser, offline. It comes from a template plus a tiny build script,
 never from hand-editing the output.
 
 - **Template + build step.** Edits happen in `template.html`; `build.py`
@@ -21,7 +21,7 @@ never from hand-editing the output.
 Copy the engine before reading any of it. Resolve this skill's directory
 and copy `assets/engine-template.html` and `assets/build.py` into the deck
 folder. When authoring, read only the template's slide sections (between
-`<div class="stage">` and the rail) to copy pattern markup — never load the
+`<div class="stage">` and the rail) to copy pattern markup. Never load the
 `<style>` and `<script>` blocks into context; the patterns are documented
 in `references/slide-patterns.md`, the motion vocabulary in
 `references/motion.md`.
@@ -35,11 +35,11 @@ in `references/slide-patterns.md`, the motion vocabulary in
    machine has (`python`, `python3`, or `py -3`). If no Python exists:
    with no images or fonts configured the built file is byte-identical to
    the template, so copying `template.html` to `deck.html` is the same
-   build — do that and say so in delivery. Done when `deck.html` exists
+   build. Do that and say so in delivery. Done when `deck.html` exists
    via one of those paths, with zero warnings.
 2. **Settle the copy.** Slides carry approved text; get the copy or a slide
    manifest settled before designing around it. Quoted material on a slide
-   is reproduced verbatim — never invented or prettified. Done when the user
+   is reproduced verbatim, never invented or prettified. Done when the user
    has confirmed the content plan.
 3. **Skin the deck.** Read `references/design-system.md` and walk its
    decision ladder: keep the shipped default as-is, swap a few tokens to
@@ -72,12 +72,12 @@ in `references/slide-patterns.md`, the motion vocabulary in
   beat is rhetorical. Too many manual clicks kills pacing.
 - `prefers-reduced-motion` and the `?qa=1` query flag both collapse every
   animation to instant. Any animation added to the engine must join both
-  collapse selectors — a motion guarantee that rots is a defect.
+  collapse selectors; a motion guarantee that rots is a defect.
 
 ## Screenshot QA (mandatory before "done")
 
 Serve the deck over HTTP (`file://` is blocked in most browser automation)
-and drive the real file with whatever browser automation the harness has —
+and drive the real file with whatever browser automation the harness has,
 `playwright-cli` where available:
 
 ```bash
@@ -90,7 +90,7 @@ python -m http.server 4477 --bind 127.0.0.1   # in the deck folder; any free por
   are deterministic. Read every one: clipped labels, cropped images, and
   misaligned marks are found by looking at renders, never by re-reading
   code. Digits+Enter reaches only the first view of an artifact group
-  (shared `data-num`) — step through the remaining group members with
+  (shared `data-num`); step through the remaining group members with
   ArrowRight so every view is captured.
 - Motion is invisible to the QA pass, so verify it separately without the
   flag by sampling: jump to an auto slide and screenshot immediately (a
@@ -98,7 +98,7 @@ python -m http.server 4477 --bind 127.0.0.1   # in the deck folder; any free por
   cascade fires), then screenshot again after ~2.5s to confirm everything
   settles at the authored values. Check the digit jump and the overview
   grid the same way.
-- No browser automation available — including automation that is installed
+- No browser automation available, including automation that is installed
   but cannot actually render a page (no browser binary, sandbox blocks the
   server): open the file in a desktop browser and check every slide by
   hand, or deliver with the explicit statement **built but not visually
@@ -106,12 +106,12 @@ python -m http.server 4477 --bind 127.0.0.1   # in the deck folder; any free por
 
 ## Hard rules
 
-- On dark skins, images and diagrams must themselves be dark — a white
+- On dark skins, images and diagrams must themselves be dark. A white
   canvas on a near-black slide reads as a mistake. Render diagrams with
   the background baked in.
 - Wide artifacts get `object-fit: contain` in a full-frame view, never
   `cover` in a small card.
-- The deliverable is generated — edit the template and rebuild, never the
+- The deliverable is generated: edit the template and rebuild, never the
   output file.
 - One file, no external requests: never emit module scripts, external
   CSS/JS, fonts fetched at runtime, or anything else that breaks `file://`.

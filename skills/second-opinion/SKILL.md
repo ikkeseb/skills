@@ -9,7 +9,7 @@ disable-model-invocation: true
 Use one read-only Codex call to pressure-test existing work. Its value is an
 independent model family with different blind spots, not automatic authority.
 Do not spend the call on lookups, work that does not exist yet, or taste.
-The prompt — and whatever material it quotes — goes to the user's own
+The prompt, and whatever material it quotes, goes to the user's own
 OpenAI/Codex account like any other Codex call they run; include only what
 the review needs.
 
@@ -89,8 +89,8 @@ The command pins the current preferred review model and `high` effort;
 update that pin here when the preferred review model changes. Explicit user
 wording may override either: effort language maps to `--effort`, and a model
 name maps to `--model`. Use conversational judgment; ask if the reading is
-ambiguous. Invalid values must fail loudly—never substitute a different model
-or effort silently.
+ambiguous. Invalid values must fail loudly, never substituting a different
+model or effort silently.
 
 ## Write a useful question
 

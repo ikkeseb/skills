@@ -14,17 +14,17 @@ Codex.
 
 A diagram moves through four distinct states:
 
-1. **Structurally valid** — JSON, numbers, IDs, files, and reciprocal bindings
+1. **Structurally valid.** JSON, numbers, IDs, files, and reciprocal bindings
    pass the validator.
-2. **Layout previewed** — the lightweight renderer exposes obvious geometry
+2. **Layout previewed.** The lightweight renderer exposes obvious geometry
    defects but does not prove native rendering.
-3. **Visually approved** — inspect pixels from an official Excalidraw surface
+3. **Visually approved.** Inspect pixels from an official Excalidraw surface
    and correct clipping, overlap, weak hierarchy, ambiguous flow, and edge
    crowding.
-4. **Handed off** — the editable artifact and its verification state are clear
+4. **Handed off.** The editable artifact and its verification state are clear
    to the user.
 
-Never collapse these states into “done.” Native inspection is required before
+Never collapse these states into "done." Native inspection is required before
 normal delivery. If the environment cannot render the official canvas,
 deliver only when useful and say `structurally valid, native visually
 unverified`.
@@ -108,8 +108,8 @@ distort a clear layout merely to silence a false positive.
 The builder creates native Excalidraw JSON with:
 
 - a black canvas and Excalifont by default (`"font": "sans"` in the scene spec
-  switches all non-code text to a normal sans face — hand-drawn stays the
-  default; switch only when the audience or deliverable clearly calls for it);
+  switches all non-code text to a normal sans face; hand-drawn stays the
+  default, switch only when the audience or deliverable clearly calls for it);
 - Cascadia only when a text item is explicitly code;
 - wrapped, reciprocally bound node labels;
 - reciprocally bound arrows;
@@ -129,9 +129,9 @@ Run `check` for early geometry feedback, then import the native file into an
 official Excalidraw surface, in this order:
 
 1. any Playwright-based browser automation available in the session, driving
-   `excalidraw.com` — headed when the user is present, headless when not;
+   `excalidraw.com` (headed when the user is present, headless when not);
 2. manual import by the user in an ordinary browser;
-3. neither available — stop at the degraded status, which is an honest end
+3. neither available: stop at the degraded status, which is an honest end
    state rather than a failure.
 
 Read `references/native-inspection.md` for the import recipe, the confirmation
@@ -142,7 +142,7 @@ Inspect that canvas at full size. For complex diagrams also inspect crops
 containing dense text, edge junctions, curved segments, and canvas boundaries.
 
 Inspection means pixels actually reached you. If a read or screenshot tool
-returns no visible image, the inspection did not happen — treat it as a failed
+returns no visible image, the inspection did not happen: treat it as a failed
 check and report the honest degraded status, never a pass.
 
 Ask these adversarial questions:

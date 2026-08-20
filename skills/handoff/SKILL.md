@@ -16,7 +16,7 @@ Do not substitute `/compact`, `/resume`, or `/fork`, and do not continue impleme
 2. Run only cheap, read-only checks when a material fact is uncertain, such as the repository path, branch, current commit, or worktree state. Do not broaden the task into a new investigation.
 3. Distinguish verified facts from assumptions or discussion. Never describe work as complete without the verification required by the active repository guidance.
 4. Omit facts the next session can recover cheaply unless their interpretation matters. Prefer decisions, constraints, failure reasons, and precise next actions over a transcript summary.
-5. Match the language used with the user for the body content. Commands, paths, identifiers, and source-language technical terms where translation would reduce precision — plus the required title, section headings, and disclaimer — stay in English exactly as specified.
+5. Match the language used with the user for the body content. Commands, paths, identifiers, and source-language technical terms where translation would reduce precision, plus the required title, section headings, and disclaimer, stay in English exactly as specified.
 6. Never include secrets. Include private or personal details only when they are necessary to continue the task safely.
 
 Done when: the draft distinguishes verified fact from assumption, and the clearest next action is stated and executable.
@@ -44,7 +44,7 @@ Make `## Next` executable: lead with the clearest next step, then name any prere
 3. Never overwrite a pre-existing file. If the name already exists, append `-2`, `-3`, and so on before `.md`.
 4. Ensure the saved file contains exactly the handoff Markdown and ends with a newline.
 5. Read the new file back and verify its full content matches what you intended
-   to write — watch line endings and the trailing newline, not just a skim. On a
+   to write. Watch line endings and the trailing newline, not just a skim. On a
    mismatch, rewrite the just-written file once (the no-overwrite rule protects
    pre-existing files, not this one); if it still mismatches, treat the write as
    failed and report the difference.
@@ -66,7 +66,7 @@ after the closing fence:
    deleted, and/or the failure warning (the write itself remains successful).
    Omit the line when cleanup found nothing to do.
 2. `Saved to <absolute path>.`
-3. `Paste the snip below into the receiving session, opening with "handover: " — leading with the literal word "handoff" can invoke this skill again.`
+3. `Paste the snip below into the receiving session, opening with "handover: " (leading with the literal word "handoff" can invoke this skill again).`
 4. A `markdown` fence containing exactly the saved file content. Choose the
    fence length dynamically: find the longest contiguous run of backticks in the
    content and use at least one more, with four backticks as the minimum.

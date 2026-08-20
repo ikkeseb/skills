@@ -21,13 +21,13 @@ For advanced shapes, swimlanes, layers, edge routing, or theme work, the pinned 
 
 ## Design quality
 
-A diagram should argue, not just label boxes — strip the text and the structure alone should still carry the concept. Every real relationship gets an edge; position alone doesn't show a connection, so if A depends on B, draw the line. Build hierarchy through size and whitespace — make the important node bigger and give it room — not through decorative color or borders. And if an edge needs tortured routing (hand-placed waypoints, a curve bent around an obstacle) to reach its target, the layout is wrong, not the edge: move the node so the line runs straight.
+A diagram should argue, not just label boxes: strip the text and the structure alone should still carry the concept. Every real relationship gets an edge. Position alone doesn't show a connection, so if A depends on B, draw the line. Build hierarchy through size and whitespace (make the important node bigger and give it room), not through decorative color or borders. If an edge needs tortured routing (hand-placed waypoints, a curve bent around an obstacle) to reach its target, the layout is wrong, not the edge: move the node so the line runs straight.
 
-## Visual verification (optional — catches what XML review can't)
+## Visual verification (optional; catches what XML review can't)
 
-The bundled structural validator is the cheap tier (no browser). Routing and label defects,
-though, never show up in the XML — only in the render — and rendering costs a browser
-cold-start, so reach for it on complex or edge-label-heavy diagrams, not every file.
+The bundled structural validator is the cheap tier (no browser). Routing and label defects
+never show up in the XML, only in the render, and rendering costs a browser cold-start.
+Reach for it on complex or edge-label-heavy diagrams, not every file.
 
 Before putting a diagram into app.diagrams.net, its CDN viewer, or any other external web
 surface, ask for permission for **that artifact** if it may contain internal, personal, or
@@ -36,8 +36,8 @@ Without permission, do not load the XML into the external page: deliver the vali
 and report `structural validation only; external visual inspection not authorized`. A local
 native renderer that does not transmit the artifact does not need this consent.
 
-When authorized, render with the bundled headless renderer (official viewer engine — same
-as app.diagrams.net, faithful sketch strokes and label placement):
+When authorized, render with the bundled headless renderer (official viewer engine, the
+same as app.diagrams.net, faithful sketch strokes and label placement):
 
 ```
 node <skill-root>/scripts/render-drawio.mjs <file.drawio> [--pages a,b] [--scale 2.5] [--bg white]
@@ -49,19 +49,19 @@ before installing. Offline fallback when draw.io Desktop is installed:
 `drawio -x -f png -s 2.5 --page-index <N> -o out.png file.drawio`. If neither path is
 available, deliver with structural validation only and say so.
 
-Inspect the full-resolution PNG first — use all the image fidelity your harness gives you.
+Inspect the full-resolution PNG first, using all the image fidelity your harness gives you.
 If the harness truncates or rejects the image, inspect a downscaled copy for the overview
 plus full-resolution crops of dense areas where possible, and report that visual review was
 resolution-limited. Deliverable exports stay full-resolution regardless. If a read or
-screenshot tool returns no visible image, the inspection did not happen — treat it as a
+screenshot tool returns no visible image, the inspection did not happen: treat it as a
 failed check, not a pass.
 
 ## Opening in a browser
 
-A `.drawio` file opened directly in a browser shows raw XML — that is not a rendering bug.
+A `.drawio` file opened directly in a browser shows raw XML; that is not a rendering bug.
 What renders it is app.diagrams.net (drag the file in, or **File → Open from → Device**) or
 a `https://app.diagrams.net/#R<url-encoded-xml>` URL. Long `#R` URLs exceed the Windows
 command-line limit (~8k chars) for non-trivial diagrams; work around it with a tiny local
 redirect HTML (`location.replace(longUrl)`) opened via `Start-Process`. Because the
 externally hosted diagrams.net code gains access to the diagram content, the consent rule
-above applies — ask before opening a non-public diagram this way.
+above applies: ask before opening a non-public diagram this way.

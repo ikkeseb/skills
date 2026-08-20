@@ -16,8 +16,8 @@ Do not classify or move a rule until its current and proposed reach are known:
 1. Identify every target harness and its canonical instruction file. The target-harness
    set comes from evidence, not assumption: harness artifacts present in the repo
    (`CLAUDE.md`, `AGENTS.md`, import adapters, harness manifests, hooks or settings)
-   plus any harness the user names. No artifact and no mention → not a target;
-   ambiguous → ask. Read the canonical files, adapters, parent/global instructions, and
+   plus any harness the user names. No artifact and no mention means not a target;
+   ambiguous means ask. Read the canonical files, adapters, parent/global instructions, and
    every file they require. Done when the harness list and its evidence can be stated in
    the read-back.
 2. Determine each harness's effective skill invocation policy from the installed skill
@@ -25,7 +25,7 @@ Do not classify or move a rule until its current and proposed reach are known:
    model-invoked or explicit/name-only. In Codex, inspect
    `policy.allow_implicit_invocation` where present. In Claude Code, inspect skill
    frontmatter (`disable-model-invocation`, `user-invocable`) and effective settings
-   (`skillOverrides` — noting they do not affect plugin-shipped skills). Do not change
+   (`skillOverrides`, noting they do not affect plugin-shipped skills). Do not change
    invocation policy as part of the audit. Done when each harness's policy is proven or
    marked unknown.
 3. Record which mechanisms each target harness actually supports; this support matrix
@@ -49,22 +49,22 @@ Mandatory always-on rules stay in canonical root instructions. Mandatory directo
 may move to nested instructions only after verifying that every target harness loads them.
 Optional procedures may move to skills.
 
-## When to run — and when to stop
+## When to run, and when to stop
 
 Run a full audit only when it pays back. Gauge two things:
 
-- **Irrelevance fraction** — what share of the file a *typical* session never uses.
-- **Session-hit-rate per domain** — rate it high/med/low from observable proxies:
+- **Irrelevance fraction:** what share of the file a *typical* session never uses.
+- **Session-hit-rate per domain:** rate it high/med/low from observable proxies:
   git-log touch frequency of the domain's files, the share of the tree it covers, any
   session history the user offers. A cluster touched in few sessions (roughly ~5%) is a
-  great move-out candidate; one touched in most (~60%) is not. State the proxy used; if
+  great move-out candidate; one touched in most (~60%) is not. State the proxy used. If
   none is available, mark the rate unknown and say the verdict is weakened by it.
 
-A repo with no instruction files at all is not an audit target — say so and offer a
+A repo with no instruction files at all is not an audit target. Say so and offer a
 bootstrap proposal instead of a restructuring.
 
-If the file is already lean and mostly relevant every session, **say so and stop** —
-splitting adds indirection for no attention gain. Raw line count is a weak proxy: a
+If the file is already lean and mostly relevant every session, **say so and stop**.
+Splitting adds indirection for no attention gain. Raw line count is a weak proxy: a
 130-line file that's fully relevant is fine; an 80-line file that's 70% irrelevant is
 not. (Past ~120 lines is *worth a look*, never automatically guilty. Any number is a
 nudge, not a law.)
@@ -82,23 +82,23 @@ nudge, not a law.)
 
 ## Classify on two axes
 
-Type and scope are **orthogonal** — every rule has both. Scope narrows the candidate
+Type and scope are **orthogonal**: every rule has both. Scope narrows the candidate
 locations; mandatory versus optional reach selects among them.
 
-**Axis 1 — TYPE (what kind of content):**
+**Axis 1, TYPE (what kind of content):**
 
 | Type | Example |
 |---|---|
 | Instruction | "Use conventional commits", "prefer X pattern" |
-| Guardrail | "Don't re-introduce X — it caused regression Y" |
+| Guardrail | "Don't re-introduce X, it caused regression Y" |
 | Procedural | Step-by-step how-to (deploy, add content) |
 | Reference / Example | Snippets, exact values, config samples |
 | Knowledge | Background facts about the domain / architecture |
 
-**Axis 2 — SCOPE (drives placement):** Universal · Domain (task-type) · Domain
+**Axis 2, SCOPE (drives placement):** Universal · Domain (task-type) · Domain
 (directory). Two flags ride alongside scope without replacing it: **sacred** (a
-guardrail whose loss causes regressions — see Guardrails) and **dead/stale** (no live
-rule; a deletion candidate whatever its scope — it needs no further classification, its
+guardrail whose loss causes regressions, see Guardrails) and **dead/stale** (no live
+rule; a deletion candidate whatever its scope: it needs no further classification, its
 proposed location is delete/archive). A live rule's required reach still determines
 whether it stays static, moves to verified nested instructions, or becomes an optional
 skill procedure with added enforcement.
@@ -128,10 +128,10 @@ Rules of thumb the table can't hold:
   existing packaging convention instead of assuming a Claude-only directory.
 - **Don't over-split.** Create a skill only when the domain is genuinely separable *and*
   low-hit-rate. Below ~10–15 lines, the frontmatter plus "which place is this rule in?"
-  overhead outweighs the content — leave it static.
-- **Dedup across always-on layers.** Audit the whole always-on stack as one surface —
+  overhead outweighs the content. Leave it static.
+- **Dedup across always-on layers.** Audit the whole always-on stack as one surface:
   global `~/.claude/CLAUDE.md`, parent-directory files, the project file. A rule stated
-  in two layers pays attention twice and drifts independently: keep it in the narrowest
+  in two layers pays attention twice and drifts independently. Keep it in the narrowest
   layer that covers its scope, delete the other copy.
 - **Enforcement-superseded prose.** If a deterministic mechanism enforces a
   *non-critical* rule for every target harness, delete duplicate prose or shrink it to a
@@ -142,14 +142,14 @@ Rules of thumb the table can't hold:
 ## Guardrails are sacred
 
 Anti-regression rules ("don't do X, it broke Y") are the highest-value, lowest-token
-content in the file — they exist because the agent *will* repeat the mistake without them.
+content in the file. They exist because the agent *will* repeat the mistake without them.
 
 - **Rules capture decisions, not current state.** A guardrail records a *rejected
   alternative + why*, or a true invariant. A bare current-state fact ("box A is blue") is
-  not one — the code already says it, and it rots the moment the value changes, then
+  not one: the code already says it, and it rots the moment the value changes, then
   silently fights the change. Leave it at its source of truth; don't copy it into a rule.
 - **Never silently drop one.** Every "don't do X" line in the original must reappear in
-  the output — moved, not deleted. No home found → keep it static and flag it.
+  the output, moved rather than deleted. No home found means keep it static and flag it.
 - **Keep a guardrail with its domain without weakening its reach.** Use a skill only
   when the guardrail is optional or invocation is guaranteed; otherwise use canonical
   or verified nested instructions.
@@ -163,21 +163,21 @@ content in the file — they exist because the agent *will* repeat the mistake w
 
 Present, in order:
 
-1. **Read-back** — list the instruction stack, the target harnesses with their evidence,
+1. **Read-back:** list the instruction stack, the target harnesses with their evidence,
    the mechanism-support matrix, and evidence for each effective invocation policy. Mark
    unknowns explicitly, and flag broken or unreadable imports as defects.
-2. **Verdict up front** — worth restructuring or leave it? One sentence, then the reasoning.
-3. **Classification table** — each rule → type → scope (plus sacred/dead flags) →
+2. **Verdict up front:** worth restructuring or leave it? One sentence, then the reasoning.
+3. **Classification table:** each rule → type → scope (plus sacred/dead flags) →
    mandatory/optional → current reach → proposed location → reach after the move.
-4. **What a typical session stops loading** — per moved domain, its rough hit-rate
+4. **What a typical session stops loading:** per moved domain, its rough hit-rate
    (high/med/low) and what leaves always-on context. Frame as attention/confusion
    reduction; a token delta is a footnote, not the headline.
-5. **Draft files** — full contents of the canonical instructions, adapters, and each new
+5. **Draft files:** full contents of the canonical instructions, adapters, and each new
    skill, nested file, or hook. Keep each extracted domain self-contained and flag every
    guardrail's new home. Do not invent unsupported cross-harness parity.
-6. **Apply steps** — the exact file operations, including any the dedup rule names on
-   user-global files. **Do not perform them** — this skill proposes; the user reviews
+6. **Apply steps:** the exact file operations, including any the dedup rule names on
+   user-global files. **Do not perform them.** This skill proposes; the user reviews
    and applies.
 
 On a leave-it-alone verdict, deliver items 1–2 plus any dead/stale deletions worth
-naming, and stop — no draft files or apply steps for a structure that should not change.
+naming, and stop. No draft files or apply steps for a structure that should not change.

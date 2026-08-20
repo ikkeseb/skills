@@ -4,6 +4,22 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.21.0 — 2026-08-20
+
+Invocation policy becomes a per-skill decision, superseding 0.20.0's
+blanket rule: check-repo now validates only that a present
+`disable-model-invocation` line is a well-formed boolean, not that every
+skill carries it. First per-skill call: `pretty-html` drops the flag and
+returns to model invocation, because its trigger is a deliverable request
+the model should recognize on its own ("make me a polished HTML report").
+The other 16 skills keep `disable-model-invocation: true` unchanged.
+
+Prose pass over every SKILL.md: em dashes, semicolon chains, and clipped
+AI cadence rewritten as plain sentences, with no behavioral rule changed.
+The two dispatch-label formats (`<model> @ <effort> — <task tag>` in
+orchestrate, `MODEL@EFFORT — TOPIC` in second-opinion) keep their em dash
+deliberately: they are field label conventions, not prose.
+
 ## 0.20.0 — 2026-08-20
 
 Invocation enforcement moves from description wording to frontmatter:

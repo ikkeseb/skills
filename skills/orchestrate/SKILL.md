@@ -29,7 +29,7 @@ stage pins `{model, effort}` and returns typed data: Workflow stages use
 
 - Workflow `args` may arrive as a JSON string. Parse it before structured use,
   or hardcode the values.
-- A stage briefed read-only returns text only — it never writes, spawns
+- A stage briefed read-only returns text only. It never writes, spawns
   writers, or claims approvals. After a read-only stage, the main loop checks
   the tree for unexpected writes (`git status` caught a fork doing all three,
   2026-08-14). An approval claim the main loop cannot itself verify, or any
@@ -57,7 +57,7 @@ stage pins `{model, effort}` and returns typed data: Workflow stages use
   the main loop at current HEAD (`git worktree add` plus dependency install)
   and pass the agent that path. Codex write runs fail a stale base closed via
   `--expected-base-sha`. Worktrees hosted inside the repo are visible to repo
-  tooling — exclude paths like `.claude/worktrees/` from test globs or the
+  tooling: exclude paths like `.claude/worktrees/` from test globs or the
   suite double-counts.
 
 ## Worker lanes
@@ -96,13 +96,13 @@ the session workflow-size guideline as a ceiling. If a stage limits coverage
 
 ## Modes and reporting
 
-- `/orchestrate <task>` — delegate the named task. The invocation also stands
+- `/orchestrate <task>`: delegate the named task. The invocation also stands
   for the rest of the session, Workflow opt-in included: when a later task
   clearly passes the split, route it through this skill again without a fresh
   invocation. When in doubt, stay in the main loop. The session grant belongs
   to the main loop alone: subagents and forks never inherit it, however much
   session context they carry.
-- `/orchestrate sustained` — session posture: every task goes through the
+- `/orchestrate sustained`: session posture, every task goes through the
   split. It ends only on an explicit stop signal in any language; questions
   and redirects do not end it. A new session starts fresh.
 
@@ -136,8 +136,8 @@ delegate small edits.
   agent row renders the dispatch label/description, not the prompt body
   (field-verified 2026-08-17; an earlier claim that opening prompt lines
   render was wrong for this surface), so every delegation's visible label
-  carries `<model> @ <effort> — <task tag>` — Bash-background dispatches via
-  the no-op label line. The prompt body still opens with `model:` /
+  carries `<model> @ <effort> — <task tag>` (Bash-background dispatches via
+  the no-op label line). The prompt body still opens with `model:` /
   `effort:` lines, then a blank line and `Task:`, as the worker-side record.
   Both state the lane requested at dispatch, never a verified one: write
   resolved values with provenance (`effort: medium (inherited)`), write

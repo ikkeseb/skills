@@ -49,8 +49,12 @@ function validateSkill(skillDir) {
     }
   }
 
-  if (!/^disable-model-invocation: true$/m.test(frontmatter)) {
-    fail(`${label}: missing disable-model-invocation: true (every skill here is explicit-invocation only; canary 2026-08-20 proved typed /name and picker visibility survive the flag)`);
+  // Invocation policy is a per-skill decision (2026-08-20): the flag is
+  // optional, but a present flag must be a well-formed boolean line.
+  for (const line of lines.filter((l) => l.startsWith("disable-model-invocation"))) {
+    if (!/^disable-model-invocation: (true|false)$/.test(line)) {
+      fail(`${label}: malformed disable-model-invocation line (must be exactly "disable-model-invocation: true" or "disable-model-invocation: false")`);
+    }
   }
 
   // Cross-skill path references (the shared-executable convention) must point

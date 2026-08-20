@@ -10,20 +10,20 @@ Posture for sessions where the user has handed work off and won't be available t
 
 ## Off-signal
 
-Only an explicit user signal drops AFK: `back`, `afk off`, or any unambiguous return/stop signal in any language. Mid-AFK interactive input (questions, redirects, corrections) does NOT drop the posture — the user may be poking in from mobile. Answer briefly, stay in AFK. A new session starts fresh; nothing persists.
+Only an explicit user signal drops AFK: `back`, `afk off`, or any unambiguous return/stop signal in any language. Mid-AFK interactive input (questions, redirects, corrections) does NOT drop the posture, because the user may be poking in from mobile. Answer briefly, stay in AFK. A new session starts fresh; nothing persists.
 
-## Preamble — first response after `/afk`
+## Preamble: first response after `/afk`
 
 Open with `[afk mode engaged]` so activation is visible, then two steps, then wait. Goal: front-load every clarification so the user can leave without coming back to answer follow-ups.
 
-**Step 1 — Subagent / token budget (one question, three options).** Ask the user to pick one:
-- *Single-agent* — Claude alone. Simpler, context compounds. Most token-conservative.
-- *Subagent-driven, moderate spend* — Claude orchestrates, prefer fewer larger subagents. Reduces context bloat without multiplying tokens hard.
-- *Subagent-driven, unconstrained* — parallelize aggressively, big jobs in own contexts.
+**Step 1: subagent / token budget (one question, three options).** Ask the user to pick one:
+- *Single-agent*: Claude alone. Simpler, context compounds. Most token-conservative.
+- *Subagent-driven, moderate spend*: Claude orchestrates, prefers fewer larger subagents. Reduces context bloat without multiplying tokens hard.
+- *Subagent-driven, unconstrained*: parallelize aggressively, big jobs in own contexts.
 
-Bake token concern into this question — don't ask separately.
+Bake the token concern into this question. Don't ask it separately.
 
-**Step 2 — Task-specific clarifications.** Surface any genuine ambiguity about the requested work. Front-load all of it in one batch.
+**Step 2: task-specific clarifications.** Surface any genuine ambiguity about the requested work. Front-load all of it in one batch.
 
 Then wait for the user's reply before starting work.
 
@@ -37,7 +37,7 @@ Clarifying questions don't get asked mid-AFK; decisions are made and logged. Cal
 - **Mid-stakes** (architecture choice, refactor scope): pick the least-committing option, log the trade-off.
 - **High-blast + genuinely uncertain**: STOP. Log the structured blocked marker (format under Logging). Move to the next independent task if one exists; otherwise wait.
 
-### Blast radius — principle, not exhaustive list
+### Blast radius is a principle, not an exhaustive list
 
 AFK changes the interaction cadence, not the user's authorization. Activating it
 never grants permission for an operation the current task did not already
@@ -59,37 +59,37 @@ authorize; repository rules and normal tool approvals still apply.
 
 ### Proactive scope expansion within blast rules
 
-Low-hanging fruit can be implemented during AFK when blast-radius rules hold and the log names the concrete signal that made it clearly desired (`"duplicate logic in 3 places, extracted helper"` beats `"looked cleaner"`). If a fix drags into unknown terrain (unfamiliar imports, feature flags, unclear side effects), back out and log it as a suggestion instead. Separate core-task work from extras in the log — the user should be able to scan "did the core job get done" before reviewing the rest.
+Low-hanging fruit can be implemented during AFK when blast-radius rules hold and the log names the concrete signal that made it clearly desired (`"duplicate logic in 3 places, extracted helper"` beats `"looked cleaner"`). If a fix drags into unknown terrain (unfamiliar imports, feature flags, unclear side effects), back out and log it as a suggestion instead. Separate core-task work from extras in the log, so the user can scan "did the core job get done" before reviewing the rest.
 
 ### Bias toward uncertainty framing in the log
 
-Without live feedback, overconfidence creeps in — write `"uncertain about X because Y, proceeded because Z"` rather than `"this is correct"`.
+Without live feedback, overconfidence creeps in. Write `"uncertain about X because Y, proceeded because Z"` rather than `"this is correct"`.
 
 ## Logging
 
-Updates flow naturally in the conversation — what was done, what's running, what surfaced. No fixed format, no per-decision template; pick a sensible cadence (major checkpoints, completed task, surprising finding) and write a normal line.
+Updates flow naturally in the conversation: what was done, what's running, what surfaced. No fixed format, no per-decision template. Pick a sensible cadence (major checkpoints, completed task, surprising finding) and write a normal line.
 
-One exception: when stopped because of blast-radius rules + genuine uncertainty, use the structured marker `[AFK BLOCKED] <what> — needs the user on <X>` so it's scannable if the user pokes in from mobile.
+One exception: when stopped because of blast-radius rules plus genuine uncertainty, use the structured marker `[AFK BLOCKED] <what>: needs the user on <X>` so it's scannable if the user pokes in from mobile.
 
 The conversation IS the audit trail. No separate log file written.
 
 ## Return summary
 
-When AFK is explicitly dropped, lead the reply with one tally line + bulleted index:
+When AFK is explicitly dropped, lead the reply with one tally line plus a bulleted index:
 
 > **3 done · 1 deferred · 1 blocked**
 >
-> - ✅ implemented X — diff ready for review
-> - ✅ tests pass — 47/47
-> - ⏸ dependency bump deferred — minor vs major is your call
-> - 🛑 blocked: prod deploy — needs your AWS creds
+> - ✅ implemented X, diff ready for review
+> - ✅ tests pass, 47/47
+> - ⏸ dependency bump deferred, minor vs major is your call
+> - 🛑 blocked: prod deploy needs your AWS creds
 
-Status keys: ✅ done · ⏸ deferred · 🛑 blocked. One bullet per item, plain prose, no nested paragraphs — this is the index, not the recap; the inline updates carry the detail.
+Status keys: ✅ done · ⏸ deferred · 🛑 blocked. One bullet per item, plain prose, no nested paragraphs. This is the index, not the recap; the inline updates carry the detail.
 
 ## Composition with other skills and modes
 
-- **Other posture skills**: stack. AFK owns the interaction model and the token budget picked in its preamble — another posture's preamble does not run (asking is forbidden); it defaults to single-task, logged as `[AFK] <posture> default → single-task`. Its substantive pass runs unchanged within AFK's blast-radius rules, and the budget picked in the AFK preamble caps any fan-out — within it, never past it.
-- **Plan mode / `EnterPlanMode`**: NEVER under AFK — requires user approval to exit, would deadlock. Write the plan inline in the log and proceed (if low-blast).
+- **Other posture skills**: stack. AFK owns the interaction model and the token budget picked in its preamble. Another posture's preamble does not run (asking is forbidden); it defaults to single-task, logged as `[AFK] <posture> default → single-task`. Its substantive pass runs unchanged within AFK's blast-radius rules, and the budget picked in the AFK preamble caps any fan-out: within it, never past it.
+- **Plan mode / `EnterPlanMode`**: NEVER under AFK. It requires user approval to exit and would deadlock. Write the plan inline in the log and proceed (if low-blast).
 - **Long blocking brainstorming**: NEVER under AFK. Answer the questions brainstorming would have asked in the log, proceed with best judgment.
 - **Verification before "done"**: not relaxed by AFK. Before logging anything as "done", "fixed", "passing", or equivalent, run the verification command (test/build/typecheck/repro) and include its output in the log. No bare claims. This stands regardless of whether the user has a separate verification skill installed.
 
@@ -99,4 +99,4 @@ Acknowledge briefly, continue the task. Don't pivot to address what the hook fla
 
 ## Failure modes worth naming
 
-- **Test failures mid-AFK**: one retry on an obvious fix (typo, import). If still failing, stop and log. Don't guess deeper — that's where unsupervised AFK runs go off the rails.
+- **Test failures mid-AFK**: one retry on an obvious fix (typo, import). If still failing, stop and log. Don't guess deeper. That is where unsupervised AFK runs go off the rails.
