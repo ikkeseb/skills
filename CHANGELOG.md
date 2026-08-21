@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.21.2 — 2026-08-21
+
+`handoff` no longer writes a file or prunes a handoffs directory: the
+paste-ready snippet in the reply is the whole deliverable (Seb's call,
+2026-08-21 — the saved copies were never read back, and the write plus
+readback plus cleanup cost three steps per handoff). Description,
+`openai.yaml` and README row updated; body loses the "Write the handoff"
+section.
+
 ## 0.21.1 — 2026-08-20
 
 `disable-model-invocation` is removed from all 16 SKILL.md files and banned

@@ -23,7 +23,7 @@ Codex-supported skills that should stay explicit set
 
 | Skill | What it does | Claude Code |
 |---|---|---|
-| **[handoff](skills/handoff)** | Compacts the session into a handoff file plus a paste-ready snippet, for switching machines or briefing another agent. Prunes saved handoffs older than 30 days. | `/handoff` |
+| **[handoff](skills/handoff)** | Compacts the session into a paste-ready handoff snippet in the reply, for switching machines or briefing another agent. Writes no file. | `/handoff` |
 | **[pretty-pdf](skills/pretty-pdf)** | PDFs that look designed rather than auto-generated (HTML + CSS via weasyprint). | `/pretty-pdf` |
 | **[pretty-html](skills/pretty-html)** | Polished, self-contained HTML deliverables: single file, dual theme with a toggle, print-friendly. | `/pretty-html` |
 | **[history-audit](skills/history-audit)** | Mines the machine's agent-session history for the most common failure modes per model × harness, and proposes instruction lines one by one, each citing the run that earned it. | `/history-audit` |
