@@ -1,0 +1,9 @@
+interface:
+  display_name: prettier-html
+  short_description: >-
+    Art-direct a single-file HTML page with editorial ambition, designing a
+    fresh visual concept from the content each time: launches, showcases,
+    announcements, flagship reports. Not for plain reading documents, decks,
+    or web-app frontends.
+policy:
+  allow_implicit_invocation: false

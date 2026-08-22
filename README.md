@@ -1,7 +1,7 @@
 # skills
 
 Agent skills for day-to-day work, published as one plugin.
-Claude Code ships the full set; Codex exposes the nine skills marked for both
+Claude Code ships the full set; Codex exposes the eleven skills marked for both
 harnesses.
 
 Browse all 17 skills on [skills.sh](https://skills.sh/ikkeseb/skills).
@@ -26,6 +26,8 @@ Codex-supported skills that should stay explicit set
 | **[handoff](skills/handoff)** | Compacts the session into a paste-ready handoff snippet in the reply, for switching machines or briefing another agent. Writes no file. | `/handoff` |
 | **[pretty-pdf](skills/pretty-pdf)** | PDFs that look designed rather than auto-generated (HTML + CSS via weasyprint). | `/pretty-pdf` |
 | **[pretty-html](skills/pretty-html)** | Polished, self-contained HTML deliverables: single file, dual theme with a toggle, print-friendly. | `/pretty-html` |
+| **[pretty-slides](skills/pretty-slides)** | Presentations as one self-contained HTML file: bundled slide engine with keyboard-only navigation and pattern-bound motion, plus a build step that inlines assets. | `/pretty-slides` |
+| **[prettier-html](skills/prettier-html)** | Art-directed single-file HTML pages with editorial ambition: a fresh visual concept per invocation, designed by the session agent against the skill's quality floor. | `/prettier-html` |
 | **[history-audit](skills/history-audit)** | Mines the machine's agent-session history for the most common failure modes per model × harness, and proposes instruction lines one by one, each citing the run that earned it. | `/history-audit` |
 | **[excalidraw](skills/excalidraw)** | `.excalidraw` diagrams that explain something instead of just labeling boxes. | `/excalidraw` |
 | **[drawio](skills/drawio)** | Native `.drawio` XML that opens straight in app.diagrams.net. | `/drawio` |
@@ -33,7 +35,7 @@ Codex-supported skills that should stay explicit set
 | **[agents-md-convert](skills/agents-md-convert)** | Audits, converts, or repairs repository instruction scopes so `AGENTS.md` is canonical and `CLAUDE.md` stays a one-line import adapter. | `/agents-md-convert` |
 | **[context-audit](skills/context-audit)** | Audits instruction reach and proposes a leaner context structure without stranding mandatory rules. | `/context-audit` |
 
-In Codex, invoke the same nine skills through the `$` picker.
+In Codex, invoke the same eleven skills through the `$` picker.
 
 ### Claude Code only
 
@@ -49,8 +51,6 @@ automation, image inspection) not yet verified under Codex.
 | **[second-opinion](skills/second-opinion)** | One read-only Codex call on work that already exists, answered as a synthesis rather than a relay. Vendor independence without the delegation ceremony. | `/second-opinion` |
 | **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes mechanical work to worker models: Claude agents, plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
 | **[suggest-loop](skills/suggest-loop)** | Turns a repo's documented verification gate into ready-to-paste `/loop` prompts with stop conditions baked in. | `/suggest-loop` |
-| **[pretty-slides](skills/pretty-slides)** | Presentations as one self-contained HTML file: bundled slide engine with keyboard-only navigation and pattern-bound motion, plus a build step that inlines assets. | `/pretty-slides` |
-| **[prettier-html](skills/prettier-html)** | Art-directed single-file HTML pages with editorial ambition: a fresh visual concept per invocation, designed by the session agent against the skill's quality floor. | `/prettier-html` |
 
 Each skill folder contains its `SKILL.md`; Excalidraw also carries setup notes
 for its render-and-inspect pipeline.
@@ -71,7 +71,10 @@ Add the repo as a marketplace, then install the plugin (ships every skill above)
 The same repo installs as a Codex plugin. It exposes only the Codex-supported
 skills, the ones carrying an `agents/openai.yaml`: `agents-md-convert`,
 `context-audit`, `drawio`, `excalidraw`, `handoff`, `history-audit`,
-`pretty-html`, `pretty-pdf`, `verify-claims`. `drawio` degrades gracefully where the sandbox denies network
+`pretty-html`, `pretty-pdf`, `pretty-slides`, `prettier-html`, `verify-claims`.
+`pretty-slides` and `prettier-html` need browser automation for their
+screenshot QA; without it they deliver with an honest unverified list.
+`drawio` degrades gracefully where the sandbox denies network
 or exec. `excalidraw` uses the same dependency-free builder, validator, and
 layout diagnostic in both harnesses, then requires an official Excalidraw
 surface for native visual approval; without one it reports the artifact as

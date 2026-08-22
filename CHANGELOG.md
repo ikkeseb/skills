@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.22.0 — 2026-08-22
+
+`pretty-slides` and `prettier-html` become Codex-supported: each gains an
+`agents/openai.yaml` (explicit invocation only) and joins the Codex manifest,
+bringing the Codex set to eleven. Their "Claude Code only" rationale was the
+unverified browser-automation dependency; both skills already state the
+no-automation fallback in their bodies.
+
 ## 0.21.2 — 2026-08-21
 
 `handoff` no longer writes a file or prunes a handoffs directory: the
