@@ -40,7 +40,7 @@ strength that does not extend to its delegate niche, which stays narrow.
 |---|---|---:|---:|---:|---|---|---|
 | `fable` | claude | 2 | 9 | 9 | medium/high | Priciest row, reserved: fuzzy-intent and highest-stakes user-facing work, where reading underspecified goals is the bottleneck. Occasional shortcut habit — its output still gets acceptance criteria and review | `opus` |
 | `opus` | claude | 4 | 9 | 8 | high/xhigh | Real-coding workhorse — user-facing surface (UI, copy, API shape) build-out | gpt-5.6-sol |
-| gpt-5.6-sol | codex | 6 | 8–9 | 6 | high/xhigh | Heavy implementation, root-cause work. Scope prompts tightly — see the overengineering note | `opus` |
+| gpt-5.6-sol | codex | 6 | 8–9 | 7 | high/xhigh | Research, heavy implementation, root-cause work — and taste/review work too; fable only when reading underspecified intent is the bottleneck. Scope prompts tightly — see the overengineering note | `opus` |
 | gpt-5.6-sol @ max | codex | 3 | 9–10 | 6 | max | Adversarial verification, independent second opinion on critical work | `opus` @ xhigh |
 | gpt-5.6-terra | codex | 8 | 7–8 | 6 | high; xhigh/max when it writes | Broad fan-out workhorse (recon, parallel analysis, bulk transforms) and small reviews / simple well-specified coding — first stop below sol; try before luna for anything that is actual code or review | `opus` |
 | `sonnet` | claude | 5 | 6 | 7 | high | Essentially orchestration-only (budget conductor seat, see seat selection) — not an execution lane; as a delegate, effectively never picked | `opus` |
@@ -99,6 +99,9 @@ nested delegation the orchestrator doesn't control.
   9 with particular frontend strength; occasional shortcut habit, so its
   output is never exempt from acceptance criteria or review. Costs roughly
   twice opus, hence cost 2.
+- **sol taste 6 → 7** (field, 2026-08-22): sol is a valid pick for taste and
+  review work, not just research and implementation; it sits a notch under
+  fable at reading the user's intent, which is the only reason to reach past it.
 - **Cost recalibration** (field, 2026-07-28): the column now ranks across
   lanes. fable ≈ 2× opus; opus sits well above every codex-lane model except
   sol @ max, which overtakes it; sol is cheaper than sonnet. Hence fable 2,

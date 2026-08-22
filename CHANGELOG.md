@@ -4,6 +4,12 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.22.1 — 2026-08-22
+
+`orchestrate` model map: gpt-5.6-sol taste 6 → 7 and its default role now
+includes taste/review work; fable is reserved for when reading underspecified
+intent is the bottleneck.
+
 ## 0.22.0 — 2026-08-22
 
 `pretty-slides` and `prettier-html` become Codex-supported: each gains an
