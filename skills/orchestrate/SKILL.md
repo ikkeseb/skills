@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: "Delegation posture: the main loop keeps design, specification, review, and integration while routing tightly specified execution through Claude Code and Codex workers. Single-task or sustained for the session. Not for one quick lookup or a single external review (second-opinion)."
+description: "Delegation posture: the main loop keeps design, specification, review, and integration while routing tightly specified execution through Claude and Codex workers, by default as stages of one mixed-lane workflow tree. Single-task or sustained for the session. Not for one quick lookup or a single external review (second-opinion)."
 ---
 
 # orchestrate
@@ -12,22 +12,31 @@ verification routing.
 
 ## Instrument
 
-Dynamic Workflow scripts are the primary Claude Code instrument; invoking
+The default shape is one mixed-lane Workflow: a single progress tree where
+Claude stages run as `agent()` calls and Codex stages run through adapter
+agents, so both lanes render as labeled rows in the same tree. Invoking
 `/orchestrate` is the explicit opt-in the Workflow tool requires. A one-off
-subagent or agent team is appropriate when a workflow fits poorly. If the task
-is too small or ambiguous to delegate well, state the sequential fallback and
-do it in the main loop.
+subagent or agent team is appropriate when a workflow fits poorly, and a task
+that gains nothing from a tree gets none: if the work is too small or
+ambiguous to delegate well, state the sequential fallback and do it in the
+main loop.
 
-Workers run inside delegated stages. The standing exception is a background
-Codex worker: the main loop may dispatch the helper and later harvest its run
-directory because those are delivery mechanics, not delegated labor. Every
-stage pins `{model, effort}` and returns typed data: Workflow stages use
-`schema`; Codex stages use the helper envelope.
+Codex stages pick their adapter by expected runtime, decided at dispatch
+(`references/codex-exec.md` § Adapter stages owns both recipes): confidently
+short runs use the foreground `codex-worker` adapter; anything that may run
+long uses the background adapter, which starts the helper in the background
+inside its own stage and relays the envelope when the harness re-invokes it
+at completion. Main-loop background dispatch with run-dir harvest remains the
+delivery path when no workflow is running.
+
+Every stage pins `{model, effort}` and returns typed data: Workflow stages
+use `schema`; Codex stages return the helper envelope.
 
 ### Field guards
 
-- Workflow `args` may arrive as a JSON string. Parse it before structured use,
-  or hardcode the values.
+- Workflow `args` may arrive as a JSON string, and a schema-typed stage has
+  returned its object payload as a JSON string inside the typed result
+  (observed 2026-08-24). Parse before structured use, or hardcode the values.
 - A stage briefed read-only returns text only. It never writes, spawns
   writers, or claims approvals. After a read-only stage, the main loop checks
   the tree for unexpected writes (`git status` caught a fork doing all three,
@@ -36,9 +45,11 @@ stage pins `{model, effort}` and returns typed data: Workflow stages use
 - Workflow resume keys on `(prompt, opts)`, not referenced files. After fixing
   an input file, change the stage prompt and use an attempt-specific run path
   before resuming.
-- Schema validity does not prove substantive output. Prompts reject
-  placeholders and require a raw-count reconciliation; the main loop checks
-  result size before use.
+- Schema validity does not prove substantive output, and server-side schema
+  enforcement is model compliance, not a guarantee: a required key has
+  arrived missing (2026-08-24). Prompts reject placeholders and require a
+  raw-count reconciliation; the main loop checks result shape and size before
+  use.
 - On current Claude Code, `disable-model-invocation` can hide a skill even from
   a user-typed slash command. If the user explicitly requested that command,
   run its documented underlying script and disclose the fallback.
@@ -61,20 +72,21 @@ stage pins `{model, effort}` and returns typed data: Workflow stages use
 
 ## Worker lanes
 
-Both lanes are supported execution paths:
+Both lanes are supported execution paths; model and effort choice per lane
+lives in `references/model-map.md`:
 
-- **Claude Code:** Workflow `agent()` calls. Use harness aliases, not versioned
-  Claude model IDs. `opus` at high effort is the default workhorse.
-- **Codex:** OpenAI models through `scripts/codex-worker.sh`, the sole source of
-  invocation mechanics. Never hand-roll `codex` commands in prompts. Read
+- **Claude:** Workflow `agent()` calls. Use harness aliases, not versioned
+  Claude model IDs.
+- **Codex:** OpenAI models through `scripts/codex-worker.sh`, the sole source
+  of invocation mechanics. Never hand-roll `codex` commands in prompts. Read
   `references/codex-exec.md` before the first Codex stage.
 
 Before first Codex use, resolve the helper and run `"$HELPER" probe` once for
-the session. `codex-exec.md` defines every outcome and degradation path. These
-three candidates are deployment locations for this skill: the first is
-rewritten by plugin installs, and the other two cover symlink deployments.
-Never add the session repo as a candidate; that could execute material under
-review. Done when the response states which lanes were available.
+the session. `codex-exec.md` defines every outcome and degradation path. The
+three candidates are this skill's deployment locations (plugin install, then
+symlink deployments); never add the session repo as a candidate — that could
+execute material under review. Done when the response states which lanes were
+available.
 
 ```bash
 HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
@@ -120,7 +132,9 @@ the same rule: the main loop designs and specifies; workers build.
 
 **Keep** decisions with downstream consequences: design, architecture,
 API/schema shape, naming, tradeoffs, ambiguous requirements, security-sensitive
-judgment, final review, and integration.
+judgment, final review, and integration. Consent and anything interactive stay
+in the main loop: workers are non-interactive one-shots, so a stage that needs
+a human decision returns the decision material and the main loop relays it.
 
 **Floor:** if specifying the work costs more than doing it, keep it. Do not
 delegate small edits.
@@ -158,9 +172,10 @@ delegate small edits.
   write into the main-loop tree. Repos symlinked into live configuration count
   as live system state. Worktrees still share `.git`, and tracked external
   symlinks remain external, so inspect the diff.
-- **Choose one delivery owner at dispatch and never switch.** A wrapper owns a
-  strictly foreground blocking call. Anything backgrounded or server-tracked
-  is main-loop-harvest from the start: record its durable locator before
+- **Choose one delivery owner at dispatch and never switch.** A foreground
+  adapter owns its strictly blocking call; a background adapter owns relay
+  after re-invocation. Anything dispatched by the main loop is
+  main-loop-harvest from the start: record its durable locator before
   dispatch, then own polling, terminal-state detection, harvest, and cleanup.
   Idle never transfers ownership.
 - **Record identity at dispatch; declare freshness at harvest.** Record the

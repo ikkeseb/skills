@@ -39,11 +39,11 @@ strength that does not extend to its delegate niche, which stays narrow.
 | model | lane | cost | intelligence | taste | default effort | default role | fallback |
 |---|---|---:|---:|---:|---|---|---|
 | `fable` | claude | 2 | 9 | 9 | medium/high | Priciest row, reserved: fuzzy-intent and highest-stakes user-facing work, where reading underspecified goals is the bottleneck. Occasional shortcut habit — its output still gets acceptance criteria and review | `opus` |
-| `opus` | claude | 4 | 9 | 8 | high/xhigh | Real-coding workhorse — user-facing surface (UI, copy, API shape) build-out | gpt-5.6-sol |
-| gpt-5.6-sol | codex | 6 | 8–9 | 7 | high/xhigh | Research, heavy implementation, root-cause work — and taste/review work too; fable only when reading underspecified intent is the bottleneck. Scope prompts tightly — see the overengineering note | `opus` |
+| `opus` | claude | 4 | 9 | 8 | high/xhigh | Claude-lane workhorse (user-facing surface — UI, copy, API shape — and anything needing harness tools) and the standard cross-family verifier of Codex-produced work | gpt-5.6-sol |
+| gpt-5.6-sol | codex | 6 | 8–9 | 7 | high/xhigh | Primary execution workhorse (decision 2026-08-24): research, heavy implementation, root-cause, taste/review; fable only when reading underspecified intent is the bottleneck. Scope prompts tightly — see the overengineering note | `opus` |
 | gpt-5.6-sol @ max | codex | 3 | 9–10 | 6 | max | Adversarial verification, independent second opinion on critical work | `opus` @ xhigh |
 | gpt-5.6-terra | codex | 8 | 7–8 | 6 | high; xhigh/max when it writes | Broad fan-out workhorse (recon, parallel analysis, bulk transforms) and small reviews / simple well-specified coding — first stop below sol; try before luna for anything that is actual code or review | `opus` |
-| `sonnet` | claude | 5 | 6 | 7 | high | Essentially orchestration-only (budget conductor seat, see seat selection) — not an execution lane; as a delegate, effectively never picked | `opus` |
+| `sonnet` | claude | 5 | 6 | 7 | high | Budget conductor seat (see seat selection) and the Codex-adapter relay seat @ low (see routing rules) — not an execution lane | `opus` |
 | gpt-5.6-luna | codex | 10 | 5–6 | 5 | high; xhigh/max when it writes | Bottom usable tier: extraction, classification, sanity checks — very simple, tightly specified tasks only; prefer terra when the task is code or review | gpt-5.6-terra |
 | `haiku` | claude | 10 | 4 | 5 | — | Never use — off-limits even for mechanical relay/adapter stages; luna covers this tier | gpt-5.6-luna |
 
@@ -115,10 +115,20 @@ nested delegation the orchestrator doesn't control.
   The reason to pair them on hard problems (one implements, the other verifies)
   is *vendor independence*, not a presumed edge either way. Doubling down on
   one buys correlated blind spots.
-- **sonnet** costs near opus in practice for similar results. The open
-  question about its delegate niche is settled (field, 2026-08-02): it has
-  none — sonnet's only remaining role is the budget conductor seat noted under
-  seat selection.
+- **sonnet** costs near opus in practice for similar results on substantive
+  work, where it burns more tokens for the same output; on fixed mechanical
+  work (the adapter seat) its lower per-token price wins directly. The open
+  question about its delegate niche is settled (field, 2026-08-02): no
+  execution niche — sonnet's roles are the budget conductor seat (seat
+  selection) and the adapter relay seat (routing rules, 2026-08-24).
+- **sol as primary execution workhorse** (decision, Seb, 2026-08-24): sol is
+  preferred over opus for most delegated execution — peer intelligence,
+  strong instruction-following, lower cost. Opus keeps the Claude lane
+  (harness-tool work, user-facing surface, a slight frontend-design edge)
+  and gains the standard verifier role: sol-heavy production routes owed
+  verification to opus under the cross-family rule, so fewer opus workers
+  means more opus verification seats, not opus removed. No scores changed —
+  the existing columns already supported this reading.
 - **GPT-5.6 price cut** (vendor, announced 2026-08-01, effective 2026-07-30):
   luna −80% ($0.20/$1.20 per M in/out), terra −20% ($2/$12). The cut also
   reduces Codex-subscription credit consumption, so it applies in this setup's
@@ -196,6 +206,15 @@ nested delegation the orchestrator doesn't control.
   documentation is overridden here: it does not know which stages are
   substantive, and current premium models earn their best performance-per-cost
   in the high band, not the low one.
+- **Adapter seat: `sonnet` @ `low`.** Codex-lane adapter stages (foreground
+  relay and background adapter alike) are pure mechanics — run one helper
+  command, relay one JSON envelope — with the orchestrator-minted run dir as
+  ground truth if the relay garbles. Pin them `sonnet` @ `low` (field,
+  2026-08-24: one green foreground relay held the contract verbatim; sonnet's
+  lower per-token price nets ~20–25 % per relay despite a slightly higher
+  token count). This supersedes the earlier opus @ low transport pin. The
+  shipped `codex-worker` agent definition carries the same pin; `haiku`
+  remains off-limits even here.
 - **Relay-stage exception** (field, 2026-08-05): a stage whose real labor
   happens in a *separate* model the worker merely prompts — image generation
   relayed through a Codex worker is the known case — is pinned to

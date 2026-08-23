@@ -177,23 +177,58 @@ alpha channel, or checkerboard painted into the pixels is a failed result;
 route the request to a generation path that can produce alpha instead of
 prompting this relay again.
 
-## Two dispatch patterns
+## Adapter stages and dispatch patterns
 
-Pick by expected runtime, at dispatch, and never switch owners mid-job:
+Three patterns. Pick by expected runtime and by whether a workflow is
+running — at dispatch, never switching owners mid-job:
 
-**Background dispatch + run-dir harvest — the default.** Any run that *may*
-exceed ~8 minutes (max-effort work, verification mandates, real repo audits —
-in practice most Codex-lane stages) is dispatched by the main loop itself:
-mint the run dir, start the helper with the Bash tool's `run_in_background`
+**Background adapter stage — the default for long runs inside a workflow.**
+Any run that *may* exceed ~8 minutes (max-effort work, verification mandates,
+real repo audits — in practice most substantive Codex-lane stages) runs as a
+Workflow stage whose adapter agent starts the helper with the Bash tool's
+`run_in_background`, ends its turn, and is re-invoked by the harness when the
+helper exits; it then reads `RUN_DIR/result.json` and relays the envelope
+verbatim. The adapter never waits actively, so the foreground 600 s cap does
+not apply (field-verified 2026-08-24: a 14-minute sol @ high run delivered
+through a background adapter stage; this supersedes the earlier rule that
+long runs never involve an adapter, which was earned under the foreground
+relay's blocking-call contract). The orchestrator still mints the run dir
+before dispatch: it stays the durable locator and ground truth, and an
+adapter that dies or goes idle is recovered from it exactly as under
+Delivery ownership below. Verified adapter prompt — a default agent pinned
+per the relay-seat rule in `model-map.md` (fill the UPPERCASE slots;
+substitute the literal helper path):
+
+```
+You are a one-shot Codex-lane adapter using BACKGROUND dispatch. Do exactly
+this:
+1. Create a private temp dir with mktemp -d. Write the worker prompt below
+   to prompt.md in it, and (if given) the JSON schema below to schema.json.
+2. Start this command with the Bash tool with run_in_background set to true:
+   HELPER_ABS_PATH run --model MODEL --effort EFFORT --sandbox SANDBOX \
+     --workspace WORKSPACE --prompt-file <tempdir>/prompt.md \
+     --schema-file <tempdir>/schema.json --run-dir RUN_DIR --timeout 1500
+3. Wait to be re-invoked when the background command exits. Do not poll, do
+   not kill, do not re-run it.
+4. When re-invoked, read RUN_DIR/result.json and return its ENTIRE content
+   verbatim as your final message - no commentary, no code fences, no
+   summary. If result.json does not exist, return the background command's
+   stdout verbatim instead.
+Rules: strictly one-shot, never retry, never touch the repo, never solve the
+task yourself.
+```
+
+**Main-loop background dispatch + run-dir harvest — when no workflow is
+running, and the recovery baseline always.** The main loop itself mints the
+run dir, starts the helper with the Bash tool's `run_in_background`
 (begin the command with a no-op label line — `: "STAGE MODEL@EFFORT — TOPIC"` —
 the shell UI lists a background job by its command's first line, so name the
-job there instead of leading with a temp-path assignment), and harvest
+job there instead of leading with a temp-path assignment), and harvests
 `RUN_DIR/result.json` — the helper's full envelope, written
 atomically at termination — accepting the payload only on `ok: true` (the
 verdict lives in the envelope, never in `final.json`, which is just the raw
 model payload). The main loop owns delivery from the start; no adapter agent
-is involved. This is the primary delivery path, not a recovery mode — the
-foreground relay's timing contract structurally cannot hold for long runs.
+is involved.
 
 **Foreground adapter relay — short runs only.** The Bash tool's timeout
 parameter is hard-capped at 600000 ms and the call auto-backgrounds past it,
@@ -209,7 +244,7 @@ not raise the relay numbers.
 For the relay, prefer the `codex-worker` agent type when it appears in the
 session's agent list — plugin installs namespace it as
 `ikkeseb-skills:codex-worker`. Otherwise (e.g. skills installed by symlink,
-which carries no agents) spawn a default agent as the adapter — opus at
+which carries no agents) spawn a default agent as the adapter — sonnet at
 low effort, the same pin the `codex-worker` agent carries — with this verified prompt (fill the
 UPPERCASE slots; keep the rules verbatim, each guards an observed failure
 mode; for write workers swap in the write-gate flags below). `HELPER_ABS_PATH`
@@ -250,12 +285,15 @@ degraded payload under the procedure below.
 
 ## Delivery ownership and lost-adapter recovery
 
-One job, one delivery owner, fixed at dispatch. Background dispatches are
-main-loop-owned by construction. For foreground relays, the adapter blocks
-on the single helper call and relays stdout — legitimate only while the call
-stays foreground for the whole run. If an adapter goes idle or dies without
-returning JSON, ownership does NOT bounce back through the adapter. Never
-ping or re-invoke it — an idle adapter is evidence of a lost delivery, not a
+One job, one delivery owner, fixed at dispatch. Main-loop dispatches are
+main-loop-owned by construction. A foreground adapter owns delivery by
+blocking on the single helper call and relaying stdout — legitimate only
+while the call stays foreground for the whole run. A background adapter owns
+delivery through harness re-invocation at helper exit — between dispatch and
+re-invocation it is legitimately silent, which is not idleness. In every
+pattern: if an adapter dies, returns no JSON, or sits idle after its run is
+terminal, ownership does NOT bounce back through the adapter. Never ping or
+re-invoke it yourself — that adapter is evidence of a lost delivery, not a
 paused one. Recover from ground truth in the orchestrator-minted
 `--run-dir`, using the same terminal-state check as a normal background
 harvest:

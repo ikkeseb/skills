@@ -4,6 +4,26 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.23.0 — 2026-08-24
+
+- `orchestrate` makes the mixed-lane Workflow the default shape: Claude and
+  Codex stages render as labeled rows in one progress tree, with Codex stages
+  running through adapter agents. New background adapter for long Codex runs
+  (adapter starts the helper in the background and relays the envelope on
+  harness re-invocation; field-verified with a 14-minute sol run), joining
+  the foreground relay (short runs) and main-loop dispatch (no workflow).
+  `model-map.md` routing: gpt-5.6-sol is the primary execution workhorse,
+  opus is the Claude-lane workhorse and standard cross-family verifier, and
+  adapter stages pin sonnet @ low (superseding opus @ low). The shipped
+  `codex-worker` agent gains the sonnet pin, an explicit 600 s Bash timeout,
+  a 540 s helper-deadline default, and a machine-readable failure envelope.
+  `second-opinion` checks reviewer independence against the producer's model
+  family, not just the seat's. All mechanics measured this session: Workflow
+  `agentType` relay, schema composition at both layers (a typed stage can
+  return its payload as a JSON string; a server-enforced schema can still
+  arrive missing a required key), background re-invocation inside a Workflow
+  stage, and sonnet relay discipline.
+
 ## 0.22.8 — 2026-08-24
 
 - `context-audit` treats write-back as a first-class placement cost: skill

@@ -2,7 +2,7 @@
 name: codex-worker
 description: Adapter that runs exactly one non-interactive Codex CLI worker (OpenAI model lane) through the orchestrate skill's codex-worker.sh helper and relays its JSON result verbatim. Give it a task prompt plus model/effort/sandbox/workspace parameters and optionally a JSON Schema for the result. Not for interactive Codex sessions, PR reviews, or any work it could do itself.
 tools: Bash
-model: opus
+model: sonnet
 effort: low
 ---
 
@@ -43,15 +43,22 @@ Steps:
    "error_class": "usage", "error": "<what was missing>"}` and stop.
 2. Create a private temp dir (`mktemp -d`). Write the worker prompt to
    `prompt.md` and, if a schema was provided, the schema to `schema.json`.
-3. Run the helper exactly once, as a single FOREGROUND Bash call:
+3. Run the helper exactly once, as a single FOREGROUND Bash call with the
+   Bash tool's timeout parameter set to 600000 — it may legitimately take
+   several minutes, worker-slot queue wait included:
    `"$HELPER" run --model <model> --prompt-file <dir>/prompt.md`
    plus `--effort`, `--sandbox`, `--workspace`, `--expected-base-sha`,
    `--run-dir`, `--schema-file`, `--timeout` for whichever parameters were
-   provided. You are strictly one-shot: never retry, whatever the failure —
-   retry and lane-fallback policy belongs to the orchestrator. Foreground
-   means foreground: never set `run_in_background`, never append `&`, and
-   never end a turn with a "started, waiting" status while the helper runs
-   — an idle adapter is a lost delivery. If you cannot hold the single
-   blocking call open, do not start it.
+   provided. If the briefing gave no timeout, pass `--timeout 540` so the
+   helper's deadline stays inside the tool's 600 s cap. You are strictly
+   one-shot: never retry, whatever the failure — retry and lane-fallback
+   policy belongs to the orchestrator. Foreground means foreground: never
+   set `run_in_background`, never append `&`, and never end a turn with a
+   "started, waiting" status while the helper runs — an idle adapter is a
+   lost delivery. If you cannot hold the single blocking call open, do not
+   start it; return exactly this instead, with the reason substituted, so
+   the result stays machine-readable: `{"ok": false, "error_class":
+   "codex_failed", "error": "adapter could not hold a foreground call:
+   <reason>", "run_dir": "<run-dir if provided>"}`.
 4. Your final message is the helper's JSON output, verbatim — no commentary,
    no reformatting, no summary.

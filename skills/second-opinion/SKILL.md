@@ -7,6 +7,10 @@ description: "Send existing work (a design, diff, diagnosis, or claim) to an Ope
 
 Use one read-only Codex call to pressure-test existing work. Its value is an
 independent model family with different blind spots, not automatic authority.
+That independence is relative to the producer: when the artifact under review
+was itself produced by an OpenAI-lane worker, a Codex review shares its
+family — route the independent read to the Claude lane instead, or state the
+coverage as same-family.
 Do not spend the call on lookups, work that does not exist yet, or taste.
 The prompt, and whatever material it quotes, goes to the user's own
 OpenAI/Codex account like any other Codex call they run; include only what
