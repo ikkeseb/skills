@@ -4,6 +4,13 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.22.5 — 2026-08-23
+
+- `context-audit` leads with its procedure and runs in two phases: the
+  read-back, verdict and grouped classification come first, draft files only
+  after the user has chosen a direction. Two new review flags, weak pointer
+  and environment cache, mark lines to rewrite, inline or delete.
+
 ## 0.22.4 — 2026-08-23
 
 - The Excalidraw test suite uses a deterministic non-browser executable for

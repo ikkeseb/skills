@@ -8,7 +8,28 @@ description: "Audit how a project's instructions and context load across harness
 Treat this as an attention audit, not a line-count diet. Splitting a lean file into
 unreachable indirection is a regression.
 
-## Establish the loading contract first
+## Process
+
+Two phases. Phase 1 ends in a verdict the user can accept or redirect in one reading;
+phase 2 runs only after the user has chosen a direction.
+
+1. **Read** the complete instruction stack (see Loading contract). Done when every
+   canonical file, adapter, parent/global file, and required file has been read.
+2. **Map** the folder structure, domains, target harnesses, and effective loading policy.
+   Done when the harness list, its evidence, and each policy are stated or marked unknown.
+3. **Classify** each rule on type and scope, then mark it mandatory or optional and flag
+   it (see Classify). Done when every live rule carries type, scope, flags, and
+   mandatory/optional.
+4. **Place** each rule in the cheapest location that preserves its required reach (see
+   Placement). Done when every moved rule has a destination and a reach-after-move.
+5. **Verdict** against the worth-it test. A no-op is a useful result. Deliver phase 1 as
+   specified under Output and stop. Done when the user has accepted, narrowed, or
+   rejected a direction.
+6. **Draft**, only for the accepted direction: ready-to-review canonical instructions,
+   adapters, nested files, skills, and hook configuration (Output items 5–6). Done when
+   every moved rule appears in a draft and every guardrail's new home is flagged.
+
+## Loading contract
 
 Do not classify or move a rule until its current and proposed reach are known:
 
@@ -68,17 +89,6 @@ Splitting adds indirection for no attention gain. Raw line count is a weak proxy
 not. (Past ~120 lines is *worth a look*, never automatically guilty. Any number is a
 nudge, not a law.)
 
-## Process
-
-1. **Read** the complete instruction stack identified above.
-2. **Map** the folder structure, domains, target harnesses, and effective loading policy.
-3. **Classify** each rule on type and scope, then mark it mandatory or optional. Done
-   when every live rule carries type, scope, flags, and mandatory/optional.
-4. **Place** each rule in the cheapest location that preserves its required reach.
-5. **Draft** ready-to-review canonical instructions, adapters, nested files, skills, and
-   hook configuration as applicable. Done when every moved rule appears in a draft.
-6. **Verdict** against the worth-it test above. A no-op is a useful result.
-
 ## Classify on two axes
 
 Type and scope are **orthogonal**: every rule has both. Scope narrows the candidate
@@ -98,7 +108,14 @@ locations; mandatory versus optional reach selects among them.
 (directory). Two flags ride alongside scope without replacing it: **sacred** (a
 guardrail whose loss causes regressions, see Guardrails) and **dead/stale** (no live
 rule; a deletion candidate whatever its scope: it needs no further classification, its
-proposed location is delete/archive). A live rule's required reach still determines
+proposed location is delete/archive). Two more flags mark review candidates whose
+disposition is rewrite, inline or delete: **weak pointer** (a line whose job is to make
+the agent reach another file, but whose wording fails to state what the material is or
+omits a distinct branch that should trigger reading it; sharpen the wording before
+considering inlining) and **environment cache** (a line that restates what
+`package.json` scripts, config files, the directory layout or `--help` already say; keep
+only what the agent cannot find by looking: the unwritten convention, the reason behind
+a choice, the gotcha no config confesses). A live rule's required reach still determines
 whether it stays static, moves to verified nested instructions, or becomes an optional
 skill procedure with added enforcement.
 
@@ -145,8 +162,8 @@ content in the file. They exist because the agent *will* repeat the mistake with
 
 - **Rules capture decisions, not current state.** A guardrail records a *rejected
   alternative + why*, or a true invariant. A bare current-state fact ("box A is blue") is
-  not one: the code already says it, and it rots the moment the value changes, then
-  silently fights the change. Leave it at its source of truth; don't copy it into a rule.
+  not one: it is an environment cache (see Classify) that rots the moment the value
+  changes, then silently fights the change. Leave it at its source of truth.
 - **Never silently drop one.** Every "don't do X" line in the original must reappear in
   the output, moved rather than deleted. No home found means keep it static and flag it.
 - **Keep a guardrail with its domain without weakening its reach.** Use a skill only
@@ -166,17 +183,21 @@ Present, in order:
    the mechanism-support matrix, and evidence for each effective invocation policy. Mark
    unknowns explicitly, and flag broken or unreadable imports as defects.
 2. **Verdict up front:** worth restructuring or leave it? One sentence, then the reasoning.
-3. **Classification table:** each rule → type → scope (plus sacred/dead flags) →
-   mandatory/optional → current reach → proposed location → reach after the move.
+3. **Classification table:** grouped by domain, one row per rule: type → scope (plus
+   flags) → mandatory/optional → current reach → proposed location → reach after the
+   move. Rules whose every field is identical may share one row; a sacred rule never
+   shares.
 4. **What a typical session stops loading:** per moved domain, its rough hit-rate
    (high/med/low) and what leaves always-on context. Frame as attention/confusion
    reduction; a token delta is a footnote, not the headline.
+Items 1–4 are phase 1. Stop there until the user has chosen a direction. On a
+leave-it-alone verdict, deliver items 1–2 plus any dead/stale deletions and weak-pointer or
+environment-cache rewrites worth naming, and stop.
+
 5. **Draft files:** full contents of the canonical instructions, adapters, and each new
-   skill, nested file, or hook. Keep each extracted domain self-contained and flag every
-   guardrail's new home. Do not invent unsupported cross-harness parity.
+   skill, nested file, or hook, for the accepted direction only. Keep each extracted
+   domain self-contained and flag every guardrail's new home. Do not invent unsupported
+   cross-harness parity.
 6. **Apply steps:** the exact file operations, including any the dedup rule names on
    user-global files. **Do not perform them.** This skill proposes; the user reviews
    and applies.
-
-On a leave-it-alone verdict, deliver items 1–2 plus any dead/stale deletions worth
-naming, and stop. No draft files or apply steps for a structure that should not change.
