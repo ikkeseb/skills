@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.22.8 — 2026-08-24
+
+- `context-audit` treats write-back as a first-class placement cost: skill
+  extraction is recommended only when the content is documented stable or
+  updates already flow through a mechanical workflow the document sits in;
+  unknown stability keeps content on the living surface. Auto-loading proves
+  reading, not write-back, and does not qualify. From the Nuez field
+  measurement: 34 commits touched the extracted lab domain over seven weeks
+  while its skill body received zero content updates — new knowledge landed
+  on the always-on surfaces instead.
+
 ## 0.22.7 — 2026-08-23
 
 - `handoff` restores complete continuity after the 0.22.3 trim made complex

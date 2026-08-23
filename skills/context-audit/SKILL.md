@@ -85,6 +85,9 @@ Run a full audit only when it pays back. Gauge two things:
   great move-out candidate; one touched in most (~60%) is not. State the proxy used. If
   none is available, mark the rate unknown and say the verdict is weakened by it.
 
+Any extraction the audit would propose must also pass the write-back test under
+Placement; if nothing does, the verdict is likely leave-it-alone.
+
 A repo with no instruction files at all is not an audit target. Say so and offer a
 bootstrap proposal instead of a restructuring.
 
@@ -135,7 +138,7 @@ skill procedure with added enforcement.
 | Canonical root instructions | Universal or mandatory cross-directory rules | Loaded by every target harness |
 | Harness adapter | Import/pointer to the canonical source | Contains no duplicate policy |
 | Nested instructions | Mandatory directory-scoped rules | Verified for every target harness |
-| Skill body | Optional domain procedure | Explicit invocation is acceptable, or implicit loading is proven |
+| Skill body | Optional domain procedure | Explicit invocation is acceptable or implicit loading is proven, and the write-back test passes |
 | Claude Code skill `paths:` | File-scoped guidance | Claude Code target and complete glob coverage |
 | Claude Code hook | Critical operation enforcement or reminders | Claude-specific; shared prose remains reachable elsewhere |
 | Delete / archive | Stale or resolved content | No live rule or required history is lost |
@@ -154,6 +157,17 @@ Rules of thumb the table can't hold:
 - **Don't over-split.** Create a skill only when the domain is genuinely separable *and*
   low-hit-rate. Below ~10–15 lines, the frontmatter plus "which place is this rule in?"
   overhead outweighs the content. Leave it static.
+- **Write-back test.** Extracted surfaces get read but not written back to: in field
+  measurement, always-on files kept receiving content updates while a routed-in skill
+  body received none — new knowledge lands on whichever surface sits in the working
+  loop. Recommend extraction only when the content is *documented* stable (few or no
+  semantic changes over the relevant history; durable boundaries, rare failure modes) or
+  when updates already flow through a mechanical workflow the document sits in. Unknown
+  stability keeps the content on the living surface. Auto-loading (a `paths:` glob)
+  guarantees reading, not write-back, and does not qualify; neither does a planned
+  changelog convention or periodic staleness audit until that loop is proven. Accepted
+  trade: stable content stays always-loaded when stability can't be documented —
+  cheaper than guidance that silently stops matching practice.
 - **Dedup across always-on layers.** Audit the whole always-on stack as one surface:
   global `~/.claude/CLAUDE.md`, parent-directory files, the project file. A rule stated
   in two layers pays attention twice and drifts independently. Keep it in the narrowest
