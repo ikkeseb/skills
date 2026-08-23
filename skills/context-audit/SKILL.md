@@ -26,8 +26,13 @@ phase 2 runs only after the user has chosen a direction.
    specified under Output and stop. Done when the user has accepted, narrowed, or
    rejected a direction.
 6. **Draft**, only for the accepted direction: ready-to-review canonical instructions,
-   adapters, nested files, skills, and hook configuration (Output items 5–6). Done when
-   every moved rule appears in a draft and every guardrail's new home is flagged.
+   adapters, nested files, skills, and hook configuration (Output items 5–6). Every
+   environment fact a draft asserts (a test exists, a hook is wired, a script does X) is
+   proven by running the lookup in this session, not by reading about it; a suite the
+   draft calls the verifier has been run, since a stale suite is the contradiction the
+   draft is about to cite as truth. Done when every moved rule appears in a draft, every
+   guardrail's new home is flagged, and every asserted environment fact was proven or
+   marked unproven.
 
 ## Loading contract
 
@@ -115,7 +120,11 @@ omits a distinct branch that should trigger reading it; sharpen the wording befo
 considering inlining) and **environment cache** (a line that restates what
 `package.json` scripts, config files, the directory layout or `--help` already say; keep
 only what the agent cannot find by looking: the unwritten convention, the reason behind
-a choice, the gotcha no config confesses). A live rule's required reach still determines
+a choice, the gotcha no config confesses). A fifth flag, **contradiction**, marks a fact
+two live documents state differently (one says a hook is unwired, another says live):
+its disposition is to find the deployed truth (settings, config, the script itself),
+name one owner for that fact, and align every other statement to a pointer. A live
+rule's required reach still determines
 whether it stays static, moves to verified nested instructions, or becomes an optional
 skill procedure with added enforcement.
 
@@ -191,8 +200,8 @@ Present, in order:
    (high/med/low) and what leaves always-on context. Frame as attention/confusion
    reduction; a token delta is a footnote, not the headline.
 Items 1–4 are phase 1. Stop there until the user has chosen a direction. On a
-leave-it-alone verdict, deliver items 1–2 plus any dead/stale deletions and weak-pointer or
-environment-cache rewrites worth naming, and stop.
+leave-it-alone verdict, deliver items 1–2 plus any dead/stale deletions, contradiction
+repairs, and weak-pointer or environment-cache rewrites worth naming, and stop.
 
 5. **Draft files:** full contents of the canonical instructions, adapters, and each new
    skill, nested file, or hook, for the accepted direction only. Keep each extracted

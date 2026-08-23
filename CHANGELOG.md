@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.22.6 — 2026-08-23
+
+- `context-audit` gains a contradiction flag (two live documents state one
+  fact differently; find the deployed truth, name one owner, align the rest)
+  and a proof rule for phase 2: every environment fact a draft asserts is run,
+  not read about, including the suite the draft names as the verifier. From
+  the first field run, where both a doc contradiction and two stale tests
+  surfaced.
+
 ## 0.22.5 — 2026-08-23
 
 - `context-audit` leads with its procedure and runs in two phases: the
