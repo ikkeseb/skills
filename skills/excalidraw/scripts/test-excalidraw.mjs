@@ -121,14 +121,13 @@ try {
       ProgramFiles: join(workspace, "program-files"),
       "ProgramFiles(x86)": join(workspace, "program-files-x86"),
       PATH: workspace,
-      EXCALIDRAW_BROWSER_PATH: "",
+      // Exercise the unavailable-preview path without launching a real GUI
+      // browser from an agent sandbox. Node rejects the Chromium flags.
+      EXCALIDRAW_BROWSER_PATH: process.execPath,
     },
   });
   assert.match(checkOutput, /LAYOUT PREVIEW SVG/);
-  // Windows re-injects ProgramFiles into child environments, so a real installed
-  // browser may be discovered despite the overrides above. Both branches are valid
-  // here; the no-browser branch is covered deterministically via findBrowser below.
-  assert.match(checkOutput, /LAYOUT PREVIEW PNG|Layout PNG unavailable/);
+  assert.match(checkOutput, /Layout PNG unavailable/);
   assert.match(checkOutput, /NATIVE VISUALLY UNVERIFIED/);
   assert.match(readFileSync(join(workspace, "scene.layout.svg"), "utf8"), /<svg/);
 
