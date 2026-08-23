@@ -105,11 +105,12 @@
 
   @media print {
     /* Force the light palette even when the toggle chose dark. */
-    :root, :root[data-theme="dark"] {
+    :root, :root[data-theme="dark"], :root[data-theme="light"] {
       --bg: #ffffff; --card: #ffffff; --ink: #17181c; --muted: #676a72;
       --accent: #14507a; --accent-soft: #e8f0f6; --line: #e3e4e0;
       --good: #2e6b46; --good-soft: #ecf4ee;
     }
+    body { background: #ffffff; }
     #theme-toggle { display: none; }
     .fact, .ladder li, .callout { break-inside: avoid; }
   }

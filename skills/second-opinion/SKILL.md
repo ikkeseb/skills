@@ -101,6 +101,9 @@ ambient house style:
   material, say: "answer from this prompt alone; do not probe the filesystem."
 - State the decision, your current belief, and the strongest counter-case you
   want tested. Ask where it breaks, not whether it is good.
+- When a conclusion depends on repository facts, require `file:line` for each
+  factual claim and `unknown` when evidence is missing. Prompt-only reasoning
+  needs reasons, not invented citations.
 - For security-adjacent reviews, keep the artifact as subject and request
   failure modes, never bypass instructions.
 - Name exclusions so the reviewer does not redesign unrelated work.

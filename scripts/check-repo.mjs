@@ -16,6 +16,20 @@ function read(relativePath) {
   return fs.readFileSync(path.join(repo, relativePath), "utf8").replace(/\r\n/g, "\n");
 }
 
+function blockAfter(text, marker) {
+  const markerIndex = text.indexOf(marker);
+  const openIndex = markerIndex < 0 ? -1 : text.indexOf("{", markerIndex);
+  if (openIndex < 0) return null;
+
+  let depth = 0;
+  for (let index = openIndex; index < text.length; index += 1) {
+    if (text[index] === "{") depth += 1;
+    if (text[index] === "}") depth -= 1;
+    if (depth === 0) return text.slice(openIndex + 1, index);
+  }
+  return null;
+}
+
 function validateSkill(skillDir) {
   const file = path.join(skillDir, "SKILL.md");
   const text = fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n");
@@ -104,6 +118,25 @@ if (claudeManifest.version !== codexManifest.version) {
 }
 if (Object.hasOwn(claudeManifest, "skills")) {
   fail(".claude-plugin/plugin.json must not carry a skills allowlist");
+}
+
+const prettyHtmlTemplate = read("skills/pretty-html/assets/template.html");
+const prettyHtmlPrint = blockAfter(prettyHtmlTemplate, "@media print");
+if (!prettyHtmlPrint) {
+  fail("pretty-html template must have a closed @media print block");
+} else {
+  if (prettyHtmlTemplate.indexOf("@media print") < prettyHtmlTemplate.indexOf(':root[data-theme="light"]')) {
+    fail("pretty-html print rules must follow the explicit theme rules");
+  }
+  if (!/:root\s*,\s*:root\[data-theme="dark"\]\s*,\s*:root\[data-theme="light"\]\s*\{/.test(prettyHtmlPrint)) {
+    fail("pretty-html print palette must cover automatic, dark, and light theme states");
+  }
+  if (!/body\s*\{\s*background:\s*#ffffff;\s*\}/.test(prettyHtmlPrint)) {
+    fail("pretty-html print body must force a white background");
+  }
+  if (!/#theme-toggle\s*\{\s*display:\s*none;\s*\}/.test(prettyHtmlPrint)) {
+    fail("pretty-html print rules must hide the theme toggle");
+  }
 }
 
 const markerNames = skillDirs

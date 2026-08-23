@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.22.2 — 2026-08-23
+
+- `history-audit` identifies Codex spawned threads by
+  `payload.source.subagent` and reports exclusion counts, avoiding the desktop
+  app's misleading `thread_source` value on main sessions.
+- `second-opinion` requires citations for repository facts without forcing
+  citations onto prompt-only reasoning.
+- `orchestrate` treats transparency as a verified image property and rejects
+  RGB files, fully opaque alpha, or painted checkerboards instead of retrying
+  the same relay.
+- `pretty-html` forces the light palette and a white body for every explicit
+  theme state under print media.
+
 ## 0.22.1 — 2026-08-22
 
 `orchestrate` model map: gpt-5.6-sol taste 6 → 7 and its default role now

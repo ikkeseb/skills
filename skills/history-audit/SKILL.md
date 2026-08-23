@@ -27,9 +27,12 @@ Deterministic where possible; agents only where judgment is needed.
    scheduled/headless sessions, 1 user message per session): they pollute
    rates. Detect forked sessions (transcripts sharing a message prefix) and
    collapse each shared prefix to one occurrence, so numerator and
-   denominator see the same population. Done when the index lists sessions
-   with harness, model, date, and cwd, records the covered window and the
-   exclusions applied, and states which corpora were absent.
+   denominator see the same population. In Codex logs, classify a spawned
+   thread only when `payload.source.subagent` is set. The desktop app also
+   writes `thread_source: subagent` on main sessions, so that field cannot
+   identify spawned threads. Done when the index lists sessions with harness,
+   model, date, and cwd, records the covered window and every exclusion count,
+   and states which corpora were absent.
 2. **Extract user messages only, per session**, into compact text files in a
    local scratch directory, with a header (harness, model, date, cwd). Skip
    tool results, meta lines, command wrappers, and environment blocks; this

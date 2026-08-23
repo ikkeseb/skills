@@ -170,6 +170,13 @@ text to X/Y/Z" — and **explicitly forbid manual pixel editing**; hedged
 prompts ("prefer native generation but reject it if…") have steered workers
 into that fallback.
 
+Transparency is an output property, not a prompt claim. When the result needs
+a transparent background, inspect the returned PNG for an alpha channel with
+at least one non-opaque pixel before accepting it. An RGB image, a fully opaque
+alpha channel, or checkerboard painted into the pixels is a failed result;
+route the request to a generation path that can produce alpha instead of
+prompting this relay again.
+
 ## Two dispatch patterns
 
 Pick by expected runtime, at dispatch, and never switch owners mid-job:
