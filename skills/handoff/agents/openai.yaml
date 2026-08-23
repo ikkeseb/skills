@@ -1,6 +1,6 @@
 interface:
   display_name: "Handoff"
-  short_description: "Write a paste-ready task handoff in the reply (no file is written)"
+  short_description: "Save and return a paste-ready task handoff"
   default_prompt: "Use $handoff to preserve the current task for continuation in a fresh session."
 policy:
   allow_implicit_invocation: false

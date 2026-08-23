@@ -23,7 +23,7 @@ Codex-supported skills that should stay explicit set
 
 | Skill | What it does | Claude Code |
 |---|---|---|
-| **[handoff](skills/handoff)** | Compacts the session into a paste-ready handoff snippet in the reply, for switching machines or briefing another agent. Writes no file. | `/handoff` |
+| **[handoff](skills/handoff)** | Compacts the session into a paste-ready handoff, saves a temporary copy, and returns the same text for switching sessions or briefing another agent. | `/handoff` |
 | **[pretty-pdf](skills/pretty-pdf)** | PDFs that look designed rather than auto-generated (HTML + CSS via weasyprint). | `/pretty-pdf` |
 | **[pretty-html](skills/pretty-html)** | Polished, self-contained HTML deliverables: single file, dual theme with a toggle, print-friendly. | `/pretty-html` |
 | **[pretty-slides](skills/pretty-slides)** | Presentations as one self-contained HTML file: bundled slide engine with keyboard-only navigation and pattern-bound motion, plus a build step that inlines assets. | `/pretty-slides` |

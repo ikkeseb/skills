@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.22.3 — 2026-08-23
+
+- `handoff` saves a verified copy in the operating system's temporary
+  directory and returns the same paste-ready snippet. It no longer needs the
+  old persistent handoff directory or its cleanup loop. Its shorter contract
+  tailors the handoff to a supplied next-session focus, links durable artifacts
+  instead of duplicating them, and labels unchecked exact boundaries as
+  unverified.
+
 ## 0.22.2 — 2026-08-23
 
 - `history-audit` identifies Codex spawned threads by
