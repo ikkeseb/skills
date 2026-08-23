@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.22.7 — 2026-08-23
+
+- `handoff` restores complete continuity after the 0.22.3 trim made complex
+  field outputs too terse. It keeps temporary-file delivery, focused checks
+  and writer-side uncertainty labels, while again reconstructing research,
+  decisions, rejected paths and the wider goal. Research-heavy work names its
+  working documents with checked durability, and multi-session work
+  distinguishes a closed session loop from an active workstream. Links carry
+  interpretation instead of replacing it; simple tasks remain short without
+  imposing a word floor.
+
 ## 0.22.6 — 2026-08-23
 
 - `context-audit` gains a contradiction flag (two live documents state one
