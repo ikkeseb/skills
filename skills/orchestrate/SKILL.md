@@ -28,10 +28,11 @@ accepts `effort`) or an agent definition that pins effort.
 Codex stages pick their adapter by expected runtime, decided at dispatch
 (`references/codex-exec.md` § Adapter stages owns both recipes): confidently
 short runs use the foreground `codex-worker` adapter; anything that may run
-long uses the background adapter, which starts the helper in the background
-inside its own stage and relays the envelope when the harness re-invokes it
-at completion. Main-loop background dispatch with run-dir harvest remains the
-delivery path when no workflow is running.
+long uses the active-wait adapter, which starts the helper in the background
+inside its own stage, holds its turn open with bounded foreground waits on
+the run dir, and relays the envelope when it lands. Main-loop background
+dispatch with run-dir harvest remains the delivery path when no workflow is
+running.
 
 Every stage pins `{model, effort}` and returns typed data: Workflow stages
 use `schema`; Codex stages return the helper envelope. While a worker runs,
@@ -164,8 +165,10 @@ delegate small edits.
   plus dependency install) and pass the agent that path. Codex write runs
   fail a stale base closed via `--expected-base-sha`.
 - **One delivery owner, fixed at dispatch — and idle is not completion.** A
-  foreground adapter owns its strictly blocking call; a background adapter
-  owns relay after re-invocation; anything dispatched by the main loop is
+  foreground adapter owns its strictly blocking call; an active-wait adapter
+  owns relay by holding its turn through bounded wait cycles — an adapter
+  turn that ends without an envelope is a lost delivery, since nothing
+  re-invokes a stage agent; anything dispatched by the main loop is
   main-loop-harvest from the start: record its durable locator before
   dispatch, then own polling, terminal-state detection, harvest, and cleanup.
   Completion requires a returned result plus inspection of the relevant

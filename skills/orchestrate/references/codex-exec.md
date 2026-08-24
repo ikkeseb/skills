@@ -175,41 +175,57 @@ verification-heavy prompts, state a time/effort budget in the prompt itself
 (e.g. "recon facts are already verified; spend your run on judgment; finish
 within 30 minutes").
 
-**Background adapter stage — the default for long runs inside a workflow.**
+**Active-wait adapter stage — the default for long runs inside a workflow.**
 Any run that *may* exceed ~8 minutes (max-effort work, verification mandates,
 real repo audits — in practice most substantive Codex-lane stages) runs as a
 Workflow stage whose adapter agent starts the helper with the Bash tool's
-`run_in_background`, ends its turn, and is re-invoked by the harness when the
-helper exits; it then reads `RUN_DIR/result.json` and relays the envelope
-verbatim. The adapter never waits actively, so the foreground 600 s cap does
-not apply (field-verified 2026-08-24: a 14-minute sol @ high run delivered
-through a background adapter stage; this supersedes the earlier rule that
-long runs never involve an adapter, which was earned under the foreground
-relay's blocking-call contract). The orchestrator still mints the run dir
-before dispatch: it stays the durable locator and ground truth, and an
-adapter that dies or goes idle is recovered from it exactly as under
-Delivery ownership below. Verified adapter prompt — a default agent pinned
-per the relay-seat rule in `model-map.md` (fill the UPPERCASE slots;
-substitute the literal helper path):
+`run_in_background`, then **holds its own turn open** by running bounded
+foreground wait commands on `RUN_DIR/result.json` — each under the 600 s
+Bash cap, repeated until the envelope lands — and relays it verbatim. The
+adapter must never end its turn to "wait to be re-invoked":
+re-invocation-on-background-exit exists only for the main loop, never for
+subagents or Workflow stages (mechanism probes, 2026-08-25 — a stage that
+ends its turn has its turn-end text recorded as the stage result and its
+background job killed at workflow teardown; an earlier revision of this
+recipe prescribed exactly that and lost a live worker, and its "field-
+verified" claim was misattributed). The wait-loop pattern is probe-verified
+including a timed-out cycle followed by delivery on the next. The
+orchestrator still mints the run dir before dispatch: it stays the durable
+locator and ground truth, and an adapter that dies or goes idle is recovered
+from it exactly as under Delivery ownership below. Verified adapter prompt —
+a default agent pinned per the relay-seat rule in `model-map.md` (fill the
+UPPERCASE slots; substitute the literal helper path):
 
 ```
-You are a one-shot Codex-lane adapter using BACKGROUND dispatch. Do exactly
-this:
+You are a one-shot Codex-lane adapter using BACKGROUND dispatch with an
+ACTIVE WAIT. Do exactly this:
 1. Create a private temp dir with mktemp -d. Write the worker prompt below
    to prompt.md in it, and (if given) the JSON schema below to schema.json.
 2. Start this command with the Bash tool with run_in_background set to true:
    HELPER_ABS_PATH run --model MODEL --effort EFFORT --sandbox SANDBOX \
      --workspace WORKSPACE --prompt-file <tempdir>/prompt.md \
      --schema-file <tempdir>/schema.json --run-dir RUN_DIR --timeout 1500
-3. Wait to be re-invoked when the background command exits. Do not poll, do
-   not kill, do not re-run it.
-4. When re-invoked, read RUN_DIR/result.json and return its ENTIRE content
-   verbatim as your final message - no commentary, no code fences, no
-   summary. If result.json does not exist, return the background command's
-   stdout verbatim instead.
-Rules: strictly one-shot, never retry, never touch the repo, never solve the
-task yourself.
+3. Then IMMEDIATELY run this FOREGROUND command with the Bash tool's
+   timeout parameter set to 600000. Never end your turn while the run is
+   in progress — you will NOT be woken up again; an ended turn kills the
+   worker:
+   timeout 540 sh -c 'until [ -f RUN_DIR/result.json ]; do sleep 5; done;
+     echo FOUND'
+4. If it exits without printing FOUND, that is a normal wait-cycle timeout,
+   not an error: run the same command again, up to 4 times total. Do not
+   poll the background task, do not kill it, do not re-run the helper.
+5. When FOUND prints, read RUN_DIR/result.json and return its ENTIRE
+   content verbatim as your final message - no commentary, no code fences,
+   no summary. If all 4 cycles pass without FOUND, return exactly:
+   {"ok": false, "error_class": "codex_failed", "error": "adapter wait
+   cycles exhausted before result.json appeared", "run_dir": "RUN_DIR"}
+Rules: strictly one-shot, never retry, never touch the repo, never solve
+the task yourself.
 ```
+
+Four 540 s cycles bound the stage at ~36 minutes, which outlives the
+helper's 1500 s deadline; a run sized beyond that belongs to main-loop
+background dispatch below.
 
 **Main-loop background dispatch + run-dir harvest — when no workflow is
 running, and the recovery baseline always.** The main loop itself mints the
@@ -280,9 +296,10 @@ Delivery ownership is fixed at dispatch (`SKILL.md` § Delegation contract);
 the pattern specifics: main-loop dispatches are main-loop-owned by
 construction; a foreground adapter owns delivery by blocking on the single
 helper call and relaying stdout — legitimate only while the call stays
-foreground for the whole run; a background adapter owns delivery through
-harness re-invocation at helper exit — between dispatch and re-invocation it
-is legitimately silent, which is not idleness. If an adapter dies, returns no
+foreground for the whole run; an active-wait adapter owns delivery by
+holding its turn open through bounded wait cycles until the envelope lands —
+its turn ending without a relayed envelope is a lost delivery, never a pause
+(no harness wakes it back up). If an adapter dies, returns no
 JSON, or sits idle after its run is terminal, it is evidence of a lost
 delivery, not a paused one: never ping or re-invoke it. Recover from ground
 truth in the orchestrator-minted `--run-dir`, using the same terminal-state

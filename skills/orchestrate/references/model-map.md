@@ -145,8 +145,8 @@ delegation the orchestrator doesn't control.
   stages are substantive, and current premium models earn their best
   performance-per-cost in the high band.
 - **Adapter seat: `sonnet` @ `low`.** Codex-lane adapter stages (foreground
-  relay and background adapter alike) are pure mechanics — run one helper
-  command, relay one JSON envelope — with the orchestrator-minted run dir as
+  relay and active-wait adapter alike) are pure mechanics — run the helper
+  command, hold bounded waits, relay one JSON envelope — with the orchestrator-minted run dir as
   ground truth if the relay garbles. Pin them `sonnet` @ `low` (field,
   2026-08-24: one green foreground relay held the contract verbatim; sonnet's
   lower per-token price nets ~20–25 % per relay despite a slightly higher

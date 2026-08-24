@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.23.4 — 2026-08-25
+
+`orchestrate` replaces the background adapter stage with an active-wait adapter: long Codex runs inside a Workflow now hold their stage open with bounded foreground waits on the run dir instead of ending the turn and waiting to be woken. Harness re-invocation on background exit only exists for the main loop — the old recipe silently lost a live worker at workflow teardown.
+
 ## 0.23.3 — 2026-08-24
 
 The changelog is rewritten to consumer grade: every entry now summarizes what shipped in a few lines, and the git log carries the full detail. No skill behavior changes.
