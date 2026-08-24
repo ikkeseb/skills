@@ -4,16 +4,23 @@ Failure-time reference. Read on `codex_failed`, suspicious `stderr.log`
 content, or a write-worker gate refusal / after-diff that behaves impossibly
 in a repo using `.gitattributes` filters.
 
-## Known stderr signals (0.144.x)
+## Known stderr signals
 
 - `failed to load/renew models cache: missing field supports_reasoning_summaries`
   recurring on every run is harmless noise (stale `~/.codex` models cache vs
-  a newer CLI schema) — don't let it mask the real failure line.
+  a newer CLI schema) — don't let it mask the real failure line (0.144.x).
 - On Windows, repeated `code-mode host closed its stdout` with exit code
   `-1073741502` (0xC0000142, STATUS_DLL_INIT_FAILED) is an intermittent
-  Codex-CLI runtime crash, observed under heavy `max`-effort runs. It is an
-  availability failure, not a quality miss: re-route the stage to the Claude
-  lane instead of retrying the crash lottery.
+  Codex-CLI runtime crash, observed under heavy `max`-effort runs (0.144.x).
+  It is an availability failure, not a quality miss: re-route the stage to
+  the Claude lane instead of retrying the crash lottery.
+- On Windows read-only runs, repeated
+  `exec_command failed for ...: CreateProcess { message: "Rejected(\"... blocked by policy\")" }`
+  (0.149.x) means the CLI's exec policy is forbidding every command no
+  allow-rule matches — a deterministic environment condition, not a worker
+  or model failure, and the run's envelope can still come back `ok: true`
+  with empty results. Fix and guards: codex-exec.md § Running a worker
+  (install `scripts/worker-read.rules`).
 
 ## Lossy clean filters
 

@@ -1,0 +1,7 @@
+prefix_rule(pattern=["git", ["status", "diff", "log", "show", "rev-parse", "ls-files", "grep"]], decision="allow", justification="codex-worker read lane: read-only git subcommands (codex >=0.149 forbids all unmatched commands on native Windows read-only runs; see orchestrate references/codex-exec.md)")
+prefix_rule(pattern=["cat"], decision="allow", justification="codex-worker read lane: plain file reads")
+prefix_rule(pattern=["rg"], decision="allow", justification="codex-worker read lane: repository search")
+prefix_rule(pattern=["ls"], decision="allow", justification="codex-worker read lane: directory listing")
+prefix_rule(pattern=["Get-Content"], decision="allow", justification="codex-worker read lane: pwsh file reads")
+prefix_rule(pattern=["Get-ChildItem"], decision="allow", justification="codex-worker read lane: pwsh directory listing")
+prefix_rule(pattern=["Select-String"], decision="allow", justification="codex-worker read lane: pwsh search")

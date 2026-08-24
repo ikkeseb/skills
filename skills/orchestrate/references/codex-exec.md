@@ -110,14 +110,35 @@ must *run* anything, use `workspace-write` in a throwaway worktree; keep
 `read-only` for pure read-and-reason work, and don't ask a read-only worker
 to execute gates.
 
-Workers have no native file-read tool — every read is a shell command. Under
-`read-only`, plain `cat`/`sed` reads succeed where `pwsh` invocations can be
-policy-blocked — a blocked worker returns schema-valid but *empty* results
-while `cat` siblings read fine (2026-08-15). Prompts for read-heavy stages
-state that reads go through simple shell reads (`cat`/`sed`) and steer away
-from pwsh. Never instruct a worker to avoid shell for reading — it has
-nothing else; a corrective prompt that forbade shell reads bricked its retry
-outright.
+Workers have no native file-read tool — every read is a shell command, so
+never instruct a worker to avoid shell for reading; it has nothing else (a
+corrective prompt that forbade shell reads bricked its retry outright).
+Prompts for read-heavy stages steer reads to simple commands: `cat`,
+read-only `git` subcommands, `rg`.
+
+On native Windows the read lane needs a one-time machine setup. Codex ≥0.149
+spawns every exec command through `pwsh.exe -Command`, and on read-only runs
+(no OS sandbox, approvals `never`) its exec policy forbids every command that
+no execpolicy allow-rule matches — the whole read lane fails
+deterministically, independent of model and prompt wording (measured
+2026-08-24 on 0.149.1; upstream main carries the same logic). Install the
+bundled read allowlist once per machine:
+`cp scripts/worker-read.rules "${CODEX_HOME:-$HOME/.codex}/rules/"`. Rules
+files do load in worker runs (`--ignore-user-config` covers only
+`config.toml`) and are evaluated against the pwsh-lowered inner commands, so
+the allowlisted reads (`git status/diff/log/show/rev-parse/ls-files/grep`,
+`cat`, `rg`, `ls`, `Get-Content`, `Get-ChildItem`, `Select-String`) run while
+everything else stays forbidden. Before dispatching a read-heavy stage on
+native Windows, check that file exists; without it, embed all material in the
+prompt (bounded diffs) or route the stage to the Claude lane.
+
+Two result-side guards, earned by a field run (2026-08-24) where a blocked
+sol @ max review returned `ok: true` with zero findings: a read-only worker's
+empty-but-valid result with `blocked by policy` rejections in its stderr is a
+lane failure — retry with embedded material or the Claude lane, never accept
+it as a clean "no findings" — and workers reviewing uncommitted state must be
+told to fail loudly rather than fall back to a remote (GitHub/MCP/web) copy
+of the repo, which silently reviews the wrong code.
 
 The worker is not a blank slate, and no flag makes it one:
 `--ignore-user-config` scopes to `config.toml` (its own help text says so),

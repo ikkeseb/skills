@@ -4,6 +4,36 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.23.2 — 2026-08-24
+
+orchestrate: the native-Windows read-only Codex lane died under codex
+0.149.1 and is restored via an execpolicy allowlist. Field signal (a
+fantasy-premier-league review dispatch, home PC): a sol @ max read-only
+worker returned schema-valid but empty results after every shell call was
+rejected `blocked by policy` — the 0.17.1-era `cat`/`sed` workaround no
+longer exists, because codex ≥0.149 wraps every exec command in
+`pwsh.exe -Command` (CLI-side, the model cannot avoid it) and its exec
+policy forbids all unmatched commands on read-only runs with no OS sandbox
+and approvals `never` (`exec_policy.rs`, verified in rust-v0.149.1 source
+and by controlled terra @ low probes: bare `cat`/`sed`/`git`/`rg`, native
+`Get-Content`/`Get-ChildItem`, `bash -lc`, `cmd.exe /c` — all rejected;
+`sandbox_permissions=["disk-full-read-access"]` does not help; upstream
+main carries the same logic). Fix: new bundled
+`scripts/worker-read.rules` — execpolicy allow-rules for read-only git
+subcommands, `cat`, `rg`, `ls`, `Get-Content`, `Get-ChildItem`,
+`Select-String` — installed once per machine into `$CODEX_HOME/rules/`;
+rules files load in worker runs (`--ignore-user-config` covers only
+`config.toml`) and are evaluated against the pwsh-lowered inner commands.
+Verified end-to-end through the helper on the home PC (all five probe
+reads executed with real output, envelope `ok: true`). `sed` deliberately
+left off the allowlist: the `sed -n` prefix would also allow the writing
+`sed -n -i`. codex-exec.md rewrites the stale cat/sed paragraph into the
+setup rule plus two result-side guards from the field run: empty-but-valid
+with `blocked by policy` stderr is a lane failure (retry embedded or
+Claude lane), and workers reviewing uncommitted state must fail loudly
+rather than fall back to a remote repo copy. codex-troubleshooting.md
+gains the 0.149.x stderr signature. Aggregate gate green.
+
 ## 0.23.1 — 2026-08-24
 
 orchestrate: seat-judged slimming pass over the 0.23.0 bundle — no routing,
