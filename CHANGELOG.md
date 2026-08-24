@@ -4,6 +4,38 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.23.1 — 2026-08-24
+
+orchestrate: seat-judged slimming pass over the 0.23.0 bundle — no routing,
+ranking, or mechanics changed. Input: an 86-item cut digest (sol @ high
+producer, opus @ high verifier); every cut was re-judged by the seat against
+the file text, the 9 rejected cuts stand untouched. SKILL.md: Worker lanes
+folded into Instrument (codex-exec's cross-ref updated), the read-only stage
+guard, placeholder/raw-count prompt rule, and schema-validity check moved to
+their owning Delegation-contract bullets, delivery-owner and idle bullets
+merged, one-off anonymity and the plain-Agent effort constraint moved in
+next to the one-off fallback, provider-filtering bullet replaced by a
+mandatory pre-delegation pointer to codex-exec.md (now the sole owner,
+absorbing the task-class exclusion and the suspected-reroute rule).
+model-map.md: Same-family collision merged into the routing verification
+rule, seat-selection and lane-naming prose deduplicated, fable/sonnet/
+cost-recalibration/separate-subscription calibration bullets retired as
+duplicates of the table and codex-exec (fable's frontend strength moved to
+its table row), vendor-independence rationale folded into the sol-as-primary
+bullet, opus 8→9 chronology dropped (this changelog and git history keep
+the provenance). codex-exec.md: recovery order fixed — the stdout-only
+envelope check now precedes the helper-death inference (removes a live
+contradiction); strict-mode lint boundary compressed to one line; dated
+incident narratives (0.144 pin, pwsh fan-out, Windows sandbox causal
+history) compressed to their live rules — CHANGELOG 0.17.0/0.17.3 and the
+helper header keep the narratives. Two conditional references split out:
+`references/imagegen.md` (relay authoring guide; the alpha-channel
+acceptance check stays in codex-exec) and `references/codex-troubleshooting.md`
+(0.144.x stderr signatures, lossy clean filters — pointed to from the
+failure classes and the write-harvest gate). Bundle: 8,727 → 7,398 words
+measured by `wc -w` (model-map −26 %, codex-exec −14 %); 498 words now load
+only on their branch. Aggregate gate green.
+
 ## 0.23.0 — 2026-08-24
 
 - `orchestrate` makes the mixed-lane Workflow the default shape: Claude and
