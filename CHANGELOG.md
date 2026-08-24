@@ -4,1153 +4,306 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.23.3 — 2026-08-24
+
+The changelog is rewritten to consumer grade: every entry now summarizes what shipped in a few lines, and the git log carries the full detail. No skill behavior changes.
+
 ## 0.23.2 — 2026-08-24
 
-orchestrate: the native-Windows read-only Codex lane died under codex
-0.149.1 and is restored via an execpolicy allowlist. Field signal (a
-fantasy-premier-league review dispatch, home PC): a sol @ max read-only
-worker returned schema-valid but empty results after every shell call was
-rejected `blocked by policy` — the 0.17.1-era `cat`/`sed` workaround no
-longer exists, because codex ≥0.149 wraps every exec command in
-`pwsh.exe -Command` (CLI-side, the model cannot avoid it) and its exec
-policy forbids all unmatched commands on read-only runs with no OS sandbox
-and approvals `never` (`exec_policy.rs`, verified in rust-v0.149.1 source
-and by controlled terra @ low probes: bare `cat`/`sed`/`git`/`rg`, native
-`Get-Content`/`Get-ChildItem`, `bash -lc`, `cmd.exe /c` — all rejected;
-`sandbox_permissions=["disk-full-read-access"]` does not help; upstream
-main carries the same logic). Fix: new bundled
-`scripts/worker-read.rules` — execpolicy allow-rules for read-only git
-subcommands, `cat`, `rg`, `ls`, `Get-Content`, `Get-ChildItem`,
-`Select-String` — installed once per machine into `$CODEX_HOME/rules/`;
-rules files load in worker runs (`--ignore-user-config` covers only
-`config.toml`) and are evaluated against the pwsh-lowered inner commands.
-Verified end-to-end through the helper on the home PC (all five probe
-reads executed with real output, envelope `ok: true`). `sed` deliberately
-left off the allowlist: the `sed -n` prefix would also allow the writing
-`sed -n -i`. codex-exec.md rewrites the stale cat/sed paragraph into the
-setup rule plus two result-side guards from the field run: empty-but-valid
-with `blocked by policy` stderr is a lane failure (retry embedded or
-Claude lane), and workers reviewing uncommitted state must fail loudly
-rather than fall back to a remote repo copy. codex-troubleshooting.md
-gains the 0.149.x stderr signature. Aggregate gate green.
+`orchestrate` restores read-only Codex workers on native Windows with Codex CLI 0.149.1 and later by bundling an exec-policy allowlist for safe read commands. Blocked empty results now fail the lane, and reviews of uncommitted work cannot fall back to a remote copy.
 
 ## 0.23.1 — 2026-08-24
 
-orchestrate: seat-judged slimming pass over the 0.23.0 bundle — no routing,
-ranking, or mechanics changed. Input: an 86-item cut digest (sol @ high
-producer, opus @ high verifier); every cut was re-judged by the seat against
-the file text, the 9 rejected cuts stand untouched. SKILL.md: Worker lanes
-folded into Instrument (codex-exec's cross-ref updated), the read-only stage
-guard, placeholder/raw-count prompt rule, and schema-validity check moved to
-their owning Delegation-contract bullets, delivery-owner and idle bullets
-merged, one-off anonymity and the plain-Agent effort constraint moved in
-next to the one-off fallback, provider-filtering bullet replaced by a
-mandatory pre-delegation pointer to codex-exec.md (now the sole owner,
-absorbing the task-class exclusion and the suspected-reroute rule).
-model-map.md: Same-family collision merged into the routing verification
-rule, seat-selection and lane-naming prose deduplicated, fable/sonnet/
-cost-recalibration/separate-subscription calibration bullets retired as
-duplicates of the table and codex-exec (fable's frontend strength moved to
-its table row), vendor-independence rationale folded into the sol-as-primary
-bullet, opus 8→9 chronology dropped (this changelog and git history keep
-the provenance). codex-exec.md: recovery order fixed — the stdout-only
-envelope check now precedes the helper-death inference (removes a live
-contradiction); strict-mode lint boundary compressed to one line; dated
-incident narratives (0.144 pin, pwsh fan-out, Windows sandbox causal
-history) compressed to their live rules — CHANGELOG 0.17.0/0.17.3 and the
-helper header keep the narratives. Two conditional references split out:
-`references/imagegen.md` (relay authoring guide; the alpha-channel
-acceptance check stays in codex-exec) and `references/codex-troubleshooting.md`
-(0.144.x stderr signatures, lossy clean filters — pointed to from the
-failure classes and the write-harvest gate). Bundle: 8,727 → 7,398 words
-measured by `wc -w` (model-map −26 %, codex-exec −14 %); 498 words now load
-only on their branch. Aggregate gate green.
+`orchestrate` reduces its instruction bundle from 8,727 to 7,398 words without changing routing or mechanics. It also fixes recovery ordering and moves image relay and troubleshooting guidance into conditional references.
 
 ## 0.23.0 — 2026-08-24
 
-- `orchestrate` makes the mixed-lane Workflow the default shape: Claude and
-  Codex stages render as labeled rows in one progress tree, with Codex stages
-  running through adapter agents. New background adapter for long Codex runs
-  (adapter starts the helper in the background and relays the envelope on
-  harness re-invocation; field-verified with a 14-minute sol run), joining
-  the foreground relay (short runs) and main-loop dispatch (no workflow).
-  `model-map.md` routing: gpt-5.6-sol is the primary execution workhorse,
-  opus is the Claude-lane workhorse and standard cross-family verifier, and
-  adapter stages pin sonnet @ low (superseding opus @ low). The shipped
-  `codex-worker` agent gains the sonnet pin, an explicit 600 s Bash timeout,
-  a 540 s helper-deadline default, and a machine-readable failure envelope.
-  `second-opinion` checks reviewer independence against the producer's model
-  family, not just the seat's. All mechanics measured this session: Workflow
-  `agentType` relay, schema composition at both layers (a typed stage can
-  return its payload as a JSON string; a server-enforced schema can still
-  arrive missing a required key), background re-invocation inside a Workflow
-  stage, and sonnet relay discipline.
+`orchestrate` makes mixed Claude and Codex workflows the default and adds a background adapter for long Codex stages. The model map assigns gpt-5.6-sol to primary execution, opus to Claude work and cross-family review, and sonnet at low effort to adapter stages. `second-opinion` now checks independence from the producer's model family.
 
 ## 0.22.8 — 2026-08-24
 
-- `context-audit` treats write-back as a first-class placement cost: skill
-  extraction is recommended only when the content is documented stable or
-  updates already flow through a mechanical workflow the document sits in;
-  unknown stability keeps content on the living surface. Auto-loading proves
-  reading, not write-back, and does not qualify. From the Nuez field
-  measurement: 34 commits touched the extracted lab domain over seven weeks
-  while its skill body received zero content updates — new knowledge landed
-  on the always-on surfaces instead.
+`context-audit` treats write-back as a placement cost. It recommends extracting content into a skill only when that content is stable or already maintained by a mechanical update workflow.
 
 ## 0.22.7 — 2026-08-23
 
-- `handoff` restores complete continuity after the 0.22.3 trim made complex
-  field outputs too terse. It keeps temporary-file delivery, focused checks
-  and writer-side uncertainty labels, while again reconstructing research,
-  decisions, rejected paths and the wider goal. Research-heavy work names its
-  working documents with checked durability, and multi-session work
-  distinguishes a closed session loop from an active workstream. Links carry
-  interpretation instead of replacing it; simple tasks remain short without
-  imposing a word floor.
+`handoff` restores fuller continuity for complex work while keeping verified temporary-file delivery. Handoffs now cover research, decisions, rejected paths, working-document durability, and the wider goal without forcing simple tasks to be long.
 
 ## 0.22.6 — 2026-08-23
 
-- `context-audit` gains a contradiction flag (two live documents state one
-  fact differently; find the deployed truth, name one owner, align the rest)
-  and a proof rule for phase 2: every environment fact a draft asserts is run,
-  not read about, including the suite the draft names as the verifier. From
-  the first field run, where both a doc contradiction and two stale tests
-  surfaced.
+`context-audit` flags contradictory live instructions and requires environment claims in proposed drafts to be checked by running the relevant commands or suites.
 
 ## 0.22.5 — 2026-08-23
 
-- `context-audit` leads with its procedure and runs in two phases: the
-  read-back, verdict and grouped classification come first, draft files only
-  after the user has chosen a direction. Two new review flags, weak pointer
-  and environment cache, mark lines to rewrite, inline or delete.
+`context-audit` splits reviews into two phases: verdict and classification first, then draft changes after the user chooses a direction. New weak-pointer and environment-cache flags identify content to rewrite, inline, or remove.
 
 ## 0.22.4 — 2026-08-23
 
-- The Excalidraw test suite uses a deterministic non-browser executable for
-  its unavailable-PNG branch. Repository checks no longer launch an installed
-  GUI browser inside an agent sandbox, which caused visible macOS crash dialogs.
+The Excalidraw test suite uses a deterministic executable for its unavailable-PNG branch and no longer launches an installed GUI browser during repository checks.
 
 ## 0.22.3 — 2026-08-23
 
-- `handoff` saves a verified copy in the operating system's temporary
-  directory and returns the same paste-ready snippet. It no longer needs the
-  old persistent handoff directory or its cleanup loop. Its shorter contract
-  tailors the handoff to a supplied next-session focus, links durable artifacts
-  instead of duplicating them, and labels unchecked exact boundaries as
-  unverified.
+`handoff` saves a verified copy in the operating system's temporary directory and returns the same paste-ready snippet. It removes the persistent handoff directory and tailors content to the next session's focus.
 
 ## 0.22.2 — 2026-08-23
 
-- `history-audit` identifies Codex spawned threads by
-  `payload.source.subagent` and reports exclusion counts, avoiding the desktop
-  app's misleading `thread_source` value on main sessions.
-- `second-opinion` requires citations for repository facts without forcing
-  citations onto prompt-only reasoning.
-- `orchestrate` treats transparency as a verified image property and rejects
-  RGB files, fully opaque alpha, or painted checkerboards instead of retrying
-  the same relay.
-- `pretty-html` forces the light palette and a white body for every explicit
-  theme state under print media.
+`history-audit` identifies Codex spawned threads correctly and reports exclusion counts. `second-opinion` requires citations for repository facts. `orchestrate` validates real image transparency, and `pretty-html` forces a light palette and white background when printing.
 
 ## 0.22.1 — 2026-08-22
 
-`orchestrate` model map: gpt-5.6-sol taste 6 → 7 and its default role now
-includes taste/review work; fable is reserved for when reading underspecified
-intent is the bottleneck.
+The `orchestrate` model map raises gpt-5.6-sol's taste score and adds taste and review work to its default role. Fable remains reserved for underspecified intent.
 
 ## 0.22.0 — 2026-08-22
 
-`pretty-slides` and `prettier-html` become Codex-supported: each gains an
-`agents/openai.yaml` (explicit invocation only) and joins the Codex manifest,
-bringing the Codex set to eleven. Their "Claude Code only" rationale was the
-unverified browser-automation dependency; both skills already state the
-no-automation fallback in their bodies.
+`pretty-slides` and `prettier-html` become available through Codex as explicitly invoked skills, bringing the Codex-supported set to eleven.
 
 ## 0.21.2 — 2026-08-21
 
-`handoff` no longer writes a file or prunes a handoffs directory: the
-paste-ready snippet in the reply is the whole deliverable (Seb's call,
-2026-08-21 — the saved copies were never read back, and the write plus
-readback plus cleanup cost three steps per handoff). Description,
-`openai.yaml` and README row updated; body loses the "Write the handoff"
-section.
+`handoff` becomes reply-only. The paste-ready snippet is the complete deliverable, with no saved file or handoff-directory cleanup.
 
 ## 0.21.1 — 2026-08-20
 
-`disable-model-invocation` is removed from all 16 SKILL.md files and banned
-again in check-repo, reverting the 0.20.0/0.21.0 policy. The 0.20.0 canary
-measured the wrong properties: TUI picker visibility and headless `/name`
-dispatch both survive the flag, but the interactive model's own skill list
-does not. With the flag present, the 16 skills were absent from that list on
-the home PC (Claude Code 2.1.237) and a typed `/second-opinion` was unknown
-until `/reload-plugins`; the instant the flags left the working tree, all 16
-reappeared in the running session. Same failure as July (0.7.5), same
-upstream issues (#26251, #38969, #43875), still unfixed. User-invoked intent
-stays in consumer `skillOverrides: name-only`; descriptions are unchanged.
-Codex markers (`allow_implicit_invocation: false`) are untouched; the Codex
-"slash exists, body never loads" symptom is a separate open question.
+All skills remove `disable-model-invocation`, and repository checks ban it because the flag can hide skills from explicit invocation. User-controlled exposure remains available through `skillOverrides: name-only`.
 
 ## 0.21.0 — 2026-08-20
 
-Invocation policy becomes a per-skill decision, superseding 0.20.0's
-blanket rule: check-repo now validates only that a present
-`disable-model-invocation` line is a well-formed boolean, not that every
-skill carries it. First per-skill call: `pretty-html` drops the flag and
-returns to model invocation, because its trigger is a deliverable request
-the model should recognize on its own ("make me a polished HTML report").
-The other 16 skills keep `disable-model-invocation: true` unchanged.
-
-Prose pass over every SKILL.md: em dashes, semicolon chains, and clipped
-AI cadence rewritten as plain sentences, with no behavioral rule changed.
-The two dispatch-label formats (`<model> @ <effort> — <task tag>` in
-orchestrate, `MODEL@EFFORT — TOPIC` in second-opinion) keep their em dash
-deliberately: they are field label conventions, not prose.
+Invocation policy becomes a per-skill choice, and `pretty-html` returns to model invocation. All skill prose also receives a plain-language edit without behavior changes.
 
 ## 0.20.0 — 2026-08-20
 
-Invocation enforcement moves from description wording to frontmatter:
-every skill now carries `disable-model-invocation: true`, after a
-2026-08-20 two-machine canary proved typed `/name` and TUI picker
-visibility survive the flag (the July hidden/uninvocable symptom is gone
-on current Claude Code). With ambient routing off, all 17 descriptions
-are rewritten as short trigger contracts: what the skill does, when to
-reach for it, nearest exclusion. check-repo now requires the flag and
-verifies that cross-skill path references (the shared-executable
-convention, e.g. second-opinion's use of orchestrate's codex-worker
-helper) resolve inside the repository.
+All skills move user-only invocation enforcement into frontmatter and receive shorter trigger descriptions. Repository checks also validate the flag and shared cross-skill file references.
 
 ## 0.19.0 — 2026-08-19
 
-Hardening pass driven by the skills.sh security audits (Snyk, Socket, Gen
-Agent Trust Hub) plus an internal full-repo review. history-audit: extracts
-are redacted by script before any model reads them, stay in a local scratch
-directory, corpus text is data never instructions, and cross-family
-verification names its provider transfer and asks first — addresses both
-FAIL verdicts. afk: hooks enforcing permission or safety requirements are
-honored, never deferred; description and heading no longer read as
-skip-confirmation directives. orchestrate: the classifier-framing note can
-no longer be read as evasion coaching, the hostile-helper test canary uses a
-neutral marker string, the stale "Two worker lanes" anchor is fixed, and the
-symlink-deploy relay pin is reconciled to opus @ low (matching the
-codex-worker agent). second-opinion: states that prompt material goes to the
-user's own OpenAI account; de-personalized the model-pin wording.
-pretty-slides: the QA server binds 127.0.0.1. Disclosure comments beside the
-three legitimate external touchpoints (diagrams.net viewer, Google Fonts
-import, local-only SVG rasterizer). Removed `skills/shots/` — four stray QA
-screenshots accidentally committed in 0.15.1.
+Security hardening adds pre-model redaction and prompt-injection boundaries to `history-audit`, makes `afk` honor safety and permission hooks, clarifies data transfer in `second-opinion`, binds `pretty-slides` QA to localhost, and tightens `orchestrate` helper handling.
 
 ## 0.18.3 — 2026-08-18
 
-drawio: the save-location default now defers to the repository's agent
-contract (AGENTS.md or equivalent) when it specifies a deliverables
-location, falling back to the cwd otherwise. Found downstream: the bare
-cwd default wrote diagrams into directories a consumer repo's output
-routing actively deletes. excalidraw checked and left unchanged — it
-names no save location, so it already falls through to the repo contract.
+`drawio` follows the consumer repository's declared deliverables location when one exists and otherwise saves in the current directory.
 
 ## 0.18.2 — 2026-08-18
 
-README: link to the skills.sh listing where all 17 skills can be browsed,
-without presenting its install-count telemetry as a quality signal.
+The README links to the skills.sh listing where all 17 skills can be browsed.
 
 ## 0.18.1 — 2026-08-18
 
-excalidraw: the scene-spec builder now rejects unknown fields as build
-errors per object type (root, sections, nodes, edges, lines, texts) — a
-typo like `label` for `text` previously built an unlabeled node with zero
-warnings. Malformed collections (`nodes` as an object, a `null` item) fail
-with clean errors instead of raw TypeErrors, and the 0.18.0 font check no
-longer accepts prototype-chain values (`"font": "toString"`). Closed
-vocabulary documented in the scene-spec escape hatch; regression tests for
-all paths; adversarially reviewed key lists against the compiler.
+The `excalidraw` scene builder rejects unknown fields, malformed collections, null items, and invalid inherited font values with clear build errors.
 
 ## 0.18.0 — 2026-08-18
 
-drawio: bundle `scripts/render-drawio.mjs`, a headless PNG renderer using
-Playwright Chromium plus the official diagrams.net viewer (faithful sketch
-strokes and label placement; multi-page, `--pages`/`--scale`/`--bg` flags,
-compressed-content detection, tolerant Playwright discovery). SKILL.md's
-visual-verification section now calls the script instead of describing a
-hand-rolled viewer page, adds inspection-honesty rules (full-resolution
-first, degraded reporting when the harness limits fidelity, no visible
-image = failed check), and gains an "Opening in a browser" section (raw XML
-is not a rendering bug; `#R` URL route with the Windows command-line-length
-workaround; consent rule applies). excalidraw: scene spec gains an optional
-`"font": "sans"` switch for all non-code text — hand-drawn Excalifont stays
-the default — plus the same inspection-honesty line. Ported from
-improvements field-proven in a downstream clone of these skills; renderer
-and font path re-verified on this machine (real render inspected, both test
-suites green).
+`drawio` adds a bundled headless PNG renderer with multi-page, scale, and background options plus clearer visual-inspection guidance. `excalidraw` adds an optional sans-serif font mode while keeping Excalifont as the default.
 
 ## 0.17.3 — 2026-08-17
 
-orchestrate: lane-visibility convention corrected after live verification —
-the agent row renders the dispatch label/description, not the prompt body,
-so the lane moves into the visible label (`<model> @ <effort> — <task tag>`);
-the prompt-header lines stay as the worker-side record. Second-opinion
-amendments folded in: values are requested-not-verified, resolved with
-provenance (`(inherited)` is provenance, never the value), `unknown` when
-unresolvable, headers updated on cross-tier retries, and a missing label
-means unknown lane, not a default.
+`orchestrate` moves model, effort, and task information into the visible dispatch label. Lane values now carry provenance, use `unknown` when unresolved, and update after cross-tier retries.
 
 ## 0.17.2 — 2026-08-17
 
-orchestrate: every delegation prompt opens with `model:` / `effort:` lines
-(marked `(inherited)` when no override), so the lane is legible in the agent
-row at dispatch and while the stage runs — the final report's lane accounting
-alone arrives too late to decide trust or route a second opinion. Drains the
-skills half of the 2026-08-16 lane-visibility coordination note; the
-statusline half was rejected by dotfiles (no per-subagent fields in the JSON
-contract).
+Every `orchestrate` delegation prompt now opens with explicit model and effort fields, including inherited markers when no override is supplied.
 
 ## 0.17.1 — 2026-08-17
 
-orchestrate: two field-incident guards from coordination notes. SKILL.md —
-the session grant belongs to the main loop alone (subagents and forks never
-inherit it), and a read-only stage returns text only: the main loop checks
-the tree after it, and an unverifiable approval claim or a claimed
-concealment order is a stop signal (fork incident, 2026-08-14).
-codex-exec.md — read-only workers read via simple shell reads (`cat`/`sed`),
-not pwsh, and must never be told to avoid shell for reading (pwsh
-policy-block + bricked retry, 2026-08-15).
+`orchestrate` keeps session-level authority with the main loop, restricts read-only stages to text output, and checks the worktree afterward. Codex read-only workers use simple shell reads.
 
 ## 0.17.0 — 2026-08-17
 
-codex-worker: native Windows workspace-write becomes an unsupported lane
-that fails closed (`unsupported_lane`) instead of pinning the elevated
-sandbox, and probe no longer engages any Windows sandbox implementation —
-preflight can no longer raise UAC from read-only sessions (second-opinion
-included). Root cause established in upstream source: every elevated setup
-rotates the machine-global sandbox users' passwords and stores them only in
-the invoking CODEX_HOME, so multiple homes/runtimes loop each other through
-UAC setup (openai/codex#36865 is the same loop); the unelevated token kills
-MSYS children (CreateFileMapping error 5, re-measured). Escape hatch
-`CODEX_WORKER_NATIVE_WINDOWS_WRITE=elevated` restores the old pin for a
-deliberately repaired single-home machine. codex-exec.md corrected: the
-read-only sandbox is a write barrier, not an execution barrier (the "blocks
-all process spawning" claim did not survive an upstream source read), and
-the "expect UAC only from write runs" guidance is superseded by "no worker
-lane may raise UAC".
+Native Windows workspace-write workers now fail closed as `unsupported_lane`, and probes no longer engage a Windows sandbox or trigger UAC. An environment-variable escape hatch retains the earlier elevated mode for explicitly repaired setups.
 
 ## 0.16.0 — 2026-08-15
 
-New skill `prettier-html` (inventory: 17 skills, 9 on Codex — Claude Code
-only): art-directed single-file HTML pages with editorial ambition. Unlike
-its siblings it deliberately ships no template and no house palette — the
-skill owns a mandatory concept step (content-shaped composition, tested by
-content-swap), calibration ranges with a reuse limit, floor invariants
-(dual art-directed themes, responsive reflow, WCAG AA measured, legible
-print), two robust wiring snippets (theme boot/toggle; reveal-through
-observer that survives jump scrolls), and measured traps. Verified through
-three blind builds plus two real-brief builds across opus and gpt-5.6-sol,
-and a sol@max adversarial review; every fix in the shipped text cites a
-defect one of those runs actually produced. Codex support deferred: both
-Codex-lane builds shipped visual defects their sandbox could not see.
+New skill `prettier-html` creates art-directed single-file HTML without a fixed template or house palette. It includes a required concept step, responsive dual themes, measured WCAG AA contrast, print support, reusable wiring, and limits on repeated visual patterns.
 
 ## 0.15.1 — 2026-08-15
 
-pretty-slides: remove the title slide's decorative "drawn band" from the
-engine template. A five-deck blind diversity test showed every agent
-faithfully copying the placeholder art — a rail with unlabeled dots that
-reads as a broken timeline. The hero band is now explicitly optional and
-image-only, and the patterns reference states the rule: decorative filler
-must never mimic data visualization. Lesson recorded: example content in
-a template is normative in practice — agents copy what they see.
+`pretty-slides` removes the decorative drawn band from its title-slide template. Hero bands are now optional and image-only, and decorative elements must not resemble data visualizations.
 
 ## 0.15.0 — 2026-08-15
 
-New skill `pretty-slides` (inventory: 16 skills, 9 on Codex — Claude Code
-only for now): presentations as one self-contained HTML file, from a bundled
-engine template plus a build step that inlines fonts and images. Keyboard-only
-navigation, eleven slide patterns with pattern-bound motion (direction-aware
-transitions, plate unveils, drawn rules, count-up numerals, one springing
-identity mark per slide), a re-skinnable token block with a dark editorial
-default, and a deterministic `?qa=1` mode that makes screenshot QA settle.
-The engine is a generalized port of a work-repo deck engine; all
-project-specific content was replaced with a self-documenting example deck.
-Codex support deferred until the QA gate has a proven harness-neutral path.
+New skill `pretty-slides` creates self-contained HTML presentations with inlined assets, keyboard navigation, eleven slide patterns, pattern-specific motion, reusable design tokens, and a deterministic screenshot-QA mode.
 
 ## 0.14.0 — 2026-08-14
 
-Orchestrate: one explicit invocation now stands for the rest of the session.
-`/orchestrate <task>` still runs the named task, but afterwards the agent may
-route later tasks that clearly pass the split through the skill again without
-a fresh invocation (Workflow opt-in included), announcing each re-entry with
-`[orchestrate]`. `sustained` remains the mandatory session posture; unattended
-work holds the standing discretion to single, logged delegations. Explicit
-invocation stays the only entry point — the skill is still never
-model-triggered from its description.
+One explicit `orchestrate` invocation now grants session-long routing discretion. Later qualifying tasks can re-enter the skill with an `[orchestrate]` announcement, while explicit invocation remains the only initial entry point.
 
 ## 0.13.0 — 2026-08-12
 
-Two new skills, both Codex-supported (inventory: 15 skills, 9 on Codex):
-
-- `pretty-html`: polished, self-contained HTML deliverables — single file,
-  dual theme with a persistent toggle, generous spacing, print-friendly —
-  with a bundled starting template. A de-personalized rewrite of a
-  previously personal skill, published here as the canonical version
-  (vault coordination note 2026-08-11).
-- `history-audit`: mines the machine's agent-session history (Claude Code
-  transcripts, Codex session logs) for correction events, counts failure
-  modes per model × harness with deterministic denominators, and proposes
-  instruction lines one by one, each citing its source session. Detects
-  which corpora exist and reports an absent one as unknown, never zero;
-  cross-family verification only when a second lane exists (vault
-  coordination note 2026-08-12).
-
-Orchestrate: the delegation contract gains a secrets boundary — stages that
-may touch live credentials are briefed to never materialize secret values
-into files, prompts, logs, or returned output; inspect on the owning host,
-return filtered results, stop and ask when a value would have to move
-(vault coordination note 2026-08-12, from a homelab field incident).
+New skills `pretty-html` and `history-audit` add polished self-contained HTML reports and evidence-based analysis of agent-session histories. `orchestrate` also adds a boundary that keeps live secrets out of files, prompts, logs, and returned output.
 
 ## 0.12.3 — 2026-08-12
 
-Orchestrate: the Codex worker helper's write probe now converts its shell
-child to a native Windows path (`cygpath -w`) before handing it to
-`codex sandbox`. `type -P bash` yields an MSYS path (`/usr/bin/bash`) that
-the Windows sandbox's `CreateProcessAsUserW` cannot resolve, so every probe
-spawn failed and read as write-denied — a false negative diagnosed in the
-field 2026-08-12 (the identical test through the native path wrote
-successfully). Non-Windows platforms are unchanged.
+The Codex worker converts its shell child to a native Windows path before running the write probe, preventing valid write support from being reported as unavailable.
 
 ## 0.12.2 — 2026-08-11
 
-Orchestrate: the Codex worker helper now pins the Windows elevated sandbox
-implementation on write runs only. Read-only runs go unpinned — no OS sandbox
-engagement, CLI-policy-enforced read-only — because the elevated sandbox's
-setup re-runs on every engagement while the CLI's setup-marker bug is live
-(the marker is written unreadable by its own owner, upstream issue), turning
-every run into a UAC elevation prompt; measured working with zero sandbox
-events. Write runs keep the pin and its UAC cost. `codex-exec.md` documents
-the split and adds a field observation: a passing probe does not clear the
-lane — the Windows sandbox has degraded underneath a `sandbox_write: true`
-probe within the minute.
+The Codex worker uses the elevated Windows sandbox only for write runs and leaves read-only runs unpinned. Documentation also warns that a passing probe does not guarantee the sandbox will remain healthy.
 
 ## 0.12.1 — 2026-08-11
 
-Orchestrate: routed a field signal from an image-generation relay session
-(2026-08-05) into the references, re-verified end-to-end through the helper
-2026-08-11. `model-map.md` § Routing rules gains a relay-stage exception — a
-worker whose real labor happens in a separate model it merely prompts is
-pinned to `gpt-5.6-sol` @ `medium`, gated on the relay target actually being
-available and never diluting effort-by-kind for stages that do their own
-labor. `codex-exec.md` gains the matching dispatch section: send context and
-intent (the relay develops the final image prompt itself), generation works
-read-only with the image landing in `$CODEX_HOME/generated_images/`, and for
-raster edits the manual pixel-edit fallback is explicitly forbidden (hedged
-prompts steered workers into it).
+`orchestrate` adds a dedicated image-generation relay route using gpt-5.6-sol at medium effort. Relay prompts carry context and intent, run read-only, and forbid manual pixel-edit fallbacks for raster edits.
 
 ## 0.12.0 — 2026-08-11
 
-Four skills tightened after a fresh-eyes audit (isolated cross-family ideal
-design for verify-claims; per-skill cold reviews for the rest; every finding
-re-verified against the source before landing):
-
-- **verify-claims:** the description no longer disambiguates against a
-  nonexistent `verify` skill; a coverage line keeps the tally honest when an
-  evidence tier is unavailable (offline sessions), the lookup budget runs out,
-  or a directory target is partially audited; claims are judged *as worded*
-  (imprecise-but-close is ❌ with the correction, ambiguous terms are ❓ with
-  the gap named); ✅ requires a source in a position to know; negative and
-  universal claims need scope coverage; session checks may be cheaply re-run
-  (settling current state, not past actions); empty/invalid targets and
-  unattended large targets have defined behavior.
-- **handoff:** the reply is now a fixed four-part contract with a defined slot
-  for the `handover:` recommendation and cleanup reporting on success, not
-  only on failure; the disclaimer's placement and English-verbatim status are
-  explicit; readback verification has a mismatch branch instead of promising
-  an infeasible byte comparison; `$CLAUDE_CONFIG_DIR` is respected
-  symmetrically with `$CODEX_HOME`, with a defined fallback for unknown
-  harnesses; the 30-day pruning is declared in every user-facing description.
-- **suggest-loop:** the output spec now matches its own example (four fields,
-  including the hard bound and its self-paced assumption); refusals have a
-  defined block shape; caps are sized to the gate's measured runtime, with a
-  no-progress stop; a target-establishing step opens the recipe; the
-  memory-distrust rationale no longer depends on a training-cutoff claim that
-  newer models falsify; the duplicated Scope section and the `.claude/loop.md`
-  aside are gone.
-- **context-audit:** "target harness" is derived from repo evidence, not
-  assumption; the no-op verdict has its own output contract; the SCOPE axis is
-  pure reach with sacred/dead as flags, restoring the claimed orthogonality;
-  enforcement-superseded deletion is scoped to non-critical rules (critical
-  guardrails keep prose plus enforcement); hit-rate gets an estimation method
-  and one unit; the Claude-side invocation check names its mechanisms; the
-  support matrix reaches the read-back.
-
-Resolved during the release: `context-audit` deliberately ships no
-`allowed-tools` backing its analysis-only promise, because the field
-pre-approves tools rather than restricting them (verified against the vendor
-skills documentation) — it cannot express that guarantee, so the promise stays
-prose-enforced. The finding is now a repo convention in `AGENTS.md`.
+`verify-claims` adds honest coverage reporting and scope-aware verdicts. `handoff` standardizes output and cleanup, `suggest-loop` adds measurable bounds and stop rules, and `context-audit` improves harness detection, no-op verdicts, and scope classification.
 
 ## 0.11.4 — 2026-08-07
 
-Codex worker: a broken OS sandbox no longer hides behind a healthy envelope
-(field 2026-08-07, codex 0.146.1 on Windows — the sandbox setup helper failed
-to launch for every exec while probe reported `write_ready: true` and a
-read-only run returned `ok: true` answered from the prompt alone):
-
-- **Probe gates on wholesale sandbox failure.** `codex sandbox` dying with a
-  sandbox-failure signature on stderr now yields `sandbox_write: false`
-  (gating), no longer the non-gating null reserved for unmeasurable probes.
-- **Runs fail closed on a dead exec layer.** A helper-launch failure in the
-  worker's stderr log classifies the run as `sandbox_denied` for every sandbox
-  mode, read-only included. Matched against the CLI's own tracing, not tool
-  output, so a worker merely reading about the failure cannot trip it.
+Codex probes now report wholesale sandbox failures as unavailable write support, and worker runs fail closed as `sandbox_denied` when the execution layer cannot launch.
 
 ## 0.11.3 — 2026-08-05
 
-Two field guards from orchestrate runs, drained from the vault coordination
-inbox (2026-08-05 note):
-
-- **Model map:** informal Codex model names resolve through the delegate
-  table, and an ID missing there is read from `~/.codex/config.toml` — never
-  guessed or transcribed from speech (a dictated `sol-5.6` failed as `config`;
-  the real ID is `gpt-5.6-sol`).
-- **Orchestrate field guard:** Workflow `isolation: 'worktree'` has been
-  observed basing worktrees on session-start HEAD, so mid-session stages can
-  miss same-session commits; when those matter, the main loop creates the
-  worktree itself at current HEAD and passes the path. Also noted: in-repo
-  worktree hosting (`.claude/worktrees/`) needs a test-glob exclusion.
-
-The same note's Windows write-lane signal was rejected as already shipped in
-0.11.2 (measured write probe, `sandbox_denied`, `workspace_changed`).
+`orchestrate` resolves informal Codex model names from its model map instead of guessing. It also avoids stale Workflow worktrees by creating one from the current HEAD when same-session commits matter.
 
 ## 0.11.2 — 2026-08-04
 
-- **The Codex write lane works on native Windows.** `--ignore-user-config`
-  also dropped the user's `[windows] sandbox` choice, and with no sandbox
-  implementation selected, `codex exec` degraded `workspace-write` to
-  read-only + approvals=never — every write rejected behind an `ok` envelope.
-  The worker now pins `windows.sandbox="elevated"` on native Windows
-  (unelevated deliberately avoided: MSYS/Cygwin children crash under its
-  restricted token).
-- **`probe` measures write capability instead of inferring it.** New
-  `sandbox_write` field from one unbilled write through the real OS sandbox
-  (`codex sandbox`); a denial gates `write_ready`, an unmeasurable test
-  reports `null` and gates nothing.
-- **Empty-handed and sandbox-degraded write runs are visible.** New
-  `workspace_changed` envelope field (post-run tree state, taken under the
-  workspace lock); a write run whose stderr proves sandbox degradation fails
-  closed as the new `sandbox_denied` error class instead of reporting `ok`.
-- **Model map:** `fable` effort is medium/high only — xhigh removed from its
-  row.
+The Codex write lane gains native Windows support, a real write-capability probe, `workspace_changed` reporting, and fail-closed handling for degraded sandboxes. The model map limits fable to medium or high effort.
 
 ## 0.11.1 — 2026-08-03
 
-- **The Codex worker's verdict-shaping text tools resolve like its other
-  dependencies.** `grep`, `head`, `tail`, `tr`, `cut`, and `awk` now resolve
-  via `type -P` (the same direct-executable contract as `codex`, `git`, and
-  `jq`), so an exported same-name shell function can no longer blank the
-  contract-flag probe, hide marked index entries, or rewrite error
-  classification. Remaining bare utilities (`ps`, `find`, `ls`, coreutils file
-  ops) are documented accepted surface.
-- **Restored two font pairings that fell out of `pretty-pdf`'s reference in
-  the 0.11.0 rewrite:** Source Sans 3 / Source Serif 4 (editorial classic) and
-  Sora / Bitter (statement opener).
+The Codex worker resolves verdict-shaping text tools as direct executables to prevent shell-function overrides. `pretty-pdf` restores its Source Sans 3 with Source Serif 4 and Sora with Bitter font pairings.
 
 ## 0.11.0 — 2026-08-03
 
-- **Orchestration is smaller and its Codex lane is harder to misuse.** The
-  first-load orchestration instructions are substantially shorter without
-  changing the model map. The worker now requires an explicit model or
-  `default` sentinel, bypasses shell wrappers for `codex`, `git`, and `jq` alike,
-  reports every write dependency,
-  and makes `result.json` the sole authoritative terminal envelope. A
-  provider-free black-box suite covers its Claude-facing invocation flags,
-  result envelopes, provider failure and write gates. The Claude transport adapter now
-  uses `opus` at low effort; `sonnet` remains reserved for the rare conductor
-  seat defined by the unchanged routing table.
-- **Context and unattended workflows preserve reach and authority.**
-  `context-audit` now measures the target's actual Claude/Codex invocation
-  policy before moving mandatory rules. `afk` cannot grant commit, install,
-  push or PR authority; `suggest-loop` requires both a measurable result and a
-  hard run bound; `verify-claims` handles incomplete session history honestly;
-  `handoff` verifies the new handoff before best-effort cleanup.
-- **Artifact skills gain deterministic and visual gates with less context.**
-  `pretty-pdf` moves executable CSS to an asset, loads one document template,
-  and requires page rendering plus inspection. `drawio` gains an offline XML
-  reference and validator — accepting the `<object>`/`<UserObject>` wrappers
-  draw.io itself writes — and asks before external web inspection.
-  `excalidraw` makes its palette machine-readable and tests theme defaults,
-  section-edge rejection, browser discovery and render failure behavior.
-  Upgrade note: scenes built by earlier versions with an arrow bound to a
-  section now fail `validate`/`check` — rebind the arrow to a node; the files
-  themselves still open fine in Excalidraw.
-- **Repository validation matches the repository.** A single check covers
-  skill/manifest inventories, explicit Codex invocation metadata, Bash syntax,
-  runner and diagram tests, helper resolution, Claude marketplace and plugin
-  validation, and diff hygiene. README inventory is split by harness and
-  shipped shell files are pinned to LF.
+`orchestrate` becomes shorter and makes the Codex lane require explicit models, direct dependencies, and authoritative result envelopes. Context and unattended skills clarify authority and completion bounds. PDF and diagram skills gain stronger deterministic and visual checks, and one repository command now validates the full plugin surface.
 
 ## 0.10.9 — 2026-08-03
 
-- **codex-worker.sh: fsmonitor override extended to the write-gate's
-  `ls-files` call.** A global `core.fsmonitor=true` could hang the skip-worktree
-  check past the run deadline (checked only after synchronous git calls); the
-  preceding `git status` already carried the override. Regression-verified
-  against a `fsmonitor=true` repo: the gate now completes in under 2 s and
-  still refuses skip-worktree state. Field origin: dotfiles coordination note
-  2026-08-02, reproduced in a vault follow-up 2026-08-03.
+The Codex worker disables fsmonitor for its marked-index check, preventing repositories with `core.fsmonitor=true` from hanging the write gate.
 
 ## 0.10.8 — 2026-08-02
 
-- **Model map recalibrated for the GPT-5.6 price cut** (luna −80%, terra
-  −20%, effective 2026-07-30, also reflected in Codex subscription credits):
-  terra cost 7 → 8 and gains small reviews / simple well-specified coding,
-  tried before luna; luna cost 9 → 10 with default effort raised to
-  high (xhigh/max on writes); sonnet's delegate niche settled as none —
-  orchestration seat only. Luna's `max` effort support field-verified through
-  the worker helper, superseding the earlier xhigh ceiling. New calibration
-  note: cheap-tier delegates run at higher effort than their price suggests,
-  under tight specs plus verification.
+The `orchestrate` model map updates for GPT-5.6 pricing changes. Terra gains small reviews and simple coding, luna moves to higher effort, and sonnet remains a conductor rather than an execution delegate.
 
 ## 0.10.7 — 2026-08-02
 
-- **orchestrate's freshness bullet no longer demands a diff hash
-  unconditionally.** "Base SHA plus diff hash" was impossible to follow when
-  no diff was embedded; now "plus a diff hash when a diff was embedded",
-  matching second-opinion's wording. Found by an end-to-end verification run
-  of the 0.10.5–0.10.6 changes through the skill itself.
+`orchestrate` requires a diff hash only when the reviewed prompt actually embeds a diff.
 
 ## 0.10.6 — 2026-08-02
 
-- **Background Codex jobs are now identifiable in the shell UI.** Dispatch
-  commands in `second-opinion` and orchestrate's codex-exec reference begin
-  with a no-op label line (`: "second-opinion MODEL@EFFORT — TOPIC"`) — the
-  shell list shows a job by its command's first line, which used to be a
-  temp-path assignment. `codex-worker.sh` additionally prints a one-line
-  start banner to stderr (model, effort, sandbox, run dir) so a running job's
-  output view shows what is running instead of "No output available"; stdout
-  remains the clean envelope channel, verified by the helper self-test.
+Background Codex jobs now show model, effort, and topic labels in the shell UI, while worker start banners identify the active run without contaminating the JSON result channel.
 
 ## 0.10.5 — 2026-08-01
 
-- **Background reviews gain a fresh/stale contract** in `second-opinion` and
-  `orchestrate`. Field signal (a backgrounded xhigh review harvested against a
-  diff superseded minutes after dispatch) showed the dangerous cost is not the
-  wasted run but stale findings that look fresh. Dispatch stays ungated; the
-  dispatcher records the reviewed artifact's identity, and harvest declares
-  fresh, stale, or unknown before findings are used. Stale reviews keep their
-  unaffected findings; only findings depending on changed material are
-  revalidated.
-- **`second-opinion` pins `gpt-5.6-sol`** instead of `--model default`
-  (maintainer hand-tracks vendor releases), accepts free-form per-call
-  effort/model overrides in the invocation, and fails loudly on an invalid
-  model or effort rather than silently falling back.
+`second-opinion` and `orchestrate` classify background review results as fresh, stale, or unknown before use. `second-opinion` also pins gpt-5.6-sol by default, accepts per-call model and effort overrides, and rejects invalid values.
 
 ## 0.10.4 — 2026-08-01
 
-- **`second-opinion` no longer kills a live review to fit Claude Code's
-  foreground Bash ceiling.** The caller now starts the existing helper as one
-  background job with an orchestrator-minted run dir, gives the worker its
-  normal one-hour safety ceiling, and harvests the atomic result envelope
-  exactly once. Field evidence invalidated the old 540-second policy: one
-  failed call stayed at `turn.started` until the wrapper deadline, while its
-  successful fresh call legitimately stayed at the same two-event prefix for
-  236 seconds. JSONL state changes are diagnostic evidence, never a heartbeat
-  or kill authority.
+`second-opinion` moves long reviews to background jobs with one-hour worker limits and a single authoritative result harvest, avoiding the foreground shell timeout.
 
 ## 0.10.3 — 2026-07-31
 
-- **`second-opinion` gains a follow-up rule.** A second round is a fresh call
-  with round 1 pasted as an explicit artifact beside the new evidence — never a
-  re-ask on disagreement alone, and never a continuation of the worker's own
-  thread. Closes a gap the skill left open: the lane runs `--ephemeral`, so
-  continuation was already impossible, but nothing said what a legitimate
-  follow-up looks like or why a fresh call is the better shape.
+A `second-opinion` follow-up now starts a fresh call with the previous response and new evidence supplied as explicit artifacts.
 
 ## 0.10.2 — 2026-07-31
 
-- **`drawio`'s optional render tier no longer reads as Playwright-only.** It
-  now names whatever browser automation the session already has — Playwright,
-  a Chrome integration, a browser MCP server — and keeps the Playwright load
-  call as the concrete example rather than the requirement. Behaviour is
-  unchanged where Playwright is present; what changes is that a session
-  holding only a Chrome surface no longer reads the whole tier as unavailable.
-  Brings the wording in line with the ladder `excalidraw` already carries.
+`drawio` can use any browser automation already available in the session for optional visual inspection, rather than requiring Playwright specifically.
 
 ## 0.10.1 — 2026-07-30
 
-- **`excalidraw` now says how to reach an official surface, not just that one
-  is required.** Step 5 carries an explicit ladder — a Playwright-based
-  browser surface already available in the session, then manual import, then
-  the degraded status as an honest end state — and a new
-  `references/native-inspection.md` holds the import recipe, the check that
-  separates a rendered canvas from an imported scene, and the per-invocation
-  consent wording for sending a diagram to excalidraw.com. Nothing is bundled
-  or installed; a session without a browser surface still stops at
-  `native visually unverified`.
+`excalidraw` adds a clear inspection ladder using an available browser, manual import, or an honest `native visually unverified` result. It never installs or bundles a browser.
 
 ## 0.10.0 — 2026-07-30
 
-- **`excalidraw` now treats native inspected pixels as the release gate in
-  both Claude Code and Codex.** A dependency-free Node CLI builds native
-  diagrams from a compact, inspectable scene specification; validates finite
-  geometry, IDs, image references, reciprocal text/arrow bindings, overlap,
-  common arrow crossings, canvas size, and container overuse; then emits a
-  lightweight layout diagnostic. The skill imports the delivered file into an
-  available official Excalidraw surface for actual visual approval, and
-  reports `native visually unverified` rather than treating its approximate
-  SVG as proof. No browser or heavyweight renderer is bundled or installed.
-- **The visual defaults are Excalifont on a black canvas.** The compact scene
-  format covers straight and curved routed arrows, arcs, structural lines,
-  rectangles, ellipses, diamonds, and regions; direct native JSON remains the
-  escape hatch for every other Excalidraw element.
-- **The stale Python/uv/CDN renderer and clipboard-paste handoff are gone.**
-  They depended on a four-year-old export package, were unavailable in the
-  current Codex environment, and merged whole scenes with cached Excalidraw
-  canvas content. Handoff now uses the native file through File → Open or
-  drag-and-drop on a fresh canvas. The replacement example is generated by
-  the new pipeline and passed structural validation with no warnings plus
-  full-size native visual inspection.
+`excalidraw` adds a dependency-free Node CLI that builds and validates native diagrams from a compact scene format, then requires inspection in an official Excalidraw surface. It defaults to Excalifont on a black canvas and removes the older Python, CDN, and clipboard workflow.
 
 ## 0.9.9 — 2026-07-30
 
-- **`drawio`, `excalidraw` and `context-audit` are now Codex-supported —
-  shipped as-is, not ported.** Each gains an `agents/openai.yaml` marker and
-  joins the `.codex-plugin` skills list (7 of 13 skills Codex-exposed). The
-  one body change: `drawio`'s reference-fetch failure branch said "stop",
-  which under Codex's no-network default sandbox refused the skill's main
-  task deterministically; it now falls back to the inline skeleton and rules
-  and skips CDN-dependent visual verification. `excalidraw` and
-  `context-audit` ship unchanged — rendering was already an opt-in follow-up,
-  and `context-audit`'s subject stays Claude Code context whichever harness
-  runs it (its marker prompt says so). The 2026-07-30 port review's heavier
-  bar (body neutralisation, mandatory validators, four-shape path-resolution
-  proof) was deliberately set aside for this repo's single-maintainer,
-  interactive-TUI usage profile; second opinion gpt-5.6-sol @ max concurred,
-  and found the drawio stop-line as the one release-blocking defect.
-- **`.agents/` is gone from the public root.** The invocation conventions
-  folded into `AGENTS.md` § Conventions; the agent-agnostic-repo ADR retired
-  to the maintainer workspace with a dated amendment relaxing the
-  "marker only after verified port" bar to ship-as-is + fix-on-friction.
-  Historical CHANGELOG references to `.agents/` paths stay as written.
+`drawio`, `excalidraw`, and `context-audit` become Codex-supported. `drawio` falls back to its inline skeleton when external references are unavailable, and public invocation conventions move from `.agents/` into `AGENTS.md`.
 
 ## 0.9.8 — 2026-07-29
 
-- **`model-map` pinning rule restated per stage, with the instrument
-  constraint that motivated it:** the plain Agent tool exposes `model` but no
-  `effort`, so a plain one-off Agent dispatch silently inherits the session
-  effort and cannot satisfy the effort pin (field, 2026-07-29 — a dispatched
-  worker had to be killed and re-dispatched as a single-stage Workflow purely
-  to pin effort). Effort-sensitive one-off stages route through a single-stage
-  Workflow or an agent definition that pins effort; an agent definition's
-  frontmatter now explicitly counts as supplying the `effort` pin.
+`orchestrate` routes effort-sensitive one-off stages through a single-stage Workflow or an agent definition that can pin effort, since the plain Agent tool cannot.
 
 ## 0.9.7 — 2026-07-28
 
-- **`context-audit` gains two passes from the instruction-file trim campaign:**
-  dedup across the always-on layer stack (global / parent / project files
-  audited as one surface), and enforcement-superseded prose (rules a hook
-  already enforces deterministically shrink to a one-line pointer or get
-  deleted).
+`context-audit` now checks for duplicate rules across the full always-loaded instruction stack and trims prose already enforced by deterministic hooks.
 
 ## 0.9.6 — 2026-07-28
 
-- **`orchestrate` run reports account for each delegate's resolved model and
-  effort.** The operator sees what each stage actually ran with, not just the
-  dispatch-side pin — pairs with 0.9.5's score-provenance rule (resolved
-  model, not alias; say so when resolution can't be verified).
-- **`second-opinion` pasted-artifact prompts forbid filesystem probing.** A
-  worker reviewing a pasted artifact otherwise spends its budget on probes
-  the read-only sandbox rejects — a field run burned its full 540s timeout
-  collecting refusals before producing nothing.
+`orchestrate` reports each delegate's resolved model and effort. `second-opinion` stops workers from probing the filesystem when the complete review artifact is already pasted into the prompt.
 
 ## 0.9.5 — 2026-07-28
 
-- **`model-map` calibrated from field data — the items 0.7.6 deferred pending
-  usage.** A `fable` delegate row (intelligence 9, taste 9, cost 2: best of
-  all delegates at reading underspecified intent, strong frontend, occasional
-  shortcut habit); seat-selection guidance (fable is the observed best seat,
-  Sonnet 5 a serviceable budget seat, and a mid-session `/model` switch is how
-  a seat is handed over); a cross-lane cost recalibration (fable ≈ 2× opus;
-  opus above every codex-lane model except sol @ max; sol cheaper than
-  sonnet); and a sol overengineering note (adds unrequested validation and
-  hardening unless prompts bound it explicitly).
-- **`model-map` now carries a score-provenance rule.** Aliases re-point
-  silently, so a harness update hands a row's scores to a model that never
-  earned them — exactly what happened when Opus 5 arrived behind the `opus`
-  alias with a vendor-reported bump and no field scores of its own (since
-  field-confirmed). Every score change now names the resolved model, date,
-  and evidence type.
+The `orchestrate` model map adds a calibrated fable delegate row, updated cost relationships, guidance for underspecified tasks, and a rule requiring evidence whenever model scores change.
 
 ## 0.9.4 — 2026-07-28
 
-- **Close three instruction contradictions left in 0.9.3.** `second-opinion`
-  no longer claims its worker sees only the prompt and checkout; the Codex-lane
-  preflight no longer calls every `ok: false` an outage immediately before
-  exempting flag-contract drift; and `orchestrate` now names output volume,
-  rather than repeating output shape as format.
+`orchestrate` and `second-opinion` fix contradictions about worker context, lane outages, and requested output volume.
 
 ## 0.9.3 — 2026-07-28
 
-- **Delegated workers are not blank slates, on either lane.** `orchestrate`'s
-  contract said workers start empty; measured on both lanes, a worker arrives
-  carrying the machine's user-level instruction file. On the Codex lane
-  `--ignore-user-config` scopes to `config.toml` — its own help text says so —
-  so `$CODEX_HOME/AGENTS.md` still loads: verified in an empty non-git
-  workspace where the worker quoted that file back unprompted, with
-  `project_doc_max_bytes=0` failing to suppress it and repointing `CODEX_HOME`
-  breaking auth, so no flag exists for it. On the Claude lane the user-level
-  `CLAUDE.md` arrives in the subagent's startup context, confirmed by a
-  zero-tool subagent quoting two sections of it verbatim. The consequence is
-  not cosmetic: an inherited output ceiling or house style can narrow a stage's
-  result with nothing in the envelope to show for it, so the contract now tells
-  prompts to state the output shape, scope and volume a stage needs rather than
-  inherit a rule the dispatcher never read.
-
-- **`second-opinion` no longer calls the lane down on a flag-contract drift.**
-  Probe's `ok` is auth ∧ version ∧ no-missing-flags, so a single dropped
-  optional flag flipped it false and the skill refused a lane that works. The
-  helper gates only `workspace-write` runs on that contract and this call is
-  always read-only, so `contract_ok: false` alone now proceeds and names the
-  missing flags; real outages (no helper, `codex_missing`, unauthenticated, no
-  version) still degrade loudly.
-
-- **`second-opinion` documents its blocking call and two ambiguities in it.**
-  The foreground call was reviewed against moving it to background dispatch and
-  deliberately kept: stdout is a `cat` of the same atomically written
-  `result.json`, so foreground already receives the authoritative envelope with
-  fewer moving parts, and blocking is what makes a missed harvest impossible.
-  What was missing is now stated — that the call blocks and the user is told
-  before it starts, that the run dir holds an identical envelope when stdout
-  comes back truncated or garbled, and that `--timeout` is a total deadline
-  including worker-slot queue wait, so a `timeout` is not evidence the question
-  was too big.
-
-- **The pinning rule now argues the model half.** `model-map.md` justified
-  pinning `effort` against the Workflow tool's own guidance but left `model`
-  unargued, while that tool documents the opposite default. Omitting it
-  inherits the seat's model, manufacturing the same-family collision the
-  verification rule exists to avoid.
+`orchestrate` accounts for user-level instructions inherited by delegated workers and requires prompts to state their needed output scope and volume. `second-opinion` continues through nonfatal flag-contract drift and documents its blocking call, result recovery, and total timeout. Model and effort pins are both required for independent review.
 
 ## 0.9.2 — 2026-07-26
 
-- **The write gate no longer trusts `core.untrackedCache` or `core.fsmonitor`.**
-  Its preflight asks for `--untracked-files=normal`, which is the mode that
-  consults the untracked cache, while `--no-optional-locks` suppresses the index
-  write that would refresh a stale one — so the call could neither see cached-away
-  dirt nor repair the staleness, and `core.untrackedCache` is settable per repo or
-  globally. Observed once in the field: the exact preflight invocation reported
-  none of three newly created files in a repo where `-uall`, `ls-files --others`
-  and `add -A --dry-run` all saw them, and overriding either knob restored the
-  truth before the window self-healed. Which knob carried it is unresolved, and a
-  lab reproduction attempt failed, so the preflight now disables both rather than
-  guessing. The refused-state matters because it is the loss 0.9.0 declined to
-  accept: a worker that overwrites a pre-existing untracked file leaves the name
-  list unchanged, so nothing in the after-diff can recover it. Cost is one full
-  lstat walk per gated dispatch. Verified across four workspace states, and the
-  clean case ran a real `workspace-write` worker end to end (`ok: true`).
+The Codex write gate disables Git's untracked cache and fsmonitor during preflight so stale repository caches cannot hide files from safety checks.
 
 ## 0.9.1 — 2026-07-26
 
-- **Write refusals now name the paths.** `dirty_worktree`, and the
-  skip-worktree/assume-unchanged form of `unsafe_git_state`, carried no
-  payload, so a caller refused in someone else's repo had to re-derive the
-  tree state by hand — the reason one such refusal cost three rounds of
-  cross-repo diagnosis. Both messages now carry a bounded, printable-ASCII
-  excerpt of the git listing the gate already read.
-- **The clean-filter blind spot, measured rather than reasoned.** Under a
-  lossy `.gitattributes` `filter=`, git compares *filtered* content: `git
-  diff` never shows a write inside a stripped region, and `git status` shows
-  it only when the byte length changes — as a bare `M` against an empty diff,
-  which is exactly what the gate refuses on. Such a repo therefore blocks
-  every write run until the file is re-added, and the refusal looks like stale
-  stat data without being it. A length-preserving write is worse: invisible to
-  gate and after-diff alike, and it survives `checkout`, `restore`, `stash`
-  and `reset --hard`, so it is discarded with the worktree instead of merged.
-  Injective filters, `filter=lfs` among them, never do this. Both directions
-  reproduced before being written down.
-- **Worktree isolation is now stated in the skill body, and honestly
-  bounded.** `orchestrate`'s always-loaded body never said a writing worker
-  gets its own worktree — the rule lived only in the on-demand Codex
-  reference, so a Claude-lane writing stage never met it. It now also says
-  why: a repo whose files are symlinked into `~/.claude/` or `~/.config/` *is*
-  live system state, so a worker writing there reconfigures the running
-  harness with nothing for a tree-state check to catch. The reference records
-  what the isolation does not cover — `.git` stays shared, so hooks and
-  `--local` config are common state (`git worktree add` runs the repo's own
-  `post-checkout` hook), and a tracked symlink pointing outside the repo is
-  materialized verbatim.
+Codex write refusals now include the affected paths. Documentation explains why lossy Git clean filters cannot be handled safely and makes isolated worktrees mandatory for writing workers while naming their limits.
 
 ## 0.9.0 — 2026-07-26
 
-- **The dirty-tree gate called clean trees dirty.** `codex-worker.sh` read
-  `git status --porcelain 2>&1`, so any warning on stderr — a flaky fsmonitor
-  hook is the common one — was folded into the porcelain output and refused
-  write-capable runs against a perfectly clean tree. Reproduced on an empty
-  repo. stdout and stderr are now separate, and a nonzero git exit is the only
-  thing treated as an error.
-- The gate now sees what it claims to. `--no-optional-locks` keeps preflight
-  from taking an index lock in someone else's repo, and explicit
-  `--untracked-files=normal --ignore-submodules=none` stop repo config from
-  hiding untracked files or dirty submodules from it.
-- New `unsafe_git_state` failure class for trees that read clean but cannot be
-  written safely: an in-progress merge, rebase, cherry-pick, revert or bisect,
-  and index entries marked `skip-worktree` or `assume-unchanged`, which hide
-  changes from the clean check. A write run during a paused bisect previously
-  passed the gate outright.
-- Untracked files still block write runs, deliberately. Letting them through
-  was considered and rejected: a worker that overwrites a pre-existing
-  untracked file leaves the name list unchanged, so the loss is invisible in
-  the after-diff and unrecoverable.
+The Codex dirty-tree gate separates Git stdout from warnings, honors untracked files and dirty submodules, and rejects merges, rebases, bisects, hidden index entries, and other unsafe write states.
 
 ## 0.8.6 — 2026-07-26
 
-- `README.md` still promised that `probe` reports "version drift against the
-  pinned, verified codex-cli series". The pin was removed in 0.8.0 and
-  replaced by a flag-surface contract; the README kept describing the old
-  gate. Corrected.
+The README now describes the Codex probe's flag-contract check instead of the removed pinned-version check.
 
 ## 0.8.5 — 2026-07-26
 
-- `orchestrate` and `second-opinion`: the provider's cybersecurity classifier
-  is a lane-selection input, not a lane outage. It kills a run mid-flight with
-  `api_error` and reacts to the prompt's framing rather than to the artifact —
-  measured across three runs on 2026-07-26, where hunting bypasses in a
-  blocking hook died while the same hook reviewed as parser correctness ran
-  clean. Red-teaming a security control now routes to the Claude lane, or gets
-  reframed as a correctness review.
+`orchestrate` and `second-opinion` route security-control red-teaming away from Codex classifier failures or frame it as a correctness review.
 
 ## 0.8.4 — 2026-07-26
 
-- **Security: the Codex lane no longer trusts the session's repo.** The helper
-  candidate list included `$(git rev-parse --show-toplevel)/skills/orchestrate/
-  scripts/codex-worker.sh` — the repo being *worked on*. Any repo shipping an
-  executable file at that path would have had it run with the session's
-  privileges, on nothing more than a preflight probe: arbitrary code execution
-  from the material under review. Reproduced against a throwaway repo, then
-  removed. Every surviving candidate is a location this repo's own content is
-  deployed to. Found by a Codex review of the 0.8.3 fix.
-- Complete the 0.8.3 fix, which reached only the subagent. `orchestrate` had
-  no resolution at all — `SKILL.md` and `references/codex-exec.md` wrote the
-  helper as a bare relative path, which resolves against the session's cwd —
-  and `second-opinion` carried a verbatim copy of the old two-candidate list.
-  All three surfaces now share one list, kept identical by the check below.
-- `second-opinion`: `--model default` is required, not optional. The skill
-  told the model to omit the flag; the helper rejects that as a usage error,
-  so every call made by the book failed on the first try.
-- `check-helper-resolution.sh`: names the three surfaces explicitly rather
-  than discovering them by grep (a reindented anchor would have silently
-  dropped a file from coverage), fails on an undeclared fourth copy, models
-  the plugin placeholder as literal text substitution rather than an
-  environment variable, and adds two canaries that plant a hostile helper in
-  the session repo and require it to lose.
+The Codex lane resolves its helper only from trusted plugin locations, never from the repository under review. `orchestrate` and `second-opinion` share the same checked path list, and `second-opinion` supplies the required `--model default` value.
 
 ## 0.8.3 — 2026-07-26
 
-- Fix `codex-worker`: the subagent could only find its helper script from a
-  session rooted in this repo, so the whole Codex lane returned
-  `missing_dependency` from every other repo. Neither existing candidate
-  covered the symlink deployment — `CLAUDE_PLUGIN_ROOT` is rewritten for
-  plugin installs only, and `git rev-parse --show-toplevel` returns the
-  session's repo. Two candidates added: the deployed skill symlink
-  (`$HOME/.claude/skills/orchestrate/…`) and a `$HOME/skills` backstop.
-- New `skills/orchestrate/scripts/check-helper-resolution.sh`: resolves the
-  candidate list as extracted from the agent file, from foreign cwds under
-  simulated deployment shapes. Verified to fail on the pre-fix list.
+The Codex worker can find its helper from repositories outside this plugin by checking installed-skill and local deployment locations. A new check validates helper resolution across deployment layouts.
 
 ## 0.8.2 — 2026-07-25
 
-- Revert the `handoff` model-invocation carve-out from 0.7.4. Its Codex marker
-  goes back to `allow_implicit_invocation: false`, and the exception is gone
-  from `.agents/invocation.md`, `AGENTS.md`, and `README.md` — every skill in
-  the repo is user-invoked again, with no exceptions. Nothing changes for
-  `/handoff` or `$handoff`; only the model's autonomous reach at wrap-up is
-  withdrawn, and on the Claude Code side that now rests on description wording
-  alone, since `disable-model-invocation` stays banned (0.7.5).
+`handoff` returns to explicit invocation only, making every skill user-invoked again while leaving `/handoff` and `$handoff` available.
 
 ## 0.8.1 — 2026-07-25
 
-- `orchestrate`: documented a field-confirmed trap in its "one-off subagents"
-  escape hatch — passing `name` to the Agent tool switches a dispatch into
-  addressable "teammate" mode, where the result is no longer delivered
-  automatically and the agent can fail to relay it even when asked directly.
-  Dispatch one-off subagents anonymously.
+`orchestrate` dispatches one-off subagents anonymously so their results return automatically instead of entering teammate mode.
 
 ## 0.8.0 — 2026-07-25
 
-- New `second-opinion` skill: one read-only Codex call on work that already
-  exists, answered as a synthesis rather than a relay. It exists because the
-  most common Codex need — "what does another model family think of this?" —
-  was only reachable through the full delegation posture and its ~1,200 lines
-  of lane contract. The skill is the question-writing discipline plus one
-  helper invocation.
-- The Codex lane no longer gates on a pinned CLI series. `codex-worker.sh`
-  checks that `codex exec --help` still advertises every flag it passes and
-  ignores the version number; `probe` reports `contract_ok` / `missing_flags`,
-  and `version_mismatch` becomes `contract_mismatch`. The old gate's failure
-  mode was backwards — a routine release refused every write-capable worker
-  (0.144 did precisely that) while a same-series release that dropped a flag
-  passed. New `codex-worker.sh verify` closes the remaining gap with one tiny
-  billed run asserting the full envelope, replacing the manual re-verification
-  ritual.
-- `--model` is now optional: omitted, the run takes the CLI's built-in default,
-  so a new provider model needs no repo change. Runs pass `--ignore-user-config`,
-  so this is deliberately *not* the user's `config.toml` model, and the envelope
-  records `model: ""` — pin one where reproducibility matters. `--effort`
-  validation flipped from an allowlist to a denylist (only `ultra` refused), so
-  a new effort level the server accepts is no longer rejected locally.
-- Dropped the `skills` key from `.claude-plugin/plugin.json`. Verified on Claude
-  Code 2.1.220 across three isolated installs (full list, no list, 3-entry
-  subset): all three shipped the same 12 skills, so the key neither restricted
-  nor was needed, and the documented "replaces the default scan" mechanic was
-  false. One fewer place to keep in sync.
-- Honest invocation wording in `README.md` and `AGENTS.md`: both claimed no
-  skill ever self-triggers, which stopped being true in 0.7.5 when the enforcing
-  flag was removed, and `handoff` is a deliberate exception besides.
-- `AGENTS.md` now routes maintainer sessions to `local/STATUS.md` up front, and
-  its sync section drops the miscount ("Four places" then "the three").
+New skill `second-opinion` asks one read-only Codex worker to review existing work and returns a synthesis. The Codex helper checks required CLI flags instead of pinning a version, accepts the CLI's default model and new supported effort levels, and adds an end-to-end verification command. Claude skill discovery no longer depends on a manifest allowlist.
 
 ## 0.7.6 — 2026-07-25
 
-- `orchestrate`: the model map now separates the senior-seat *invariant* (the
-  session model holds the seat; this skill never selects it) from the delegate
-  table, which previously carried Fable-specific scores on the seat row and was
-  internally false in any non-Fable session.
-- Claude-lane rows are now written as harness aliases (`opus`, `sonnet`,
-  `haiku`) instead of versioned strings, in the table and in all four stale
-  fallback cells. Aliases re-point silently on harness update — `opus` was
-  observed resolving to Opus 5 under Claude Code 2.1.219 with no repo change.
-  Codex-lane rows stay exact model IDs because the worker helper passes them
-  straight to `codex -m`. The map documents the asymmetry.
-- `opus` intelligence 8 → 9 (Opus 5, vendor-reported); taste deliberately held
-  at 8 — benchmarks do not measure the column's subject. The sol-vs-opus
-  calibration drops its presumed capability ordering: they are peers, and the
-  reason to pair them is vendor independence.
-- Verification rules sharpened: still risk-triggered, but when owed, the
-  verifier must not share the producer's model family — including the seat's
-  own, which is the common case when the seat and the delegate resolve to the
-  same model. Same-family verification is declared degraded coverage.
-- Explicit effort policy: `high` default for substantive delegated work,
-  `medium` floor, `xhigh`/`max` for exhaustive and adversarial work, `low` only
-  for transport and bounded mechanical stages. Pinning `{model, effort}` is
-  now justified where it is stated — an omitted effort inherits a per-session,
-  per-machine setting.
-- New pitfall: safety classifiers can swap the model underneath a running
-  request with no error, so security work is partitioned before dispatch
-  rather than diagnosed after the fact.
-- Fixed a contradiction between `SKILL.md` and the map: adversarial and
-  verification passes were described as undelegatable while the map assigned
-  adversarial verification to a delegate. The invariant is final review and
-  integration; producing review *evidence* delegates.
-- Corrected the `disable-model-invocation` pitfall, which still carried the
-  rationale `.agents/invocation.md` disproved in 0.7.5.
-- Added a `Spend` section naming the Workflow `budget` global and the session
-  size guideline, and a prioritised-review rule for diffs too large to read
-  whole.
-- Codex lane: recipe re-verified against codex-cli 0.145.0 (read-only and
-  `workspace-write`, `--output-schema`, base-sha and dirty-tree gates) and the
-  pin bumped from 0.144, which was blocking all write-capable workers.
-  Corrected four documentation overclaims found by audit and confirmed against
-  the script: `result.json` is not mirrored for `usage`, `codex_missing`, or
-  `interrupted` failures (stdout-only — background dispatch must capture it);
-  the helper does not validate schema instances, only parseability, with
-  conformance enforced server-side; the semaphore is per-uid and per-`TMPDIR`,
-  not machine-global; and the strict-mode lint does not traverse `oneOf`,
-  `not`, `if`/`then`/`else`, or external `$ref`. Added the missing `usage`,
-  `slot_root_hijacked`, and `interrupted` failure classes, a stop condition on
-  quality escalation, and a JSON error envelope for the adapter's
-  cannot-hold-foreground branch, which previously returned raw text and broke
-  the enclosing schema.
+`orchestrate` separates the session seat from delegate selection, uses stable Claude model aliases, requires cross-family verification when review is owed, and defines effort and spend guidance. The Codex lane updates for CLI 0.145.0 and documents its actual result, schema, semaphore, and failure behavior.
 
 ## 0.7.5 — 2026-07-22
 
-- Remove `disable-model-invocation: true` from every remaining SKILL.md. In
-  current Claude Code the flag hides the skill from the model entirely, and
-  since typed `/name` runs go through the model's Skill tool, author-locked
-  skills were uninvocable even by explicit slash command (upstream
-  anthropics/claude-code #26251, #38969, #43875; unfixed as of v2.1.217).
-  The 0.7.4 assumption that slash invocation kept working was wrong.
-- User-invoked intent now rests on human-readable descriptions plus, on Codex,
-  the unchanged `allow_implicit_invocation: false` markers; consumers can tune
-  Claude Code exposure with settings `skillOverrides` (`name-only` works;
-  `user-invocable-only` currently re-triggers the hiding bug). Convention
-  rewritten in `.agents/invocation.md`; `context-audit`'s skill-architecture
-  advice updated to stop recommending the broken flag.
+All skills remove `disable-model-invocation` because it hides them from explicit slash commands in affected Claude Code versions. Codex keeps explicit-invocation markers, and Claude users can use `skillOverrides: name-only`.
 
 ## 0.7.4 — 2026-07-22
 
-- `handoff` is now model-invokable in both harnesses (removed
-  `disable-model-invocation` from its frontmatter; set
-  `allow_implicit_invocation: true` in its Codex marker). It is the one skill the
-  model legitimately reaches for on its own at session wrap-up; the blanket
-  user-invoked convention hid it from the model, which then improvised a
-  `handoff.md` in the working repo instead of using the skill. Slash invocation
-  was unaffected throughout. Carve-out documented in `.agents/invocation.md`;
-  every other skill stays user-invoked.
+`handoff` becomes model-invokable in both Claude Code and Codex so agents can use it automatically at session wrap-up. Every other skill remains user-invoked.
 
 ## 0.7.3 — 2026-07-19
 
-- Redesign `agents-md-convert` around user-selected Audit or Apply operations,
-  repository-wide instruction mapping, partial and nested repairs, competing
-  override detection, and overlap-safe work in dirty trees.
-- Separate deterministic ownership, adapter, routing, reference, and diff
-  checks from optional paid/authenticated harness canaries.
-- Keep the public workflow environment-neutral and make the one-line adapter
-  strict without assuming LF versus CRLF.
+`agents-md-convert` adds user-selected Audit and Apply modes, repository-wide instruction mapping, nested repairs, conflicting-override detection, and safe handling of dirty worktrees. Deterministic checks remain separate from optional authenticated canaries.
 
 ## 0.7.2 — 2026-07-18
 
-Fixes from an adversarial (Codex) review of 0.7.1:
-
-- The helper now mirrors its full result envelope atomically to
-  `RUN_DIR/result.json` (success and every failure class), so a background
-  harvest gets the authoritative `ok`/`error_class` verdict instead of just
-  the model payload in `final.json`. Harvest steps updated to gate on it.
-- `--timeout` is now the total wall-clock deadline including worker-slot
-  queue wait — the foreground relay's 540/600000 invariant previously broke
-  under slot contention (queue wait started before the run clock).
-- The schema lint traversal is schema-keyword-aware
-  (`properties`/`items`/`anyOf`/`allOf`/`$defs`/`definitions`) instead of
-  matching any object containing a `properties` key — a field literally
-  named `properties` no longer false-positives — and it now rejects
-  non-object and `anyOf` roots.
-- orchestrate SKILL.md explicitly authorizes main-loop background dispatch
-  of Codex workers as delegation mechanics (was contradictory with the new
-  primary path).
+The Codex helper writes a complete result envelope for success and failure, counts queue time toward the total timeout, and improves strict-schema validation. `orchestrate` also permits main-loop background dispatch for Codex workers.
 
 ## 0.7.1 — 2026-07-18
 
-Codex-lane hardening from two field sessions' friction logs:
-
-- `codex-worker.sh` lints `--schema-file` locally for OpenAI strict mode
-  (`additionalProperties: false` + `required` listing every property key,
-  recursively) and fails fast instead of surfacing a 400 after dispatch.
-- `codex-exec.md` dispatch contract flipped: background dispatch + run-dir
-  harvest is the primary delivery path for runs that may exceed ~8 minutes;
-  foreground adapter relay is short-runs-only (`--timeout 540`, Bash tool
-  600000 ms — the tool hard-caps there and auto-backgrounds past it, which
-  the previous 900000/840 recipe missed).
-- Fresh run dir per attempt documented (resolves the collision between the
-  run-dir-must-be-empty guard and Workflow resume replays).
-- Sandbox guidance: `read-only` blocks all process spawning — match sandbox
-  to whether the task must run tests/linters, not just whether it writes.
-- Soft, task-shaped timeout guidance (headroom + a stated time budget in
-  verification-heavy prompts) instead of per-role numbers.
-- Known-noise and Windows code-mode-crash (0xC0000142) diagnosis notes.
-- orchestrate SKILL.md gains an instrument-pitfalls section: stringified
-  Workflow `args`, resume-cache blindness to referenced files, schema-valid
-  placeholder output (anti-stub clause), and the sanctioned Bash route for
-  user-ordered plugin commands guarded by `disable-model-invocation`.
+The Codex worker validates strict output schemas before dispatch. Long runs use background delivery with a fresh run directory per attempt, while updated guidance covers timeouts, sandbox choice, resume caching, and placeholder results.
 
 ## 0.7.0 — 2026-07-17
 
-- Lost-delivery contract: one job, one delivery owner, fixed at dispatch.
+`orchestrate` assigns one fixed delivery owner to every delegated job, preventing completed work from being lost between agents.
 
 ## 0.6.x — 2026-07-17
 
-- 0.6.7 Harden Codex adapter timeout and completion contract.
-- 0.6.6 Add missing done-whens to drawio fetch and handoff write sequence.
-- 0.6.5 Make workflows primary-not-only; ship verified Codex adapter prompt.
-- 0.6.4 Rewrite descriptions for the reader; dedupe skill bodies.
-- 0.6.1–0.6.3 Add gitignored `local/` maintainer workspace and tighten its
-  note.
-- 0.6.0 Make every skill user-invoked; README invocation table.
+The 0.6 series hardens Codex adapter timeouts and completion reporting, adds checkable completion conditions to `drawio` and `handoff`, makes workflows the preferred but optional route, shortens skill descriptions, adds the local maintainer workspace, and makes every skill user-invoked.
 
 ## 0.5.x — 2026-07-17
 
-- 0.5.1 Polish README, archive the planning doc out of the repo.
-- 0.5.0 Add Codex CLI plugin distribution route.
+The 0.5 series adds Codex CLI plugin distribution, polishes the README, and removes the archived planning document from the public repository.
