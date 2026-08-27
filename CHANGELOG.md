@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.24.1 — 2026-08-27
+
+Doc-only: the AGENTS.md `disable-model-invocation` convention now records that the flag's behavior flips across Claude Code versions (uninvocable on 2.1.237, user-only again on 2.1.247) and grounds the ban on that instability. No skill behavior changes.
+
 ## 0.24.0 — 2026-08-27
 
 `afk` and `suggest-loop` are removed: neither saw real use. The public inventory is now 15 skills; the Codex-supported set is unchanged at 11.
