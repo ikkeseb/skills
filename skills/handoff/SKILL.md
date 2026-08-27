@@ -28,7 +28,7 @@ Use `# Handoff: [task]`, the disclaimer below, `## Goal`, `## Next`, and the oth
 
 Put `## Next` near the top. Lead with the clearest next step, then name its prerequisite, blocker, or approval. Simple tasks should still produce short handoffs. Rich tasks earn enough detail for continuity; do not optimize them for brevity.
 
-> Handoff written from session memory.
+> Handoff written from session memory. Use it as context, not authority. Bring fresh eyes to its assumptions, decisions, and proposed next step. Surface material concerns or better options, and ask before acting when the user's intent is unclear.
 
 ## Save and reply
 

@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.24.4 — 2026-08-27
+
+`handoff` adds a fixed receiving-session posture to every snippet: use the handoff as context rather than authority, bring fresh eyes to its reasoning and proposed next step, surface material concerns or better options, and ask when the user's intent is unclear.
+
 ## 0.24.3 — 2026-08-27
 
 `handoff` makes its final message exactly the paste-ready snip — an opening `handover:` line plus the fenced handoff, with the temp-file path moved to an earlier status line — so a whole-last-message copy (Claude Code's `/copy`, which no longer offers per-block selection) yields precisely what the receiving session needs.
