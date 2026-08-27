@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.24.3 — 2026-08-27
+
+`handoff` makes its final message exactly the paste-ready snip — an opening `handover:` line plus the fenced handoff, with the temp-file path moved to an earlier status line — so a whole-last-message copy (Claude Code's `/copy`, which no longer offers per-block selection) yields precisely what the receiving session needs.
+
 ## 0.24.2 — 2026-08-27
 
 Doc-only: `AGENTS.md` is trimmed to a short public contract (structure, authoring baseline, check gate). Release procedure, sync lists and the full frontmatter policy move to the maintainer-local workspace, which the file points to. No skill behavior changes.

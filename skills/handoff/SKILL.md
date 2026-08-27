@@ -32,14 +32,15 @@ Put `## Next` near the top. Lead with the clearest next step, then name its prer
 
 ## Save and reply
 
-Save the exact handoff to a uniquely named `.md` file in the operating system's temporary directory and verify its contents. Do not maintain or prune a persistent handoff directory.
+Save the exact handoff to a uniquely named `.md` file in the operating system's temporary directory and verify its contents. Do not maintain or prune a persistent handoff directory. State `Saved temporary copy to <absolute path>.` in a brief status line before the final message — never inside it.
 
-Reply with these parts and nothing after the fence:
+The final message is the copy surface: a whole-last-message copy (Claude Code's `/copy`) must yield the paste-ready snip and nothing else. Make it exactly:
 
-1. `Saved temporary copy to <absolute path>.`
-2. `Paste the snip below into the receiving session, opening with "handover: " (leading with the literal word "handoff" can invoke this skill again).`
-3. A `markdown` fence containing the same handoff, longer than any backtick run inside it.
+1. The opening line `handover: continuation handoff below.` (opening with "handover" — leading with the literal word "handoff" can invoke this skill in the receiving session).
+2. A blank line, then a `markdown` fence containing the same handoff, longer than any backtick run inside it.
 
-If saving fails, report that briefly and still return parts 2-3.
+Nothing before the opening line, nothing after the fence.
 
-Done when: the file and snippet match, or the save failure is reported without losing the snippet.
+If saving fails, report that briefly in the status line and still deliver the final message.
+
+Done when: the file and snippet match and the final message contains only the snip, or the save failure is reported without losing the snippet.
