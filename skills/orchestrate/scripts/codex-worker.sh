@@ -719,7 +719,7 @@ cmd_run() {
     # cache, core.untrackedCache is settable per repo or globally, and
     # --no-optional-locks suppresses the index write that would refresh a stale
     # one, so this call could neither see the dirt nor repair the staleness.
-    # Observed once in the field (2026-07-26, ~/the-vault): this invocation
+    # Observed once in the field (2026-07-26): this invocation
     # reported none of three newly created files while -uall, ls-files --others
     # and add -A --dry-run all saw them; overriding either core.untrackedCache
     # or core.fsmonitor restored the truth, and the window then self-healed.

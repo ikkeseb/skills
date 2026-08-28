@@ -77,7 +77,7 @@ delegation the orchestrator doesn't control.
   for — but follows explicit instructions closely. Prompts to sol state scope
   and bound the extras ("no validation/hardening beyond the spec") rather
   than trusting its defaults.
-- **sol as primary execution workhorse** (decision, Seb, 2026-08-24): sol is
+- **sol as primary execution workhorse** (decision, 2026-08-24): sol is
   preferred over opus for most delegated execution — peer intelligence,
   strong instruction-following, lower cost. Opus keeps the Claude lane
   (harness-tool work, user-facing surface, a slight frontend-design edge)

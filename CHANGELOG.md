@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.24.5 — 2026-08-28
+
+Depersonalization pass from a cross-repo audit: `orchestrate`'s worker script drops a private repo path from a provenance comment, and `model-map.md` drops a personal name from a decision tag. No behavior change.
+
 ## 0.24.4 — 2026-08-27
 
 `handoff` adds a fixed receiving-session posture to every snippet: use the handoff as context rather than authority, bring fresh eyes to its reasoning and proposed next step, surface material concerns or better options, and ask when the user's intent is unclear.
