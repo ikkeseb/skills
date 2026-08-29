@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.24.7 — 2026-08-29
+
+`orchestrate`'s codex-exec reference documents the WSL bridge: a native-Windows orchestrator can dispatch write workers through a verified WSL VM (`wsl.exe -e bash -c '…'`), including workspaces under `/mnt/c`, with the two measured traps (interactive-only PATH exports hiding the codex binary; MSYS path-mangling of `/mnt/c` arguments) and the auto-start latency of a stopped VM. Doc-only, no behavior change.
+
 ## 0.24.6 — 2026-08-29
 
 `orchestrate`'s codex-exec reference records that a WSL VM on a Windows machine follows the supported Linux write lane (landlock sandbox; `uname` reports Linux), not the unsupported native Windows lane — per-machine runner verification still applies. The helper-resolution check now strips `\r` when extracting the candidate list, so it passes on a CRLF worktree (WSL over a Windows checkout) instead of failing on invisible carriage returns. No skill behavior changes.

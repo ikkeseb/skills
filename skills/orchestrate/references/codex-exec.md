@@ -457,7 +457,18 @@ suspected reroute as unverified without evidence.
   the VM `uname` reports Linux, the landlock sandbox applies, and
   workspace-write follows the supported Linux lane. Per-machine runner
   verification (probe plus one write e2e) still applies before trusting a
-  new VM's write lane, as for any Linux host.
+  new VM's write lane, as for any Linux host. The lane is also reachable
+  *from* a native-Windows orchestrator: invoke the helper inside the VM
+  (`wsl.exe -e bash -c '…'`) with the run dir minted on the VM side, and
+  harvest the same envelope; workspaces under `/mnt/c` work, so the VM can
+  write into checkouts the Windows session is orchestrating (git over drvfs
+  is slow — prefer VM-side checkouts for heavy repos). Two measured traps:
+  a non-interactive WSL shell may lack the codex binary on PATH (PATH
+  exports often live in interactive-only rc files) — export it explicitly
+  in the bridge command or the run fails as `codex_missing`; and keep the
+  whole payload as one quoted string so the Windows-side shell cannot
+  path-mangle `/mnt/c/...` arguments (MSYS path conversion). A stopped VM
+  auto-starts on the first call, adding seconds of latency.
 - The result JSON proves the worker finished, not that the changes survive:
   read the actual `git diff` (and untracked files) in the worktree before the
   workflow's worktree cleanup can discard it, and let the main loop apply or
