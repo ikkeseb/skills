@@ -40,7 +40,10 @@ for later runs: the Windows sandbox has been observed degrading underneath a
 necessary, never sufficient, for write dispatch. `true`/`false` are verdicts and `false`
 gates `write_ready`; `null` means the test could not run and gates nothing.
 `write_ready: false` leaves the read-only lane available: route write stages
-to the Claude lane and say so. Missing write dependencies fail closed as
+to the Claude lane and say so — except on native Windows, where that verdict
+is policy, not a measurement: if the machine has a WSL VM, probe inside it
+over the bridge first (§ Write-worker gates, WSL bullet); a green VM-side
+probe makes the bridge the write route. Missing write dependencies fail closed as
 `missing_dependency`; a write run dispatched despite a denying sandbox fails
 closed as `sandbox_denied` at harvest.
 
@@ -388,8 +391,9 @@ overwritten.
   sandbox setup, or route write stages to the Claude lane.
 - `unsupported_lane` — the requested lane does not exist on this platform
   (today: native Windows workspace-write, see Write-worker gates). Policy,
-  not an outage: never retryable at any tier; route the stage to the Claude
-  lane or a verified worker host and say so.
+  not an outage: never retryable at any tier; route the stage over a
+  verified WSL VM's bridge when the machine has one, otherwise to the
+  Claude lane or a verified worker host, and say so.
 - `unsafe_git_state` — the tree reads clean but the repo cannot be written to
   safely: an in-progress merge/rebase/cherry-pick/revert/bisect, or index
   entries marked `skip-worktree` / `assume-unchanged`, which hide changes from
@@ -449,9 +453,11 @@ suspected reroute as unverified without evidence.
   `[windows]` sandbox choice — leaves exec with no OS sandbox, so
   workspace-write silently degrades to read-only + approvals=never,
   rejecting every write behind an `ok` envelope. When the machine has a
-  verified WSL VM, prefer bridging write stages through it (next bullet)
-  over degrading them to the Claude lane; otherwise route them to the
-  Claude lane or a verified macOS/Linux worker. Read-only runs stay unpinned
+  WSL VM whose write lane has passed per-machine verification (next
+  bullet — a VM-side probe over the bridge is the runtime check), prefer
+  bridging write stages through it over degrading them to the Claude
+  lane; otherwise route them to the Claude lane or a verified
+  macOS/Linux worker. Read-only runs stay unpinned
   and CLI-policy-enforced rather than OS-enforced — a deliberate trust
   downgrade for the read lane, measured working. No worker lane may raise
   UAC. Escape hatch: `CODEX_WORKER_NATIVE_WINDOWS_WRITE=elevated` restores

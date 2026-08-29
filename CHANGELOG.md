@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.24.10 — 2026-08-29
+
+Closes the routing gaps 0.24.9 left: the probe section's `write_ready: false` sentence — the first routing text a native-Windows orchestrator hits — now carves out the WSL bridge (probe inside the VM before degrading to the Claude lane), the `unsupported_lane` error description routes over the bridge first, and the gates sentence operationalizes "verified" (per-machine verification per the WSL bullet; a VM-side probe over the bridge is the runtime check). Doc-only, no behavior change.
+
 ## 0.24.9 — 2026-08-29
 
 `orchestrate`'s codex-exec reference makes the WSL bridge the preferred write route on native Windows: when the machine has a verified WSL VM, bridge write stages through it instead of degrading them to the Claude lane (previously the bridge was documented but the routing sentence sent orchestrators to the Claude lane first). Doc-only, no behavior change.
