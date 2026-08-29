@@ -73,6 +73,9 @@ fi
 # neither an assignment nor a fallback.
 extract() {
   awk '
+    { sub(/\r$/, "") }  # a CRLF worktree (WSL on a Windows checkout) must not
+                        # leak \r into the candidate paths — MSYS strips it in
+                        # text mode, Linux awk does not
     /^HELPER="\$\{CLAUDE_PLUGIN_ROOT\}/ { in_block = 1 }
     in_block && /^(HELPER=|\[ -x "\$HELPER" \] \|\|)/ { print; next }
     in_block { exit }

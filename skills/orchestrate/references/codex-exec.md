@@ -453,6 +453,11 @@ suspected reroute as unverified without evidence.
   Under that opt-in `.git` stays write-denied inside the sandbox, so a write
   worker edits files but cannot stage or commit — integration is main-loop
   work anyway; do not ask a Windows write worker to commit.
+- A WSL VM on a Windows machine is **not** the native Windows lane: inside
+  the VM `uname` reports Linux, the landlock sandbox applies, and
+  workspace-write follows the supported Linux lane. Per-machine runner
+  verification (probe plus one write e2e) still applies before trusting a
+  new VM's write lane, as for any Linux host.
 - The result JSON proves the worker finished, not that the changes survive:
   read the actual `git diff` (and untracked files) in the worktree before the
   workflow's worktree cleanup can discard it, and let the main loop apply or
