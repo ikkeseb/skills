@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.24.9 — 2026-08-29
+
+`orchestrate`'s codex-exec reference makes the WSL bridge the preferred write route on native Windows: when the machine has a verified WSL VM, bridge write stages through it instead of degrading them to the Claude lane (previously the bridge was documented but the routing sentence sent orchestrators to the Claude lane first). Doc-only, no behavior change.
+
 ## 0.24.8 — 2026-08-29
 
 `orchestrate`'s codex-exec reference adds a one-line pointer in the adapter-stages section back to the strict-mode schema contract: adapter-passed `--schema-file`s are orchestrator-authored, and a non-strict schema costs a full dispatch round as `usage` (field, 2026-08-29 — the first live adapter-layer run lost one round to a missing `additionalProperties: false`). Doc-only, no behavior change.

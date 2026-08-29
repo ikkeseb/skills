@@ -448,7 +448,9 @@ suspected reroute as unverified without evidence.
   processes, and unpinned — `--ignore-user-config` drops the user's
   `[windows]` sandbox choice — leaves exec with no OS sandbox, so
   workspace-write silently degrades to read-only + approvals=never,
-  rejecting every write behind an `ok` envelope. Route write stages to the
+  rejecting every write behind an `ok` envelope. When the machine has a
+  verified WSL VM, prefer bridging write stages through it (next bullet)
+  over degrading them to the Claude lane; otherwise route them to the
   Claude lane or a verified macOS/Linux worker. Read-only runs stay unpinned
   and CLI-policy-enforced rather than OS-enforced — a deliberate trust
   downgrade for the read lane, measured working. No worker lane may raise
