@@ -175,6 +175,11 @@ verification-heavy prompts, state a time/effort budget in the prompt itself
 (e.g. "recon facts are already verified; spend your run on judgment; finish
 within 30 minutes").
 
+Every `--schema-file` an adapter passes is authored by the orchestrator
+before dispatch: write it to the strict-mode contract under Running a
+worker, or the helper fails the stage fast as `usage` (field, 2026-08-29:
+one adapter round lost to a schema missing `additionalProperties: false`).
+
 **Active-wait adapter stage — the default for long runs inside a workflow.**
 Any run that *may* exceed ~8 minutes (max-effort work, verification mandates,
 real repo audits — in practice most substantive Codex-lane stages) runs as a

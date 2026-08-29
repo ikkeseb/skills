@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.24.8 — 2026-08-29
+
+`orchestrate`'s codex-exec reference adds a one-line pointer in the adapter-stages section back to the strict-mode schema contract: adapter-passed `--schema-file`s are orchestrator-authored, and a non-strict schema costs a full dispatch round as `usage` (field, 2026-08-29 — the first live adapter-layer run lost one round to a missing `additionalProperties: false`). Doc-only, no behavior change.
+
 ## 0.24.7 — 2026-08-29
 
 `orchestrate`'s codex-exec reference documents the WSL bridge: a native-Windows orchestrator can dispatch write workers through a verified WSL VM (`wsl.exe -e bash -c '…'`), including workspaces under `/mnt/c`, with the two measured traps (interactive-only PATH exports hiding the codex binary; MSYS path-mangling of `/mnt/c` arguments) and the auto-start latency of a stopped VM. Doc-only, no behavior change.
