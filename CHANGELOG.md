@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.25.2 — 2026-08-30
+
+`handoff` moves the `handover:` guard line inside the markdown fence. Field find (home PC, Claude Code 2026-08-30): `/copy` now returns the fence content unwrapped, dropping everything outside it — the pasted handoff led with the literal word "Handoff", exactly what the guard line existed to prevent. With the guard as the fence's first line the paste starts with `handover:` whether `/copy` copies the message verbatim or unwraps the block. Done-when updated to match.
+
 ## 0.25.1 — 2026-08-30
 
 `handoff` gets a bounded verification contract, tuned by transcript measurement (Claude lane: 1–4 tool calls per handoff; Codex lane: 5–27, driven by verification archaeology the old elastic wording invited). Writing side: an explicit budget of at most five cheap read-only operations, spent on facts whose misstatement would change the receiving session's first action, with builds, tests, and history reconstruction banned; working-document durability is stated as known from the session (`unknown` allowed) instead of demanding a per-document repository check, with a targeted-read carve-out when the only detailed artifact is ephemeral and memory is insufficient. Receiving side: the disclaimer switches from "bring fresh eyes" to just-in-time verification — never repeat completed verification merely to validate the handoff; check a claim only when the next action depends on it or the state may have changed. Structure section gains a conditional suggested-skill line and folds the section list into one paragraph. Delivery mechanics unchanged. Second-opinion reviewed (gpt-5.6-sol high).

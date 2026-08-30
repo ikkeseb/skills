@@ -32,13 +32,13 @@ Use `# Handoff: [task]`, the disclaimer below, `## Goal`, `## Next` near the top
 
 Save the exact handoff to a uniquely named `.md` file in the operating system's temporary directory and verify its contents. Do not maintain or prune a persistent handoff directory. State `Saved temporary copy to <absolute path>.` in a brief status line before the final message — never inside it.
 
-The final message is the copy surface: a whole-last-message copy (Claude Code's `/copy`) must yield the paste-ready snip and nothing else. Make it exactly:
+The final message is the copy surface: a whole-last-message copy (Claude Code's `/copy`) must yield the paste-ready snip and nothing else — and `/copy` may return the fence content unwrapped, so the guard line lives inside the fence. Make the final message exactly one `markdown` fence, longer than any backtick run inside it, containing:
 
-1. The opening line `handover: continuation handoff below.` (opening with "handover" — leading with the literal word "handoff" can invoke this skill in the receiving session).
-2. A blank line, then a `markdown` fence containing the same handoff, longer than any backtick run inside it.
+1. The first line `handover: continuation handoff below.` (opening with "handover" — leading with the literal word "handoff" can invoke this skill in the receiving session).
+2. A blank line, then the same handoff that was saved.
 
-Nothing before the opening line, nothing after the fence.
+Nothing before the fence, nothing after it.
 
 If saving fails, report that briefly in the status line and still deliver the final message.
 
-Done when: the file and snippet match and the final message contains only the snip, or the save failure is reported without losing the snippet.
+Done when: the fence contains the guard line plus exactly the saved handoff and the final message contains only the fence, or the save failure is reported without losing the snippet.
