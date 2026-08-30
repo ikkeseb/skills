@@ -33,7 +33,7 @@ Codex-supported skills that should stay explicit set
 | **[drawio](skills/drawio)** | Native `.drawio` XML that opens straight in app.diagrams.net. | `/drawio` |
 | **[verify-claims](skills/verify-claims)** | Fact-checks prose against traceable sources: a classified table plus a retract list of unsupported or contradicted claims. | `/verify-claims` |
 | **[agents-md-convert](skills/agents-md-convert)** | Audits, converts, or repairs repository instruction scopes so `AGENTS.md` is canonical and `CLAUDE.md` stays a one-line import adapter. | `/agents-md-convert` |
-| **[context-audit](skills/context-audit)** | Audits instruction reach and proposes a leaner context structure without stranding mandatory rules. | `/context-audit` |
+| **[context-audit](skills/context-audit)** | Audits instruction reach and the document skeleton, proposing a leaner context structure without stranding mandatory rules. | `/context-audit` |
 
 In Codex, invoke the same eleven skills through the `$` picker.
 

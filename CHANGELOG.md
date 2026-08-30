@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.25.0 — 2026-08-30
+
+`context-audit` grows a doctrine core and a prose pass. New Target shape section states the default the audit judges against (minimal always-loaded skeleton with a routing table, one on-demand owner per truth, environment owns what it can show, slim never at the cost of reach — deliberate repo deviations win). The Map step now flags skeleton gaps (ownerless truths, double owners, unrouted documents). Three new classification flags carry the prose pass: frozen enumeration (present-tense counts that freeze at write time), evidence-laden (rules still carrying the history that earned them), and no-op (sentences the agent already obeys); the flag paragraph is restructured as a list. The verdict names which budget a proposal spends — placement or prose — since they are different passes and a full audit runs both. Description now covers the skeleton dimension.
+
 ## 0.24.10 — 2026-08-29
 
 Closes the routing gaps 0.24.9 left: the probe section's `write_ready: false` sentence — the first routing text a native-Windows orchestrator hits — now carves out the WSL bridge (probe inside the VM before degrading to the Claude lane), the `unsupported_lane` error description routes over the bridge first, and the gates sentence operationalizes "verified" (per-machine verification per the WSL bullet; a VM-side probe over the bridge is the runtime check). Doc-only, no behavior change.

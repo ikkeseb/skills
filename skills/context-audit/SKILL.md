@@ -1,12 +1,22 @@
 ---
 name: context-audit
-description: "Audit how a project's instructions and context load across harnesses: CLAUDE.md, AGENTS.md, skills, nested files, hooks. Analysis only, ending in an honest worth-it verdict. Not for mechanical AGENTS.md conversion (agents-md-convert)."
+description: "Audit how a project's instructions and context load across harnesses — CLAUDE.md, AGENTS.md, skills, nested files, hooks — and how its document skeleton routes each truth to one owner. Analysis only, ending in an honest worth-it verdict. Not for mechanical AGENTS.md conversion (agents-md-convert)."
 ---
 
 # Context Audit
 
 Treat this as an attention audit, not a line-count diet. Splitting a lean file into
 unreachable indirection is a regression.
+
+## Target shape
+
+Judge against this default: always-loaded files form a minimal skeleton — the
+project's general rules plus a routing table — and every other truth lives in
+exactly one on-demand owner the project has earned, not a template file list. The
+environment (code, config, directory layout, `--help` output) owns what it can
+show; a doc restating it is a cache. Slim never at the cost of reach: a mandatory
+rule keeps a deterministic path into context. A repo that deviates deliberately
+wins — flag the deviation once and audit within its convention.
 
 ## Process
 
@@ -16,7 +26,9 @@ phase 2 runs only after the user has chosen a direction.
 1. **Read** the complete instruction stack (see Loading contract). Done when every
    canonical file, adapter, parent/global file, and required file has been read.
 2. **Map** the folder structure, domains, target harnesses, and effective loading policy.
-   Done when the harness list, its evidence, and each policy are stated or marked unknown.
+   Note skeleton gaps against Target shape: a truth with no owner, two documents owning
+   one truth, a document the routing never reaches. Done when the harness list, its
+   evidence, each policy, and any skeleton gaps are stated or marked unknown.
 3. **Classify** each rule on type and scope, then mark it mandatory or optional and flag
    it (see Classify). Done when every live rule carries type, scope, flags, and
    mandatory/optional.
@@ -113,23 +125,35 @@ locations; mandatory versus optional reach selects among them.
 | Knowledge | Background facts about the domain / architecture |
 
 **Axis 2, SCOPE (drives placement):** Universal · Domain (task-type) · Domain
-(directory). Two flags ride alongside scope without replacing it: **sacred** (a
-guardrail whose loss causes regressions, see Guardrails) and **dead/stale** (no live
-rule; a deletion candidate whatever its scope: it needs no further classification, its
-proposed location is delete/archive). Two more flags mark review candidates whose
-disposition is rewrite, inline or delete: **weak pointer** (a line whose job is to make
-the agent reach another file, but whose wording fails to state what the material is or
-omits a distinct branch that should trigger reading it; sharpen the wording before
-considering inlining) and **environment cache** (a line that restates what
-`package.json` scripts, config files, the directory layout or `--help` already say; keep
-only what the agent cannot find by looking: the unwritten convention, the reason behind
-a choice, the gotcha no config confesses). A fifth flag, **contradiction**, marks a fact
-two live documents state differently (one says a hook is unwired, another says live):
-its disposition is to find the deployed truth (settings, config, the script itself),
-name one owner for that fact, and align every other statement to a pointer. A live
-rule's required reach still determines
-whether it stays static, moves to verified nested instructions, or becomes an optional
-skill procedure with added enforcement.
+(directory). Flags ride alongside scope without replacing it; each names its
+disposition:
+
+- **sacred** — a guardrail whose loss causes regressions (see Guardrails).
+- **dead/stale** — no live rule; a deletion candidate whatever its scope: no further
+  classification needed, its proposed location is delete/archive.
+- **weak pointer** — a line whose job is to make the agent reach another file, but
+  whose wording fails to state what the material is or omits a distinct branch that
+  should trigger reading it; sharpen the wording before considering inlining.
+- **environment cache** — a line restating what `package.json` scripts, config files,
+  the directory layout or `--help` already say; keep only what the agent cannot find
+  by looking: the unwritten convention, the reason behind a choice, the gotcha no
+  config confesses.
+- **contradiction** — a fact two live documents state differently (one says a hook is
+  unwired, another says live); find the deployed truth (settings, config, the script
+  itself), name one owner for that fact, and align every other statement to a pointer.
+- **frozen enumeration** — a present-tense count, list or measurement ("the four
+  routes", "all 17 skills") that froze at write time and lies at the first change to
+  what it counts; rewrite as a derivation pointer to its source, or as a dated
+  measurement.
+- **evidence-laden** — a kept rule still carrying the history that earned it (dates,
+  quotes, incident stats); strip the rule bare and leave the evidence to the owning
+  document or git history.
+- **no-op** — a sentence the agent already obeys by default, paying load to say
+  nothing; delete the whole sentence rather than trim it.
+
+A live rule's required reach still determines whether it stays static, moves to
+verified nested instructions, or becomes an optional skill procedure with added
+enforcement.
 
 ## Placement
 
@@ -205,7 +229,9 @@ Present, in order:
 1. **Read-back:** list the instruction stack, the target harnesses with their evidence,
    the mechanism-support matrix, and evidence for each effective invocation policy. Mark
    unknowns explicitly, and flag broken or unreadable imports as defects.
-2. **Verdict up front:** worth restructuring or leave it? One sentence, then the reasoning.
+2. **Verdict up front:** worth restructuring or leave it? One sentence, then the
+   reasoning, naming which budget the proposal spends: placement (what moves), prose
+   (what tightens), or both — they are different passes and a full audit runs both.
 3. **Classification table:** grouped by domain, one row per rule: type → scope (plus
    flags) → mandatory/optional → current reach → proposed location → reach after the
    move. Rules whose every field is identical may share one row; a sacred rule never
