@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.26.2 — 2026-08-31
+
+The three tier definitions (`opus-medium`, `opus-high`, `opus-xhigh`) tell the worker to Read-tool every file before it Edits it. Field driver: a dispatched stage read its inputs through the shell (`cat`), hit the harness's built-in "File must be read first" refusal on its first Edit, and spent the rest of the stage on a replace-script workaround.
+
 ## 0.26.1 — 2026-08-31
 
 `orchestrate` adds the `opus-medium` tier definition and puts opus @ medium in trial for tightly specified builds, mechanical refactors and test updates. The effort rule's "best performance-per-cost in the high band" has no field citation; the model map logs outcomes and promotes or drops on evidence.
