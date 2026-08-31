@@ -193,6 +193,8 @@ def scan_codex(since, stats):
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--days", type=int, default=14)
     ap.add_argument("--examples", type=int, default=3)
