@@ -1,10 +1,10 @@
 # skills
 
 Agent skills for day-to-day work, published as one plugin.
-Claude Code ships the full set; Codex exposes the eleven skills marked for both
+Claude Code ships the full set; Codex exposes the twelve skills marked for both
 harnesses.
 
-Browse all 13 skills on [skills.sh](https://skills.sh/ikkeseb/skills).
+Browse all 14 skills on [skills.sh](https://skills.sh/ikkeseb/skills).
 
 ## Skills
 
@@ -34,8 +34,9 @@ Codex-supported skills that should stay explicit set
 | **[verify-claims](skills/verify-claims)** | Fact-checks prose against traceable sources: a classified table plus a retract list of unsupported or contradicted claims. | `/verify-claims` |
 | **[agents-md-convert](skills/agents-md-convert)** | Audits, converts, or repairs repository instruction scopes so `AGENTS.md` is canonical and `CLAUDE.md` stays a one-line import adapter. | `/agents-md-convert` |
 | **[context-audit](skills/context-audit)** | Audits instruction reach and the document skeleton, proposing a leaner context structure without stranding mandatory rules. | `/context-audit` |
+| **[repo-cosplay](skills/repo-cosplay)** | Operates as a named repository from a session rooted elsewhere, loading that repository's own contract and gates. Explicit ask required. | `/repo-cosplay` |
 
-In Codex, invoke the same eleven skills through the `$` picker.
+In Codex, invoke the same twelve skills through the `$` picker.
 
 ### Claude Code only
 
@@ -67,7 +68,8 @@ Add the repo as a marketplace, then install the plugin (ships every skill above)
 The same repo installs as a Codex plugin. It exposes only the Codex-supported
 skills, the ones carrying an `agents/openai.yaml`: `agents-md-convert`,
 `context-audit`, `drawio`, `excalidraw`, `handoff`, `history-audit`,
-`pretty-html`, `pretty-pdf`, `pretty-slides`, `prettier-html`, `verify-claims`.
+`pretty-html`, `pretty-pdf`, `pretty-slides`, `prettier-html`, `repo-cosplay`,
+`verify-claims`.
 `pretty-slides` and `prettier-html` need browser automation for their
 screenshot QA; without it they deliver with an honest unverified list.
 `drawio` degrades gracefully where the sandbox denies network

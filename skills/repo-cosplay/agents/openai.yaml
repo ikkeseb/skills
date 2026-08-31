@@ -1,0 +1,6 @@
+interface:
+  display_name: "Repo Cosplay"
+  short_description: "Work as a named repository from another session"
+  default_prompt: "Use $repo-cosplay to operate as the named target repository from this session."
+policy:
+  allow_implicit_invocation: false

@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.28.0 — 2026-08-31
+
+Adds `repo-cosplay`: an explicitly invoked, Claude Code and Codex skill for
+operating as a named repository from a session rooted elsewhere. It loads the
+target's own instructions and the operating documents they point to, reports
+git state before writing, preserves repository boundaries, runs native gates
+manually, and closes the target's normal bookkeeping.
+
 ## 0.27.2 — 2026-08-31
 
 `full-send` and `max-effort` are removed after seeing no real use across harnesses or machines. `orchestrate` already owns deliberate breadth through its Shapes, and risk-scaled review remains part of ordinary delivery, so the two posture skills leave no replacement layer.
