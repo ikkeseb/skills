@@ -1,6 +1,6 @@
 ---
 name: opus-xhigh
-description: Worker pinned to opus @ xhigh for a single delegated stage where a miss is expensive (exhaustive inventory, verification of Codex-produced work, adversarial review) without a workflow tree. Give it a complete specification with acceptance criteria and output bounds. Not for routine implementation (opus-high) or adapter work (codex-worker).
+description: Only when the orchestrate skill is active in this session; otherwise use general-purpose. Worker pinned to opus @ xhigh for a single delegated stage where a miss is expensive (exhaustive inventory, verification of Codex-produced work, adversarial review) without a workflow tree. Give it a complete specification with acceptance criteria and output bounds. Not for routine implementation (opus-high) or adapter work (codex-worker).
 model: opus
 effort: xhigh
 ---

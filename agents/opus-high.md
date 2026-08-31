@@ -1,6 +1,6 @@
 ---
 name: opus-high
-description: Worker pinned to opus @ high for a single delegated stage that needs harness tools (implementation, research, review) without a workflow tree. Give it a complete specification with acceptance criteria and output bounds. Not for adapter or relay work (codex-worker), and not a substitute for the seat's own design, specification or final review.
+description: Only when the orchestrate skill is active in this session; otherwise use general-purpose. Worker pinned to opus @ high for a single delegated stage that needs harness tools (implementation, research, review) without a workflow tree. Give it a complete specification with acceptance criteria and output bounds. Not for adapter or relay work (codex-worker), and not a substitute for the seat's own design, specification or final review.
 model: opus
 effort: high
 ---

@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.26.6 — 2026-08-31
+
+The `opus-medium` / `opus-high` / `opus-xhigh` agent definitions now open their description with "Only when the orchestrate skill is active in this session; otherwise use general-purpose." Custom agents in `~/.claude/agents/` are visible to the model in every session and no frontmatter field scopes them to a skill (vendor sub-agents doc, checked 2026-08-31); the wording is the only available gate. Field driver: an unattended non-orchestrate session picked `opus-xhigh` for two plain read-only tasks (a 5.5k-line CSS inventory, a 22-screenshot critique) because the description said "exhaustive inventory"; both ran 22–38 minutes without returning and were stopped.
+
 ## 0.26.5 — 2026-08-31
 
 `orchestrate` model map logs the first cheap-tier field outcome after 0.26.0: five terra @ high read-only classification stages in one Workflow, clean.

@@ -1,6 +1,6 @@
 ---
 name: opus-medium
-description: Worker pinned to opus @ medium for a single tightly specified stage (bounded implementation against explicit acceptance criteria, mechanical refactors, test updates) without a workflow tree. Give it a complete specification with acceptance criteria and output bounds. Not for open problems or verification (opus-high, opus-xhigh) or adapter work (codex-worker).
+description: Only when the orchestrate skill is active in this session; otherwise use general-purpose. Worker pinned to opus @ medium for a single tightly specified stage (bounded implementation against explicit acceptance criteria, mechanical refactors, test updates) without a workflow tree. Give it a complete specification with acceptance criteria and output bounds. Not for open problems or verification (opus-high, opus-xhigh) or adapter work (codex-worker).
 model: opus
 effort: medium
 ---
