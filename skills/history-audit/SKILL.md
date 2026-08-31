@@ -13,6 +13,12 @@ self-reported.
 
 Deterministic where possible; agents only where judgment is needed.
 
+Quick friction pass, no agents: `python3 scripts/friction-scan.py --days 14`
+counts failed tool calls (hook blocks, permission denials, read-before-edit,
+edit mismatches, exit codes, Codex `Script failed`) per harness, lane and
+model with dated pointers. Run it first; it answers "what breaks mechanically"
+so the pipeline below can stay on "what the user corrected".
+
 ## Pipeline
 
 1. **Detect and index the corpora by script, not agents.** Probe what exists

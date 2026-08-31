@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.26.3 — 2026-08-31
+
+`history-audit` gains `scripts/friction-scan.py`: a deterministic, stdlib-only count of failed tool calls across Claude Code transcripts (main and subagent lanes) and Codex rollouts, bucketed by cause (hook blocks, permission denials, read-before-edit, edit mismatches, exit codes, Codex `Script failed`) per harness, lane and model, with dated pointers and credential masking. Field driver: a subagent's harness refusal was noticed by luck; subagent transcripts are rarely read, so mechanical friction had no measurement.
+
 ## 0.26.2 — 2026-08-31
 
 The three tier definitions (`opus-medium`, `opus-high`, `opus-xhigh`) tell the worker to Read-tool every file before it Edits it. Field driver: a dispatched stage read its inputs through the shell (`cat`), hit the harness's built-in "File must be read first" refusal on its first Edit, and spent the rest of the stage on a replace-script workaround.
