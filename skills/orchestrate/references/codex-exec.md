@@ -426,11 +426,11 @@ suspected reroute as unverified without evidence.
 
 ## Write-worker gates
 
-- One dedicated git worktree per writing worker (`SKILL.md` owns the
-  isolation rule) — in Workflow scripts, spawn the wrapper agent with
-  `isolation: 'worktree'` and run the helper with `--workspace` pointing at
-  that worktree; the helper also holds an exclusive per-workspace lock during
-  write runs as a backstop.
+- A writing worker's workspace follows its write set (`SKILL.md` owns the
+  isolation rule): the main tree when nothing else writes there, a dedicated
+  worktree when the rule calls for one — pass it with `--workspace`. The
+  helper also holds an exclusive per-workspace lock during write runs as a
+  backstop.
 - That worktree isolates the working tree, not the repository: `.git` is
   shared, so hooks and `--local` config stay common state — `git worktree add`
   runs the repo's own `post-checkout` hook before any worker starts — and a

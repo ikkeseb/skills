@@ -5,11 +5,25 @@ encode routing judgment, not benchmarks — higher = better/cheaper, and the
 cost column ranks across lanes, not within them; adjust the scores when
 experience disagrees.
 
-## The senior seat
+## Tiers
 
-The session model is the senior seat. It is never a delegate, and this skill
-does not select it — the seat is whatever model the session is running, so it
-carries no score.
+Three tiers, cut by blast radius and final say rather than by score:
+
+- **Seat** — the session model. Design, specification, cuts and seams,
+  integration, final review. Never a delegate; this skill does not select it.
+- **Workhorse** (`opus`, gpt-5.6-sol) — execution that carries judgment:
+  implementation, root-cause, research with conclusions, cross-family review,
+  recommendations. The last delegate word before the seat.
+- **Cheap** (gpt-5.6-terra, gpt-5.6-luna) — the default for breadth and
+  mechanics: Map readers, single-dimension checkers, sweeps, extraction,
+  classification, test and lint fix-ups, "does this diff meet criterion N".
+  Fans out by default; every result is a candidate the seat or a workhorse
+  judges, never a verdict. Anything that needs a decision goes one tier up.
+
+`fable` as a delegate is the rare exception to all three: a fable seat over
+fable delegates buys nothing the seat does not already have.
+
+## The senior seat
 
 **Seat selection.** A mid-session `/model` switch before invoking this skill
 is how a seat is handed over. Field experience: `fable` (Fable 5) is the best
@@ -23,14 +37,14 @@ budget seat — a seat strength that does not extend to its delegate niche.
 
 | model | lane | cost | intelligence | taste | default effort | default role | fallback |
 |---|---|---:|---:|---:|---|---|---|
-| `fable` | claude | 2 | 9 | 9 | medium/high | Priciest row, reserved: fuzzy-intent and highest-stakes user-facing work — reading underspecified goals is the bottleneck; particular frontend strength. Occasional shortcut habit — its output still gets acceptance criteria and review | `opus` |
-| `opus` | claude | 4 | 9 | 8 | high/xhigh | Claude-lane workhorse (user-facing surface — UI, copy, API shape — and anything needing harness tools) and the standard cross-family verifier of Codex-produced work | gpt-5.6-sol |
-| gpt-5.6-sol | codex | 6 | 8–9 | 7 | high/xhigh | Primary execution workhorse (decision 2026-08-24): research, heavy implementation, root-cause, taste/review; fable only when reading underspecified intent is the bottleneck. Scope prompts tightly — see the overengineering note | `opus` |
+| `fable` | claude | 2 | 9 | 9 | medium/high | Reserved: fuzzy-intent, highest-stakes user-facing work, particular frontend strength. Its output still gets acceptance criteria and review | `opus` |
+| `opus` | claude | 4 | 9 | 8 | high/xhigh | Claude-lane workhorse (user-facing surface — UI, copy, API shape — and anything needing harness tools); standard cross-family verifier of Codex-produced work. Tier definitions `opus-high` / `opus-xhigh` carry the pins | gpt-5.6-sol |
+| gpt-5.6-sol | codex | 6 | 8–9 | 7 | high/xhigh | Primary execution workhorse (decision 2026-08-24): research, heavy implementation, root-cause, taste/review. Scope prompts tightly — see the overengineering note | `opus` |
 | gpt-5.6-sol @ max | codex | 3 | 9–10 | 6 | max | Adversarial verification, independent second opinion on critical work | `opus` @ xhigh |
-| gpt-5.6-terra | codex | 8 | 7–8 | 6 | high; xhigh/max when it writes | Broad fan-out workhorse (recon, parallel analysis, bulk transforms) and small reviews / simple well-specified coding — first stop below sol; try before luna for anything that is actual code or review | `opus` |
-| `sonnet` | claude | 5 | 6 | 7 | high | Budget conductor seat (see seat selection) and the Codex-adapter relay seat @ low (see routing rules) — not an execution lane | `opus` |
-| gpt-5.6-luna | codex | 10 | 5–6 | 5 | high; xhigh/max when it writes | Bottom usable tier: extraction, classification, sanity checks — very simple, tightly specified tasks only; prefer terra when the task is code or review | gpt-5.6-terra |
-| `haiku` | claude | 10 | 4 | 5 | — | Never use — off-limits even for mechanical relay/adapter stages; luna covers this tier | gpt-5.6-luna |
+| gpt-5.6-terra | codex | 8 | 7–8 | 6 | high; xhigh/max when it writes | First cheap stop: Map readers, parallel analysis, bulk transforms, small reviews, simple well-specified code | `opus` |
+| `sonnet` | claude | 5 | 6 | 7 | high | Budget conductor seat and the Codex-adapter relay seat @ low — not an execution lane | `opus` |
+| gpt-5.6-luna | codex | 10 | 5–6 | 5 | high; xhigh/max when it writes | Cheapest usable: extraction, classification, sanity checks, single-criterion checks; terra first when the task is code | gpt-5.6-terra |
+| `haiku` | claude | 10 | 4 | 5 | — | Off-limits, adapter stages included; luna covers this tier | gpt-5.6-luna |
 
 **The two lanes are named differently, and the difference matters.**
 Claude-lane rows are *harness aliases* (`fable`, `opus`, `sonnet`, `haiku`) —
@@ -91,13 +105,22 @@ delegation the orchestrator doesn't control.
   −20%. The cut also reduces Codex-subscription credit consumption, so it
   applies in this setup's billing, not just the API — hence terra cost 8 and
   luna 10, undercutting haiku on raw tariff.
-- **Cheap-tier effort compensation** (field, 2026-08-02): terra and luna earn
-  their keep at *higher* effort than their price suggests — high for read-only
-  work, xhigh/max when they write or execute. The price cut makes this cheap:
-  luna at max is still a fraction of sol at medium. Both remain
-  delegation-eligible but deliberately underused until their task-class
-  boundaries are clearer; the common precondition is a tight spec from the
-  seat plus verification where the result matters.
+- **Cheap tier: effort up, breadth on** (field 2026-08-02; decision
+  2026-08-31). terra and luna earn their keep at *higher* effort than their
+  price suggests — high for read-only work, xhigh/max when they write or
+  execute; luna at max is still a fraction of sol at medium, and max is slow,
+  so fan-outs run at high. The precondition is a tight spec from the seat
+  plus verification where the result matters; they fumble on open-ended
+  work, so they replace nothing in the workhorse tier. A cheap stage returns
+  evidence and findings; accept/reject stays with the seat or a workhorse.
+  Task classes in trial — log each outcome below as it lands. Read-only:
+  Map readers with a fixed schema; single-criterion diff checks; test-run
+  triage (run, classify, no fixing); evidence extraction from named,
+  reachable sources, no conclusions (cheap research fails silently with
+  plausible-but-wrong facts). Writing, each under a deterministic gate plus
+  the risk-tiered review: test-file updates to a changed API; CSS or code
+  deletion by explicit rule list; formatter/lint fix-ups.
+  - 2026-08-29, terra @ medium read-only Map via foreground relay: clean.
 - Score changes need usage evidence, not launch benchmarks — vendor
   capability claims are adopted nowhere. Cost stays a tariff/quota score; do
   not silently redefine it as cost-per-successful-task.
@@ -111,8 +134,6 @@ delegation the orchestrator doesn't control.
   a main-loop problem, and re-rolling is spend without a hypothesis. This
   governs *quality* misses only; a `workspace-write` failure is never
   blind-retried at any tier (the tree may hold a partial change to inspect).
-  Wider spend changes (bigger fan-outs, more rounds) follow the session's
-  spend posture, not this rule.
 - **Verification is risk-triggered, not blanket — and cross-family when
   owed.** It is owed to work where a wrong result ships or is expensive to
   unwind; everything else is covered by acceptance criteria, tests, and
@@ -124,16 +145,16 @@ delegation the orchestrator doesn't control.
   codex lane. Same-family or same-lane verification is *degraded coverage*:
   usable when the other lane is down, stated as degraded, never implied away.
   Report coverage honestly: cross-provider, same-provider, or none.
-- **Pin `{model, effort}` on every delegated stage.** Put each pin on the call
-  itself where the instrument supports it; an agent definition's frontmatter
-  may supply `effort` instead. An `effort` omitted from both inherits the
-  session's setting, which is a per-session, per-machine choice that will not
-  be what the stage needs. An omitted *model* inherits the seat's, which
-  manufactures the same-family collision the verification rule exists to
-  avoid — so the Workflow tool's own "default to omitting it" advice for
-  `model` is overridden here, exactly as its effort advice is below. Explicit
-  pinning is what makes a delegated stage reproducible across machines and
-  sessions.
+- **Pin `{model, effort}` on every delegated stage.** Workflow stages pin on
+  the `agent()` call; a plain Agent dispatch pins through a tier definition
+  (`opus-high`, `opus-xhigh`, `codex-worker`), since the Agent tool takes
+  `model` but no `effort`. An omitted `effort` inherits the session's
+  setting, a per-session, per-machine choice that will not be what the stage
+  needs. An omitted *model* inherits the seat's, which manufactures the
+  same-family collision the verification rule exists to avoid and, under a
+  fable seat, bills every forgotten pin at fable price — so the Workflow
+  tool's own "default to omitting it" advice for `model` is overridden here,
+  exactly as its effort advice is below.
 - **Effort by kind of work, not by price** — per-model defaults live in the
   table; the universal bounds: `medium` is the floor for substantive work
   (below it the output stops being worth reviewing); `xhigh`/`max` for
@@ -146,19 +167,15 @@ delegation the orchestrator doesn't control.
   performance-per-cost in the high band.
 - **Adapter seat: `sonnet` @ `low`.** Codex-lane adapter stages (foreground
   relay and active-wait adapter alike) are pure mechanics — run the helper
-  command, hold bounded waits, relay one JSON envelope — with the orchestrator-minted run dir as
-  ground truth if the relay garbles. Pin them `sonnet` @ `low` (field,
-  2026-08-24: one green foreground relay held the contract verbatim; sonnet's
-  lower per-token price nets ~20–25 % per relay despite a slightly higher
-  token count). This supersedes the earlier opus @ low transport pin. The
-  shipped `codex-worker` agent definition carries the same pin; `haiku`
-  remains off-limits even here.
+  command, hold bounded waits, relay one JSON envelope — with the
+  orchestrator-minted run dir as ground truth if the relay garbles. Pin them
+  `sonnet` @ `low` (field, 2026-08-24: one green foreground relay held the
+  contract verbatim; sonnet's lower per-token price nets ~20–25 % per relay
+  despite a slightly higher token count). The shipped `codex-worker` agent
+  definition carries the same pin; `haiku` remains off-limits even here.
 - **Relay-stage exception** (field, 2026-08-05): a stage whose real labor
   happens in a *separate* model the worker merely prompts — image generation
   relayed through a Codex worker is the known case — is pinned to
   `gpt-5.6-sol` @ `medium`; higher effort buys nothing there. Applies only
   when the relay target is actually available in the setup, and never to
   stages that do their own labor.
-- **Never route judgment work to the cheap tier**: luna-class models do
-  extraction and mechanical checks; anything requiring a decision goes at
-  least one tier up.

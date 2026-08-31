@@ -639,7 +639,7 @@ cmd_run() {
      && "$GIT_BIN" -C "$workspace" rev-parse --git-dir >/dev/null 2>&1; then in_git=true; fi
   if [ "$in_git" = false ]; then
     [ "$sandbox" = "read-only" ] || fail_json usage \
-      "workspace-write requires a git workspace (worktree per writing worker)"
+      "workspace-write requires a git workspace"
     [ -z "$expected_sha" ] || fail_json usage "--expected-base-sha given for a non-git workspace"
   fi
   local run_dir
