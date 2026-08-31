@@ -104,6 +104,8 @@ never reports back. **Fresh run dir per attempt, always**: the helper refuses
 a non-empty dir (mixed evidence). Suffix an attempt counter into both the
 run-dir path and the dispatch prompt — the prompt edit also busts the
 Workflow resume cache (see the resume notes in the orchestrate skill).
+The run dir is helper-owned: adapters keep prompt and schema files elsewhere
+and never create or write `RUN_DIR` themselves.
 
 Sandbox choice is a write barrier, not an execution barrier: `read-only`
 denies all writes but does not reliably block process spawning (verified in
@@ -209,6 +211,7 @@ You are a one-shot Codex-lane adapter using BACKGROUND dispatch with an
 ACTIVE WAIT. Do exactly this:
 1. Create a private temp dir with mktemp -d. Write the worker prompt below
    to prompt.md in it, and (if given) the JSON schema below to schema.json.
+   Never write either file into RUN_DIR; it is reserved for helper output.
 2. Start this command with the Bash tool with run_in_background set to true:
    HELPER_ABS_PATH run --model MODEL --effort EFFORT --sandbox SANDBOX \
      --workspace WORKSPACE --prompt-file <tempdir>/prompt.md \
@@ -475,7 +478,13 @@ suspected reroute as unverified without evidence.
   (`wsl.exe -e bash -c '…'`) with the run dir minted on the VM side, and
   harvest the same envelope; workspaces under `/mnt/c` work, so the VM can
   write into checkouts the Windows session is orchestrating (git over drvfs
-  is slow — prefer VM-side checkouts for heavy repos). Two measured traps:
+  is slow — prefer VM-side checkouts for heavy repos). A VM-side worktree can
+  be registered under a `/home/...` path Windows Git cannot resolve. While
+  any are registered, never run `git worktree prune` from Windows or use
+  Windows Git to remove them; list and clean them inside the VM, and limit
+  Windows-side removal to Windows paths. A bridged run that may be harvested
+  after a VM restart uses a persistent VM-local run dir instead of `/tmp`,
+  then removes it after harvest. Two other measured traps:
   a non-interactive WSL shell may lack the codex binary on PATH (PATH
   exports often live in interactive-only rc files) — export it explicitly
   in the bridge command or the run fails as `codex_missing`; and keep the

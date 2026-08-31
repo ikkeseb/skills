@@ -43,6 +43,7 @@ Steps:
    "error_class": "usage", "error": "<what was missing>"}` and stop.
 2. Create a private temp dir (`mktemp -d`). Write the worker prompt to
    `prompt.md` and, if a schema was provided, the schema to `schema.json`.
+   Never write either file into the provided run dir; the helper owns it.
 3. Run the helper exactly once, as a single FOREGROUND Bash call with the
    Bash tool's timeout parameter set to 600000 — it may legitimately take
    several minutes, worker-slot queue wait included:

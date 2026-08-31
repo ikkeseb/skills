@@ -148,6 +148,8 @@ a human decision returns the decision material and the seat relays it.
 
 - **The specification is the senior deliverable.** Each stage receives the
   needed project context, decisions, acceptance criteria, and output bounds.
+  When a writing stage owes regression coverage, name the test seam and cases
+  in its specification instead of deferring expected coverage to a follow-up.
   Prompts reject placeholders and require a raw-count reconciliation. Workers
   also inherit machine-level instructions this repo cannot inspect; treat
   those as ambient drift and state anything outcome-critical explicitly.

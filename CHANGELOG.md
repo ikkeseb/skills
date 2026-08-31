@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.27.1 — 2026-08-31
+
+`handoff` now closes the current session before it builds continuation context: it finishes only already authorized verification and repository bookkeeping, preserves the exact remaining state when a clean stop needs new work or authority, then writes the handoff last. The five-read verification budget still applies only to building the handoff. `orchestrate` folds the same field session's narrow operational findings: build specifications name expected regression coverage, adapters keep prompt and schema files out of the helper-owned run dir, and the WSL bridge protects VM-side worktrees from Windows Git cleanup while using a persistent VM-local run dir only when harvest must survive a restart.
+
 ## 0.27.0 — 2026-08-31
 
 `orchestrate` drops the `opus-medium` / `opus-high` / `opus-xhigh` agent definitions (0.26.0–0.26.6). A plain Agent dispatch now pins `model` and inherits the session's effort; a stage that needs more than the seat runs at — deep verification of another lane's work — goes as a one-agent Workflow with `effort` pinned on the `agent()` call. Why: custom agents in `~/.claude/agents/` are visible to the model in every session and no frontmatter field scopes them to a skill, so the 0.26.6 description gate was the only guard and a soft one; the effort control they bought is nice-to-have on the Claude lane (the Codex lane pins effort through the helper, unchanged). Both effort mechanisms were verified in transcripts before the decision; second-opinion (gpt-5.6-sol high) concurred. Consumers: remove the three links from `~/.claude/agents/`; `codex-worker.md` stays.

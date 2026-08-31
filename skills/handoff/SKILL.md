@@ -9,6 +9,10 @@ Write a complete but selective continuation handoff, tailored to any next-sessio
 
 A handoff is a judgment exercise, not template fill. Its failure mode is either a polished recap of facts recoverable from `git status`, or a terse pointer that makes the next session reconstruct the research and decisions again.
 
+## Close the session
+
+Before building the handoff, finish in-flight verification and normal repository bookkeeping allowed by the existing task scope and authorization, including an already authorized commit, push, or deploy. Do not start new product work. If a clean stop needs new implementation or authority, preserve the exact remaining state. Write the handoff last, from that state.
+
 ## Build the handoff
 
 1. Reconstruct from session memory: the goal, verified state, research that changed the direction, decisions and their reasons, rejected or deferred paths, failed approaches, open work, blockers, and the clearest executable next step. Include only the categories that matter, but do not drop load-bearing context to make the handoff short.
@@ -19,8 +23,6 @@ A handoff is a judgment exercise, not template fill. Its failure mode is either 
 6. Match the user's language. Keep commands, paths, identifiers, and source-language technical text exact. Redact secrets and personal details that are unnecessary for continuation.
 
 Done when the receiving session can answer, without redoing the investigation: what the goal is, what changed, what was decided, what remains, which documents carry the evidence, and what to do first.
-
-Do not continue the task or edit durable repository guidance while creating the handoff. If durable context is missing, name that gap; the handoff is transport, not its replacement.
 
 ## Structure the content
 
