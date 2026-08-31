@@ -36,8 +36,8 @@ fix → no fan-out. A worker earns its slot with a named distinct slice; when
 the next slice has no name, the fan-out is done.
 
 **The instrument follows the shape.** One short stage → a plain Agent
-dispatch through a tier definition (`opus-high`, `opus-xhigh`,
-`codex-worker`); one long Codex stage → main-loop background dispatch with
+dispatch through a tier definition (`opus-medium`, `opus-high`,
+`opus-xhigh`, `codex-worker`); one long Codex stage → main-loop background dispatch with
 run-dir harvest; fan-out or multiple stages → one mixed-lane Workflow, Claude
 stages as `agent()` calls, Codex stages through adapter agents, every lane a
 labeled row in one tree — never a one-row tree. Invoking `/orchestrate` is

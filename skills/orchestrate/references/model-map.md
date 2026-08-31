@@ -38,7 +38,7 @@ budget seat — a seat strength that does not extend to its delegate niche.
 | model | lane | cost | intelligence | taste | default effort | default role | fallback |
 |---|---|---:|---:|---:|---|---|---|
 | `fable` | claude | 2 | 9 | 9 | medium/high | Reserved: fuzzy-intent, highest-stakes user-facing work, particular frontend strength. Its output still gets acceptance criteria and review | `opus` |
-| `opus` | claude | 4 | 9 | 8 | high/xhigh | Claude-lane workhorse (user-facing surface — UI, copy, API shape — and anything needing harness tools); standard cross-family verifier of Codex-produced work. Tier definitions `opus-high` / `opus-xhigh` carry the pins | gpt-5.6-sol |
+| `opus` | claude | 4 | 9 | 8 | high/xhigh | Claude-lane workhorse (user-facing surface — UI, copy, API shape — and anything needing harness tools); standard cross-family verifier of Codex-produced work. Tier definitions `opus-medium` / `opus-high` / `opus-xhigh` carry the pins | gpt-5.6-sol |
 | gpt-5.6-sol | codex | 6 | 8–9 | 7 | high/xhigh | Primary execution workhorse (decision 2026-08-24): research, heavy implementation, root-cause, taste/review. Scope prompts tightly — see the overengineering note | `opus` |
 | gpt-5.6-sol @ max | codex | 3 | 9–10 | 6 | max | Adversarial verification, independent second opinion on critical work | `opus` @ xhigh |
 | gpt-5.6-terra | codex | 8 | 7–8 | 6 | high; xhigh/max when it writes | First cheap stop: Map readers, parallel analysis, bulk transforms, small reviews, simple well-specified code | `opus` |
@@ -121,6 +121,11 @@ delegation the orchestrator doesn't control.
   the risk-tiered review: test-file updates to a changed API; CSS or code
   deletion by explicit rule list; formatter/lint fix-ups.
   - 2026-08-29, terra @ medium read-only Map via foreground relay: clean.
+- **opus @ medium in trial** (decision 2026-08-31): for tightly specified
+  builds, mechanical refactors and test updates, via `opus-medium`. The
+  "best performance-per-cost in the high band" line in the effort rule has
+  no field citation; third-party figures put medium two index points under
+  high at ~60 % of the cost. Log outcomes here; promote or drop on evidence.
 - Score changes need usage evidence, not launch benchmarks — vendor
   capability claims are adopted nowhere. Cost stays a tariff/quota score; do
   not silently redefine it as cost-per-successful-task.
@@ -147,7 +152,7 @@ delegation the orchestrator doesn't control.
   Report coverage honestly: cross-provider, same-provider, or none.
 - **Pin `{model, effort}` on every delegated stage.** Workflow stages pin on
   the `agent()` call; a plain Agent dispatch pins through a tier definition
-  (`opus-high`, `opus-xhigh`, `codex-worker`), since the Agent tool takes
+  (`opus-medium`, `opus-high`, `opus-xhigh`, `codex-worker`), since the Agent tool takes
   `model` but no `effort`. An omitted `effort` inherits the session's
   setting, a per-session, per-machine choice that will not be what the stage
   needs. An omitted *model* inherits the seat's, which manufactures the
