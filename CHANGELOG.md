@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.26.4 — 2026-08-31
+
+`history-audit` friction scan after second-opinion review (gpt-5.6-sol high): per-model sums no longer overwrite across lanes (a real miscount: 8 reported where 102 occurred), `EISDIR` gets its own `read-directory` bucket, the Codex tools line is dropped (outputs carry no tool name), the header reports how many files yielded recognised records and flags FORMAT UNKNOWN when none do, and the denominator table carries its own caveat (task mix, small denominators, Claude `is_error` vs Codex text heuristic, raw population). Declined: failure-streak metric (add only if a report needs spiral ranking) and delegating fan-out to `orchestrate` (skills stay self-contained and Codex-usable).
+
 ## 0.26.3 — 2026-08-31
 
 `history-audit` gains `scripts/friction-scan.py`: a deterministic, stdlib-only count of failed tool calls across Claude Code transcripts (main and subagent lanes) and Codex rollouts, bucketed by cause (hook blocks, permission denials, read-before-edit, edit mismatches, exit codes, Codex `Script failed`) per harness, lane and model, with dated pointers and credential masking. Field driver: a subagent's harness refusal was noticed by luck; subagent transcripts are rarely read, so mechanical friction had no measurement.

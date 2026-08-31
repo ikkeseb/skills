@@ -43,7 +43,8 @@ CC_BUCKETS = [
     ("read-before-edit", re.compile(r"(File has not been read yet|File must be read first)")),
     ("edit-mismatch", re.compile(r"(String to replace not found|Found \d+ matches of the string)")),
     ("modified-since-read", re.compile(r"File has been modified since read")),
-    ("file-not-found", re.compile(r"(File does not exist|ENOENT|EISDIR)")),
+    ("read-directory", re.compile(r"EISDIR")),
+    ("file-not-found", re.compile(r"(File does not exist|ENOENT)")),
     ("schema-mismatch", re.compile(r"Output does not match required schema")),
     ("blocked-command", re.compile(r"<tool_use_error>Blocked:")),
     ("worktree-isolation", re.compile(r"This session is isolated in the worktree")),
@@ -127,6 +128,7 @@ def scan_cc(since, stats):
                     if not isinstance(b, dict):
                         continue
                     if b.get("type") == "tool_use":
+                        stats["parsed"]["claude-code"].add(path)
                         tool_by_id[b.get("id")] = b.get("name", "?")
                         stats["calls"][("claude-code", lane, model)] += 1
                         stats["sessions"][("claude-code", lane, model)].add(path)
@@ -172,6 +174,7 @@ def scan_codex(since, stats):
                 elif t == "turn_context":
                     model = p.get("model") or model
                 elif t == "response_item" and p.get("type") in ("function_call", "custom_tool_call"):
+                    stats["parsed"]["codex"].add(path)
                     stats["calls"][("codex", lane, model)] += 1
                     stats["sessions"][("codex", lane, model)].add(path)
                 elif t == "response_item" and p.get("type") in ("function_call_output", "custom_tool_call_output"):
@@ -185,7 +188,6 @@ def scan_codex(since, stats):
                     detail = next((l for l in lines[1:] if not l.startswith(NOISE)), "")
                     key = "codex-fail:" + redact(detail)[:60]
                     stats["errors"][key][("codex", lane, model)] += 1
-                    stats["tools"][key][p.get("name") or p.get("type")] += 1
                     ex = stats["examples"][key]
                     if len(ex) < 50:
                         ex.append((day, project, lane, base[8:27], redact(detail)[:110]))
@@ -206,6 +208,7 @@ def main():
         "errors": collections.defaultdict(collections.Counter),
         "tools": collections.defaultdict(collections.Counter),
         "examples": collections.defaultdict(list),
+        "parsed": collections.defaultdict(set),
     }
     found = {"claude-code": scan_cc(since, stats), "codex": scan_codex(since, stats)}
 
@@ -213,13 +216,20 @@ def main():
     out.append(f"# Friction scan — {socket.gethostname()} — since {since} ({a.days} days)")
     out.append("")
     for h, n in found.items():
-        out.append(f"- {h}: " + ("corpus absent (unknown, not zero)" if n is None else f"{n} transcript files on disk"))
+        if n is None:
+            out.append(f"- {h}: corpus absent (unknown, not zero)")
+            continue
+        parsed = len(stats["parsed"][h])
+        line = f"- {h}: {n} transcript files on disk, {parsed} with recognised tool calls in window"
+        if parsed == 0:
+            line += " — FORMAT UNKNOWN: files exist but no expected records parsed; treat every count below as unknown"
+        out.append(line)
     out.append("- Codex failures are heuristic (first output line `Script failed` / nonzero `exit=`); "
                "hooks that fired without blocking are not visible here.")
     out.append("")
     out.append("## Tool calls in window (denominator)")
     out.append("")
-    out.append("| harness | lane | model | sessions | tool calls | failed | fail % |")
+    out.append("| harness | lane | model | sessions | tool calls | failed | observed fail % |")
     out.append("|---|---|---|---|---|---|---|")
     fails = collections.Counter()
     for key, per in stats["errors"].items():
@@ -230,6 +240,11 @@ def main():
         pct = f"{100 * f / calls:.1f}" if calls else "-"
         out.append(f"| {h} | {lane} | {model} | {len(stats['sessions'][(h, lane, model)])} | {calls} | {f} | {pct} |")
     out.append("")
+    out.append("fail % is observed failed-result share: task mix differs per lane and model, small "
+               "denominators swing, and Claude Code (`is_error` flag) is not comparable with Codex "
+               "(text heuristic). Population is every raw transcript; the correction audit's "
+               "exclusions (automated sessions, forked prefixes) are not applied here.")
+    out.append("")
     out.append("## Failure buckets")
     out.append("")
     ranked = sorted(stats["errors"].items(), key=lambda kv: -sum(kv[1].values()))
@@ -238,13 +253,14 @@ def main():
         by_lane = collections.Counter()
         for (h, lane, model), v in per.items():
             by_lane[f"{h}/{lane}"] += v
-        tools = ", ".join(f"{t}×{n}" for t, n in stats["tools"][key].most_common(3))
+        tools = ", ".join(f"{t}×{n}" for t, n in stats["tools"][key].most_common(3)) or "n/a (Codex outputs carry no tool name)"
         out.append(f"### {key} — {total}")
         out.append("")
         out.append("- by lane: " + ", ".join(f"{k} {v}" for k, v in by_lane.most_common()))
-        out.append("- by model: " + ", ".join(
-            f"{m} {v}" for m, v in sorted(collections.Counter(
-                {model: v for (h, lane, model), v in per.items()}).items(), key=lambda kv: -kv[1])))
+        by_model = collections.Counter()
+        for (h, lane, model), v in per.items():
+            by_model[model] += v
+        out.append("- by model: " + ", ".join(f"{m} {v}" for m, v in by_model.most_common()))
         out.append(f"- tools: {tools}")
         for ts, project, lane, fname, line in stats["examples"][key][:a.examples]:
             out.append(f"- `{ts}` {project} {lane} `{fname}` — {line}")
