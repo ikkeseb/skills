@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.27.0 — 2026-08-31
+
+`orchestrate` drops the `opus-medium` / `opus-high` / `opus-xhigh` agent definitions (0.26.0–0.26.6). A plain Agent dispatch now pins `model` and inherits the session's effort; a stage that needs more than the seat runs at — deep verification of another lane's work — goes as a one-agent Workflow with `effort` pinned on the `agent()` call. Why: custom agents in `~/.claude/agents/` are visible to the model in every session and no frontmatter field scopes them to a skill, so the 0.26.6 description gate was the only guard and a soft one; the effort control they bought is nice-to-have on the Claude lane (the Codex lane pins effort through the helper, unchanged). Both effort mechanisms were verified in transcripts before the decision; second-opinion (gpt-5.6-sol high) concurred. Consumers: remove the three links from `~/.claude/agents/`; `codex-worker.md` stays.
+
 ## 0.26.6 — 2026-08-31
 
 The `opus-medium` / `opus-high` / `opus-xhigh` agent definitions now open their description with "Only when the orchestrate skill is active in this session; otherwise use general-purpose." Custom agents in `~/.claude/agents/` are visible to the model in every session and no frontmatter field scopes them to a skill (vendor sub-agents doc, checked 2026-08-31); the wording is the only available gate. Field driver: an unattended non-orchestrate session picked `opus-xhigh` for two plain read-only tasks (a 5.5k-line CSS inventory, a 22-screenshot critique) because the description said "exhaustive inventory"; both ran 22–38 minutes without returning and were stopped.

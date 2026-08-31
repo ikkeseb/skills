@@ -38,7 +38,7 @@ budget seat — a seat strength that does not extend to its delegate niche.
 | model | lane | cost | intelligence | taste | default effort | default role | fallback |
 |---|---|---:|---:|---:|---|---|---|
 | `fable` | claude | 2 | 9 | 9 | medium/high | Reserved: fuzzy-intent, highest-stakes user-facing work, particular frontend strength. Its output still gets acceptance criteria and review | `opus` |
-| `opus` | claude | 4 | 9 | 8 | high/xhigh | Claude-lane workhorse (user-facing surface — UI, copy, API shape — and anything needing harness tools); standard cross-family verifier of Codex-produced work. Tier definitions `opus-medium` / `opus-high` / `opus-xhigh` carry the pins | gpt-5.6-sol |
+| `opus` | claude | 4 | 9 | 8 | high/xhigh | Claude-lane workhorse (user-facing surface — UI, copy, API shape — and anything needing harness tools); standard cross-family verifier of Codex-produced work. Plain dispatches inherit the seat's effort; Workflow stages pin it (pin rule) | gpt-5.6-sol |
 | gpt-5.6-sol | codex | 6 | 8–9 | 7 | high/xhigh | Primary execution workhorse (decision 2026-08-24): research, heavy implementation, root-cause, taste/review. Scope prompts tightly — see the overengineering note | `opus` |
 | gpt-5.6-sol @ max | codex | 3 | 9–10 | 6 | max | Adversarial verification, independent second opinion on critical work | `opus` @ xhigh |
 | gpt-5.6-terra | codex | 8 | 7–8 | 6 | high; xhigh/max when it writes | First cheap stop: Map readers, parallel analysis, bulk transforms, small reviews, simple well-specified code | `opus` |
@@ -124,11 +124,13 @@ delegation the orchestrator doesn't control.
   - 2026-08-31, terra @ high ×5 read-only classification (evidence extraction
     with a fixed schema) via `codex-worker` adapters in one Workflow: clean;
     two seat spot-checks matched the sources; 94k tokens, 2 min 19 s.
-- **opus @ medium in trial** (decision 2026-08-31): for tightly specified
-  builds, mechanical refactors and test updates, via `opus-medium`. The
-  "best performance-per-cost in the high band" line in the effort rule has
-  no field citation; third-party figures put medium two index points under
-  high at ~60 % of the cost. Log outcomes here; promote or drop on evidence.
+- **opus @ medium** (2026-08-31): the `opus-medium` trial logged no
+  datapoint before inherit-by-default superseded it the same day — under
+  the usual medium seat every plain Opus dispatch already runs at medium.
+  The "best performance-per-cost in the high band" line in the effort rule
+  has no field citation; third-party figures put medium two index points
+  under high at ~60 % of the cost. Log outcomes of inherited-medium builds
+  here.
 - Score changes need usage evidence, not launch benchmarks — vendor
   capability claims are adopted nowhere. Cost stays a tariff/quota score; do
   not silently redefine it as cost-per-successful-task.
@@ -153,12 +155,23 @@ delegation the orchestrator doesn't control.
   codex lane. Same-family or same-lane verification is *degraded coverage*:
   usable when the other lane is down, stated as degraded, never implied away.
   Report coverage honestly: cross-provider, same-provider, or none.
-- **Pin `{model, effort}` on every delegated stage.** Workflow stages pin on
-  the `agent()` call; a plain Agent dispatch pins through a tier definition
-  (`opus-medium`, `opus-high`, `opus-xhigh`, `codex-worker`), since the Agent tool takes
-  `model` but no `effort`. An omitted `effort` inherits the session's
-  setting, a per-session, per-machine choice that will not be what the stage
-  needs. An omitted *model* inherits the seat's, which manufactures the
+- **Pin `model` on every delegated stage; pin `effort` where the instrument
+  takes one.** Workflow stages pin both on the `agent()` call; Codex stages
+  pin both through the helper; a plain Agent dispatch pins `model` only —
+  the Agent tool has no `effort` parameter, so the stage inherits the
+  session's effort. Both mechanisms verified 2026-08-31 (subagent
+  transcripts stamp the level: a Workflow `effort: 'low'` under a medium
+  seat ran at low; a tier definition's `effort: high` ran at high).
+  Inheritance is accepted (decision 2026-08-31): under the usual medium
+  seat it is the right level for bounded Claude work, and the one stage it
+  shortchanges — deep verification of Codex-produced work — goes as a
+  one-agent Workflow with `effort` pinned. The tier agent definitions
+  `opus-medium` / `opus-high` / `opus-xhigh` (0.26.0–0.26.6) carried the pin
+  for plain dispatches and were removed in 0.27.0: a custom agent is
+  visible to the model in every session, no frontmatter field scopes it to
+  a skill, and an unattended non-orchestrate session picked `opus-xhigh`
+  for two plain reads that ran 22–38 min without returning. An omitted
+  *model* inherits the seat's, which manufactures the
   same-family collision the verification rule exists to avoid and, under a
   fable seat, bills every forgotten pin at fable price — so the Workflow
   tool's own "default to omitting it" advice for `model` is overridden here,

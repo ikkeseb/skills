@@ -35,20 +35,23 @@ Map work.
 fix → no fan-out. A worker earns its slot with a named distinct slice; when
 the next slice has no name, the fan-out is done.
 
-**The instrument follows the shape.** One short stage → a plain Agent
-dispatch through a tier definition (`opus-medium`, `opus-high`,
-`opus-xhigh`, `codex-worker`); one long Codex stage → main-loop background dispatch with
-run-dir harvest; fan-out or multiple stages → one mixed-lane Workflow, Claude
-stages as `agent()` calls, Codex stages through adapter agents, every lane a
-labeled row in one tree — never a one-row tree. Invoking `/orchestrate` is
-the Workflow opt-in. `pipeline()` by default; a barrier only where a stage
+**The instrument follows the shape.** One short Claude stage → a plain
+Agent dispatch with `model` pinned; effort inherits the session. One short
+Codex stage → the `codex-worker` adapter; one long Codex stage → main-loop
+background dispatch with run-dir harvest. Fan-out or multiple stages → one
+mixed-lane Workflow, Claude stages as `agent()` calls, Codex stages through
+adapter agents, every lane a labeled row in one tree. A one-row tree is an
+effort adapter, never a shape: only deep verification of another lane's
+work under a seat running below `high` earns it, with `effort` pinned on the
+`agent()` call. Invoking `/orchestrate` is the Workflow opt-in. `pipeline()` by default; a barrier only where a stage
 needs every prior result. Too small or too ambiguous to delegate well → state
 the sequential fallback and do it in the main loop.
 
 ## Instrument
 
-Every stage pins `{model, effort}` and returns typed data: Workflow stages
-use `schema`; Codex stages return the helper envelope. While a worker runs,
+Every stage pins `model`, and `effort` where the instrument takes one
+(model map § pin rule), and returns typed data: Workflow stages use
+`schema`; Codex stages return the helper envelope. While a worker runs,
 the seat specifies the next piece.
 
 Keep one-off dispatches anonymous — naming one turns it into an addressable
