@@ -26,9 +26,14 @@ phase 2 runs only after the user has chosen a direction.
 1. **Read** the complete instruction stack (see Loading contract). Done when every
    canonical file, adapter, parent/global file, and required file has been read.
 2. **Map** the folder structure, domains, target harnesses, and effective loading policy.
-   Note skeleton gaps against Target shape: a truth with no owner, two documents owning
-   one truth, a document the routing never reaches. Done when the harness list, its
-   evidence, each policy, and any skeleton gaps are stated or marked unknown.
+   Include the documents beside the instruction files: status pages, backlogs, specs,
+   roadmaps, session logs, audit findings, archive folders. For each, state the distinct
+   truth or repository function it owns that no other file owns; for historical
+   material, state whether the repository deliberately retains and routes it. Note skeleton
+   gaps against Target shape: a truth with no owner, two documents owning one truth, a
+   document the routing never reaches, a document with no current owner role. Done
+   when the harness list, its evidence, each policy, and any skeleton gaps are stated
+   or marked unknown.
 3. **Classify** each rule on type and scope, then mark it mandatory or optional and flag
    it (see Classify). Done when every live rule carries type, scope, flags, and
    mandatory/optional.
@@ -55,8 +60,11 @@ Do not classify or move a rule until its current and proposed reach are known:
    (`CLAUDE.md`, `AGENTS.md`, import adapters, harness manifests, hooks or settings)
    plus any harness the user names. No artifact and no mention means not a target;
    ambiguous means ask. Read the canonical files, adapters, parent/global instructions, and
-   every file they require. Done when the harness list and its evidence can be stated in
-   the read-back.
+   every file they require. Record the word count of each on-disk file, and separately
+   the loaded payload's count and source breakdown when observable (otherwise unknown):
+   a session payload concatenates global and repository instructions, and reading it as
+   one file misattributes size to the repository. Done when the harness list, its
+   evidence and both counts can be stated in the read-back.
 2. Determine each harness's effective skill invocation policy from the installed skill
    metadata and user/project settings. Check, rather than infer, whether skills are
    model-invoked or explicit/name-only. In Codex, inspect
@@ -130,7 +138,12 @@ disposition:
 
 - **sacred** — a guardrail whose loss causes regressions (see Guardrails).
 - **dead/stale** — no live rule; a deletion candidate whatever its scope: no further
-  classification needed, its proposed location is delete/archive.
+  classification needed, its proposed location is delete. Apply the flag to a whole
+  document only after every item in it is proven resolved, contradicted or owned
+  elsewhere against the live source (code, git log, branches, CI), never against the
+  file's age. Shipped work and duplicate task lists trigger the ownership test; they do
+  not prove staleness. Typical candidates: a status page describing shipped work as
+  waiting, a class map the code contradicts, a session log doubling as a second backlog.
 - **weak pointer** — a line whose job is to make the agent reach another file, but
   whose wording fails to state what the material is or omits a distinct branch that
   should trigger reading it; sharpen the wording before considering inlining.
@@ -165,7 +178,7 @@ enforcement.
 | Skill body | Optional domain procedure | Explicit invocation is acceptable or implicit loading is proven, and the write-back test passes |
 | Claude Code skill `paths:` | File-scoped guidance | Claude Code target and complete glob coverage |
 | Claude Code hook | Critical operation enforcement or reminders | Claude-specific; shared prose remains reachable elsewhere |
-| Delete / archive | Stale or resolved content | No live rule or required history is lost |
+| Delete | Stale or resolved content | No live rule or required record is lost; the repository convention or the user confirms git history suffices |
 
 Rules of thumb the table can't hold:
 
@@ -178,9 +191,12 @@ Rules of thumb the table can't hold:
 - **Project ownership:** keep project-specific rules in the project's supported
   instruction or skill locations, not in user-global context. Follow the repository's
   existing packaging convention instead of assuming a Claude-only directory.
-- **Don't over-split.** Create a skill only when the domain is genuinely separable *and*
-  low-hit-rate. Below ~10–15 lines, the frontmatter plus "which place is this rule in?"
-  overhead outweighs the content. Leave it static.
+- **Don't over-split.** Create a skill or routed supporting file only when the work can be
+  invoked on its own, its routing pointer names a task or path condition no neighbouring
+  domain shares, *and* its hit-rate is low. A file added for taxonomy trades context load
+  for navigation debt. Below ~10–15 lines, the
+  frontmatter plus "which place is this rule in?" overhead outweighs the content. Leave
+  it static.
 - **Write-back test.** Extracted surfaces get read but not written back to: in field
   measurement, always-on files kept receiving content updates while a routed-in skill
   body received none — new knowledge lands on whichever surface sits in the working
@@ -196,6 +212,15 @@ Rules of thumb the table can't hold:
   global `~/.claude/CLAUDE.md`, parent-directory files, the project file. A rule stated
   in two layers pays attention twice and drifts independently. Keep it in the narrowest
   layer that covers its scope, delete the other copy.
+- **Archive placement does not settle authority.** A document moved to an archive folder
+  or folded into an archive file is still read, found by search and cited. Preserve a
+  deliberate archive or a required record. Otherwise propose deletion, only when no live
+  rule or required record is lost and the repository convention or the user confirms
+  that git history is sufficient. Before deleting, transfer what survives the ownership
+  test: a durable failure mechanism moves to the owning instruction or gotcha file, a
+  still-wanted outcome becomes one backlog row, and every inbound reference (code
+  comments, script examples, lint ignores, adapters) is rewritten in the same change.
+  Resolution notes, commit lists and narrative stay in git.
 - **Enforcement-superseded prose.** If a deterministic mechanism enforces a
   *non-critical* rule for every target harness, delete duplicate prose or shrink it to a
   one-line pointer. Keep prose where another harness still needs it or where it must
@@ -221,6 +246,12 @@ content in the file. They exist because the agent *will* repeat the mistake with
   silently remove the rule from another harness.
 - **When in doubt, keep it static.** A little redundant static context is far cheaper
   than a returning bug.
+- **Procedures keep their action boundary.** A copy, restore, deploy or recovery
+  procedure keeps each operation, its ordering and its validation through any trim.
+  "Copy the files" in place of three commands and their check removes the bound that
+  prevents operator error. The loss check for a trimmed runbook: every operation is
+  still named with its validation; every state-changing step keeps whatever rollback or
+  recovery procedure the original had; irreversible steps are marked as such.
 
 ## Output
 
@@ -238,7 +269,9 @@ Present, in order:
    shares.
 4. **What a typical session stops loading:** per moved domain, its rough hit-rate
    (high/med/low) and what leaves always-on context. Frame as attention/confusion
-   reduction; a token delta is a footnote, not the headline.
+   reduction as the intended effect. Word and token deltas are payload measurements
+   only; reduced attention or confusion is proven by observations from later
+   representative sessions, and the audit does not claim it.
 Items 1–4 are phase 1. Stop there until the user has chosen a direction. On a
 leave-it-alone verdict, deliver items 1–2 plus any dead/stale deletions, contradiction
 repairs, and weak-pointer or environment-cache rewrites worth naming, and stop.

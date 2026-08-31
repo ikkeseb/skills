@@ -4,6 +4,30 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.28.1 — 2026-09-01
+
+`context-audit` widens its scope to the documents beside the instruction files
+(status pages, backlogs, specs, session logs, archives) and asks each what
+distinct truth or function it owns that no other file owns. A whole document
+is flagged stale only after every item is proven resolved, contradicted or
+owned elsewhere against live sources, never by age. Archive placement does not
+settle authority: an archived file is still read and cited, so the skill
+preserves deliberate archives and required records and otherwise proposes
+deletion, when the repository convention or the user confirms git history is
+sufficient, after transferring surviving rules and rewriting inbound
+references. Procedures gain the protection guardrails already had: a copy,
+restore, deploy or recovery procedure keeps each operation, its ordering,
+validation and any existing rollback through a trim, with irreversible steps
+marked. Smaller repairs: record on-disk and loaded-payload word counts
+separately in the read-back, report deltas as payload measurements without
+claiming reduced attention, and split only for work that can be invoked on its
+own with a routing condition no neighbour shares. Driver: two field runs on
+2026-09-01 where a first audit pass had archived stale documents and a week
+later the same false claims were still being read, and a trimmed hardening
+runbook had lost its copy and rollback commands. A second opinion (sol @ high)
+on the draft supplied the archive-convention, per-item proof and rollback
+corrections.
+
 ## 0.28.0 — 2026-08-31
 
 Adds `repo-cosplay`: an explicitly invoked, Claude Code and Codex skill for
