@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.27.2 — 2026-08-31
+
+`full-send` and `max-effort` are removed after seeing no real use across harnesses or machines. `orchestrate` already owns deliberate breadth through its Shapes, and risk-scaled review remains part of ordinary delivery, so the two posture skills leave no replacement layer.
+
 ## 0.27.1 — 2026-08-31
 
 `handoff` now closes the current session before it builds continuation context: it finishes only already authorized verification and repository bookkeeping, preserves the exact remaining state when a clean stop needs new work or authority, then writes the handoff last. The five-read verification budget still applies only to building the handoff. `orchestrate` folds the same field session's narrow operational findings: build specifications name expected regression coverage, adapters keep prompt and schema files out of the helper-owned run dir, and the WSL bridge protects VM-side worktrees from Windows Git cleanup while using a persistent VM-local run dir only when harvest must survive a restart.

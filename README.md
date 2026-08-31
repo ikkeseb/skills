@@ -4,7 +4,7 @@ Agent skills for day-to-day work, published as one plugin.
 Claude Code ships the full set; Codex exposes the eleven skills marked for both
 harnesses.
 
-Browse all 15 skills on [skills.sh](https://skills.sh/ikkeseb/skills).
+Browse all 13 skills on [skills.sh](https://skills.sh/ikkeseb/skills).
 
 ## Skills
 
@@ -45,8 +45,6 @@ automation, image inspection) not yet verified under Codex.
 
 | Skill | What it does | Invoke |
 |---|---|---|
-| **[full-send](skills/full-send)** | Posture: resources are authorized. Fan out subagents freely, then converge. | `/full-send` · `/full-send sustained` |
-| **[max-effort](skills/max-effort)** | Posture: high-stakes work gets adversarial review, not a rubber stamp. | `/max-effort` · `/max-effort sustained` |
 | **[second-opinion](skills/second-opinion)** | One read-only Codex call on work that already exists, answered as a synthesis rather than a relay. Vendor independence without the delegation ceremony. | `/second-opinion` |
 | **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes bounded, reviewable execution and reconnaissance to worker models by shape: cheap models fan out, workhorses build and review. Claude agents plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
 
