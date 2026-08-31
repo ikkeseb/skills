@@ -121,6 +121,9 @@ delegation the orchestrator doesn't control.
   the risk-tiered review: test-file updates to a changed API; CSS or code
   deletion by explicit rule list; formatter/lint fix-ups.
   - 2026-08-29, terra @ medium read-only Map via foreground relay: clean.
+  - 2026-08-31, terra @ high ×5 read-only classification (evidence extraction
+    with a fixed schema) via `codex-worker` adapters in one Workflow: clean;
+    two seat spot-checks matched the sources; 94k tokens, 2 min 19 s.
 - **opus @ medium in trial** (decision 2026-08-31): for tightly specified
   builds, mechanical refactors and test updates, via `opus-medium`. The
   "best performance-per-cost in the high band" line in the effort rule has

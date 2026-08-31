@@ -4,6 +4,10 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.26.5 — 2026-08-31
+
+`orchestrate` model map logs the first cheap-tier field outcome after 0.26.0: five terra @ high read-only classification stages in one Workflow, clean.
+
 ## 0.26.4 — 2026-08-31
 
 `history-audit` friction scan after second-opinion review (gpt-5.6-sol high): per-model sums no longer overwrite across lanes (a real miscount: 8 reported where 102 occurred), `EISDIR` gets its own `read-directory` bucket, the Codex tools line is dropped (outputs carry no tool name), the header reports how many files yielded recognised records and flags FORMAT UNKNOWN when none do, and the denominator table carries its own caveat (task mix, small denominators, Claude `is_error` vs Codex text heuristic, raw population). Declined: failure-streak metric (add only if a report needs spiral ranking) and delegating fan-out to `orchestrate` (skills stay self-contained and Codex-usable).
