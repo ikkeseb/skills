@@ -28,9 +28,10 @@ and either `shasum` or `sha256sum`. `probe` makes no model call and returns
 `{ok, codex_version, authenticated, contract_ok, missing_flags, dependencies,
 read_mode, sandbox_write, write_ready}`. `read_mode` reports the command
 surface: `allowlisted-single-command` on native Windows and `full-shell` on
-macOS, Linux and WSL. It is independent of write readiness. A missing `jq`
-returns `missing_dependency`
-immediately. `sandbox_write` is measured, not inferred: probe performs one
+macOS, Linux and WSL. It is independent of write readiness. `lane` reports
+where the helper ran: `native`, or `wsl-bridge` when a Windows machine has
+switched its Codex work into its WSL VM (§ Write-worker gates, WSL bullet).
+A missing `jq` returns `missing_dependency` immediately. `sandbox_write` is measured, not inferred: probe performs one
 unbilled write inside the real OS sandbox (`codex sandbox`), because
 dependency presence does not prove write capability — every write can be
 rejected while git, jq and the hash tool all pass. On native Windows the
@@ -44,9 +45,10 @@ necessary, never sufficient, for write dispatch. `true`/`false` are verdicts and
 gates `write_ready`; `null` means the test could not run and gates nothing.
 `write_ready: false` leaves the read-only lane available: route write stages
 to the Claude lane and say so — except on native Windows, where that verdict
-is policy, not a measurement: if the machine has a WSL VM, probe inside it
-over the bridge first (§ Write-worker gates, WSL bullet); a green VM-side
-probe makes the bridge the write route. Missing write dependencies fail closed as
+is policy, not a measurement: a machine with a verified WSL VM sets
+`CODEX_WORKER_LANE=wsl` once (§ Write-worker gates, WSL bullet), after which
+probe and every run report `lane: "wsl-bridge"` with the VM's full-shell
+read lane and its measured write lane. Missing write dependencies fail closed as
 `missing_dependency`; a write run dispatched despite a denying sandbox fails
 closed as `sandbox_denied` at harvest.
 
@@ -131,8 +133,11 @@ files do load in worker runs (`--ignore-user-config` covers only
 `config.toml`) and are evaluated against the pwsh-lowered inner commands, so
 the allowlisted reads (`git status/diff/log/show/rev-parse/ls-files/grep`,
 `cat`, `rg`, `ls`, `Get-Content`, `Get-ChildItem`, `Select-String`) run while
-everything else stays forbidden. Without the rules file, route the stage
-through a verified WSL bridge, embed bounded material, or use the Claude lane.
+everything else stays forbidden. Without the rules file, run the stage on the
+WSL lane, embed bounded material, or use the Claude lane. Even with it the
+allowlist makes fan-out reads fragile (a field run lost three of four Map
+readers to non-allowlisted commands), so a machine with the WSL lane routes
+reads there too and keeps the native lane for machines without a VM.
 
 For native-Windows read-only runs the helper appends this constraint to the
 task automatically: use one plain allowlisted command per exec call; express
@@ -140,9 +145,9 @@ filtering with that command's own flags or separate calls; do not use
 pipelines, redirection, command separators, subshells or another executable.
 This adds no worker call. If stderr contains an exec-policy rejection, the
 helper stops the worker on its existing five-second poll and returns
-`read_policy_denied`. Route the same stage through a verified WSL bridge, or
-re-specify it as plain allowlisted commands; never retry the unchanged stage
-on the native lane. Full-shell platforms receive the original prompt
+`read_policy_denied`. Route the same stage over the WSL lane, or re-specify
+it as plain allowlisted commands; never retry the unchanged stage on the
+native lane. Full-shell platforms receive the original prompt
 unchanged.
 
 Workers reviewing uncommitted state must be told to fail loudly rather than
@@ -357,7 +362,8 @@ instance validation. Conformance to `--schema-file` is enforced server-side by
 `--output-schema` — so a schema-shaped result is the model's compliance, not a
 local guarantee, and a stage that must not act on malformed data checks the
 shape itself. Fields: `result` (the parsed final message — the payload),
-`read_mode` (the measured command surface for this run),
+`read_mode` (the measured command surface for this run), `lane` (`native`,
+or `wsl-bridge` with `run_dir_wsl` beside the Windows-side `run_dir`),
 `base_sha` / `dirty_before` (git state when the run started),
 `workspace_changed` (write runs: whether the tree differs after the run,
 taken before the workspace lock is released — `ok: true` with
@@ -379,8 +385,12 @@ overwritten.
   Claude lane, report it.
 - `read_policy_denied` — a native-Windows read tried something outside the
   single-command allowlist. Do not repeat the unchanged native run; route the
-  stage through a verified WSL bridge, or re-specify it as plain allowlisted
-  commands.
+  stage over the WSL lane, or re-specify it as plain allowlisted commands.
+- `wsl_bridge_failed` — `CODEX_WORKER_LANE=wsl` is set but no envelope came
+  back from the VM (wsl.exe missing, the distribution absent or unable to
+  start, a path with no drvfs form); the message carries wsl.exe's
+  diagnostic. A machine problem, never a model miss: not retryable at any
+  tier. Fix the VM or unset the lane, and say so.
 - `config` — the invocation itself is wrong (bad model name, unsupported
   effort — see `api_error`); fix the call, don't retry blindly.
 - `contract_mismatch` — the CLI no longer advertises a flag the runner passes,
@@ -403,9 +413,9 @@ overwritten.
   sandbox setup, or route write stages to the Claude lane.
 - `unsupported_lane` — the requested lane does not exist on this platform
   (today: native Windows workspace-write, see Write-worker gates). Policy,
-  not an outage: never retryable at any tier; route the stage over a
-  verified WSL VM's bridge when the machine has one, otherwise to the
-  Claude lane or a verified worker host, and say so.
+  not an outage: never retryable at any tier; route the stage over the WSL
+  lane when the machine has one, otherwise to the Claude lane or a verified
+  worker host, and say so.
 - `unsafe_git_state` — the tree reads clean but the repo cannot be written to
   safely: an in-progress merge/rebase/cherry-pick/revert/bisect, or index
   entries marked `skip-worktree` / `assume-unchanged`, which hide changes from
@@ -465,10 +475,9 @@ suspected reroute as unverified without evidence.
   `[windows]` sandbox choice — leaves exec with no OS sandbox, so
   workspace-write silently degrades to read-only + approvals=never,
   rejecting every write behind an `ok` envelope. When the machine has a
-  WSL VM whose write lane has passed per-machine verification (next
-  bullet — a VM-side probe over the bridge is the runtime check), prefer
-  bridging write stages through it over degrading them to the Claude
-  lane; otherwise route them to the Claude lane or a verified
+  WSL VM whose write lane has passed per-machine verification, the WSL
+  lane (next bullet) takes write stages instead of degrading them to the
+  Claude lane; otherwise route them to the Claude lane or a verified
   macOS/Linux worker. Read-only runs stay unpinned
   and CLI-policy-enforced rather than OS-enforced — a deliberate trust
   downgrade for the read lane, measured working. No worker lane may raise
@@ -482,24 +491,36 @@ suspected reroute as unverified without evidence.
   the VM `uname` reports Linux, the landlock sandbox applies, and
   workspace-write follows the supported Linux lane. Per-machine runner
   verification (probe plus one write e2e) still applies before trusting a
-  new VM's write lane, as for any Linux host. The lane is also reachable
-  *from* a native-Windows orchestrator: invoke the helper inside the VM
-  (`wsl.exe -e bash -c '…'`) with the run dir minted on the VM side, and
-  harvest the same envelope; workspaces under `/mnt/c` work, so the VM can
-  write into checkouts the Windows session is orchestrating (git over drvfs
-  is slow — prefer VM-side checkouts for heavy repos). A VM-side worktree can
-  be registered under a `/home/...` path Windows Git cannot resolve. While
-  any are registered, never run `git worktree prune` from Windows or use
-  Windows Git to remove them; list and clean them inside the VM, and limit
-  Windows-side removal to Windows paths. A bridged run that may be harvested
-  after a VM restart uses a persistent VM-local run dir instead of `/tmp`,
-  then removes it after harvest. Two other measured traps:
-  a non-interactive WSL shell may lack the codex binary on PATH (PATH
-  exports often live in interactive-only rc files) — export it explicitly
-  in the bridge command or the run fails as `codex_missing`; and keep the
-  whole payload as one quoted string so the Windows-side shell cannot
-  path-mangle `/mnt/c/...` arguments (MSYS path conversion). A stopped VM
-  auto-starts on the first call, adding seconds of latency.
+  new VM's write lane, as for any Linux host. A native-Windows orchestrator
+  reaches that lane through the helper itself: with `CODEX_WORKER_LANE=wsl`
+  in the machine's environment (set once, after that verification;
+  `CODEX_WORKER_WSL_DISTRO` selects a non-default distribution), every
+  `probe`, `verify` and `run` re-executes inside the VM and returns the
+  ordinary envelope with `lane: "wsl-bridge"`. Path-valued options are
+  translated to the drvfs mount (`/mnt/<drive>/...`), so the Windows
+  checkouts the session is orchestrating work as they are; the run dir stays
+  on the Windows side (`run_dir` is the Windows path, `run_dir_wsl` the VM's
+  view), so harvest is a local read that survives a VM restart; a stopped VM
+  auto-starts on the first call, adding seconds of latency. Nothing is
+  auto-detected: without the variable the native lane runs, and with it a VM
+  that does not answer fails closed as `wsl_bridge_failed`. Traps the lane
+  absorbs: the VM's login-shell PATH is what workers see (`codex_missing`
+  under the lane means the VM's profile does not export the codex install),
+  and MSYS path conversion is suppressed for the call. Traps it does not
+  absorb: the VM's interop token follows the Windows session that launched
+  the helper, so a session started under sshd carries its restrictions into
+  every Windows executable a worker calls through interop — drive the lane
+  from a locally started session; worker-slot semaphores are per VM, not
+  shared with native runs; VM-side `$CODEX_HOME/AGENTS.md` and rules residue
+  load in bridged workers; git over drvfs is slow (prefer VM-side checkouts
+  for heavy repos); and a worktree the worker will use must be created with
+  `git worktree add --relative-paths` (or `worktree.useRelativePaths=true`,
+  git ≥ 2.48) — the absolute gitdir Windows git writes by default is
+  unreadable from the VM and listed there as prunable (measured
+  2026-09-01), just as a VM-created worktree under `/home/...` is invisible
+  to Windows git. While either kind is registered, list and clean worktrees
+  from the side that created them; never `git worktree prune` from the
+  other.
 - The result JSON proves the worker finished, not that the changes survive:
   read the actual `git diff` (and untracked files) in the worktree before the
   workflow's worktree cleanup can discard it, and let the main loop apply or

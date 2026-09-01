@@ -4,6 +4,27 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.29.0 — 2026-09-01
+
+`orchestrate` gives native Windows a first-class WSL lane. With
+`CODEX_WORKER_LANE=wsl` in the machine's environment, `codex-worker.sh`
+re-executes `probe`, `verify` and `run` inside the WSL VM through `wsl.exe`:
+path-valued options are translated to the drvfs mount, the run dir stays on
+the Windows side, the VM shell is a login shell, MSYS path conversion is
+suppressed, and the envelope returns with `lane: "wsl-bridge"` plus
+`run_dir_wsl`. Every envelope now carries `lane`; a VM that does not answer
+fails closed as `wsl_bridge_failed`. The lane is explicit and per machine —
+nothing is auto-detected — and replaces the hand-written
+`wsl.exe -e bash -c` bridge the reference used to prescribe. New measured
+trap folded into the worktree rule: a worktree whose gitdir is absolute is
+unreadable from the other side of the drvfs boundary, so worktrees are
+created with `--relative-paths`. Driver: 0.28.2 told the orchestrator to
+route stages "through a verified WSL bridge" three times without giving it a
+mechanism, and the native read lane lost three of four Map readers in the
+field. Hermetic suite: a fake `wsl.exe` covers path translation, login-shell
+invocation, run-dir minting, probe, and the fail-closed path; off Windows the
+variable is asserted inert.
+
 ## 0.28.2 — 2026-09-01
 
 `orchestrate` makes the native-Windows Codex read lane explicit and

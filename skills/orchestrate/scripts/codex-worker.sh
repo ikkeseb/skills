@@ -24,6 +24,12 @@
 #   codex-worker.sh probe     auth + CLI contract, no model call
 #   codex-worker.sh verify    end-to-end smoke test (one tiny billed run)
 #
+# Environment (per machine, never per call):
+#   CODEX_WORKER_LANE=wsl       native Windows only: run every command inside
+#                               the machine's WSL VM (see the WSL lane section)
+#   CODEX_WORKER_WSL_DISTRO     VM to use with that lane (default: wsl.exe's
+#                               default distribution)
+#
 # Output: exactly one JSON object on stdout. Everything else goes to stderr.
 # Dependencies: Bash and jq for every command; Codex for probe/run/verify;
 # git plus shasum or sha256sum for workspace-write runs.
@@ -131,6 +137,134 @@ current_read_mode() {
 WINDOWS_SANDBOX_CONFIG='windows.sandbox="elevated"'
 native_windows_write_allowed() {
   [ "${CODEX_WORKER_NATIVE_WINDOWS_WRITE:-}" = "elevated" ]
+}
+
+# --- WSL lane (native Windows only) ------------------------------------------
+# CODEX_WORKER_LANE=wsl re-executes this helper inside the machine's WSL VM.
+# There `uname` is Linux, the landlock sandbox applies, and read runs get the
+# full shell — the native lane's unsupported write path and single-command
+# read allowlist both disappear. The switch is explicit and per machine (set
+# it once the VM's lane has passed runner verification); nothing is
+# auto-detected, so an absent or unverified VM can never be trusted silently.
+# The VM side runs the plain Linux code path: wsl.exe does not forward the
+# Windows environment, so the switch is invisible there and never re-enters.
+#
+# What crosses the boundary: every path-valued option is translated to the
+# VM's drvfs mount (/mnt/<drive>/...); a run dir the caller did not mint is
+# minted on the Windows side, so harvest is a local read that survives a VM
+# restart; the VM shell is a login shell (user PATH exports usually live in
+# profile files — a non-login shell fails as codex_missing); MSYS path
+# conversion is suppressed for the call so `/mnt/c/...` arrives verbatim;
+# and `-e` skips the VM's default-shell expansion, so no argument is
+# expanded twice. The envelope returns with `lane: "wsl-bridge"`, `run_dir`
+# rewritten to the Windows path the caller can open, `run_dir_wsl` for
+# VM-side diagnosis, and the same rewritten envelope mirrored to
+# result.json so stdout and the harvest file stay one authoritative object.
+#
+# Inherited, not fixed here: the VM's interop token follows the Windows
+# session that launched this helper (a session started under sshd carries
+# its restrictions into every Windows executable a worker calls through
+# interop); worker-slot semaphores live per VM; and a worktree the worker
+# should use must carry a relative gitdir (`git worktree add
+# --relative-paths`) — the absolute gitdir Windows git writes by default is
+# unreadable from the VM (measured 2026-09-01).
+wsl_lane_requested() {
+  is_windows && [ "${CODEX_WORKER_LANE:-}" = wsl ]
+}
+
+to_wsl_path() { # Windows or MSYS path -> /mnt/<drive>/...; fails on non-drive paths
+  local mixed drive
+  mixed="$(cygpath -m -a -- "$1" 2>/dev/null)" || return 1
+  case "$mixed" in [A-Za-z]:/*) ;; *) return 1 ;; esac
+  drive="$(printf '%s' "${mixed%%:*}" | "$TR_BIN" '[:upper:]' '[:lower:]')"
+  printf '/mnt/%s%s' "$drive" "${mixed#?:}"
+}
+
+from_wsl_path() { # /mnt/<drive>/... -> <DRIVE>:/... (mixed form: MSYS and Windows tools both open it)
+  local rest drive
+  case "$1" in
+    /mnt/[A-Za-z]/*|/mnt/[A-Za-z])
+      rest="${1#/mnt/}"
+      drive="$(printf '%s' "${rest%%/*}" | "$TR_BIN" '[:lower:]' '[:upper:]')"
+      rest="${rest#?}"
+      printf '%s:%s' "$drive" "${rest:-/}" ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+
+bridge_to_wsl() { # $@ = this helper's own argv: run|probe|verify [options]
+  require_jq
+  resolve_text_tools
+  local wsl_bin helper_wsl cmd="$1"
+  shift
+  wsl_bin="$(type -P wsl.exe || true)"
+  [ -n "$wsl_bin" ] || fail_json wsl_bridge_failed \
+    "CODEX_WORKER_LANE=wsl but wsl.exe is not on PATH"
+  helper_wsl="$(to_wsl_path "${BASH_SOURCE[0]}")" \
+    || fail_json wsl_bridge_failed "helper path has no drvfs form: ${BASH_SOURCE[0]}"
+
+  # Only path-valued options are translated; everything else passes through.
+  local -a argv=()
+  local run_dir_win="" run_dir_wsl="" wsl_val
+  if [ "$cmd" = run ]; then
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --workspace|--prompt-file|--schema-file|--run-dir)
+          [ $# -ge 2 ] || fail_json usage "missing value for $1"
+          wsl_val="$(to_wsl_path "$2")" || fail_json wsl_bridge_failed \
+            "$1 has no drvfs form (drive-letter paths only): $2"
+          if [ "$1" = --run-dir ]; then
+            # Created here so a bridge failure can mirror its verdict into it,
+            # as a native failure would; the VM side still enforces emptiness.
+            mkdir -p "$2" 2>/dev/null || fail_json usage "cannot create --run-dir: $2"
+            run_dir_win="$2"; run_dir_wsl="$wsl_val"
+          fi
+          argv+=("$1" "$wsl_val"); shift 2 ;;
+        *) argv+=("$1"); shift ;;
+      esac
+    done
+    if [ -z "$run_dir_wsl" ]; then
+      run_dir_win="$(mktemp -d "${TMPDIR:-/tmp}/codex-worker.XXXXXX")"
+      run_dir_wsl="$(to_wsl_path "$run_dir_win")" || fail_json wsl_bridge_failed \
+        "the minted run dir has no drvfs form: $run_dir_win"
+      argv+=(--run-dir "$run_dir_wsl")
+    fi
+    FAIL_RUN_DIR="$run_dir_win"
+  else
+    argv=("$@")
+  fi
+
+  local -a wsl_args=()
+  [ -z "${CODEX_WORKER_WSL_DISTRO:-}" ] || wsl_args+=(-d "$CODEX_WORKER_WSL_DISTRO")
+  local err_file out rc=0
+  err_file="$(mktemp)"
+  # `$0` carries the helper's VM path into the login shell; the arguments
+  # follow it untouched.
+  out="$(MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' \
+    "$wsl_bin" ${wsl_args[@]+"${wsl_args[@]}"} -e bash -lc 'exec bash "$0" "$@"' \
+    "$helper_wsl" "$cmd" ${argv[@]+"${argv[@]}"} 2>"$err_file")" || rc=$?
+  # The VM-side helper's stderr (start banner, diagnostics) is replayed so a
+  # background job's combined log reads the same as a native run.
+  "$CAT_BIN" "$err_file" >&2
+  if ! printf '%s' "$out" | "$JQ_BIN" -e 'type == "object"' >/dev/null 2>&1; then
+    local diag
+    diag="$("$TAIL_BIN" -c 500 "$err_file" 2>/dev/null | "$TR_BIN" -d '\r' || true)"
+    rm -f "$err_file"
+    fail_json wsl_bridge_failed \
+      "wsl.exe exit $rc, no envelope from the VM-side helper: $diag" "$run_dir_win"
+  fi
+  rm -f "$err_file"
+  # jq is a native Windows binary here, so MSYS would rewrite the /mnt/...
+  # argument into a Git-install path unless conversion is suppressed.
+  out="$(printf '%s' "$out" | MSYS_NO_PATHCONV=1 "$JQ_BIN" -c \
+    --arg rd_wsl "$run_dir_wsl" --arg rd_win "$(from_wsl_path "$run_dir_wsl")" \
+    '. + {lane: "wsl-bridge"}
+     + (if $rd_wsl == "" then {} else {run_dir: $rd_win, run_dir_wsl: $rd_wsl} end)')"
+  if [ -n "$run_dir_win" ] && [ -d "$run_dir_win" ]; then
+    printf '%s\n' "$out" > "$run_dir_win/result.json.tmp" \
+      && mv -f "$run_dir_win/result.json.tmp" "$run_dir_win/result.json"
+  fi
+  printf '%s\n' "$out"
 }
 
 # Same direct-executable contract as resolve_codex/resolve_git, for the text
@@ -472,7 +606,7 @@ cmd_probe() {
       dependencies: {jq: true, git: $git_ready,
         workspace_hash: $hash_ready,
         workspace_hash_command: (if $hash_command == "" then null else $hash_command end)},
-      read_mode: $read_mode,
+      read_mode: $read_mode, lane: "native",
       sandbox_write: $sandbox_write,
       write_ready: $write_ready}'
 }
@@ -1003,7 +1137,7 @@ cmd_run() {
     --arg stderr_tail "$("$TAIL_BIN" -c 2000 "$run_dir/stderr.log" 2>/dev/null || true)" \
     --arg api_error "$api_error" \
     '{ok: $ok, model: $model, effort: $effort, sandbox: $sandbox,
-      read_mode: $read_mode,
+      read_mode: $read_mode, lane: "native",
       workspace: $workspace, base_sha: $base_sha, dirty_before: $dirty_before,
       workspace_changed: $workspace_changed,
       result: $result_doc[0],
@@ -1016,6 +1150,10 @@ cmd_run() {
   cat "$run_dir/result.json"
 }
 
+case "${1:-}" in
+  run|probe|verify)
+    if wsl_lane_requested; then bridge_to_wsl "$@"; exit 0; fi ;;
+esac
 case "${1:-}" in
   run)    shift; cmd_run "$@" ;;
   probe)  cmd_probe ;;

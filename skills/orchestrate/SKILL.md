@@ -198,7 +198,9 @@ a human decision returns the decision material and the seat relays it.
   into live configuration, or a cheap-tier writer outside a machine-gated
   mechanical task. Worktrees share `.git`, hooks and external symlinks, so
   inspect the diff. Create them in the main loop at current HEAD
-  (`git worktree add` plus the dependency install the repo's docs prescribe):
+  (`git worktree add --relative-paths`, so a worker reaching the checkout
+  through another platform view — the WSL lane over `/mnt/c` — can resolve
+  it, plus the dependency install the repo's docs prescribe):
   the harness's `isolation: 'worktree'` has based on session-start HEAD
   (twice, 2026-08-05) and installs nothing. Codex write runs fail a stale
   base closed via `--expected-base-sha`.

@@ -92,9 +92,40 @@ fake_codex() {
   esac
 }
 
-# A copy of this file named `codex` is the fake executable.
+fake_wsl() {
+  # Models wsl.exe as seen from the Windows side: records the invocation,
+  # then runs the helper natively with every /mnt/<drive>/ path mapped back
+  # to a Windows path and WITHOUT CODEX_WORKER_LANE — the real wsl.exe
+  # forwards no Windows environment, so the VM side must never re-enter the
+  # bridge. `broken` mode answers like a missing distribution.
+  printf 'WSL %s\n' "$*" >> "$HOME/wsl-calls"
+  printf 'MSYS_NO_PATHCONV=%s\n' "${MSYS_NO_PATHCONV:-unset}" >> "$HOME/wsl-env"
+  if [ "$(cat "$HOME/wsl-mode" 2>/dev/null)" = broken ]; then
+    printf '%s\n' 'There is no distribution with the supplied name.' >&2
+    return 1
+  fi
+  while [ $# -gt 0 ] && [ "$1" != -lc ]; do shift; done
+  [ "${1:-}" = -lc ] || return 64
+  shift 2
+  local -a mapped=()
+  local a
+  for a in "$@"; do
+    case "$a" in
+      /mnt/[a-z]/*) a="$(printf '%s' "$a" | sed -E 's#^/mnt/([a-z])/#\U\1:/#')" ;;
+    esac
+    mapped+=("$a")
+  done
+  unset CODEX_WORKER_LANE
+  exec bash "${mapped[@]}"
+}
+
+# A copy of this file named `codex` (or `wsl.exe`) is the fake executable.
 if [ "${0##*/}" = codex ]; then
   fake_codex "$@"
+  exit $?
+fi
+if [ "${0##*/}" = wsl.exe ]; then
+  fake_wsl "$@"
   exit $?
 fi
 
@@ -114,7 +145,8 @@ fake_home="$tmp/home"
 fake_bin="$tmp/bin"
 mkdir -p "$fake_home" "$fake_bin"
 cp "$0" "$fake_bin/codex"
-chmod +x "$fake_bin/codex"
+cp "$0" "$fake_bin/wsl.exe"
+chmod +x "$fake_bin/codex" "$fake_bin/wsl.exe"
 original_path="$PATH"
 test_path="$fake_bin:$original_path"
 printf '%s\n' success > "$fake_home/fake-mode"
@@ -185,7 +217,7 @@ run_dir="$tmp/run-success"
 run_worker "$tmp/success.json" "$tmp/success.err" run \
   --model default --effort low --sandbox read-only --workspace "$tmp" \
   --prompt-file "$prompt" --schema-file "$schema" --run-dir "$run_dir" --timeout 30
-assert_json "$tmp/success.json" ".ok == true and .model == \"default\" and .read_mode == \"$expected_read_mode\" and .result.answer == \"ok\" and .turn_completed == true and .exit_code == 0" \
+assert_json "$tmp/success.json" ".ok == true and .model == \"default\" and .read_mode == \"$expected_read_mode\" and .lane == \"native\" and .result.answer == \"ok\" and .turn_completed == true and .exit_code == 0" \
   'schema-shaped success produces a valid envelope'
 if [ "$(exec_count)" -eq "$((before + 1))" ]; then
   ok 'native read guard adds no worker call'
@@ -382,6 +414,84 @@ case "$(uname -s)" in
       "$tmp/win-default-probe.json" "$tmp/win-default-probe.err" probe
     assert_json "$tmp/win-default-probe.json" '.sandbox_write == false and .write_ready == false' \
       'default native Windows probe gates write_ready without engaging any sandbox'
+    ;;
+esac
+
+# WSL lane. CODEX_WORKER_LANE=wsl is a native-Windows switch: there the helper
+# re-executes itself inside the VM through wsl.exe (the fake above stands in
+# for it); everywhere else the variable is ignored and the platform's own
+# lane runs.
+printf '%s\n' success > "$fake_home/fake-mode"
+rm -f "$fake_home/wsl-calls" "$fake_home/wsl-env" "$fake_home/wsl-mode"
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    run_dir="$tmp/run-wsl-bridge"
+    CODEX_WORKER_LANE=wsl run_worker "$tmp/wsl-bridge.json" "$tmp/wsl-bridge.err" run \
+      --model default --effort low --sandbox read-only --workspace "$tmp" \
+      --prompt-file "$prompt" --schema-file "$schema" --run-dir "$run_dir" --timeout 30
+    run_dir_mixed="$(cygpath -m -a "$run_dir")"
+    assert_json "$tmp/wsl-bridge.json" ".ok == true and .lane == \"wsl-bridge\" and .result.answer == \"ok\" and .run_dir == \"$run_dir_mixed\" and (.run_dir_wsl | startswith(\"/mnt/\"))" \
+      'WSL lane relays the VM envelope with the lane and a Windows-side run dir'
+    assert_same "$tmp/wsl-bridge.json" "$run_dir/result.json" \
+      'WSL lane mirrors the rewritten envelope into result.json'
+    wsl_call="$(tail -n 1 "$fake_home/wsl-calls" 2>/dev/null || true)"
+    case "$wsl_call" in
+      *'-e bash -lc '*'/mnt/'*'/codex-worker.sh run '*'--workspace /mnt/'*'--prompt-file /mnt/'*'--run-dir /mnt/'*)
+        ok 'WSL lane runs the helper in a login shell with drvfs paths' ;;
+      *) fail "WSL lane runs the helper in a login shell with drvfs paths ($wsl_call)" ;;
+    esac
+    case "$wsl_call" in
+      *[A-Za-z]:/*) fail 'WSL lane passes no Windows-form path into the VM' ;;
+      *) ok 'WSL lane passes no Windows-form path into the VM' ;;
+    esac
+    if grep -qx 'MSYS_NO_PATHCONV=1' "$fake_home/wsl-env" 2>/dev/null; then
+      ok 'WSL lane suppresses MSYS path conversion for the wsl.exe call'
+    else
+      fail 'WSL lane suppresses MSYS path conversion for the wsl.exe call'
+    fi
+
+    CODEX_WORKER_LANE=wsl run_worker "$tmp/wsl-minted.json" "$tmp/wsl-minted.err" run \
+      --model default --effort low --sandbox read-only --workspace "$tmp" \
+      --prompt-file "$prompt" --schema-file "$schema" --timeout 30
+    minted="$(jq -r '.run_dir // ""' "$tmp/wsl-minted.json")"
+    if [ -n "$minted" ] && jq -e '.lane == "wsl-bridge"' "$minted/result.json" >/dev/null 2>&1; then
+      ok 'WSL lane mints a Windows-side run dir when the caller gave none'
+    else
+      fail 'WSL lane mints a Windows-side run dir when the caller gave none'
+    fi
+
+    CODEX_WORKER_LANE=wsl run_worker "$tmp/wsl-probe.json" "$tmp/wsl-probe.err" probe
+    assert_json "$tmp/wsl-probe.json" '.ok == true and .lane == "wsl-bridge"' \
+      'WSL lane probe reports the bridged lane'
+
+    printf '%s\n' broken > "$fake_home/wsl-mode"
+    before="$(exec_count)"
+    run_dir="$tmp/run-wsl-broken"
+    CODEX_WORKER_LANE=wsl run_worker "$tmp/wsl-broken.json" "$tmp/wsl-broken.err" run \
+      --model default --effort low --sandbox read-only --workspace "$tmp" \
+      --prompt-file "$prompt" --schema-file "$schema" --run-dir "$run_dir" --timeout 30
+    assert_json "$tmp/wsl-broken.json" '.ok == false and .error_class == "wsl_bridge_failed" and (.error | contains("distribution"))' \
+      'WSL lane fails closed with the VM diagnostic when wsl.exe does not answer'
+    assert_same "$tmp/wsl-broken.json" "$run_dir/result.json" \
+      'WSL bridge failure is recoverable from result.json'
+    if [ "$(exec_count)" = "$before" ]; then
+      ok 'WSL bridge failure never invokes Codex'
+    else
+      fail 'WSL bridge failure never invokes Codex'
+    fi
+    ;;
+  *)
+    run_dir="$tmp/run-wsl-ignored"
+    CODEX_WORKER_LANE=wsl run_worker "$tmp/wsl-ignored.json" "$tmp/wsl-ignored.err" run \
+      --model default --effort low --sandbox read-only --workspace "$tmp" \
+      --prompt-file "$prompt" --schema-file "$schema" --run-dir "$run_dir" --timeout 30
+    assert_json "$tmp/wsl-ignored.json" '.ok == true and .lane == "native"' \
+      'CODEX_WORKER_LANE=wsl is ignored off native Windows'
+    if [ ! -e "$fake_home/wsl-calls" ]; then
+      ok 'non-Windows platforms never call wsl.exe'
+    else
+      fail 'non-Windows platforms never call wsl.exe'
+    fi
     ;;
 esac
 
