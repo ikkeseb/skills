@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.28.2 — 2026-09-01
+
+`orchestrate` makes the native-Windows Codex read lane explicit and
+fail-closed. `probe` and run envelopes report `read_mode`; the helper appends
+the single-command allowlist contract without adding a worker call, stops a
+worker on the existing five-second poll when exec policy rejects a command,
+and returns `read_policy_denied` so the orchestrator can route the same stage
+through verified WSL. Full-shell platforms keep the original prompt. Driver:
+a field review looked like a total lane outage because plain reads passed
+while pipelines and non-allowlisted commands burned retries. The hermetic
+runner suite now covers prompt preservation, one-call normal execution,
+capability reporting and the routing verdict.
+
 ## 0.28.1 — 2026-09-01
 
 `context-audit` widens its scope to the documents beside the instruction files

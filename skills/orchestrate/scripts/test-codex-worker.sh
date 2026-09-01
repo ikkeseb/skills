@@ -55,6 +55,7 @@ fake_codex() {
     esac
   done
   [ -n "$output" ] || return 64
+  cat > "$HOME/fake-stdin"
   mode="$(sed -n '1p' "$HOME/fake-mode")"
   case "$mode" in
     success)
@@ -78,6 +79,11 @@ fake_codex() {
       printf '%s\n' '{"answer":"ok"}' > "$output"
       printf '%s\n' '{"type":"turn.completed"}'
       printf '%s\n' 'ERROR: patch rejected: writing is blocked by read-only sandbox; rejected by user approval settings' >&2
+      return 0 ;;
+    read-policy-denied)
+      printf '%s\n' '{"answer":"incomplete"}' > "$output"
+      printf '%s\n' '{"type":"turn.completed"}'
+      printf '%s\n' 'ERROR: exec_command failed: CreateProcess rejected: blocked by policy' >&2
       return 0 ;;
     missing-result)
       printf '%s\n' '{"type":"turn.completed"}'
@@ -144,7 +150,8 @@ run_worker() { # stdout-file stderr-file args...
 
 probe_out="$tmp/probe.json"
 run_worker "$probe_out" "$tmp/probe.err" probe
-assert_json "$probe_out" '.ok == true and .codex_version == "9.9.9" and .contract_ok == true and .dependencies.jq == true and .dependencies.git == true and .dependencies.workspace_hash == true and .sandbox_write == true and .write_ready == true' \
+case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) expected_read_mode=allowlisted-single-command ;; *) expected_read_mode=full-shell ;; esac
+assert_json "$probe_out" ".ok == true and .codex_version == \"9.9.9\" and .contract_ok == true and .dependencies.jq == true and .dependencies.git == true and .dependencies.workspace_hash == true and .read_mode == \"$expected_read_mode\" and .sandbox_write == true and .write_ready == true" \
   'probe reports CLI, contract, write dependencies, and a measured sandbox write'
 if [ ! -e "$fake_home/wrapper-calls" ]; then
   ok 'PATH executable bypasses the imported codex shell function'
@@ -173,16 +180,34 @@ assert_json "$tmp/missing-model.json" '.ok == false and .error_class == "usage" 
   'missing model fails before dispatch'
 if [ "$(exec_count)" = "$before" ]; then ok 'usage failure never invokes Codex'; else fail 'usage failure never invokes Codex'; fi
 
+before="$(exec_count)"
 run_dir="$tmp/run-success"
 run_worker "$tmp/success.json" "$tmp/success.err" run \
   --model default --effort low --sandbox read-only --workspace "$tmp" \
   --prompt-file "$prompt" --schema-file "$schema" --run-dir "$run_dir" --timeout 30
-assert_json "$tmp/success.json" '.ok == true and .model == "default" and .result.answer == "ok" and .turn_completed == true and .exit_code == 0' \
+assert_json "$tmp/success.json" ".ok == true and .model == \"default\" and .read_mode == \"$expected_read_mode\" and .result.answer == \"ok\" and .turn_completed == true and .exit_code == 0" \
   'schema-shaped success produces a valid envelope'
+if [ "$(exec_count)" -eq "$((before + 1))" ]; then
+  ok 'native read guard adds no worker call'
+else
+  fail 'native read guard adds no worker call'
+fi
 assert_same "$tmp/success.json" "$run_dir/result.json" \
   'stdout and result.json are the same authoritative envelope'
 assert_single_json "$run_dir/result.json" \
   'result.json is exactly one parseable object for Claude harvests'
+if [ "$expected_read_mode" = allowlisted-single-command ]; then
+  if grep -Fq 'Return the result.' "$fake_home/fake-stdin" \
+     && grep -Fq 'Native Windows read contract:' "$fake_home/fake-stdin"; then
+    ok 'native Windows read prompt keeps the task and appends the lane contract'
+  else
+    fail 'native Windows read prompt keeps the task and appends the lane contract'
+  fi
+elif cmp -s "$prompt" "$fake_home/fake-stdin"; then
+  ok 'full-shell read prompt is unchanged'
+else
+  fail 'full-shell read prompt is unchanged'
+fi
 actual_call="$(grep '^EXEC ' "$fake_home/fake-calls" | tail -n 1)"
 case "$actual_call" in
   *'--ask-for-approval never exec'*'--ignore-user-config'*'--disable multi_agent'*'--sandbox read-only'*'--output-schema'*)
@@ -203,6 +228,19 @@ if [ "$has_pin" = no ]; then
   ok 'windows.sandbox pin absent on read-only runs'
 else
   fail 'windows.sandbox pin absent on read-only runs'
+fi
+
+printf '%s\n' read-policy-denied > "$fake_home/fake-mode"
+run_dir="$tmp/run-read-policy-denied"
+run_worker "$tmp/read-policy-denied.json" "$tmp/read-policy-denied.err" run \
+  --model default --effort low --sandbox read-only --workspace "$tmp" \
+  --prompt-file "$prompt" --schema-file "$schema" --run-dir "$run_dir" --timeout 30
+if [ "$expected_read_mode" = allowlisted-single-command ]; then
+  assert_json "$tmp/read-policy-denied.json" '.ok == false and .error_class == "read_policy_denied" and .read_mode == "allowlisted-single-command"' \
+    'native Windows policy rejection fails closed with a routing verdict'
+else
+  assert_json "$tmp/read-policy-denied.json" '.ok == true and .read_mode == "full-shell"' \
+    'non-Windows runs ignore the native exec-policy signature'
 fi
 
 printf '%s\n' rate-limit > "$fake_home/fake-mode"

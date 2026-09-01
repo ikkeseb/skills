@@ -63,7 +63,7 @@ ensure_slot_root() {
 SLOT_DIR="" WS_LOCK="" CODEX_PID="" VERIFY_TMP=""
 CODEX_BIN="" WORKSPACE_HASH_BIN="" WORKSPACE_HASH_KIND=""
 JQ_BIN="" GIT_BIN=""
-GREP_BIN="" HEAD_BIN="" TAIL_BIN="" TR_BIN="" CUT_BIN="" AWK_BIN=""
+GREP_BIN="" HEAD_BIN="" TAIL_BIN="" TR_BIN="" CUT_BIN="" AWK_BIN="" CAT_BIN=""
 # Script-scope, not `local`: the EXIT trap fires after the function returns, so
 # a function-local would be unbound there and `set -u` would abort the run.
 verify_cleanup() { [ -z "${VERIFY_TMP:-}" ] || rm -rf "$VERIFY_TMP"; }
@@ -102,6 +102,11 @@ require_jq() {
 is_pos_int() { case "${1:-}" in ''|0|*[!0-9]*) return 1 ;; *) return 0 ;; esac; }
 
 is_windows() { case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*) return 0 ;; *) return 1 ;; esac; }
+current_read_mode() {
+  if is_windows; then printf '%s' allowlisted-single-command
+  else printf '%s' full-shell
+  fi
+}
 
 # Native Windows workspace-write is an unsupported lane by default
 # (2026-08-17): every elevated sandbox setup rotates the machine-global
@@ -137,7 +142,7 @@ native_windows_write_allowed() {
 # mktemp, coreutils file ops) are accepted surface. Call after require_jq.
 resolve_text_tools() {
   local t bin
-  for t in grep head tail tr cut awk; do
+  for t in grep head tail tr cut awk cat; do
     bin="$(type -P "$t" || true)"
     [ -n "$bin" ] || fail_json missing_dependency "$t not found on PATH"
     printf -v "${t^^}_BIN" '%s' "$bin"
@@ -431,8 +436,9 @@ cmd_probe() {
   resolve_text_tools
   resolve_codex
   build_worker_env
-  local version authenticated=false auth_mode=login hash_command=""
+  local version authenticated=false auth_mode=login hash_command="" read_mode
   local git_ready=false hash_ready=false write_ready=false
+  read_mode="$(current_read_mode)"
   version="$(codex_version)"
   if env -i "${WORKER_ENV[@]}" "$CODEX_BIN" login status >/dev/null 2>&1; then
     authenticated=true
@@ -453,6 +459,7 @@ cmd_probe() {
   local missing
   missing="$(missing_contract_flags all)"
   "$JQ_BIN" -n --arg v "$version" --arg missing "$missing" \
+    --arg read_mode "$read_mode" \
     --arg auth_mode "$auth_mode" --argjson auth "$authenticated" \
     --arg hash_command "$hash_command" --argjson git_ready "$git_ready" \
     --argjson hash_ready "$hash_ready" --argjson write_ready "$write_ready" \
@@ -465,6 +472,7 @@ cmd_probe() {
       dependencies: {jq: true, git: $git_ready,
         workspace_hash: $hash_ready,
         workspace_hash_command: (if $hash_command == "" then null else $hash_command end)},
+      read_mode: $read_mode,
       sandbox_write: $sandbox_write,
       write_ready: $write_ready}'
 }
@@ -536,6 +544,8 @@ cmd_run() {
   is_pos_int "$SLOT_WAIT_SECS" || fail_json usage "CODEX_WORKER_SLOT_WAIT must be a positive integer"
 
   local model="" effort="high" sandbox="read-only" workspace="$PWD"
+  local read_mode
+  read_mode="$(current_read_mode)"
   local prompt_file="" schema_file="" timeout_secs=3600 expected_sha="" run_dir_opt=""
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -657,6 +667,21 @@ cmd_run() {
   fi
   mkdir -p "$run_dir/tmp"
   FAIL_RUN_DIR="$run_dir"
+
+  local effective_prompt_file="$prompt_file"
+  if [ "$read_mode" = allowlisted-single-command ] && [ "$sandbox" = read-only ]; then
+    effective_prompt_file="$run_dir/tmp/effective-prompt.md"
+    "$CAT_BIN" "$prompt_file" > "$effective_prompt_file" \
+      || fail_json usage "cannot read --prompt-file: $prompt_file" "$run_dir"
+    printf '%s\n' \
+      '' \
+      '' \
+      'Native Windows read contract:' \
+      'Use one plain command per exec call from this list: git status/diff/log/show/rev-parse/ls-files/grep; cat; rg; ls; Get-Content; Get-ChildItem; Select-String.' \
+      "Express filtering with that command's own flags or use separate calls." \
+      'If the task requires a pipeline, redirection, a command separator, a subshell, or another executable, stop and report that this native read lane is insufficient. Do not retry through a different shell.' \
+      >> "$effective_prompt_file"
+  fi
 
   # Start banner on stderr: stdout is the envelope channel and stays clean,
   # but a background task's combined output file — and a human peeking at a
@@ -834,11 +859,18 @@ cmd_run() {
   set +e
   set -m
   env -i "${env_args[@]}" "$CODEX_BIN" "${codex_args[@]}" \
-    < "$prompt_file" > "$run_dir/events.jsonl" 2> "$run_dir/stderr.log" &
+    < "$effective_prompt_file" > "$run_dir/events.jsonl" 2> "$run_dir/stderr.log" &
   CODEX_PID=$!
   set +m
-  local elapsed=0 timed_out=false
+  local elapsed=0 timed_out=false read_policy_denied=false
   while kill -0 "$CODEX_PID" 2>/dev/null; do
+    if [ "$read_mode" = allowlisted-single-command ] \
+       && "$GREP_BIN" -qiE 'CreateProcess.*blocked by policy' \
+            "$run_dir/stderr.log" 2>/dev/null; then
+      read_policy_denied=true
+      kill_worker_group
+      break
+    fi
     if [ "$elapsed" -ge "$remaining_secs" ]; then
       timed_out=true
       kill_worker_group
@@ -850,6 +882,12 @@ cmd_run() {
   local exit_code=$?
   CODEX_PID=""
   set -e
+  if [ "$read_policy_denied" = false ] \
+     && [ "$read_mode" = allowlisted-single-command ] \
+     && "$GREP_BIN" -qiE 'CreateProcess.*blocked by policy' \
+          "$run_dir/stderr.log" 2>/dev/null; then
+    read_policy_denied=true
+  fi
   # Post-run tree check for write runs, taken BEFORE the workspace lock is
   # released so no other writer can own the dirt attributed to this worker.
   # ok proves the worker completed a turn, not that it did the work: the tree
@@ -902,7 +940,10 @@ cmd_run() {
   fi
 
   local ok=false error_class="" error=""
-  if [ "$timed_out" = true ]; then
+  if [ "$read_policy_denied" = true ]; then
+    error_class=read_policy_denied
+    error="native Windows read command rejected by the exec-policy allowlist; route the stage through a verified WSL bridge, or re-specify it as plain allowlisted commands"
+  elif [ "$timed_out" = true ]; then
     error_class=timeout; error="worker exceeded the ${timeout_secs}s total deadline (${setup_elapsed}s of it queue wait and gates)"
   elif "$GREP_BIN" -q 'orchestrator_helper_launch_failed' "$run_dir/stderr.log" 2>/dev/null; then
     # The OS sandbox could not launch its helper, so command spawns failed
@@ -952,6 +993,7 @@ cmd_run() {
     --argjson ok "$ok" \
     --arg error_class "$error_class" --arg error "$error" \
     --arg model "$model" --arg effort "$effort" --arg sandbox "$sandbox" \
+    --arg read_mode "$read_mode" \
     --arg workspace "$workspace" --arg base_sha "$base_sha" \
     --argjson dirty_before "$dirty_before" \
     --argjson workspace_changed "$workspace_changed" \
@@ -961,6 +1003,7 @@ cmd_run() {
     --arg stderr_tail "$("$TAIL_BIN" -c 2000 "$run_dir/stderr.log" 2>/dev/null || true)" \
     --arg api_error "$api_error" \
     '{ok: $ok, model: $model, effort: $effort, sandbox: $sandbox,
+      read_mode: $read_mode,
       workspace: $workspace, base_sha: $base_sha, dirty_before: $dirty_before,
       workspace_changed: $workspace_changed,
       result: $result_doc[0],

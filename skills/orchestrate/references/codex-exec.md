@@ -26,7 +26,10 @@ Run once per session before the first Codex-lane stage:
 The helper requires Bash and `jq`; write-capable runs additionally require Git
 and either `shasum` or `sha256sum`. `probe` makes no model call and returns
 `{ok, codex_version, authenticated, contract_ok, missing_flags, dependencies,
-sandbox_write, write_ready}`. A missing `jq` returns `missing_dependency`
+read_mode, sandbox_write, write_ready}`. `read_mode` reports the command
+surface: `allowlisted-single-command` on native Windows and `full-shell` on
+macOS, Linux and WSL. It is independent of write readiness. A missing `jq`
+returns `missing_dependency`
 immediately. `sandbox_write` is measured, not inferred: probe performs one
 unbilled write inside the real OS sandbox (`codex sandbox`), because
 dependency presence does not prove write capability — every write can be
@@ -118,32 +121,33 @@ to execute gates.
 Workers have no native file-read tool — every read is a shell command, so
 never instruct a worker to avoid shell for reading; it has nothing else (a
 corrective prompt that forbade shell reads bricked its retry outright).
-Prompts for read-heavy stages steer reads to simple commands: `cat`,
-read-only `git` subcommands, `rg`.
-
 On native Windows the read lane needs a one-time machine setup. Codex ≥0.149
 spawns every exec command through `pwsh.exe -Command`, and on read-only runs
 (no OS sandbox, approvals `never`) its exec policy forbids every command that
-no execpolicy allow-rule matches — the whole read lane fails
-deterministically, independent of model and prompt wording (measured
-2026-08-24 on 0.149.1; upstream main carries the same logic). Install the
-bundled read allowlist once per machine:
+no execpolicy allow-rule matches. Install the bundled read allowlist once per
+machine:
 `cp scripts/worker-read.rules "${CODEX_HOME:-$HOME/.codex}/rules/"`. Rules
 files do load in worker runs (`--ignore-user-config` covers only
 `config.toml`) and are evaluated against the pwsh-lowered inner commands, so
 the allowlisted reads (`git status/diff/log/show/rev-parse/ls-files/grep`,
 `cat`, `rg`, `ls`, `Get-Content`, `Get-ChildItem`, `Select-String`) run while
-everything else stays forbidden. Before dispatching a read-heavy stage on
-native Windows, check that file exists; without it, embed all material in the
-prompt (bounded diffs) or route the stage to the Claude lane.
+everything else stays forbidden. Without the rules file, route the stage
+through a verified WSL bridge, embed bounded material, or use the Claude lane.
 
-Two result-side guards, earned by a field run (2026-08-24) where a blocked
-sol @ max review returned `ok: true` with zero findings: a read-only worker's
-empty-but-valid result with `blocked by policy` rejections in its stderr is a
-lane failure — retry with embedded material or the Claude lane, never accept
-it as a clean "no findings" — and workers reviewing uncommitted state must be
-told to fail loudly rather than fall back to a remote (GitHub/MCP/web) copy
-of the repo, which silently reviews the wrong code.
+For native-Windows read-only runs the helper appends this constraint to the
+task automatically: use one plain allowlisted command per exec call; express
+filtering with that command's own flags or separate calls; do not use
+pipelines, redirection, command separators, subshells or another executable.
+This adds no worker call. If stderr contains an exec-policy rejection, the
+helper stops the worker on its existing five-second poll and returns
+`read_policy_denied`. Route the same stage through a verified WSL bridge, or
+re-specify it as plain allowlisted commands; never retry the unchanged stage
+on the native lane. Full-shell platforms receive the original prompt
+unchanged.
+
+Workers reviewing uncommitted state must be told to fail loudly rather than
+fall back to a remote (GitHub/MCP/web) copy of the repo, which silently
+reviews the wrong code.
 
 The worker is not a blank slate, and no flag makes it one:
 `--ignore-user-config` scopes to `config.toml` (its own help text says so),
@@ -353,6 +357,7 @@ instance validation. Conformance to `--schema-file` is enforced server-side by
 `--output-schema` — so a schema-shaped result is the model's compliance, not a
 local guarantee, and a stage that must not act on malformed data checks the
 shape itself. Fields: `result` (the parsed final message — the payload),
+`read_mode` (the measured command surface for this run),
 `base_sha` / `dirty_before` (git state when the run started),
 `workspace_changed` (write runs: whether the tree differs after the run,
 taken before the workspace lock is released — `ok: true` with
@@ -372,6 +377,10 @@ overwritten.
   other lane is usually still open); pick one, don't stack both.
 - `auth`, `codex_missing`, `missing_dependency` — lane is down; degrade to
   Claude lane, report it.
+- `read_policy_denied` — a native-Windows read tried something outside the
+  single-command allowlist. Do not repeat the unchanged native run; route the
+  stage through a verified WSL bridge, or re-specify it as plain allowlisted
+  commands.
 - `config` — the invocation itself is wrong (bad model name, unsupported
   effort — see `api_error`); fix the call, don't retry blindly.
 - `contract_mismatch` — the CLI no longer advertises a flag the runner passes,
