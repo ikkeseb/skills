@@ -4,6 +4,13 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.29.1 — 2026-09-02
+
+`history-audit` attributes a failure cluster to its parent call before it
+blames a prompt: the quick friction pass now says to walk one sampled
+failed `tool_result` back to its `tool_use` and record the tool, input
+shape and caller ownership.
+
 ## 0.29.0 — 2026-09-01
 
 `orchestrate` gives native Windows a first-class WSL lane. With

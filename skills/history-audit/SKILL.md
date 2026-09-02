@@ -17,7 +17,12 @@ Quick friction pass, no agents: `python3 scripts/friction-scan.py --days 14`
 counts failed tool calls (hook blocks, permission denials, read-before-edit,
 edit mismatches, exit codes, Codex `Script failed`) per harness, lane and
 model with dated pointers. Run it first; it answers "what breaks mechanically"
-so the pipeline below can stay on "what the user corrected".
+so the pipeline below can stay on "what the user corrected". Before blaming a
+prompt or instruction line for a failure cluster, follow one sampled failed
+`tool_result` back to the `tool_use` that produced it (the scan already maps
+`tool_use_id` to the tool name) and record the tool, the redacted input
+shape and whether the caller was harness-shipped or user-authored. A count
+says how often; the parent call says whose.
 
 ## Pipeline
 
