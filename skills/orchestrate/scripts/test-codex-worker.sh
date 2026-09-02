@@ -59,8 +59,11 @@ fake_codex() {
   mode="$(sed -n '1p' "$HOME/fake-mode")"
   case "$mode" in
     success)
+      # One command item plus usage on the turn, the shape a real run emits,
+      # so the suite can assert the spend field.
       printf '%s\n' '{"answer":"ok"}' > "$output"
-      printf '%s\n' '{"type":"turn.completed"}'
+      printf '%s\n' '{"type":"item.completed","item":{"id":"c1","type":"command_execution","command":"ls","exit_code":0,"status":"completed","aggregated_output":""}}'
+      printf '%s\n' '{"type":"turn.completed","usage":{"input_tokens":1200,"cached_input_tokens":1000,"cache_write_input_tokens":0,"output_tokens":30,"reasoning_output_tokens":10}}'
       return 0 ;;
     success-write)
       # Like success, but also mutates the workspace (--cd) so the suite can
@@ -224,6 +227,8 @@ if [ "$(exec_count)" -eq "$((before + 1))" ]; then
 else
   fail 'native read guard adds no worker call'
 fi
+assert_json "$tmp/success.json" '.spend.commands == 1 and .spend.input_tokens == 1200 and .spend.cached_input_tokens == 1000 and .spend.output_tokens == 30 and .spend.reasoning_output_tokens == 10 and (.spend.seconds | type) == "number"' \
+  'envelope reports spend: command items, token usage, wall seconds'
 assert_same "$tmp/success.json" "$run_dir/result.json" \
   'stdout and result.json are the same authoritative envelope'
 assert_single_json "$run_dir/result.json" \
@@ -292,6 +297,8 @@ run_dir="$tmp/run-missing-result"
 run_worker "$tmp/missing-result.json" "$tmp/missing-result.err" run \
   --model default --effort low --sandbox read-only --workspace "$tmp" \
   --prompt-file "$prompt" --schema-file "$schema" --run-dir "$run_dir" --timeout 30
+assert_json "$tmp/missing-result.json" '.spend.commands == 0 and .spend.input_tokens == null' \
+  'spend degrades to zero commands and null tokens when the turn carries no usage'
 assert_json "$tmp/missing-result.json" '.ok == false and .error_class == "schema" and .turn_completed == true and .result == null' \
   'missing final payload fails closed as schema error'
 

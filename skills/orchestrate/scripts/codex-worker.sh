@@ -1053,6 +1053,22 @@ cmd_run() {
           "$run_dir/events.jsonl" >/dev/null 2>&1; then
     turn_completed=true
   fi
+  # Spend: what the stage cost, from the same tolerant parse. The seat reads
+  # it beside model and effort; a stage that outruns its budget line is a
+  # spec problem to fix before the next dispatch (2026-09-02: one read stage
+  # ran 27 command items and 3.4M cumulative input tokens with no budget).
+  local spend='{"commands":0,"input_tokens":null,"cached_input_tokens":null,"output_tokens":null,"reasoning_output_tokens":null,"seconds":0}'
+  if [ -s "$run_dir/events.jsonl" ]; then
+    spend="$("$JQ_BIN" -Rsc --argjson seconds "$(( $(date +%s) - start_ts ))" '
+      [split("\n")[] | fromjson?] as $ev
+      | ([$ev[] | select(.type == "turn.completed")] | last | .usage // {}) as $u
+      | {commands: ([$ev[] | select(.type == "item.completed" and .item.type == "command_execution")] | length),
+         input_tokens: ($u.input_tokens // null),
+         cached_input_tokens: ($u.cached_input_tokens // null),
+         output_tokens: ($u.output_tokens // null),
+         reasoning_output_tokens: ($u.reasoning_output_tokens // null),
+         seconds: $seconds}' "$run_dir/events.jsonl" 2>/dev/null || printf '%s' "$spend")"
+  fi
   local api_error=""
   if [ -s "$run_dir/events.jsonl" ]; then
     api_error="$("$JQ_BIN" -Rrs \
@@ -1132,6 +1148,7 @@ cmd_run() {
     --argjson dirty_before "$dirty_before" \
     --argjson workspace_changed "$workspace_changed" \
     --argjson exit_code "$exit_code" --argjson turn_completed "$turn_completed" \
+    --argjson spend "$spend" \
     --arg run_dir "$run_dir" \
     --slurpfile result_doc "$run_dir/result.norm.json" \
     --arg stderr_tail "$("$TAIL_BIN" -c 2000 "$run_dir/stderr.log" 2>/dev/null || true)" \
@@ -1141,7 +1158,7 @@ cmd_run() {
       workspace: $workspace, base_sha: $base_sha, dirty_before: $dirty_before,
       workspace_changed: $workspace_changed,
       result: $result_doc[0],
-      exit_code: $exit_code, turn_completed: $turn_completed,
+      exit_code: $exit_code, turn_completed: $turn_completed, spend: $spend,
       run_dir: $run_dir, stderr_tail: $stderr_tail}
      + (if $ok then {}
         else {error_class: $error_class, error: $error, api_error: $api_error} end)' \

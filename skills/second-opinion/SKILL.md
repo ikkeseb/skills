@@ -62,7 +62,7 @@ run may sit at `turn.started` for minutes.
 Harvest exactly once after the job is terminal:
 
 1. Parse `<temp-dir>/run/result.json`. It is the authoritative envelope; use
-   `result` only when `ok: true`.
+   `result` only when `ok: true`, and report its `spend` beside the finding.
 2. If that file is absent or invalid, inspect the recorded background output.
    Failures before run-dir creation and interrupted runners can report only
    there. The file combines a stderr banner with stdout; locate its JSON
@@ -111,6 +111,9 @@ ambient house style:
 - For security-adjacent reviews, keep the artifact as subject and request
   failure modes, never bypass instructions.
 - Name exclusions so the reviewer does not redesign unrelated work.
+- Bound the run: a `budget:` line with commands and minutes, and the stop —
+  answer from the packet, verify only the claims you dispute. An open bound
+  re-audits the repo.
 
 Make a second call only for genuinely new evidence: paste the first result and
 new evidence into a fresh prompt, then ask whether the conclusion changes.

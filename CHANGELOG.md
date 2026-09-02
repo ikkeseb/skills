@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.30.0 — 2026-09-02
+
+Codex-lane stages get a budget and report their spend. `codex-worker.sh`
+adds `spend` to every envelope (command items completed, token usage from
+the turn, wall seconds), degrading to zero commands and null tokens when
+the events carry none. `orchestrate` makes `budget:` the third line of every
+worker prompt — commands, minutes and the stop — lists spend per stage in
+the final report, and names the Map-stage rule: a workhorse that must read
+more than about ten files gets cheap readers and their extracts instead.
+`second-opinion` bounds its one call the same way and reports the spend.
+Driver: a read/cluster stage that ran 27 command items and 3.4M cumulative
+input tokens with no bound (model map calibration note).
+
 ## 0.29.1 — 2026-09-02
 
 `history-audit` attributes a failure cluster to its parent call before it

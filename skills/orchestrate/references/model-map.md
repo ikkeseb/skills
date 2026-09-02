@@ -124,6 +124,13 @@ delegation the orchestrator doesn't control.
   - 2026-08-31, terra @ high ×5 read-only classification (evidence extraction
     with a fixed schema) via `codex-worker` adapters in one Workflow: clean;
     two seat spot-checks matched the sources; 94k tokens, 2 min 19 s.
+- **Rounds are the cost, not text** (field, 2026-09-02): one sol @ high
+  read/cluster stage over 19 candidates and three sibling repos ran 27
+  command items in 9 min for 3.36M cumulative input tokens (94 % cached,
+  ~175k unique text) and 27k output, with no budget line in the prompt.
+  Every round re-sends the context, so the levers are the `budget:` line
+  and the Map-stage split, both now in the contract. `effort: medium` for
+  read/cluster stages is a trial to log here, not a rule.
 - **opus @ medium** (2026-08-31): the `opus-medium` trial logged no
   datapoint before inherit-by-default superseded it the same day — under
   the usual medium seat every plain Opus dispatch already runs at medium.

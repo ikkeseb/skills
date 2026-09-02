@@ -33,7 +33,9 @@ Map work.
 **Scale to the ask.** "Understand this package" → three to five readers.
 "Find every site" → finders until two rounds return nothing new. A one-line
 fix → no fan-out. A worker earns its slot with a named distinct slice; when
-the next slice has no name, the fan-out is done.
+the next slice has no name, the fan-out is done. A workhorse stage that must
+read more than about ten files is a Map stage in disguise: fan the reading
+out to cheap readers and hand the workhorse their extracts.
 
 **The instrument follows the shape.** One short Claude stage → a plain
 Agent dispatch with `model` pinned; effort inherits the session. One short
@@ -126,8 +128,8 @@ the session workflow-size guideline as a ceiling. If a stage limits coverage
 
 Open with `[orchestrate]` or `[orchestrate sustained]`, discretionary
 re-entries included. The final report accounts for every delegated stage's
-actual model and effort (Claude aliases: the resolved model when verified,
-otherwise the alias with resolution unknown) and the lane mix.
+actual model, effort and spend (Claude aliases: the resolved model when
+verified, otherwise the alias with resolution unknown) and the lane mix.
 
 ## The split
 
@@ -157,12 +159,20 @@ a human decision returns the decision material and the seat relays it.
   agent row renders the dispatch label, not the prompt body, so every
   delegation's visible label carries `<model> @ <effort> — <task tag>`
   (Bash-background dispatches via the no-op label line). The prompt body
-  opens with `model:` / `effort:` lines, then a blank line and `Task:`, as
-  the worker-side record. Both state the lane requested at dispatch, never a
-  verified one: write resolved values with provenance (`effort: medium
-  (inherited)`), write `unknown` when unresolvable, and update both on any
-  retry at a different tier. A missing label means the lane is unknown, not a
-  default.
+  opens with `model:` / `effort:` / `budget:` lines, then a blank line and
+  `Task:`, as the worker-side record. Both state the lane requested at
+  dispatch, never a verified one: write resolved values with provenance
+  (`effort: medium (inherited)`), write `unknown` when unresolvable, and
+  update both on any retry at a different tier. A missing label means the
+  lane is unknown, not a default.
+- **Every stage carries a budget and returns its spend.** The `budget:` line
+  sizes the run to its shape — commands and minutes — and names the stop:
+  acceptance criteria met, briefed facts taken as verified. A workhorse
+  follows a stated bound and overbuilds an open one (model map). The
+  envelope's `spend` (command items, tokens, seconds) is the measurement:
+  the final report lists it per stage beside model and effort, and a stage
+  that outran its budget is a spec problem to fix before the next dispatch,
+  never a retry.
 - **Senior review is mandatory, at a depth set by risk.** Anything whose
   wrong result can ship or is expensive to unwind (state, data shape, wire-
   adjacent, security-sensitive, a test that could stop catching a regression)

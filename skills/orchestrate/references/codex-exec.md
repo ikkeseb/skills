@@ -184,10 +184,9 @@ Three patterns. Pick by expected runtime and by whether a workflow is
 running — at dispatch, never switching owners mid-job. Worker runtime is
 task-shaped and not reliably predictable — a max-effort verification mandate
 has run 86 tool steps over 14+ minutes — so don't tune `--timeout` per role:
-leave headroom (the 3600 default is fine under background dispatch) and, for
-verification-heavy prompts, state a time/effort budget in the prompt itself
-(e.g. "recon facts are already verified; spend your run on judgment; finish
-within 30 minutes").
+leave headroom (the 3600 default is fine under background dispatch). The
+prompt's `budget:` line (SKILL.md § Delegation contract) bounds the run, the
+timeout only catches a hang.
 
 Every `--schema-file` an adapter passes is authored by the orchestrator
 before dispatch: write it to the strict-mode contract under Running a
@@ -369,7 +368,10 @@ or `wsl-bridge` with `run_dir_wsl` beside the Windows-side `run_dir`),
 taken before the workspace lock is released — `ok: true` with
 `workspace_changed: false` is an empty-handed worker whose summary must not
 be trusted as work done; `null` on read-only runs or when the after-status
-itself failed), `run_dir` (events.jsonl + stderr.log for diagnosis), and on
+itself failed), `spend` (command items completed, token usage from the
+turn, wall seconds — the per-stage cost the final report lists; zero
+commands and null tokens when the events carry none), `run_dir`
+(events.jsonl + stderr.log for diagnosis), and on
 failure `error_class` / `error` / `api_error`.
 
 Failure classes and what to do. This is the single retry/fallback policy —
