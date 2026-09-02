@@ -66,7 +66,10 @@ Flag presence proves the CLI still *accepts* the invocation, not that it still
 ```
 
 It exercises the real `run` path and asserts the whole envelope — contract,
-`ok`, and schema conformance.
+`ok`, schema conformance — and it is a read canary: the worker must report a
+token `verify` just wrote to `canary.txt` in its workspace (`workspace_read`).
+A worker that completes and honours the schema but cannot see the workspace
+fails here; probe alone never catches that (measured 2026-08-24).
 
 ## Running a worker
 

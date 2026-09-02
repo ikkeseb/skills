@@ -10,6 +10,9 @@ set -euo pipefail
 # classification). The fail-closed DEFAULT lane is asserted separately at the
 # end with the variable cleared.
 export CODEX_WORKER_NATIVE_WINDOWS_WRITE=elevated
+# A shell that has opted into the WSL lane would route every fake run through
+# the real wsl.exe; the suite sets the lane itself where it tests the bridge.
+unset CODEX_WORKER_LANE
 
 fake_codex() {
   case "${1:-}" in
@@ -89,6 +92,18 @@ fake_codex() {
       printf '%s\n' 'ERROR: exec_command failed: CreateProcess rejected: blocked by policy' >&2
       return 0 ;;
     missing-result)
+      printf '%s\n' '{"type":"turn.completed"}'
+      return 0 ;;
+    canary)
+      # A worker that can see the workspace: reports canary.txt verbatim,
+      # the shape `verify` asks for.
+      printf '{"canary":"%s","confident":true}\n' "$(cat "$cd_dir/canary.txt")" > "$output"
+      printf '%s\n' '{"type":"turn.completed"}'
+      return 0 ;;
+    canary-blind)
+      # Schema-valid but guessed: the dead-read-lane shape verify must not
+      # call ok (2026-08-24).
+      printf '%s\n' '{"canary":"Oslo","confident":true}' > "$output"
       printf '%s\n' '{"type":"turn.completed"}'
       return 0 ;;
     *) printf 'unknown fake mode: %s\n' "$mode" >&2; return 64 ;;
@@ -301,6 +316,21 @@ assert_json "$tmp/missing-result.json" '.spend.commands == 0 and .spend.input_to
   'spend degrades to zero commands and null tokens when the turn carries no usage'
 assert_json "$tmp/missing-result.json" '.ok == false and .error_class == "schema" and .turn_completed == true and .result == null' \
   'missing final payload fails closed as schema error'
+
+# verify is a read canary: only a worker that reports the token written to
+# the workspace passes; a schema-valid guess or the wrong shape does not.
+printf '%s\n' canary > "$fake_home/fake-mode"
+run_worker "$tmp/verify-canary.json" "$tmp/verify-canary.err" verify
+assert_json "$tmp/verify-canary.json" '.ok == true and .envelope_ok == true and .schema_honoured == true and .workspace_read == true' \
+  'verify passes when the worker reports the workspace canary'
+printf '%s\n' canary-blind > "$fake_home/fake-mode"
+run_worker "$tmp/verify-blind.json" "$tmp/verify-blind.err" verify
+assert_json "$tmp/verify-blind.json" '.ok == false and .envelope_ok == true and .schema_honoured == true and .workspace_read == false' \
+  'verify fails a schema-valid guess that never read the workspace'
+printf '%s\n' success > "$fake_home/fake-mode"
+run_worker "$tmp/verify-shape.json" "$tmp/verify-shape.err" verify
+assert_json "$tmp/verify-shape.json" '.ok == false and .schema_honoured == false and .workspace_read == false' \
+  'verify fails a result in the wrong shape'
 
 repo="$tmp/write-repo"
 mkdir -p "$repo"

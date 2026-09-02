@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.30.1 — 2026-09-02
+
+`codex-worker.sh verify` is now a read canary. The one billed run writes a
+fresh token to `canary.txt` in its workspace and asks the worker to report
+it; the envelope gains `workspace_read`, and `ok` requires it. A worker that
+completes and honours the schema but cannot see the workspace (the dead read
+lane measured 2026-08-24, where probe and the old capital-of-Norway verify
+both sat green) now fails verify. Same single call, no new cost.
+
 ## 0.30.0 — 2026-09-02
 
 Codex-lane stages get a budget and report their spend. `codex-worker.sh`

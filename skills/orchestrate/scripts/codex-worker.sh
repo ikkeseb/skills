@@ -617,11 +617,19 @@ cmd_probe() {
 # guarantee — flag presence proves the CLI still accepts our invocation, this
 # proves the invocation still behaves. Run it after a Codex upgrade instead of
 # re-verifying the recipe by hand.
+#
+# The run is a read canary: a fresh token is written to canary.txt in the
+# workspace and the worker is asked to report it. A worker that cannot see
+# the workspace (a dead read lane, measured 2026-08-24 on Windows: probe and
+# the old capital-of-Norway verify both green while every run came back
+# schema-valid but empty) can only guess, so `workspace_read` separates "the
+# run completes" from "the worker could read the repo". Same single billed
+# call as before.
 cmd_verify() {
   require_jq
   resolve_text_tools
   resolve_codex
-  local dir out missing verdict
+  local dir out missing verdict token
   missing="$(missing_contract_flags all)"
 
   # Nothing to learn from a billed run when the invocation is already known
@@ -630,7 +638,7 @@ cmd_verify() {
     "$JQ_BIN" -n --arg v "$(codex_version)" --arg missing "$missing" \
       '{ok: false, codex_version: $v, contract_ok: false,
         missing_flags: ($missing | split(" ")),
-        envelope_ok: false, schema_honoured: false,
+        envelope_ok: false, schema_honoured: false, workspace_read: false,
         error: "contract check failed; skipped the billed run"}'
     return
   fi
@@ -638,11 +646,13 @@ cmd_verify() {
   dir="$(mktemp -d)"; VERIFY_TMP="$dir"
   trap verify_cleanup EXIT           # named function, so a TMPDIR containing a
                                      # quote can never become shell injection
+  token="canary-$(date +%s)-$$-$RANDOM"
+  printf '%s\n' "$token" > "$dir/canary.txt"
   # The prompt deliberately never mentions the response shape, so conformance
   # is evidence that --output-schema actually took effect rather than the model
   # echoing a shape it was shown.
-  printf 'What is the capital of Norway?\n' > "$dir/prompt.md"
-  printf '%s\n' '{"type":"object","additionalProperties":false,"required":["city","confident"],"properties":{"city":{"type":"string"},"confident":{"type":"boolean"}}}' > "$dir/schema.json"
+  printf 'Read the file canary.txt in the current working directory and report its exact contents.\n' > "$dir/prompt.md"
+  printf '%s\n' '{"type":"object","additionalProperties":false,"required":["canary","confident"],"properties":{"canary":{"type":"string"},"confident":{"type":"boolean"}}}' > "$dir/schema.json"
 
   out="$(bash "${BASH_SOURCE[0]}" run --model default --effort low \
            --sandbox read-only --workspace "$dir" \
@@ -652,20 +662,22 @@ cmd_verify() {
   # One jq pass over the raw stdout: a non-JSON, empty, or multi-document relay
   # degrades to false instead of failing an --argjson under `set -e`, so verify
   # keeps its promise of exactly one JSON object on stdout.
-  verdict="$(printf '%s' "$out" | "$JQ_BIN" -sR '
+  verdict="$(printf '%s' "$out" | "$JQ_BIN" -sR --arg token "$token" '
       (try (fromjson? // {}) catch {}) as $_ |
       (. | try fromjson catch {}) as $e |
       {envelope_ok: ($e.ok == true),
        schema_honoured: (($e.result | type) == "object"
-                         and ($e.result.city | type) == "string"
+                         and ($e.result.canary | type) == "string"
                          and ($e.result.confident | type) == "boolean"),
+       workspace_read: ((($e.result.canary // "") | tostring | gsub("^\\s+|\\s+$"; "")) == $token),
        error: ($e.error // "")}' 2>/dev/null \
-    || printf '%s' '{"envelope_ok":false,"schema_honoured":false,"error":"unparseable runner output"}')"
+    || printf '%s' '{"envelope_ok":false,"schema_honoured":false,"workspace_read":false,"error":"unparseable runner output"}')"
 
   "$JQ_BIN" -n --arg v "$(codex_version)" --argjson d "$verdict" \
-    '{ok: ($d.envelope_ok and $d.schema_honoured),
+    '{ok: ($d.envelope_ok and $d.schema_honoured and $d.workspace_read),
       codex_version: $v, contract_ok: true, missing_flags: [],
-      envelope_ok: $d.envelope_ok, schema_honoured: $d.schema_honoured}
+      envelope_ok: $d.envelope_ok, schema_honoured: $d.schema_honoured,
+      workspace_read: $d.workspace_read}
      + (if $d.error == "" then {} else {error: $d.error} end)'
 }
 
