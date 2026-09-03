@@ -1,6 +1,6 @@
 # Codex lane: worker contract
 
-Read this before authoring the first Codex-lane stage in a workflow. The
+Read this before dispatching the first Codex-lane stage. The
 invocation itself (flags, environment, concurrency, validation) lives in
 `scripts/codex-worker.sh` — this file documents how to call it and what comes
 back. Never hand-roll `codex` commands: shells may wrap `codex` in functions
@@ -181,104 +181,68 @@ opaque alpha channel, or checkerboard painted into the pixels is a failed
 result; route the request to a generation path that can produce alpha instead
 of prompting this relay again.
 
-## Adapter stages and dispatch patterns
+## Dispatch patterns
 
-Three patterns. Pick by expected runtime and by whether a workflow is
-running — at dispatch, never switching owners mid-job. Worker runtime is
-task-shaped and not reliably predictable — a max-effort verification mandate
-has run 86 tool steps over 14+ minutes — so don't tune `--timeout` per role:
-leave headroom (the 3600 default is fine under background dispatch). The
-prompt's `budget:` line (SKILL.md § Delegation contract) bounds the run, the
-timeout only catches a hang.
+Two patterns. Seat dispatch is the default for every Codex stage; the
+foreground adapter is the Workflow exception. Pick at dispatch and never
+switch owners mid-job. Worker runtime is task-shaped and not reliably
+predictable — a max-effort verification mandate has run 86 tool steps over
+14+ minutes — so don't tune `--timeout` per role: leave headroom (the 3600
+default is fine under seat dispatch). The prompt's `budget:` line
+(SKILL.md § Delegation contract) bounds the run, the timeout only catches a
+hang.
 
-Every `--schema-file` an adapter passes is authored by the orchestrator
-before dispatch: write it to the strict-mode contract under Running a
-worker, or the helper fails the stage fast as `usage` (field, 2026-08-29:
-one adapter round lost to a schema missing `additionalProperties: false`).
+Every `--schema-file` is authored by the orchestrator before dispatch: write
+it to the strict-mode contract under Running a worker, or the helper fails
+the stage fast as `usage` (field, 2026-08-29: one adapter round lost to a
+schema missing `additionalProperties: false`).
 
-**Active-wait adapter stage — the default for long runs inside a workflow.**
-Any run that *may* exceed ~8 minutes (max-effort work, verification mandates,
-real repo audits — in practice most substantive Codex-lane stages) runs as a
-Workflow stage whose adapter agent starts the helper with the Bash tool's
-`run_in_background`, then **holds its own turn open** by running bounded
-foreground wait commands on `RUN_DIR/result.json` — each under the 600 s
-Bash cap, repeated until the envelope lands — and relays it verbatim. The
-adapter must never end its turn to "wait to be re-invoked":
-re-invocation-on-background-exit exists only for the main loop, never for
-subagents or Workflow stages (mechanism probes, 2026-08-25 — a stage that
-ends its turn has its turn-end text recorded as the stage result and its
-background job killed at workflow teardown; an earlier revision of this
-recipe prescribed exactly that and lost a live worker, and its "field-
-verified" claim was misattributed). The wait-loop pattern is probe-verified
-including a timed-out cycle followed by delivery on the next. The
-orchestrator still mints the run dir before dispatch: it stays the durable
-locator and ground truth, and an adapter that dies or goes idle is recovered
-from it exactly as under Delivery ownership below. Verified adapter prompt —
-a default agent pinned per the relay-seat rule in `model-map.md` (fill the
-UPPERCASE slots; substitute the literal helper path):
+**Seat dispatch + run-dir harvest — the default.** The seat writes the
+stage's prompt and schema to a private dir, mints the run dir, and starts
+the helper with the Bash tool's `run_in_background`, `description` set to
+the stage label. The command opens with the same label as a no-op line (the
+shell UI lists a background job by its command's first line) and redirects
+stdout to a file, because some failures emit their envelope on stdout only
+(recovery step 2 below):
 
-```
-You are a one-shot Codex-lane adapter using BACKGROUND dispatch with an
-ACTIVE WAIT. Do exactly this:
-1. Create a private temp dir with mktemp -d. Write the worker prompt below
-   to prompt.md in it, and (if given) the JSON schema below to schema.json.
-   Never write either file into RUN_DIR; it is reserved for helper output.
-2. Start this command with the Bash tool with run_in_background set to true:
-   HELPER_ABS_PATH run --model MODEL --effort EFFORT --sandbox SANDBOX \
-     --workspace WORKSPACE --prompt-file <tempdir>/prompt.md \
-     --schema-file <tempdir>/schema.json --run-dir RUN_DIR --timeout 1500
-3. Then IMMEDIATELY run this FOREGROUND command with the Bash tool's
-   timeout parameter set to 600000. Never end your turn while the run is
-   in progress — you will NOT be woken up again; an ended turn kills the
-   worker:
-   sh -c 'i=0; until [ -f RUN_DIR/result.json ] || [ $i -ge 108 ]; do
-     sleep 5; i=$((i+1)); done; [ -f RUN_DIR/result.json ] && echo FOUND'
-   (a plain sh counter, 108 rounds of 5 s = 540 s; GNU timeout is absent
-   on macOS)
-4. If it exits without printing FOUND, that is a normal wait-cycle timeout,
-   not an error: run the same command again, up to 4 times total. Do not
-   poll the background task, do not kill it, do not re-run the helper.
-5. When FOUND prints, read RUN_DIR/result.json and return its ENTIRE
-   content verbatim as your final message - no commentary, no code fences,
-   no summary. If all 4 cycles pass without FOUND, return exactly:
-   {"ok": false, "error_class": "codex_failed", "error": "adapter wait
-   cycles exhausted before result.json appeared", "run_dir": "RUN_DIR"}
-Rules: strictly one-shot, never retry, never touch the repo, never solve
-the task yourself.
+```bash
+: "r1 authority — gpt-5.6-terra @ high"
+"$HELPER" run --model gpt-5.6-terra --effort high --sandbox read-only \
+  --workspace "$PWD" --prompt-file "$DIR/prompt.md" \
+  --schema-file "$DIR/schema.json" --run-dir "$RUN_DIR" > "$DIR/stdout.json"
 ```
 
-Four 540 s cycles bound the stage at ~36 minutes, which outlives the
-helper's 1500 s deadline; a run sized beyond that belongs to main-loop
-background dispatch below.
+One such call per stage, at most four in flight (§ Concurrency); the seat
+keeps specifying the next piece while they run. Claude Code re-invokes the
+seat when a background command exits: harvest `RUN_DIR/result.json` — the
+helper's full envelope, written atomically at termination — accept the
+payload only on `ok: true` (the verdict lives in the envelope, never in
+`final.json`, which is the raw model payload), and print the stage line
+from `spend` (SKILL.md § Modes and reporting). No relay agent is involved,
+so no Claude context is replayed per stage. A harness without an exit signal
+waits on the run dir in bounded foreground calls instead
+(`sh -c 'i=0; until [ -f "$RUN_DIR/result.json" ] || [ $i -ge 108 ]; do
+sleep 5; i=$((i+1)); done'`, 540 s per call, repeated).
 
-**Main-loop background dispatch + run-dir harvest — when no workflow is
-running, and the recovery baseline always.** The main loop itself mints the
-run dir, starts the helper with the Bash tool's `run_in_background`
-(begin the command with a no-op label line — `: "STAGE MODEL@EFFORT — TOPIC"` —
-the shell UI lists a background job by its command's first line, so name the
-job there instead of leading with a temp-path assignment), and harvests
-`RUN_DIR/result.json` — the helper's full envelope, written
-atomically at termination — accepting the payload only on `ok: true` (the
-verdict lives in the envelope, never in `final.json`, which is just the raw
-model payload). Always redirect the helper's stdout to a file: some failures
-emit their envelope on stdout only (see recovery step 2). The main loop owns
-delivery from the start; no adapter agent is involved.
+**Foreground adapter — the Workflow exception.** Only a per-item pipeline
+that must mix lanes puts a Codex stage inside a Workflow, because every
+Workflow stage is a Claude agent that replays its own context (instruction
+files included, ~25k tokens) on every tool call. Keep it to one call: the
+seat writes the prompt and schema files before the workflow starts and
+passes their paths in the briefing. The Bash tool's timeout parameter is
+hard-capped at 600000 ms and the call auto-backgrounds past it, which
+silently breaks a foreground relay, so the helper runs with `--timeout 540`
+(a total deadline, queue wait included) and the stage must be confidently
+short; a run that may need more time is seat dispatch, full stop — do not
+raise the relay numbers, and never let an adapter end its turn to "wait to
+be re-invoked": re-invocation-on-background-exit exists only for the seat,
+never for subagents or Workflow stages (mechanism probes, 2026-08-25).
 
-**Foreground adapter relay — short runs only.** The Bash tool's timeout
-parameter is hard-capped at 600000 ms and the call auto-backgrounds past it,
-which silently breaks a foreground relay: the invariant "tool timeout
-outlives helper deadline" is only satisfiable under 600 s. So relay through
-an adapter only when the run is confidently short (small prompt, low/medium
-effort), with helper `--timeout 540` and Bash timeout 600000 — 540 is a
-total deadline (queue wait included), so it genuinely bounds the whole call
-under 600 s even when slots are contended. A run that may need more time is a
-background-dispatch case, full stop — do not raise the relay numbers.
-
-For the relay, prefer the `codex-worker` agent type when it appears in the
-session's agent list — plugin installs namespace it as
-`ikkeseb-skills:codex-worker`. Otherwise (e.g. skills installed by symlink,
-which carries no agents) spawn a default agent as the adapter — sonnet at
-low effort, the same pin the `codex-worker` agent carries — with this verified prompt (fill the
+Prefer the `codex-worker` agent type when it appears in the session's agent
+list — plugin installs namespace it as `ikkeseb-skills:codex-worker`.
+Otherwise (e.g. skills installed by symlink, which carries no agents) spawn
+a default agent as the adapter — sonnet at low effort, the same pin the
+`codex-worker` agent carries — with this verified prompt (fill the
 UPPERCASE slots; keep the rules verbatim, each guards an observed failure
 mode; for write workers swap in the write-gate flags below). `HELPER_ABS_PATH`
 is `"$HELPER"` expanded — the adapter is a separate session that resolves
@@ -317,17 +281,15 @@ that follows Delivery ownership below.
 ## Delivery ownership and lost-adapter recovery
 
 Delivery ownership is fixed at dispatch (`SKILL.md` § Delegation contract);
-the pattern specifics: main-loop dispatches are main-loop-owned by
-construction; a foreground adapter owns delivery by blocking on the single
-helper call and relaying stdout — legitimate only while the call stays
-foreground for the whole run; an active-wait adapter owns delivery by
-holding its turn open through bounded wait cycles until the envelope lands —
-its turn ending without a relayed envelope is a lost delivery, never a pause
-(no harness wakes it back up). If an adapter dies, returns no
+the pattern specifics: seat dispatches are seat-owned by construction; a
+foreground adapter owns delivery by blocking on the single helper call and
+relaying stdout — legitimate only while the call stays foreground for the
+whole run; its turn ending without a relayed envelope is a lost delivery,
+never a pause (no harness wakes it back up). If an adapter dies, returns no
 JSON, or sits idle after its run is terminal, it is evidence of a lost
 delivery, not a paused one: never ping or re-invoke it. Recover from ground
 truth in the orchestrator-minted `--run-dir`, using the same terminal-state
-check as a normal background harvest:
+check as a normal seat harvest:
   1. Terminal-state check: `RUN_DIR/result.json` exists → the helper
      finished and that file is the authoritative envelope; parse it and gate
      on `ok: true` exactly as if it had arrived on stdout (`result` holds
@@ -547,17 +509,17 @@ unless `CODEX_WORKER_ALLOW_API_KEY=1` is set explicitly.
 
 The helper holds a semaphore of 4 concurrent workers (override:
 `CODEX_WORKER_MAX_SLOTS`); extra workers queue up to 30 minutes, then fail as
-`slots_exhausted`. Workflow concurrency is higher than 4, so batch Codex-lane
-stages in groups of ≤4 — queued workers burn workflow agent slots doing
-nothing. The semaphore is per-orchestrator, not machine-global (its lock tree
+`slots_exhausted`. Start at most four seat dispatches at a time and launch
+the next as one harvests; in a Workflow, batch adapter stages in groups of
+≤4 — queued workers burn workflow agent slots doing nothing. The semaphore is per-orchestrator, not machine-global (its lock tree
 lives under `$TMPDIR`, scoped per uid). Queue wait is bounded by each run's
 own `--timeout` — a *total* deadline — so a short-timeout run that sits in
 the queue fails as `timeout`, not `slots_exhausted`; don't read the class as
 proof the queue was clear.
 
-Done when: every dispatched worker ends in exactly one of — adapter-relayed
-JSON (typed via the Workflow `schema` option), a main-loop harvest from its
-`--run-dir` with the evidence above, or a recorded failure with `run_dir`
+Done when: every dispatched worker ends in exactly one of — a seat harvest
+from its `--run-dir` with the evidence above, adapter-relayed JSON (typed
+via the Workflow `schema` option), or a recorded failure with `run_dir`
 evidence; every failure path degrades loudly or surfaces evidence — no
 silent fallback, no job closed off an idle notification, and no adapter ever
 pinged to deliver.

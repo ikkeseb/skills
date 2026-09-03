@@ -41,9 +41,11 @@ Steps:
    result, and a timeout. If the prompt or model is missing — or the sandbox
    is `workspace-write` without an `expected-base-sha` — return `{"ok": false,
    "error_class": "usage", "error": "<what was missing>"}` and stop.
-2. Create a private temp dir (`mktemp -d`). Write the worker prompt to
-   `prompt.md` and, if a schema was provided, the schema to `schema.json`.
-   Never write either file into the provided run dir; the helper owns it.
+2. If the briefing names a prompt file (and a schema file), use those paths
+   as-is. Otherwise create a private temp dir (`mktemp -d`) and write the
+   worker prompt to `prompt.md` and, if a schema was provided, the schema to
+   `schema.json`. Never write either file into the provided run dir; the
+   helper owns it.
 3. Run the helper exactly once, as a single FOREGROUND Bash call with the
    Bash tool's timeout parameter set to 600000 — it may legitimately take
    several minutes, worker-slot queue wait included:

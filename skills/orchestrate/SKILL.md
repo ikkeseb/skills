@@ -37,17 +37,22 @@ the next slice has no name, the fan-out is done. A workhorse stage that must
 read more than about ten files is a Map stage in disguise: fan the reading
 out to cheap readers and hand the workhorse their extracts.
 
-**The instrument follows the shape.** One short Claude stage → a plain
-Agent dispatch with `model` pinned; effort inherits the session. One short
-Codex stage → the `codex-worker` adapter; one long Codex stage → main-loop
-background dispatch with run-dir harvest. Fan-out or multiple stages → one
-mixed-lane Workflow, Claude stages as `agent()` calls, Codex stages through
-adapter agents, every lane a labeled row in one tree. A one-row tree is an
-effort adapter, never a shape: only deep verification of another lane's
-work under a seat running below `high` earns it, with `effort` pinned on the
-`agent()` call. Invoking `/orchestrate` is the Workflow opt-in. `pipeline()` by default; a barrier only where a stage
-needs every prior result. Too small or too ambiguous to delegate well → state
-the sequential fallback and do it in the main loop.
+**The instrument follows the lane.** Codex stages are seat-dispatched: the
+seat writes the prompt and schema files, starts the helper in the background
+with a labeled call, keeps working, and harvests the run dir when the
+harness reports the exit (`references/codex-exec.md` § Dispatch patterns).
+One call per stage, up to four at a time, no relay agent in between. Claude
+stages: one short stage → a plain Agent dispatch with `model` pinned, effort
+inheriting the session; fan-out or multiple stages → a Workflow of `agent()`
+calls, every lane a labeled row in one tree. A Workflow carries a Codex
+stage only when a per-item pipeline must mix lanes; then the foreground
+`codex-worker` adapter makes one call over files the seat wrote. A one-row
+tree is an effort adapter, never a shape: only deep verification of another
+lane's work under a seat running below `high` earns it, with `effort` pinned
+on the `agent()` call. Invoking `/orchestrate` is the Workflow opt-in.
+`pipeline()` by default; a barrier only where a stage needs every prior
+result. Too small or too ambiguous to delegate well → state the sequential
+fallback and do it in the main loop.
 
 ## Instrument
 
@@ -60,13 +65,9 @@ Keep one-off dispatches anonymous — naming one turns it into an addressable
 teammate and may suppress automatic result delivery; name only for
 intentional mailbox-based collaboration.
 
-Codex stages pick their adapter by expected runtime, decided at dispatch
-(`references/codex-exec.md` § Adapter stages owns both recipes): confidently
-short runs use the foreground `codex-worker` adapter; anything that may run
-long uses the active-wait adapter, which starts the helper in the background
-inside its own stage, holds its turn open with bounded foreground waits on
-the run dir, and relays the envelope when it lands. Main-loop background
-dispatch with run-dir harvest is the delivery path when no workflow runs.
+Seat dispatch is the Codex default at any run length; the foreground
+adapter is the one Workflow exception (`references/codex-exec.md`
+§ Dispatch patterns owns both recipes).
 
 Claude stages take harness aliases, never versioned Claude model IDs. Codex
 stages run OpenAI models through `scripts/codex-worker.sh`, the sole source
@@ -127,8 +128,12 @@ the session workflow-size guideline as a ceiling. If a stage limits coverage
   and redirects do not end it. A new session starts fresh.
 
 Open with `[orchestrate]` or `[orchestrate sustained]`, discretionary
-re-entries included. The final report accounts for every delegated stage's
-actual model, effort and spend (Claude aliases: the resolved model when
+re-entries included. Every seat dispatch prints one stage line at start and
+one at harvest, so the lane and the cost stay visible in the terminal:
+`▸ <tag> — <model> @ <effort> — started, run dir <path>` and
+`✓ <tag> — <n> cmds, <in>M in (<cached>M cached), <out>k out, <m>m<s>s`
+(`✗ <tag> — <error_class>` on failure). The final report accounts for
+every delegated stage's actual model, effort and spend (Claude aliases: the resolved model when
 verified, otherwise the alias with resolution unknown) and the lane mix.
 
 ## The split
@@ -158,7 +163,8 @@ a human decision returns the decision material and the seat relays it.
 - **The lane is legible at dispatch: label first, prompt header second.** The
   agent row renders the dispatch label, not the prompt body, so every
   delegation's visible label carries `<model> @ <effort> — <task tag>`
-  (Bash-background dispatches via the no-op label line). The prompt body
+  (seat dispatches: the same text as the Bash `description` and the no-op
+  label line). The prompt body
   opens with `model:` / `effort:` / `budget:` lines, then a blank line and
   `Task:`, as the worker-side record. Both state the lane requested at
   dispatch, never a verified one: write resolved values with provenance
@@ -215,13 +221,13 @@ a human decision returns the decision material and the seat relays it.
   (twice, 2026-08-05) and installs nothing. Codex write runs fail a stale
   base closed via `--expected-base-sha`.
 - **One delivery owner, fixed at dispatch — and idle is not completion.** A
-  foreground adapter owns its strictly blocking call; an active-wait adapter
-  owns relay by holding its turn through bounded wait cycles — an adapter
-  turn that ends without an envelope is a lost delivery, since nothing
-  re-invokes a stage agent; anything dispatched by the main loop is
-  main-loop-harvest from the start: record its durable locator before
-  dispatch, then own polling, terminal-state detection, harvest, and cleanup.
-  Completion requires a returned result plus inspection of the relevant
+  seat dispatch is seat-harvest from the start: record its run dir before
+  dispatch, then own the exit signal (Claude Code re-invokes the seat when a
+  background command exits; a harness without that signal polls the run dir
+  with bounded waits), terminal-state detection, harvest, and cleanup. A
+  foreground adapter owns its strictly blocking call — an adapter turn that
+  ends without an envelope is a lost delivery, since nothing re-invokes a
+  stage agent. Completion requires a returned result plus inspection of the relevant
   artifact or diff. On idle without a result, check the durable locator, job
   state, workspace diff, PID, and log freshness; idle never transfers
   ownership, and no wrapper is pinged to resume delivery.

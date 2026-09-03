@@ -4,6 +4,18 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.31.0 — 2026-09-03
+
+Codex stages are seat-dispatched by default. The orchestrator writes the
+prompt and schema files, starts `codex-worker.sh` in the background with a
+labeled call, and harvests the run dir when the harness reports the exit;
+no relay agent sits in between, so no Claude context is replayed per stage
+(a relay cost about 25k tokens per tool call, five to nine calls each).
+The foreground `codex-worker` adapter stays as the one Workflow exception,
+for a per-item pipeline that must mix lanes, now over files the seat wrote
+so it makes a single call. The active-wait adapter is retired (git history
+keeps it). Every seat dispatch prints a stage line at start and at harvest.
+
 ## 0.30.2 — 2026-09-03
 
 `orchestrate` fixes: the active-wait adapter recipe now uses a plain `sh`
