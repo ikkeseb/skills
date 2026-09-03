@@ -231,8 +231,10 @@ ACTIVE WAIT. Do exactly this:
    timeout parameter set to 600000. Never end your turn while the run is
    in progress — you will NOT be woken up again; an ended turn kills the
    worker:
-   timeout 540 sh -c 'until [ -f RUN_DIR/result.json ]; do sleep 5; done;
-     echo FOUND'
+   sh -c 'i=0; until [ -f RUN_DIR/result.json ] || [ $i -ge 108 ]; do
+     sleep 5; i=$((i+1)); done; [ -f RUN_DIR/result.json ] && echo FOUND'
+   (a plain sh counter, 108 rounds of 5 s = 540 s; GNU timeout is absent
+   on macOS)
 4. If it exits without printing FOUND, that is a normal wait-cycle timeout,
    not an error: run the same command again, up to 4 times total. Do not
    poll the background task, do not kill it, do not re-run the helper.

@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.30.2 — 2026-09-03
+
+`orchestrate` fixes: the active-wait adapter recipe now uses a plain `sh`
+counter loop instead of GNU `timeout`, which macOS does not ship (the
+2026-09-03 rig ran 22 adapters on that substitute). The model map labels
+the seat as Fable 5.1 and records the alias re-point as a calibration
+note. The skill's description states it is invoked only by the user's
+`/orchestrate`; the harness's own subagents and Workflow tool cover
+ordinary fan-out.
+
 ## 0.30.1 — 2026-09-02
 
 `codex-worker.sh verify` is now a read canary. The one billed run writes a

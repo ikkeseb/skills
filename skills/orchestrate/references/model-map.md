@@ -26,7 +26,7 @@ fable delegates buys nothing the seat does not already have.
 ## The senior seat
 
 **Seat selection.** A mid-session `/model` switch before invoking this skill
-is how a seat is handed over. Field experience: `fable` (Fable 5) is the best
+is how a seat is handed over. Field experience: `fable` (Fable 5.1) is the best
 seat — strongest at reading intent, goals and orchestration — at roughly
 twice opus's price, with one known cost: an occasional shortcut habit, so a
 fable seat applies the verification and senior-review rules to its own
@@ -76,6 +76,9 @@ delegation the orchestrator doesn't control.
 
 ## Calibration notes
 
+- **`fable` alias re-pointed to Fable 5.1** (field, 2026-09-03): same alias,
+  same seat role. The user confirmed medium/high as the right effort band on
+  5.1; the row's scores are inherited from Fable 5 until field use earns them.
 - **Score provenance** (rule, 2026-07-28): aliases re-point silently, so a
   score is only as trustworthy as its provenance. Every score change here
   names the resolved model that earned it, the date, and the evidence type
