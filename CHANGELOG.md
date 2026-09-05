@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.31.2 — 2026-09-05
+
+`handoff` is invoked only by a typed `/handoff` (Codex `$handoff`); the
+description no longer offers itself on "hand off" phrasing. With no
+soft trigger to guard against, the `handover:` guard line and the
+`/copy` unwrapping note go; the final message is still exactly one
+markdown fence holding the saved handoff.
+
 ## 0.31.1 — 2026-09-05
 
 `orchestrate` reference diet, no behavior change. `model-map.md` keeps the
