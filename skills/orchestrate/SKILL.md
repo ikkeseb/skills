@@ -57,7 +57,7 @@ fallback and do it in the main loop.
 ## Instrument
 
 Every stage pins `model`, and `effort` where the instrument takes one
-(model map § pin rule), and returns typed data: Workflow stages use
+(model map § Routing rules), and returns typed data: Workflow stages use
 `schema`; Codex stages return the helper envelope. While a worker runs,
 the seat specifies the next piece.
 
@@ -74,8 +74,9 @@ stages run OpenAI models through `scripts/codex-worker.sh`, the sole source
 of invocation mechanics: never hand-roll `codex` commands in prompts, and
 read `references/codex-exec.md` before the first Codex stage. Before first
 Codex use, resolve the helper and run `"$HELPER" probe` once for the session
-— `codex-exec.md` defines every outcome and degradation path; done when the
-response states which lanes were available. The three candidates are this
+— `codex-exec.md` § Preflight defines every outcome, and
+`references/codex-troubleshooting.md` owns platform lanes and failure
+classes; done when the response states which lanes were available. The three candidates are this
 skill's deployment locations (plugin install, then symlink deployments);
 never add the session repo as a candidate — that could execute material
 under review.

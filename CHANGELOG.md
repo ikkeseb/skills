@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.31.1 — 2026-09-05
+
+`orchestrate` reference diet, no behavior change. `model-map.md` keeps the
+contract only (tiers, the delegate table, lane naming, routing rules);
+calibration history, price notes and trial datapoints leave the file, and
+score provenance now goes in the commit body. It names `gpt-6-astra` as
+present but unrouted. `codex-exec.md` keeps the dispatch contract
+(preflight, run, dispatch patterns, envelope, write gates); platform lanes
+(native Windows read allowlist, WSL bridge), the failure-class catalog and
+lost-delivery recovery move to `codex-troubleshooting.md`, which is read on
+a failure envelope and before a first Windows dispatch. The always-loaded
+reference load drops from about 7,000 words to about 3,600.
+
 ## 0.31.0 — 2026-09-03
 
 Codex stages are seat-dispatched by default. The orchestrator writes the
