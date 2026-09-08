@@ -99,17 +99,17 @@ inherited output ceiling or house style can narrow a result with nothing
 in the envelope to show for it; prompts for exhaustive work state their
 own volume expectation. Image-generation stages read
 `references/imagegen.md` before the prompt is written; their pin is
-`model-map.md` § Routing rules, relay-stage exception.
+`model-map.md` § Review and spend, image-generation relay exception.
 
 ## Dispatch patterns
 
 Seat dispatch is the default for every Codex stage; the foreground adapter
 is the Workflow exception. Pick at dispatch and never switch owners
-mid-job. Worker runtime is task-shaped (a max-effort verification has run
-86 tool steps over 14 minutes), so leave `--timeout` at its default; the
-prompt's `budget:` line (SKILL.md § Delegation contract) bounds the run and
-the timeout only catches a hang. Every `--schema-file` is authored by the
-orchestrator before dispatch.
+mid-job. The prompt's `budget:` line (SKILL.md § Delegation contract) is a
+work target, not an enforced command or token cap. Choose `--timeout` as a
+separate hard total deadline, allowing for queueing and reasoning; its default
+is one hour. A timeout proves the deadline elapsed, not that the model hung.
+Every `--schema-file` is authored by the orchestrator before dispatch.
 
 **Seat dispatch and run-dir harvest.** The seat writes the stage's prompt
 and schema to a private dir, mints the run dir, and starts the helper with

@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: "Delegation posture, invoked only by the user typing /orchestrate: the main loop keeps design, specification, review, and integration and routes bounded, reviewable execution and reconnaissance through Claude and Codex workers — cheap models fan out by default, workhorses build and review, the seat decides. Single-task or sustained for the session. Not for one quick lookup, a single external review (second-opinion), or ordinary fan-out the harness's own subagents and Workflow tool already cover."
+description: "Delegation posture, invoked only by the user typing /orchestrate: the main loop keeps design, specification, review, and integration and routes bounded, reviewable execution and reconnaissance through Claude and Codex workers — cheap models cover independent slices, Astra handles demanding reasoning, Sol handles bounded execution, the seat decides. Single-task or sustained for the session. Not for one quick lookup, a single external review (second-opinion), or ordinary fan-out the harness's own subagents and Workflow tool already cover."
 ---
 
 # orchestrate
@@ -15,7 +15,8 @@ read each result before choosing the next. No shape is mandatory.
 
 - **Map** — parallel cheap readers over the surfaces involved, returning one
   structured map (file → responsibilities → key symbols → line ranges →
-  coupling). Runs before the seat reads anything large.
+  coupling). Use it when independent slices repay dispatch and synthesis;
+  the seat may read directly to frame the work and verify findings.
 - **Build** — the seat cuts the work at file seams and specifies each piece;
   workers build, in parallel where the pieces touch different files.
 - **Check** — on one diff, at the same time: cheap single-dimension checkers
@@ -26,16 +27,18 @@ read each result before choosing the next. No shape is mandatory.
   sites, test updates against a changed API, rule-driven deletions.
 - **Second look** — one cross-family reader on a finished result.
 
-**Scout inline, fan out the reading.** The seat discovers the work-list with
-cheap listing (`ls`, `grep`, diff stat); reading files to understand them is
-Map work.
+**Scout inline, split independent work.** Discover the work-list with cheap
+listings, search and diff stats; read the files needed to set the brief.
+Use Map for distinct areas that can be read independently. A tightly coupled
+problem may be cheaper and clearer in one Astra context than across readers
+whose summaries the seat must reconcile and reread.
 
-**Scale to the ask.** "Understand this package" → three to five readers.
-"Find every site" → finders until two rounds return nothing new. A one-line
-fix → no fan-out. A worker earns its slot with a named distinct slice; when
-the next slice has no name, the fan-out is done. A workhorse stage that must
-read more than about ten files is a Map stage in disguise: fan the reading
-out to cheap readers and hand the workhorse their extracts.
+**Scale to the ask.** A worker earns its slot with a named distinct slice and
+acceptance criteria. A one-line fix needs no fan-out. For exhaustive searches,
+name the corpus and reconcile coverage against a deterministic file or symbol
+inventory; repeat only to close a specific gap. File count alone never forces
+a Map stage. Keep output to relevant excerpts, source locations and unknowns,
+so the next stage does not repeat the same reconnaissance.
 
 **The instrument follows the lane.** Codex stages are seat-dispatched: the
 seat writes the prompt and schema files, starts the helper in the background
@@ -134,8 +137,12 @@ one at harvest, so the lane and the cost stay visible in the terminal:
 `▸ <tag> — <model> @ <effort> — started, run dir <path>` and
 `✓ <tag> — <n> cmds, <in>M in (<cached>M cached), <out>k out, <m>m<s>s`
 (`✗ <tag> — <error_class>` on failure). The final report accounts for
-every delegated stage's actual model, effort and spend (Claude aliases: the resolved model when
-verified, otherwise the alias with resolution unknown) and the lane mix.
+every delegated stage's requested model, effort and spend, plus the lane mix.
+Report the served model only when runtime evidence establishes it; the helper
+envelope echoes the request. For Claude aliases, give the resolved model when
+verified, otherwise mark resolution unknown. Compare cost per accepted task
+including readers, adapters, retries, seat synthesis and rework; worker spend
+alone is only part of it. Missing usage stays unknown.
 
 ## The split
 
@@ -158,7 +165,8 @@ a human decision returns the decision material and the seat relays it.
   needed project context, decisions, acceptance criteria, and output bounds.
   When a writing stage owes regression coverage, name the test seam and cases
   in its specification instead of deferring expected coverage to a follow-up.
-  Prompts reject placeholders and require a raw-count reconciliation. Workers
+  Prompts reject placeholders; inventories and bulk transforms require count
+  reconciliation against their named corpus. Workers
   also inherit machine-level instructions this repo cannot inspect; treat
   those as ambient drift and state anything outcome-critical explicitly.
 - **The lane is legible at dispatch: label first, prompt header second.** The
@@ -174,12 +182,13 @@ a human decision returns the decision material and the seat relays it.
   lane is unknown, not a default.
 - **Every stage carries a budget and returns its spend.** The `budget:` line
   sizes the run to its shape — commands and minutes — and names the stop:
-  acceptance criteria met, briefed facts taken as verified. A workhorse
-  follows a stated bound and overbuilds an open one (model map). The
-  envelope's `spend` (command items, tokens, seconds) is the measurement:
-  the final report lists it per stage beside model and effort, and a stage
-  that outran its budget is a spec problem to fix before the next dispatch,
-  never a retry.
+  acceptance criteria met or the bound reached, then return partial coverage
+  and unknowns. Reuse briefed evidence with its provenance; inspect sources
+  for disputed or load-bearing claims. Budget lines are prompt targets, not
+  enforced command or token caps. The helper's `--timeout` is a separate hard
+  deadline. Report `spend` beside model and effort, including failed attempts.
+  An overrun earns inspection of scope, environment and task difficulty
+  before another dispatch, not an automatic retry.
 - **Senior review is mandatory, at a depth set by risk.** Anything whose
   wrong result can ship or is expensive to unwind (state, data shape, wire-
   adjacent, security-sensitive, a test that could stop catching a regression)

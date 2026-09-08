@@ -4,6 +4,18 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.32.0 — 2026-09-08
+
+`second-opinion` defaults to GPT-6 Astra at high effort, keeps that model
+for OpenAI-produced work with same-family coverage stated, and separates
+evidence from the main agent's hypothesis. `orchestrate` routes demanding
+reasoning, difficult implementation and critical review to Astra; Sol stays
+for bounded execution and Fable for intent and design judgment. Role-based
+routing replaces numerical taste/intelligence scores. Map fan-out now needs
+independent slices; file count and repeated empty search rounds no longer
+force extra workers. Budget targets, measured usage and hard timeouts are
+distinct, and cost comparisons include failed attempts and main-loop work.
+
 ## 0.31.2 — 2026-09-05
 
 `handoff` is invoked only by a typed `/handoff` (Codex `$handoff`); the

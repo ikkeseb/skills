@@ -46,8 +46,8 @@ automation, image inspection) not yet verified under Codex.
 
 | Skill | What it does | Invoke |
 |---|---|---|
-| **[second-opinion](skills/second-opinion)** | One read-only Codex call on work that already exists, answered as a synthesis rather than a relay. Vendor independence without the delegation ceremony. | `/second-opinion` |
-| **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes bounded, reviewable execution and reconnaissance to worker models by shape: cheap models fan out, workhorses build and review. Claude agents plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
+| **[second-opinion](skills/second-opinion)** | One read-only Codex call on work that already exists, answered as a synthesis rather than a relay. GPT-6 Astra in a fresh review context, with family coverage stated. | `/second-opinion` |
+| **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes bounded, reviewable execution and reconnaissance to worker models by shape: cheap models cover independent slices, Astra handles demanding reasoning, and Sol handles bounded execution. Claude agents plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
 
 Each skill folder contains its `SKILL.md`; Excalidraw also carries setup notes
 for its render-and-inspect pipeline.

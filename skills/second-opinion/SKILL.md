@@ -1,16 +1,15 @@
 ---
 name: second-opinion
-description: "Send existing work (a design, diff, diagnosis, or claim) to an OpenAI model through the Codex CLI for one independent read-only review, synthesized back. The work leaves the machine. Not for delegating execution (orchestrate)."
+description: "Send existing work (a design, diff, diagnosis, or claim) to GPT-6 Astra through the Codex CLI for one independent read-only review, synthesized back. The work leaves the machine. Not for delegating execution (orchestrate)."
 ---
 
 # second-opinion
 
-Use one read-only Codex call to pressure-test existing work. Its value is an
-independent model family with different blind spots, not automatic authority.
-That independence is relative to the producer: when the artifact under review
-was itself produced by an OpenAI-lane worker, a Codex review shares its
-family — route the independent read to the Claude lane instead, or state the
-coverage as same-family.
+Use one read-only GPT-6 Astra call to pressure-test existing work. A fresh
+review context can expose different blind spots; agreement is not authority.
+When the producer used OpenAI, label coverage same-family. Keep Astra for
+this skill; a cross-family Claude review is a separate choice, not an
+automatic substitute.
 Do not spend the call on lookups, work that does not exist yet, or taste.
 The prompt, and whatever material it quotes, goes to the user's own
 OpenAI/Codex account like any other Codex call they run; include only what
@@ -41,7 +40,7 @@ every placeholder below with the recorded literal path:
 
 ```bash
 : "second-opinion MODEL@EFFORT — TOPIC"
-HELPER_ABS_PATH run --model gpt-5.6-sol --effort high --sandbox read-only \
+HELPER_ABS_PATH run --model gpt-6-astra --effort high --sandbox read-only \
   --workspace WORKSPACE --prompt-file PROMPT_FILE --run-dir RUN_DIR
 ```
 
@@ -63,6 +62,9 @@ Harvest exactly once after the job is terminal:
 
 1. Parse `<temp-dir>/run/result.json`. It is the authoritative envelope; use
    `result` only when `ok: true`, and report its `spend` beside the finding.
+   Label `model` as requested unless runtime evidence verifies the served
+   model. Token counts are usage, not subscription charges; unavailable usage
+   stays unknown. Include failed attempts when comparing cost per task.
 2. If that file is absent or invalid, inspect the recorded background output.
    Failures before run-dir creation and interrupted runners can report only
    there. The file combines a stderr banner with stdout; locate its JSON
@@ -88,8 +90,9 @@ established. A stale review may still contain unaffected findings; recheck any
 finding that depends on changed material against the current artifact, or earn
 a new call.
 
-The command pins the current preferred review model and `high` effort;
-update that pin here when the preferred review model changes. Explicit user
+The command pins GPT-6 Astra and `high` effort. Use `xhigh` when the named
+question needs deeper reasoning; `max` needs a specific unresolved difficulty,
+not merely an important task. Explicit user
 wording may override either: effort language maps to `--effort`, and a model
 name maps to `--model`. Use conversational judgment; ask if the reading is
 ambiguous. Invalid values must fail loudly, never substituting a different
@@ -103,17 +106,21 @@ ambient house style:
 
 - Include the artifact or relevant excerpt, not only a path. For prompt-only
   material, say: "answer from this prompt alone; do not probe the filesystem."
-- State the decision, your current belief, and the strongest counter-case you
-  want tested. Ask where it breaks, not whether it is good.
+- State the decision, requirements and evidence before your current belief.
+  Ask for an independent assessment first, then the strongest counter-case.
+  Label your belief as a hypothesis so the reviewer can reject the framing.
 - When a conclusion depends on repository facts, require `file:line` for each
   factual claim and `unknown` when evidence is missing. Prompt-only reasoning
   needs reasons, not invented citations.
 - For security-adjacent reviews, keep the artifact as subject and request
   failure modes, never bypass instructions.
 - Name exclusions so the reviewer does not redesign unrelated work.
-- Bound the run: a `budget:` line with commands and minutes, and the stop —
-  answer from the packet, verify only the claims you dispute. An open bound
-  re-audits the repo.
+- Bound the run with a `budget:` line, expected command count, target minutes,
+  output size and stop condition. Answer from the packet; inspect only source
+  needed to test the conclusion. At the bound, return findings and uncovered
+  questions rather than widening into a repository audit. These are prompt
+  targets, not enforced token or command caps; `--timeout` is the helper's
+  separate hard wall-clock deadline.
 
 Make a second call only for genuinely new evidence: paste the first result and
 new evidence into a fresh prompt, then ask whether the conclusion changes.
