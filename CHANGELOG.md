@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.33.0 — 2026-09-20
+
+`pretty-html` is now `html-brief`, rebuilt as what it was used for: a dark,
+self-contained brief that reads at a glance. Dark only; the light theme,
+toggle and print rules are gone. Every brief opens with a glance block that
+answers on the first screen, and the template body is a catalogue of shapes
+the agent composes from by content, with one accent hue and a serif or sans
+heading voice per document. If you linked or overrode `pretty-html` by name,
+rename it.
+
 ## 0.32.1 — 2026-09-20
 
 `orchestrate`: a numeric acceptance criterion names what the number stands

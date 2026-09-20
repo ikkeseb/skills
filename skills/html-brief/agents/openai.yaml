@@ -1,0 +1,9 @@
+interface:
+  display_name: html-brief
+  short_description: >-
+    Turn content into a dark, self-contained HTML brief that reads at a
+    glance: summaries, status reports, decision briefs, meeting notes, prep
+    docs, comparisons. Not for web-app frontends, site frameworks, or
+    Markdown notes.
+policy:
+  allow_implicit_invocation: false

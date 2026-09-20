@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>TITLE</title>
+<style>
+  /* Fixed: surfaces, ink, fonts, rhythm. Yours to set per document: --hue. */
+  :root {
+    --hue: 235;
+    --bg: #0b0c0e; --card: #14161a; --raise: #1b1e24; --line: #262930;
+    --ink: #e9e9e5; --muted: #9a9da5; --faint: #6d7078;
+    --accent: oklch(0.80 0.11 var(--hue)); --accent-soft: oklch(0.27 0.045 var(--hue));
+    --good: #86c29b; --warn: #dcb26a; --bad: #e08a80;
+    --sans: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.65 var(--sans);
+    -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 72px 28px 112px; }
+  .wrap.wide { max-width: 1080px; }
+  body.editorial h1, body.editorial h2, body.editorial .verdict { font-family: var(--serif); font-weight: 500; }
+
+  .kicker { font: 600 12.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: 38px; line-height: 1.12; letter-spacing: -.02em; margin: 16px 0 14px; text-wrap: balance; }
+  .lede { font-size: 18.5px; line-height: 1.55; color: var(--muted); max-width: 640px; margin: 0; text-wrap: pretty; }
+  h2 { font-size: 22px; letter-spacing: -.01em; margin: 72px 0 20px; }
+  h2 small { display: block; font: 600 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+    color: var(--faint); margin-bottom: 10px; }
+  h3 { font-size: 16px; margin: 0 0 6px; }
+  p { margin: 14px 0; max-width: 700px; }
+  ul, ol { margin: 14px 0; padding-left: 22px; max-width: 700px; }
+  li { margin: 9px 0; } li::marker { color: var(--faint); }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  code { font: 14px var(--mono); background: var(--raise); padding: 2px 6px; border-radius: 5px; }
+  .muted { color: var(--muted); } .small { font-size: 13.5px; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* Glance: the first screen. Holds the answer, then the few facts behind it. */
+  .glance { margin: 44px 0 0; padding: 30px 32px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
+  .verdict { font-size: 25px; line-height: 1.35; letter-spacing: -.01em; margin: 0; max-width: none; text-wrap: balance; }
+  .verdict em { font-style: normal; color: var(--accent); }
+  .glance > * + * { margin-top: 26px; }
+
+  /* Figures: numbers divided by hairlines, not boxed. */
+  .figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 26px 0; }
+  .figures > div { padding: 0 24px; border-left: 1px solid var(--line); }
+  .figures > div:first-child { padding-left: 0; border-left: 0; }
+  .figures b { display: block; font: 600 30px/1.1 var(--mono); letter-spacing: -.02em; color: var(--ink); }
+  .figures span { display: block; margin-top: 8px; font-size: 13.5px; line-height: 1.4; color: var(--muted); }
+
+  /* Board: one row per item with its state. */
+  .board { list-style: none; margin: 20px 0; padding: 0; max-width: none; border-top: 1px solid var(--line); }
+  .board li { display: grid; grid-template-columns: minmax(150px, 1.1fr) 110px 2fr; gap: 20px; align-items: baseline;
+    margin: 0; padding: 15px 0; border-bottom: 1px solid var(--line); }
+  .board li > :last-child { color: var(--muted); font-size: 14.5px; }
+
+  .pill { display: inline-block; font: 600 11px/1 var(--mono); letter-spacing: .07em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 99px; background: var(--raise); color: var(--muted); white-space: nowrap;
+    justify-self: start; vertical-align: middle; }
+  .pill.good { color: var(--good); } .pill.warn { color: var(--warn); } .pill.bad { color: var(--bad); }
+  .pill.accent { background: var(--accent-soft); color: var(--accent); }
+
+  /* Cols: options or parties side by side. Mark the chosen one with .pick. */
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin: 22px 0; }
+  .cols > div { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; }
+  .cols > .pick { border-color: var(--accent); background: linear-gradient(var(--accent-soft), var(--card) 70%); }
+  .cols p, .cols ul { font-size: 14.5px; color: var(--muted); margin: 8px 0 0; }
+
+  /* Steps: ordered actions or phases. */
+  .steps { list-style: none; counter-reset: s; margin: 22px 0; padding: 0; max-width: none; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 44px 1fr; margin: 0; padding: 18px 0;
+    border-top: 1px solid var(--line); }
+  .steps li::before { content: counter(s, decimal-leading-zero); font: 600 13px/1.9 var(--mono); color: var(--accent); }
+  .steps p { margin: 4px 0 0; font-size: 14.5px; color: var(--muted); }
+
+  /* Timeline: dated or timed entries. */
+  .timeline { list-style: none; margin: 22px 0; padding: 0; border-left: 1px solid var(--line); max-width: none; }
+  .timeline li { position: relative; margin: 0; padding: 10px 0 10px 28px; }
+  .timeline li::before { content: ""; position: absolute; left: -4.5px; top: 17px; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--bg); border: 1.5px solid var(--accent); }
+  .timeline time { display: block; font: 600 12.5px/1.6 var(--mono); color: var(--accent); }
+
+  /* Meter: a share or progress, read in a second. */
+  .meter { height: 6px; border-radius: 99px; background: var(--raise); overflow: hidden; margin: 10px 0 0; }
+  .meter i { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
+
+  .callout { margin: 24px 0; padding: 18px 22px; border-left: 2px solid var(--accent); background: var(--accent-soft);
+    border-radius: 0 12px 12px 0; }
+  .callout p { margin: 4px 0; }
+
+  table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 15px; line-height: 1.5; }
+  th, td { text-align: left; vertical-align: top; padding: 13px 28px 13px 0; border-bottom: 1px solid var(--line); }
+  th { font: 600 11.5px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  tr:last-child td { border-bottom: 0; } td.num, th.num { text-align: right; }
+  th:last-child, td:last-child { padding-right: 0; }
+
+  /* Depth: detail that must exist but not on the first read. */
+  details { margin: 16px 0; border: 1px solid var(--line); border-radius: 12px; padding: 0 20px; }
+  summary { cursor: pointer; padding: 15px 0; font-weight: 600; font-size: 15px; list-style: none; }
+  summary::before { content: "+"; display: inline-block; width: 22px; font-family: var(--mono); color: var(--accent); }
+  details[open] summary::before { content: "–"; } details[open] { padding-bottom: 12px; }
+
+  footer { margin-top: 88px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--faint); }
+  @media (max-width: 640px) { h1 { font-size: 30px; } .glance { padding: 24px 22px; }
+    .figures > div { border-left: 0; padding: 0; } .board li { grid-template-columns: 1fr auto; }
+    .board li > :last-child { grid-column: 1 / -1; } }
+</style>
+</head>
+<body><!-- class="editorial" sets serif headings, for reflective or narrative subjects -->
+<div class="wrap"><!-- add "wide" when boards, columns or tables carry the document -->
+
+<header>
+  <div class="kicker">KICKER · DATE</div>
+  <h1>TITLE</h1>
+  <p class="lede">What this is and who it is for, in one sentence.</p>
+</header>
+
+<!-- Everything below is a catalogue of shapes, not a layout. Delete it all,
+     then bring back only what this content calls for. -->
+
+<section class="glance">
+  <p class="verdict">The answer in one sentence, with <em>the part that matters</em> marked.</p>
+  <div class="figures">
+    <div><b>42</b><span>what the number counts</span></div>
+    <div><b>3 of 5</b><span>second fact</span></div>
+    <div><b>Fri</b><span>the date that matters</span></div>
+  </div>
+</section>
+
+<!-- board -->
+<h2><small>Label</small>Heading that names the content</h2>
+<ul class="board">
+  <li><b>Item</b><span class="pill good">done</span><span>One clause of context.</span></li>
+  <li><b>Item</b><span class="pill warn">at risk</span><span>One clause of context.</span></li>
+</ul>
+
+<!-- cols -->
+<div class="cols">
+  <div class="pick"><h3>Chosen <span class="pill accent">pick</span></h3><p>Why it wins.</p></div>
+  <div><h3>Alternative</h3><p>What it costs.</p></div>
+</div>
+
+<!-- steps -->
+<ol class="steps">
+  <li><div><h3>Step</h3><p>What happens and who owns it.</p></div></li>
+</ol>
+
+<!-- timeline -->
+<ul class="timeline">
+  <li><time>09:00</time>Entry.</li>
+</ul>
+
+<!-- meter -->
+<p>Share of the budget used <span class="num">64%</span></p>
+<div class="meter"><i style="width:64%"></i></div>
+
+<!-- callout -->
+<div class="callout"><p>The one paragraph that must not be skimmed past.</p></div>
+
+<!-- table -->
+<table>
+  <tr><th>Column</th><th class="num">Value</th></tr>
+  <tr><td>Row</td><td class="num">1,200</td></tr>
+</table>
+
+<!-- details -->
+<details><summary>Detail behind the summary</summary><p>Method, caveats, raw notes.</p></details>
+
+<footer>Source · date · terms</footer>
+
+</div>
+</body>
+</html>
