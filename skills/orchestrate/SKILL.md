@@ -22,7 +22,9 @@ read each result before choosing the next. No shape is mandatory.
 - **Check** — on one diff, at the same time: cheap single-dimension checkers
   (one acceptance criterion or one risk each), the test/lint gate, and a
   cross-family reviewer when verification is owed. Findings reach the seat as
-  candidates; fix-ups fold into the next piece instead of blocking it.
+  candidates; fix-ups fold into the next piece instead of blocking it. A cheap
+  check whose red result forces a source change runs before the expensive
+  gate, not beside it.
 - **Sweep** — one bulk transform pipelined over a discovered list: rename
   sites, test updates against a changed API, rule-driven deletions.
 - **Second look** — one cross-family reader on a finished result.
@@ -165,6 +167,8 @@ a human decision returns the decision material and the seat relays it.
   needed project context, decisions, acceptance criteria, and output bounds.
   When a writing stage owes regression coverage, name the test seam and cases
   in its specification instead of deferring expected coverage to a follow-up.
+  When a criterion is a number, state what the number stands for and name one
+  shortcut that would reach it without serving that.
   Prompts reject placeholders; inventories and bulk transforms require count
   reconciliation against their named corpus. Workers
   also inherit machine-level instructions this repo cannot inspect; treat

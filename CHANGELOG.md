@@ -4,6 +4,12 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.32.1 — 2026-09-20
+
+`orchestrate`: a numeric acceptance criterion names what the number stands
+for and one forbidden shortcut; a cheap check whose red result forces a source
+change runs before the expensive gate.
+
 ## 0.32.0 — 2026-09-08
 
 `second-opinion` defaults to GPT-6 Astra at high effort, keeps that model
