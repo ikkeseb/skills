@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.34.0 — 2026-09-20
+
+The HTML skills share one naming scheme: `prettier-html` is now
+`html-showcase` and `pretty-slides` is now `html-slides`, beside `html-brief`.
+Behavior is unchanged; if you linked or overrode either by name, rename it.
+`html-brief` drops its serif heading option: one clean sans throughout,
+another typeface only when the user asks. Its instructions are rewritten to
+state what to do rather than what to avoid.
+
 ## 0.33.0 — 2026-09-20
 
 `pretty-html` is now `html-brief`, rebuilt as what it was used for: a dark,

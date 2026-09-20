@@ -1,5 +1,5 @@
 interface:
-  display_name: pretty-slides
+  display_name: html-slides
   short_description: >-
     Build a presentation as one self-contained HTML file: bundled slide
     engine, inlined fonts and images, re-skinnable through a token block,

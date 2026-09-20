@@ -26,8 +26,8 @@ Codex-supported skills that should stay explicit set
 | **[handoff](skills/handoff)** | Compacts the session into a paste-ready handoff, saves a temporary copy, and returns the same text for switching sessions or briefing another agent. | `/handoff` |
 | **[pretty-pdf](skills/pretty-pdf)** | PDFs that look designed rather than auto-generated (HTML + CSS via weasyprint). | `/pretty-pdf` |
 | **[html-brief](skills/html-brief)** | Dark, self-contained HTML briefs that read at a glance: summaries, status reports, decision briefs, prep docs. | `/html-brief` |
-| **[pretty-slides](skills/pretty-slides)** | Presentations as one self-contained HTML file: bundled slide engine with keyboard-only navigation and pattern-bound motion, plus a build step that inlines assets. | `/pretty-slides` |
-| **[prettier-html](skills/prettier-html)** | Art-directed single-file HTML pages with editorial ambition: a fresh visual concept per invocation, designed by the session agent against the skill's quality floor. | `/prettier-html` |
+| **[html-slides](skills/html-slides)** | Presentations as one self-contained HTML file: bundled slide engine with keyboard-only navigation and pattern-bound motion, plus a build step that inlines assets. | `/html-slides` |
+| **[html-showcase](skills/html-showcase)** | Art-directed single-file HTML pages with editorial ambition: a fresh visual concept per invocation, designed by the session agent against the skill's quality floor. | `/html-showcase` |
 | **[history-audit](skills/history-audit)** | Mines the machine's agent-session history for the most common failure modes per model × harness, and proposes instruction lines one by one, each citing the run that earned it. | `/history-audit` |
 | **[excalidraw](skills/excalidraw)** | `.excalidraw` diagrams that explain something instead of just labeling boxes. | `/excalidraw` |
 | **[drawio](skills/drawio)** | Native `.drawio` XML that opens straight in app.diagrams.net. | `/drawio` |
@@ -68,9 +68,9 @@ Add the repo as a marketplace, then install the plugin (ships every skill above)
 The same repo installs as a Codex plugin. It exposes only the Codex-supported
 skills, the ones carrying an `agents/openai.yaml`: `agents-md-convert`,
 `context-audit`, `drawio`, `excalidraw`, `handoff`, `history-audit`,
-`html-brief`, `pretty-pdf`, `pretty-slides`, `prettier-html`, `repo-cosplay`,
+`html-brief`, `pretty-pdf`, `html-slides`, `html-showcase`, `repo-cosplay`,
 `verify-claims`.
-`pretty-slides` and `prettier-html` need browser automation for their
+`html-slides` and `html-showcase` need browser automation for their
 screenshot QA; without it they deliver with an honest unverified list.
 `drawio` degrades gracefully where the sandbox denies network
 or exec. `excalidraw` uses the same dependency-free builder, validator, and

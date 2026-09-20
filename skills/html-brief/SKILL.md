@@ -1,76 +1,72 @@
 ---
 name: html-brief
-description: "Turn content into a dark, self-contained HTML brief that reads at a glance: summaries, status reports, decision briefs, meeting notes, prep docs, comparisons. Not for showcase pages (prettier-html), decks (pretty-slides), or web-app frontends."
+description: "Turn content into a dark, self-contained HTML brief that reads at a glance: summaries, status reports, decision briefs, meeting notes, prep docs, comparisons. Not for showcase pages (html-showcase), decks (html-slides), or web-app frontends."
 ---
 
 # HTML brief
 
-The deliverable is one finished file the user opens locally, screen-shares or
-sends onward. The reader gets the point from the first screen and scrolls only
-for depth. The bar is "useful and good-looking with zero follow-up fixes".
+A brief is one finished file the user opens locally, screen-shares or sends
+onward. Its reader gets the point from the first screen and scrolls only for
+depth. The bar: useful and good-looking with zero follow-up fixes.
 
-Copy `assets/template.html`. Its stylesheet is the design: surfaces, ink,
-fonts and rhythm are fixed so the result stays clean whoever builds it. Its
-body is a catalogue of shapes, not a layout: delete it, then compose.
+Start from a copy of `assets/template.html`. Its stylesheet is the design:
+surfaces, ink, the sans type and the spacing are fixed, so the result stays
+clean whoever builds it. Its body is a catalogue of shapes. Empty it, then
+compose the brief from the shapes this content calls for.
 
 ## Invariants
 
-1. **One self-contained file.** Inline CSS, no CDNs, no external fonts, no
-   network requests. It renders from `file://` offline.
-2. **Dark only.** Keep the template's surfaces and ink. No light theme, no
-   toggle, no print rules.
-3. **The first screen answers.** Open with a `.glance` block: the verdict,
-   status or recommendation in one sentence, then the few facts behind it.
-   A reader who stops there has the brief. Background, method and caveats
-   come after, or inside `details`.
-4. **Selective content.** Every section earns its place. Cut before you
-   shrink: supporting detail goes in `details`, muted small print, or out.
-   Never tighten the template's spacing to fit more in.
-5. **Language follows the audience** of the document, not the chat.
+1. **One self-contained file.** All CSS inline, system fonts, zero network
+   requests. It renders from `file://` offline.
+2. **Dark, in the template's type.** Keep its surfaces, ink and sans stack.
+   Set another typeface only when the user asks for one.
+3. **The glance answers.** The brief opens with a `.glance` block: the
+   verdict, status or recommendation in one sentence, then the few facts
+   behind it. A reader who stops there has the brief. Background, method and
+   caveats follow it, or fold into `details`.
+4. **Every section earns its place.** When the brief runs long, cut content
+   or fold it into `details`; the template's spacing stays as it is.
+5. **Language follows the audience** of the document, whatever the chat uses.
 
-## Compose from the content
+## Compose
 
-Two briefs on different subjects should not look alike. Decide these from
-the material, not from habit:
+Two briefs on different subjects look different, because each is composed
+from its own material:
 
-- **What the glance holds.** A decision leads with the verdict. A status
-  leads with figures or a short board. A comparison leads with the pick.
-  A plan leads with the next date and step.
-- **Which shapes appear.** Match shape to data: `figures` for a few numbers,
-  `board` for items with a state, `cols` for options or parties, `steps` for
-  order, `timeline` for time, `meter` for a share, `table` for anything with
-  three or more attributes, `callout` for the one warning. Most briefs need
-  two or three shapes. Prose is a shape too; a short brief may be a glance
-  and four paragraphs. A board shows what differs: items that share a state
-  and need no note collapse into one row. Headings name the content, never
-  the shape.
-- **`--hue`.** One accent per document, chosen for the subject (for example
-  150 green for money or health, 25 rust for personal, 235 blue for neutral
-  work, 300 violet for creative). State colors (`good`, `warn`, `bad`) mean
-  state only.
-- **Voice.** `class="editorial"` on `body` gives serif headings for
-  reflective or narrative subjects. Default sans for operational ones.
-- **Width.** `wide` on `.wrap` when boards, columns or tables carry it.
+- **The glance.** A decision leads with the verdict, a status with figures or
+  a short board, a comparison with the pick, a plan with the next date and
+  step.
+- **The shapes.** Match shape to data: `figures` for a few numbers, `board`
+  for items with a state, `cols` for options or parties, `steps` for order,
+  `timeline` for time, `meter` for a share, `table` for three or more
+  attributes, `callout` for the one warning. Two or three shapes carry most
+  briefs, and prose is a shape: a short brief may be a glance and four
+  paragraphs. A board shows what differs, so items sharing a state with
+  nothing to add collapse into one row. Headings name the content.
+- **`--hue`.** One accent per document, chosen for the subject: 150 green
+  for money or health, 25 rust for personal, 235 blue for neutral work, 300
+  violet for creative, or your own. `good`, `warn` and `bad` mark state only.
+- **Width.** Add `wide` to `.wrap` when boards, columns or tables carry the
+  brief.
 
-A new shape is welcome when the content has one the catalogue lacks. Build it
-from the template's variables and spacing so it belongs. No gradients beyond
-the template's, no emoji, no icons, no decoration that carries no
-information.
+When the content has a shape the catalogue lacks, build it from the
+template's variables and spacing so it belongs. Everything on the page
+carries information: text, numbers, hairlines and flat surfaces, with emoji
+and icons left out.
 
 ## Routing and delivery
 
-- **Where to save:** the owning repo's rules first, otherwise its natural
+- **Save** where the owning repo's rules say, otherwise in its natural
   artifacts location, or the session scratchpad for throwaways. Content about
-  named people or otherwise sensitive material goes wherever the repo keeps
-  uncommitted files, never somewhere that auto-publishes.
+  named people or otherwise sensitive material goes where the repo keeps
+  uncommitted files.
 - **Deliver** the rendered file directly to the user (in Claude Code:
   SendUserFile with `display: render`).
-- **Never publish** (Artifact tool, external hosting) unless the user
-  explicitly asks.
+- **Publish** (Artifact tool, external hosting) only on the user's explicit
+  ask.
 
 ## Done when
 
-The file was opened from `file://` with no console errors and looked at: the
-first screen alone carries the point, no catalogue placeholder text remains,
-nothing overflows at a narrow width, and the user would forward it without
-edits.
+You opened the file from `file://`, saw no console errors, and looked at it:
+the glance alone carries the point, every catalogue placeholder is gone,
+nothing overflows at a narrow width, and the user would forward it unedited.

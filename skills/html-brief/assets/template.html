@@ -13,8 +13,7 @@
     --ink: #e9e9e5; --muted: #9a9da5; --faint: #6d7078;
     --accent: oklch(0.80 0.11 var(--hue)); --accent-soft: oklch(0.27 0.045 var(--hue));
     --good: #86c29b; --warn: #dcb26a; --bad: #e08a80;
-    --sans: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: Inter, "Segoe UI Variable Text", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
     --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
   }
   * { box-sizing: border-box; }
@@ -22,7 +21,6 @@
     -webkit-font-smoothing: antialiased; }
   .wrap { max-width: 860px; margin: 0 auto; padding: 72px 28px 112px; }
   .wrap.wide { max-width: 1080px; }
-  body.editorial h1, body.editorial h2, body.editorial .verdict { font-family: var(--serif); font-weight: 500; }
 
   .kicker { font: 600 12.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
   h1 { font-size: 38px; line-height: 1.12; letter-spacing: -.02em; margin: 16px 0 14px; text-wrap: balance; }
@@ -110,7 +108,7 @@
     .board li > :last-child { grid-column: 1 / -1; } }
 </style>
 </head>
-<body><!-- class="editorial" sets serif headings, for reflective or narrative subjects -->
+<body>
 <div class="wrap"><!-- add "wide" when boards, columns or tables carry the document -->
 
 <header>
@@ -119,8 +117,7 @@
   <p class="lede">What this is and who it is for, in one sentence.</p>
 </header>
 
-<!-- Everything below is a catalogue of shapes, not a layout. Delete it all,
-     then bring back only what this content calls for. -->
+<!-- Catalogue of shapes. Empty it, then compose from what this content calls for. -->
 
 <section class="glance">
   <p class="verdict">The answer in one sentence, with <em>the part that matters</em> marked.</p>
