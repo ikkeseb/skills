@@ -32,7 +32,7 @@ Use `# Handoff: [task]`, the disclaimer below, `## Goal`, `## Next` near the top
 
 ## Save and reply
 
-Save the exact handoff to a uniquely named `.md` file in the operating system's temporary directory and verify its contents. Do not maintain or prune a persistent handoff directory. State `Saved temporary copy to <absolute path>.` in a brief status line before the final message, never inside it.
+Save the exact handoff to a uniquely named `.md` file in the operating system's temporary directory and verify its contents. Create the file once, under its final `.md` name, so the temporary directory holds that file alone. Do not maintain or prune a persistent handoff directory. State `Saved temporary copy to <absolute path>.` in a brief status line before the final message, never inside it.
 
 The final message is the copy surface: exactly one `markdown` fence, longer than any backtick run inside it, containing the same handoff that was saved. Nothing before the fence, nothing after it.
 

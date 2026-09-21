@@ -4,6 +4,12 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.34.1 — 2026-09-21
+
+`handoff` creates its temporary file once, under its final `.md` name. An
+agent that made a temp name first and appended `.md` afterwards left an empty
+sibling file behind.
+
 ## 0.34.0 — 2026-09-20
 
 The HTML skills share one naming scheme: `prettier-html` is now
