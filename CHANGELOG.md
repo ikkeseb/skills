@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.34.2 — 2026-09-21
+
+`repo-cosplay` says how to read the target's instruction files so the read
+counts: whole, as its own call, through the harness's canonical file read
+(Claude Code's Read tool, a bare `cat --` in Codex) and under one path
+spelling. A read folded into a compound shell command got the first write
+refused by a read gate.
+
 ## 0.34.1 — 2026-09-21
 
 `handoff` creates its temporary file once, under its final `.md` name. An

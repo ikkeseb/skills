@@ -17,8 +17,13 @@ supplies native-session discipline.
 
 1. Resolve the exact target. Read its root and relevant nested `AGENTS.md` or
    `CLAUDE.md`, then any current-state, handoff, or operating documents those
-   instructions point to. Report its branch, sync state, and unrelated dirt
-   before writing.
+   instructions point to. Read each instruction file whole, as its own call,
+   through the harness's canonical file read (Claude Code: the Read tool with
+   no offset or limit; Codex: a bare `cat -- <absolute path>`), and address it
+   by one path spelling throughout. A read folded into a compound shell
+   command, a windowed read, or a second spelling of the same path leaves no
+   record a write gate or edit tool can match, and the first write is refused.
+   Report its branch, sync state, and unrelated dirt before writing.
 2. Work under the target's owners and conventions. Load the documents that own
    the requested area, preserve unrelated changes, and run the target's hooks
    or gates manually because the current session may not inherit them.
