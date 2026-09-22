@@ -11,10 +11,11 @@ token price alone does not establish which model is cheaper for the job.
   integration and final review. This skill never selects or replaces it.
   Fable 5.1 is preferred for design taste and reading user intent; `sonnet`
   is a budget seat. The seat verifies its own conclusions against evidence.
-- **Workhorse**: judgment-bearing execution and review. Astra handles the
-  hardest reasoning; Sol handles well-bounded execution; `opus` handles
-  Claude-tool-dependent work and cross-family review of Codex output.
-  The seat retains final say.
+- **Workhorse**: judgment-bearing execution and review. `opus` is the
+  default for implementation, migrations and long-horizon codebase work;
+  Astra handles the hardest reasoning and cross-family review of Claude
+  output; Sol handles well-bounded execution when the Codex lane is the
+  better fit. The seat retains final say.
 - **Cheap**: Terra and Luna handle bounded readers, extraction, mechanical
   transforms and single-criterion checks. Use independent slices when they
   repay coordination. Their findings are candidates for the seat or a
@@ -24,20 +25,21 @@ token price alone does not establish which model is cheaper for the job.
 
 | Model | Lane | Default effort | Role | Availability fallback |
 |---|---|---|---|---|
-| `gpt-6-astra` | Codex | high; xhigh for difficult reasoning | Demanding research and synthesis, hard root-cause work, complex implementation, critical review and architectural counter-cases | `opus` at high/xhigh; `fable` for fuzzy intent |
-| `gpt-5.6-sol` | Codex | high | Bounded implementation, known-pattern migrations, focused research and routine review where the approach and acceptance criteria are clear | `opus` |
+| `gpt-6-astra` | Codex | high; xhigh for difficult reasoning | Demanding research and synthesis, hard root-cause work, critical review and architectural counter-cases; cross-family verification of Claude-produced work | `opus` at high/xhigh; `fable` for fuzzy intent |
+| `gpt-5.6-sol` | Codex | high | Bounded implementation, known-pattern migrations, focused research and routine review where the approach and acceptance criteria are clear, when the Codex lane is wanted: cross-family production ahead of a Claude review, or a throttled Claude lane | `opus` |
 | `fable` | Claude | medium/high | Design taste, fuzzy intent and highest-stakes user-facing judgment. Delegate only a distinct question the seat cannot resolve as efficiently; a Fable seat seldom needs another Fable | `opus` |
-| `opus` | Claude | high/xhigh | User-facing implementation, copy and API-shape proposals; work needing Claude harness tools; cross-family verification of Codex-produced work | `gpt-6-astra`, with degraded family coverage when applicable |
+| `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default implementation workhorse: bounded and long-horizon implementation, migrations, codebase audits, frontend builds, user-facing copy and API-shape proposals; work needing Claude harness tools; cross-family verification of Codex-produced work | `gpt-6-astra` for reasoning-heavy work, `gpt-5.6-sol` for bounded implementation, with degraded family coverage when applicable |
 | `gpt-5.6-terra` | Codex | high | First cheap stop for bounded code, Map readers, bulk transforms and small criterion-based reviews | `gpt-5.6-sol`; `opus` if the Codex lane is down |
 | `gpt-5.6-luna` | Codex | high | Extraction, classification and narrow sanity checks; prefer Terra for code | `gpt-5.6-terra`; `opus` if the Codex lane is down |
 | `sonnet` | Claude | low for transport | Budget seat or foreground Codex adapter, not an execution worker | `opus` |
 | `haiku` | Claude | — | Off-limits, adapters included; Luna covers cheap work | `gpt-5.6-luna` |
 
 Astra is the first choice when the difficulty is reasoning, uncertainty or
-costly mistakes. Do not run Sol first merely to justify Astra through a
-failed attempt. Fable's taste and intent role does not imply a general
-reasoning advantage over Astra. State scope and acceptance criteria for
-either model; a stronger model still needs a bounded job. Research requiring
+costly mistakes; `opus` when it is implementation. Do not run Sol or `opus`
+first merely to justify Astra through a failed attempt. Fable's taste and
+intent role does not imply a general reasoning advantage over Astra. State
+scope and acceptance criteria for any of them; a stronger model still needs
+a bounded job. Research requiring
 live web or other harness tools uses a lane verified to provide them; the
 Codex probe does not test tool availability.
 
@@ -67,7 +69,7 @@ Codex `ultra` stays off-limits because it may introduce nested delegation.
 
 **Escalate a quality miss once.** Name the missed acceptance criterion and
 why the next model can resolve it. Luna goes to Terra, bounded Terra work
-to Sol, and reasoning failures to Astra. Taste or intent failures go to
+to `opus` (Sol on the Codex lane), and reasoning failures to Astra. Taste or intent failures go to
 Fable. A second miss goes back to the seat to fix the brief or investigate,
 not another reroll. Inspect partial writes before any retry; a failed
 `workspace-write` run never earns a blind rerun.

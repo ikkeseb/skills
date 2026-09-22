@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: "Delegation posture, invoked only by the user typing /orchestrate: the main loop keeps design, specification, review, and integration and routes bounded, reviewable execution and reconnaissance through Claude and Codex workers — cheap models cover independent slices, Astra handles demanding reasoning, Sol handles bounded execution, the seat decides. Single-task or sustained for the session. Not for one quick lookup, a single external review (second-opinion), or ordinary fan-out the harness's own subagents and Workflow tool already cover."
+description: "Delegation posture, invoked only by the user typing /orchestrate: the main loop keeps design, specification, review, and integration and routes bounded, reviewable execution and reconnaissance through Claude and Codex workers — cheap models cover independent slices, Opus handles implementation, Astra handles demanding reasoning, Sol handles bounded execution on the Codex lane, the seat decides. Single-task or sustained for the session. Not for one quick lookup, a single external review (second-opinion), or ordinary fan-out the harness's own subagents and Workflow tool already cover."
 ---
 
 # orchestrate

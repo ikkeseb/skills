@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.36.0 — 2026-09-22
+
+`orchestrate` model map after Claude Opus 5.5: `opus` is the default
+implementation workhorse (bounded and long-horizon implementation,
+migrations, codebase audits, frontend builds) at `medium` by default, `high`
+for substantive work and `xhigh` for a named hard problem. Astra keeps the
+hardest reasoning and cross-family verification of Claude output; Sol is the
+bounded executor when the Codex lane is wanted rather than the cheap default.
+Escalation from bounded Terra work goes to `opus`, Sol on the Codex lane.
+Evidence and the price comparison are in the commit body.
+
 ## 0.35.1 — 2026-09-22
 
 `orchestrate` briefs carry relevant files, sourced findings and remaining
