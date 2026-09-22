@@ -55,7 +55,7 @@ accepts the invocation; only verify proves it still behaves.
 
 ```bash
 "$HELPER" run \
-  --model gpt-5.6-terra                # REQUIRED; exact Codex model ID
+  --model gpt-6-luna                   # REQUIRED; exact Codex model ID
   --prompt-file "$DIR/prompt.md" \
   [--effort high]                      # default high
   [--sandbox read-only]                # or workspace-write (git workspace only)
@@ -126,8 +126,8 @@ background job by its first line) and redirects stdout to a file, because
 some failures emit their envelope on stdout only:
 
 ```bash
-: "r1 authority — gpt-5.6-terra @ high"
-"$HELPER" run --model gpt-5.6-terra --effort high --sandbox read-only \
+: "r1 authority — gpt-6-luna @ high"
+"$HELPER" run --model gpt-6-luna --effort high --sandbox read-only \
   --workspace "$PWD" --prompt-file "$DIR/prompt.md" \
   --schema-file "$DIR/schema.json" --run-dir "$RUN_DIR" > "$DIR/stdout.json"
 ```

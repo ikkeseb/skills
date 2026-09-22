@@ -36,7 +36,7 @@ If no candidate is executable, return `{"ok": false, "error_class":
 Steps:
 
 1. From your task briefing, extract: the worker prompt (required), `model`
-   (required, e.g. `gpt-5.6-sol`), and optionally `effort`, `sandbox`,
+   (required, e.g. `gpt-6-sol`), and optionally `effort`, `sandbox`,
    `workspace`, `expected-base-sha`, `run-dir`, a JSON Schema for the
    result, and a timeout. If the prompt or model is missing — or the sandbox
    is `workspace-write` without an `expected-base-sha` — return `{"ok": false,

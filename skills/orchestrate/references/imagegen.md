@@ -2,7 +2,7 @@
 
 Authoring guide for Codex-lane stages whose real labor happens in the image
 model the worker prompts. `codex-exec.md` owns dispatch mechanics and the
-result-side transparency check; the pin is `gpt-5.6-sol` @ `medium`
+result-side transparency check; the pin is `gpt-6-sol` @ `medium`
 (`model-map.md` § Review and spend, image-generation relay exception).
 
 The relay worker is an LLM that forwards to the image model through its

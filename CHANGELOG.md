@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.37.0 — 2026-09-22
+
+`orchestrate` model map after GPT-6 Sol and Luna, same day as 0.36.0: the
+Codex rows are `gpt-6-sol` and `gpt-6-luna`, `gpt-5.6-terra` leaves the map.
+Sol is again the cheap bounded executor (its price halved), so the 0.36.0
+"when the Codex lane is wanted" clause is gone; `opus` keeps long-horizon,
+frontend and judgment-bearing builds. Luna takes Terra's Map-reader, bulk
+transform and small-review roles on top of extraction and classification.
+Escalation is Luna → Sol → `opus` → Astra. The image relay pin and the
+helper examples name the GPT-6 IDs. Evidence in the commit body.
+
 ## 0.36.0 — 2026-09-22
 
 `orchestrate` model map after Claude Opus 5.5: `opus` is the default
