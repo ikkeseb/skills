@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.35.0 — 2026-09-22
+
+Audits may conclude "retire the rule", "change the tool" or "do nothing",
+not only propose lines. `history-audit` step 6 names the five outcomes a
+proposal can take and says when a zero-event line is a retire candidate (only
+when the audited window contained the situation the line governs; a short or
+skewed window measures the task mix). `context-audit` § Guardrails says what
+evidence retiring a guardrail needs, so a retire is a verdict with its
+evidence in the output, never a side effect of a move.
+
 ## 0.34.2 — 2026-09-21
 
 `repo-cosplay` says how to read the target's instruction files so the read

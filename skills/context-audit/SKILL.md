@@ -238,6 +238,12 @@ content in the file. They exist because the agent *will* repeat the mistake with
   changes, then silently fights the change. Leave it at its source of truth.
 - **Never silently drop one.** Every "don't do X" line in the original must reappear in
   the output, moved rather than deleted. No home found means keep it static and flag it.
+  Retiring one is a verdict the audit may reach, never a side effect of a move: it needs
+  the evidence named in the output, either the failure it guards can no longer occur
+  (the code path, tool or workflow is gone, shown from the live source) or a
+  deterministic gate every target harness runs now catches it and the audit ran that
+  gate in this session. The same applies to a whole surface: "change the tool" or "do
+  nothing" are complete verdicts when the evidence supports them.
 - **Keep a guardrail with its domain without weakening its reach.** Use a skill only
   when the guardrail is optional or invocation is guaranteed; otherwise use canonical
   or verified nested instructions.

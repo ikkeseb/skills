@@ -79,15 +79,20 @@ says how often; the parent call says whose.
    no second family is available on the machine, state the degraded
    coverage plainly instead of skipping the caveat. Done when the report
    names the verifier (or the missing lane) and the spot-check results.
-6. **Propose instruction lines one by one, never wholesale.** Each proposal
-   cites its source session and gets individual approval before any
-   instruction file changes. High-confidence events are the basis;
-   medium-confidence events are candidates at best (observed: roughly a
-   third of them are normal steering misread as corrections). Correction
-   events double as source material for bad/good example pairs: the
-   corrected behavior is the "bad", the outcome the user asked for the
-   "good". Done when every accepted line is applied with its citation,
-   every rejected one dropped, and nothing was edited unapproved.
+6. **Propose changes one by one, never wholesale.** Each proposal is one
+   of: add a line, rewrite a line, retire a line, change the tool or hook
+   instead of the prose, or no change. Each cites its source session and
+   gets individual approval before any instruction file changes.
+   High-confidence events are the basis; medium-confidence events are
+   candidates at best (observed: roughly a third of them are normal
+   steering misread as corrections). A line with zero events is a retire
+   candidate only when the window contained the situation the line
+   governs; a short or skewed window (travel, one task type) measures the
+   task mix, not the line. Correction events double as source material
+   for bad/good example pairs: the corrected behavior is the "bad", the
+   outcome the user asked for the "good". Done when every accepted change
+   is applied with its citation, every rejected one dropped, and nothing
+   was edited unapproved.
 
 ## State these caveats in any report
 
