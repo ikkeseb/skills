@@ -144,7 +144,11 @@ Report the served model only when runtime evidence establishes it; the helper
 envelope echoes the request. For Claude aliases, give the resolved model when
 verified, otherwise mark resolution unknown. Compare cost per accepted task
 including readers, adapters, retries, seat synthesis and rework; worker spend
-alone is only part of it. Missing usage stays unknown.
+alone is only part of it. At task close, total available usage by provider
+from existing stage results and harness telemetry, counting each attempt once.
+Keep providers' token categories separate and state which totals include cache.
+Label missing seat or worker usage as unknown and the total as partial;
+collecting spend needs no extra model call or transcript review.
 
 ## The split
 
@@ -164,7 +168,11 @@ a human decision returns the decision material and the seat relays it.
 ## Delegation contract
 
 - **The specification is the senior deliverable.** Each stage receives the
-  needed project context, decisions, acceptance criteria, and output bounds.
+  needed project context, relevant files or symbols, decisions, acceptance
+  criteria, and output bounds.
+  Carry forward verified findings with source locations and remaining unknowns;
+  label hypotheses separately. These are starting points, not a read allowlist:
+  follow dependencies needed for the criterion.
   When a writing stage owes regression coverage, name the test seam and cases
   in its specification instead of deferring expected coverage to a follow-up.
   When a criterion is a number, state what the number stands for and name one

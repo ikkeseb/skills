@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.35.1 — 2026-09-22
+
+`orchestrate` briefs carry relevant files, sourced findings and remaining
+unknowns while allowing workers to follow dependencies. Codex workers wait
+on running processes within tool limits, combining any fallback delay and
+status check in one call. Task reports total available usage by provider
+from existing telemetry and label missing seat or worker usage as partial,
+without extra model calls or transcript audits.
+
 ## 0.35.0 — 2026-09-22
 
 Audits may conclude "retire the rule", "change the tool" or "do nothing",

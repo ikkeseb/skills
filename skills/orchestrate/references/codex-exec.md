@@ -101,6 +101,13 @@ own volume expectation. Image-generation stages read
 `references/imagegen.md` before the prompt is written; their pin is
 `model-map.md` § Review and spend, image-generation relay exception.
 
+For long-running tests or commands, brief the worker to wait on the existing
+process with the tool's bounded wait, within harness limits. If only log or
+process checks are available, combine the delay and status check in one shell
+call and return a compact status or failure excerpt. Completion signals take
+precedence when available; progress updates do not require separate sleep and
+poll model turns.
+
 ## Dispatch patterns
 
 Seat dispatch is the default for every Codex stage; the foreground adapter
