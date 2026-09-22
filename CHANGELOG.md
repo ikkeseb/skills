@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.38.0 — 2026-09-23
+
+`orchestrate`: Luna also takes mechanical implementation under a tight spec
+whose wrong result a test or lint gate catches, so the routing order reads
+Astra, `opus`, Sol, then Luna for mechanical and gated slices. Effort is
+judged on the difficulty left after the brief: a tight specification lets
+the implementer run a notch below the default, a thin one earns no discount.
+The harvest line shows fresh input before cached input, and the spend report
+says Codex input sums replayed context across rounds, so it is never one unit
+with a Claude harness total; missing usage is named (`seat spend unknown`).
+
 ## 0.37.0 — 2026-09-22
 
 `orchestrate` model map after GPT-6 Sol and Luna, same day as 0.36.0: the

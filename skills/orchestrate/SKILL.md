@@ -137,8 +137,9 @@ Open with `[orchestrate]` or `[orchestrate sustained]`, discretionary
 re-entries included. Every seat dispatch prints one stage line at start and
 one at harvest, so the lane and the cost stay visible in the terminal:
 `▸ <tag> — <model> @ <effort> — started, run dir <path>` and
-`✓ <tag> — <n> cmds, <in>M in (<cached>M cached), <out>k out, <m>m<s>s`
-(`✗ <tag> — <error_class>` on failure). The final report accounts for
+`✓ <tag> — <n> cmds, <fresh>k fresh + <cached>M cached in, <out>k out, <m>m<s>s`
+(`✗ <tag> — <error_class>` on failure), where fresh is `input_tokens`
+minus `cached_input_tokens`. The final report accounts for
 every delegated stage's requested model, effort and spend, plus the lane mix.
 Report the served model only when runtime evidence establishes it; the helper
 envelope echoes the request. For Claude aliases, give the resolved model when
@@ -147,7 +148,9 @@ including readers, adapters, retries, seat synthesis and rework; worker spend
 alone is only part of it. At task close, total available usage by provider
 from existing stage results and harness telemetry, counting each attempt once.
 Keep providers' token categories separate and state which totals include cache.
-Label missing seat or worker usage as unknown and the total as partial;
+Codex input sums every model round's replayed context; a Claude harness
+token total counts differently, so never set the two side by side as one
+unit. Name what is missing (`seat spend unknown`), mark the total partial;
 collecting spend needs no extra model call or transcript review.
 
 ## The split
