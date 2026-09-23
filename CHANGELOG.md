@@ -4,6 +4,25 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.42.0 — 2026-09-23
+
+HTML skills lose the generic machine-made look. `html-brief`: the sans stack
+starts with the system face instead of Inter; figures, step numbers, times,
+pills, table heads and the kicker drop tracked uppercase mono for the sans
+with tabular figures; the picked column loses its gradient. `html-slides`:
+the engine names itself `html-slides` instead of the pre-rename brand; the
+per-slide kicker count is gone (it duplicated the fixed counter), and the
+counter total and key legend now count themselves from the last slide, so
+deck chrome no longer needs hand-editing; microlabels, hint, counter and
+panel labels grow to projector-legible sizes; the divider numeral is set in
+the sans; KPI columns align at the top; the example deck no longer counts
+its own patterns. `html-showcase`: the ambition section states floor rules
+instead of one reference page's devices, motion becomes optional, and a new
+list names the generic look to avoid (mono microlabels, dotted grids,
+count-up stats, gradients and glows, card grids, the landing-page sequence,
+reflex typefaces). Brief and slides verified in Chromium at desktop and
+375 px; showcase ships no template to render.
+
 ## 0.41.0 — 2026-09-23
 
 `pretty-pdf` is rebuilt around one design instead of a menu. The base

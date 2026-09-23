@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pretty Slides</title>
+<title>html-slides — engine template</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='3' y='3' width='10' height='10' fill='%23E5A83B'/%3E%3C/svg%3E">
 <style>
 /* __FONTS_CSS__ */
@@ -155,14 +155,14 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
 }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand .sq { width: 10px; height: 10px; background: var(--identity); flex-shrink: 0; }
-.brand .mark { font-weight: 500; font-size: 13px; letter-spacing: 0.18em; color: var(--ink); }
+.brand .mark { font-family: var(--sans); font-weight: 600; font-size: 15px; letter-spacing: -0.005em; color: var(--ink); }
 .kicker .kr { color: var(--ink3); }
 
 .hair-v { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dotted var(--hair); pointer-events: none; }
 .hair-v.one { left: 33.333%; }
 .hair-v.two { left: 66.666%; }
 
-.microlabel { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink3); text-transform: uppercase; }
+.microlabel { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; color: var(--ink3); text-transform: uppercase; }
 
 .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; padding-top: 5vh; }
 .sec-head h2 { font-weight: 600; font-size: clamp(34px, 3.4vw, 52px); letter-spacing: -0.03em; line-height: 1.08; max-width: 24ch; }
@@ -173,7 +173,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   background: var(--surface); border: 1px solid var(--line);
   box-shadow: var(--shadow); padding: 26px 28px;
 }
-.panel .plab { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; color: var(--ink3); margin-bottom: 14px; }
+.panel .plab { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; color: var(--ink3); margin-bottom: 14px; }
 .panel .plab .pin { color: var(--identity); margin-right: 8px; }
 
 /* dark media plate: hairline frame, image bleeds dark-into-dark */
@@ -183,11 +183,11 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
 /* pending-asset placeholder */
 .pending {
   border: 1px dashed var(--line-strong); display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--ink3);
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; color: var(--ink3);
   text-align: center; padding: 20px;
 }
 
-.foot-note { position: absolute; right: 3vw; bottom: 58px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; color: var(--ink3); }
+.foot-note { position: absolute; right: 3vw; bottom: 58px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; color: var(--ink3); }
 .foot-note .rd { color: var(--identity); }
 
 /* ---------- progress rail (bottom) ---------- */
@@ -196,11 +196,11 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
 .rail .tick { position: absolute; top: -2px; width: 2px; height: 7px; background: var(--identity); transition: left var(--dur-slide) var(--ease-soft); }
 .counter {
   position: fixed; right: 3vw; bottom: 16px; z-index: 10;
-  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink3);
+  font-family: var(--mono); font-size: 13px; letter-spacing: 0.14em; color: var(--ink3);
 }
 .counter .cur { color: var(--ink2); }
-.jumpbuf { position: fixed; left: 3vw; bottom: 38px; z-index: 10; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink2); min-height: 1em; }
-.hint { position: fixed; left: 3vw; bottom: 16px; z-index: 10; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--ink3); opacity: 0.7; }
+.jumpbuf { position: fixed; left: 3vw; bottom: 38px; z-index: 10; font-family: var(--mono); font-size: 13px; letter-spacing: 0.14em; color: var(--ink2); min-height: 1em; }
+.hint { position: fixed; left: 3vw; bottom: 16px; z-index: 10; font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--ink3); }
 
 /* ---------- overview grid (G) ---------- */
 .overview {
@@ -208,7 +208,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   display: none; flex-direction: column; padding: 6vh 6vw; overflow-y: auto;
 }
 .overview.open { display: flex; }
-.overview .ohead { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--ink3); margin-bottom: 3vh; }
+.overview .ohead { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; color: var(--ink3); margin-bottom: 3vh; }
 .overview ol { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 4vw; }
 .overview li { border-top: 1px dotted var(--line-strong); }
 .overview button {
@@ -217,7 +217,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   color: var(--ink2); font-family: var(--sans); font-size: clamp(15px, 1.4vw, 19px);
 }
 .overview button:hover { color: var(--ink); }
-.overview button .onum { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--ink3); flex: 0 0 3ch; }
+.overview button .onum { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; color: var(--ink3); flex: 0 0 3ch; }
 .overview button:hover .onum { color: var(--identity); }
 
 /* ---------- pattern · title ---------- */
@@ -245,7 +245,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
 
 /* ---------- pattern · section divider ---------- */
 .divider { display: flex; flex-direction: column; justify-content: center; flex: 1; padding: 0 0 9vh; }
-.divider .dnum { font-family: var(--mono); font-weight: 400; font-size: clamp(80px, 11vw, 170px); line-height: 1; color: var(--ink3); letter-spacing: -0.02em; }
+.divider .dnum { font-weight: 600; font-size: clamp(80px, 11vw, 170px); line-height: 1; color: var(--ink3); letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
 .divider .dtitle { margin-top: 2vh; font-weight: 600; font-size: clamp(30px, 3vw, 46px); letter-spacing: -0.03em; }
 .divider-rule { margin-top: 4vh; border-top: 1px dotted var(--line-strong); transform: scaleX(0); transform-origin: left center; transition: transform 900ms var(--ease-soft) 200ms; }
 .slide.active .divider-rule { transform: scaleX(1); }
@@ -286,13 +286,13 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
 .tl-st { flex: 1; position: relative; padding-right: 2vw; }
 .tl-st .dot { width: 11px; height: 11px; background: var(--bg); border: 2px solid var(--accent-strong); border-radius: 50%; }
 .tl-st.now .dot { border-color: var(--identity); }
-.tl-st .tmon { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--ink3); margin: 2.4vh 0 0.6vh; }
+.tl-st .tmon { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; color: var(--ink3); margin: 2.4vh 0 0.6vh; }
 .tl-st.now .tmon { color: var(--identity); }
 .tl-st .tlab { font-size: clamp(14px, 1.25vw, 18px); line-height: 1.4; color: var(--ink); max-width: 16ch; }
 .tl-under { margin-top: 8vh; font-size: clamp(16px, 1.4vw, 21px); color: var(--ink2); }
 
 /* ---------- pattern · KPI / big number ---------- */
-.kpi { display: flex; justify-content: space-between; gap: 3vw; flex: 1; align-items: center; padding: 3vh 0 12vh; }
+.kpi { display: flex; flex-wrap: wrap; align-content: center; align-items: flex-start; justify-content: space-between; gap: 3vw; flex: 1; padding: 3vh 0 12vh; }
 .kpi .kcell { flex: 1; border-top: 2px solid var(--accent); padding-top: 3vh; }
 .kpi .kval { font-weight: 600; font-size: clamp(56px, 6.4vw, 104px); line-height: 1; letter-spacing: -0.04em; }
 .kpi .kval .kunit { font-size: 0.4em; color: var(--ink3); letter-spacing: -0.01em; }
@@ -362,7 +362,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
 .docmock .dstat .dval { font-weight: 600; font-size: clamp(18px, 1.7vw, 26px); letter-spacing: -0.02em; }
 .docmock .dstat .dval .rd { color: var(--identity); }
 .docmock table { border-collapse: collapse; width: 100%; font-size: clamp(11.5px, 1vw, 14px); }
-.docmock th { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: var(--ink3); text-align: left; font-weight: 500; padding: 0 14px 8px 0; }
+.docmock th { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.14em; color: var(--ink3); text-align: left; font-weight: 500; padding: 0 14px 8px 0; }
 .docmock td { border-top: 1px dotted var(--line-strong); padding: 9px 14px 9px 0; color: var(--ink); }
 .docmock td.mono { font-size: 0.86em; color: var(--ink2); }
 .docmock td .ok { color: var(--accent-strong); }
@@ -380,10 +380,10 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
 <div class="stage">
 
   <!-- ============ 1 · title ============ -->
-  <section class="slide" data-title="Pretty Slides" data-num="1">
+  <section class="slide" data-title="One file, no slideware" data-num="1">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker hs">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
       <div class="kr">ENGINE TEMPLATE · SELF-DOCUMENTING DECK</div>
     </div>
     <div class="s1-body">
@@ -402,8 +402,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   <section class="slide" data-title="Motion belongs to the pattern" data-num="2">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
-      <div class="kr">02 / 12</div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
     </div>
     <div class="statement">
       <p class="sbig frag">Motion belongs to the pattern, never to the author. <em>Write ordinary markup; the choreography is already decided.</em></p>
@@ -416,12 +415,11 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   <section class="slide" data-title="Chapter · The patterns" data-num="3">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
-      <div class="kr">03 / 12</div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
     </div>
     <div class="divider">
       <div class="dnum">01</div>
-      <div class="dtitle">Eleven slide patterns, one worked example each</div>
+      <div class="dtitle">Every slide pattern, one worked example each</div>
       <div class="divider-rule"></div>
     </div>
   </section>
@@ -430,8 +428,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   <section class="slide" data-title="What the engine promises" data-num="4">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
-      <div class="kr">04 / 12</div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
     </div>
     <div class="sec-head">
       <h2>What the engine promises</h2>
@@ -450,8 +447,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   <section class="slide" data-title="The exchange pattern" data-num="5">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
-      <div class="kr">05 / 12</div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
     </div>
     <div class="sec-head">
       <h2>Show a real question and its answer</h2>
@@ -484,8 +480,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   <section class="slide" data-title="A deck's life on the rail" data-num="6" data-auto="1">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
-      <div class="kr">06 / 12</div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
     </div>
     <div class="sec-head">
       <h2>A deck is built in stations</h2>
@@ -508,8 +503,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   <section class="slide" data-title="The engine in numbers" data-num="7" data-auto="1">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
-      <div class="kr">07 / 12</div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
     </div>
     <div class="sec-head">
       <h2>The engine in numbers</h2>
@@ -517,7 +511,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
     </div>
     <div class="kpi">
       <div class="kcell frag"><div class="kval"><span class="count" data-to="1">1</span><span class="kunit"> file</span></div><div class="klab">The whole deliverable. No server, no dependencies.</div></div>
-      <div class="kcell frag"><div class="kval"><span class="count" data-to="11">11</span><span class="kunit"> patterns</span></div><div class="klab">Each with its choreography already decided.</div></div>
+      <div class="kcell frag"><div class="kval"><span class="count" data-to="900">900</span><span class="kunit"> ms</span></div><div class="klab">The longest any element may animate. An audience waiting to read is a defect.</div></div>
       <div class="kcell frag"><div class="kval"><span class="rd count" data-to="0">0</span><span class="kunit"> clicks</span></div><div class="klab">A mouse click never advances a slide.</div></div>
     </div>
   </section>
@@ -526,8 +520,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   <section class="slide" data-title="Against slideware" data-num="8" data-auto="1">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
-      <div class="kr">08 / 12</div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
     </div>
     <div class="sec-head">
       <h2>What changes against slideware</h2>
@@ -546,8 +539,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   <section class="slide" data-title="Dark media on dark slides" data-num="9" data-auto="1">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
-      <div class="kr">09 / 12</div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
     </div>
     <div class="sec-head">
       <h2>Media sits on a plate</h2>
@@ -572,8 +564,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   <section class="slide" data-title="Artifacts · 1 code" data-num="10" data-group="artifacts" data-auto="1">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
-      <div class="kr">10 / 12</div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
     </div>
     <div class="sec-head">
       <h2>One artifact per full frame</h2>
@@ -603,8 +594,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   <section class="slide" data-title="Artifacts · 2 document" data-num="10" data-group="artifacts" data-auto="1">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
-      <div class="kr">10 / 12</div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
     </div>
     <div class="sec-head">
       <h2>One artifact per full frame</h2>
@@ -643,8 +633,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   <section class="slide" data-title="Solo diagram" data-num="11" data-auto="1">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
-      <div class="kr">11 / 12</div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
     </div>
     <div class="sec-head">
       <h2>One diagram, the whole stage</h2>
@@ -660,8 +649,7 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   <section class="slide" data-title="Build your own" data-num="12" data-auto="1">
     <div class="hair-v one"></div><div class="hair-v two"></div>
     <div class="kicker">
-      <div class="brand"><span class="sq"></span><span class="mark mono">PRETTY&nbsp;SLIDES</span></div>
-      <div class="kr">12 / 12</div>
+      <div class="brand"><span class="sq"></span><span class="mark">html-slides</span></div>
     </div>
     <div class="sec-head">
       <h2>Build your own</h2>
@@ -679,9 +667,9 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
 </div>
 
 <div class="rail"><div class="fill"></div><div class="tick"></div></div>
-<div class="counter"><span class="cur">01</span> / <span class="tot">12</span></div>
+<div class="counter"><span class="cur">01</span> / <span class="tot"></span></div>
 <div class="jumpbuf"></div>
-<div class="hint">← → · 1–12 ⏎ · G OVERVIEW</div>
+<div class="hint"></div>
 
 <div class="overview" id="overview">
   <div class="ohead">OVERVIEW — CLICK A SLIDE, OR PRESS G / ESC TO CLOSE</div>
@@ -695,6 +683,8 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
   var fill = document.querySelector('.rail .fill');
   var tick = document.querySelector('.rail .tick');
   var counter = document.querySelector('.counter .cur');
+  var total = document.querySelector('.counter .tot');
+  var hint = document.querySelector('.hint');
   var jumpbuf = document.querySelector('.jumpbuf');
   var overview = document.getElementById('overview');
   var ovlist = document.getElementById('ovlist');
@@ -849,6 +839,11 @@ html.qa .rail .fill, html.qa .rail .tick { transition: none !important; transfor
     else if (e.key === 'End') { goTo(slides.length - 1, true); }
   });
   /* deliberately no click-to-advance: keys only */
+
+  /* the chrome counts itself: the highest data-num is the deck's length */
+  var last = pad(numOf(slides.length - 1));
+  if (total) total.textContent = last;
+  if (hint) hint.textContent = '← → · 1–' + parseInt(last, 10) + ' ⏎ · G overview';
 
   if (qa) slides.forEach(function (s, i) { frags(i).forEach(reveal); });
   paint();

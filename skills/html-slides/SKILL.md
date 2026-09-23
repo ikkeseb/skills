@@ -54,11 +54,11 @@ in `references/slide-patterns.md`, the motion vocabulary in
 5. **Build all slides**, choosing layouts from
    `references/slide-patterns.md`: replace the example sections inside
    `<div class="stage">` with your own (delete what you don't use); keep
-   everything outside it. Update the deck chrome to match your slide
-   count and title: `<title>`, the `.hint` legend, the counter's `.tot`,
-   and each slide's kicker count. Done when every slide carries real
-   content, no example content remains, the chrome matches, and the build
-   is clean.
+   everything outside it. Set the deck's `<title>` and the brand mark in
+   each kicker; the counter's total and the key legend count themselves
+   from the last slide's `data-num`. Done when every slide carries real
+   content, no example content remains, the chrome names this deck, and
+   the build is clean.
 6. **Run screenshot QA** (below) on every slide before claiming done.
 
 ## Navigation and pacing contract

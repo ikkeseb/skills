@@ -49,34 +49,44 @@ this file except the invariants. The concept names:
 Done when: replacing the brief's content would force a different
 macro-composition, not merely different copy, color, or ornament.
 
-## The ambition level (calibration, not a look)
+## The ambition level
 
-One measured reference page that earns this level used the ranges below.
-They describe that page's complete solution, not defaults: **a new page
-may reuse at most one of these concrete devices unchanged**. Derive the
-rest from your concept. The measured values are the devices; the
-restraint items are floor rules and never count against reuse.
+The bar is a page a working designer would sign. These are floor rules,
+not a look:
 
-- **Scale contrast**: display type in the 56–120px range with tight
-  negative tracking, against 11–12px uppercase mono microlabels. The
-  span between the largest and smallest type is where the drama lives.
-- **Whitespace at page scale**: 80–130px between sections; hierarchy
-  from space and scale, not boxes and borders.
-- **Restraint**: one chromatic accent on the whole page; hairlines as
-  low-alpha ink (0.05–0.22 alpha), not solid grey borders; no gradients
-  or decoration that carries no information.
-- **Structure made visible**: rules, dotted grids, and column edges that
-  show the page's skeleton instead of hiding it.
-- **Motion belongs at this ambition level**: entrance reveals, rules
-  that draw themselves, staggered arrivals, numbers that count up. Be
-  generous enough that the page feels alive: starving it of motion reads
-  as unfinished, drowning it reads as noise. Two hard rules: reveal at
-  the level of sections or clusters, never every row individually, and a
-  fast scroll must outrun the choreography. Content the reader has
-  passed appears settled, never queued behind animations still playing.
-  Motion supports discovery, never becomes the identity: no smooth
-  scrolling, nothing loops or autoplays. (Reference values: reveals rise
-  12–28px, fade in around 750–900ms, short staggers.)
+- **Scale carries the hierarchy.** A real span between the largest and
+  smallest type, set with deliberate weight, tracking and line-height at
+  every size. Display type is the most carefully tuned thing on the page.
+- **Whitespace at page scale.** Sections separate by space and scale,
+  not boxes and borders.
+- **Restraint.** One chromatic accent on the whole page; hairlines as
+  low-alpha ink, not solid grey borders; nothing decorative that carries
+  no information.
+- **Structure from the content.** Whatever skeleton shows (a column
+  edge, a numbering, a rule system) is the content's own order made
+  visible, never an ornament laid over it.
+- **Motion is optional and earns its place.** The page must work
+  without it. Where it helps discovery, reveal at the level of sections
+  or clusters, never every row, and a fast scroll must outrun the
+  choreography: content the reader has passed appears settled, never
+  queued behind animations still playing. Nothing loops, autoplays or
+  smooth-scrolls. (Reference values: reveals rise 12–28px, fade in
+  around 750–900ms, short staggers.)
+
+### The generic look
+
+Machine-made pages currently converge on one look, and readers spot it at
+a glance. Each item below can be right for a specific concept; two or
+more together read as a template, not a design:
+
+- tracked uppercase mono microlabels on kickers, captions and labels;
+- dotted background grids, crosshair marks and rules that carry nothing;
+- a row of big stats, especially numbers that count up;
+- gradients, glows, glass panels and text filled with colour;
+- a uniform grid of rounded cards, icons or emoji as bullets;
+- the landing-page sequence (hero, three features, stats, call to
+  action) imposed on content that is not a product pitch;
+- a reflex typeface: Inter, Space Grotesk and their close cousins.
 
 Distinctiveness comes from composition, structure, and palette, not from
 exotic fonts. Default to the system font stack; embed a local font file
@@ -238,8 +248,8 @@ the checks you could not perform, never claiming them.
   scheme, with a reload proving persistence and a correct first paint.
   Both editions read as designed, not inverted.
 - Contrast was measured, not eyeballed, in both themes (invariant 5).
-- Motion was checked with reduced-motion emulated and with at least one
-  mid-reveal frame sampled.
+- Motion, when the page has any, was checked with reduced-motion emulated
+  and with at least one mid-reveal frame sampled.
 - The page was checked at 360–390px wide with zero horizontal overflow.
 - Print preview shows a legible page from both explicit themes.
 - You can state in one line why this design could only belong to this
