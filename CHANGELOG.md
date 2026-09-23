@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.43.0 — 2026-09-23
+
+`orchestrate` model map: `opus` takes bounded implementation too, and Sol
+leaves the executor role. Sol becomes the routine cross-family reviewer of
+Claude-produced work when Astra is not needed, plus focused research and
+relay work; it writes code only under a tight, gated spec. Escalation is
+Luna → `opus`, and a Sol review miss goes to Astra. Early-days routing on
+the maintainer's direction; evidence in the commit body.
+
 ## 0.42.0 — 2026-09-23
 
 HTML skills lose the generic machine-made look. `html-brief`: the sans stack

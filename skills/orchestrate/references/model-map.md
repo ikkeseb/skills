@@ -16,9 +16,10 @@ token price alone does not establish which model is cheaper for the job.
   conclusions against evidence.
 - **Workhorse**: judgment-bearing execution and review. `opus` is the
   default for long-horizon implementation, frontend and judgment-bearing
-  builds; Sol handles well-bounded implementation at low cost; Astra
-  handles the hardest reasoning and cross-family review of Claude output.
-  The seat retains final say.
+  builds, bounded implementation included; Astra handles the hardest
+  reasoning and critical cross-family review of Claude output; Sol handles
+  routine cross-family review of Claude output at low cost. The seat
+  retains final say.
 - **Cheap**: Luna handles bounded readers, extraction, mechanical
   transforms, single-criterion checks and spec-bounded mechanical
   implementation that a deterministic gate checks. Use independent slices
@@ -30,17 +31,17 @@ token price alone does not establish which model is cheaper for the job.
 | Model | Lane | Default effort | Role | Availability fallback |
 |---|---|---|---|---|
 | `gpt-6-astra` | Codex | high; xhigh for difficult reasoning | Demanding research and synthesis, hard root-cause work, critical review and architectural counter-cases; cross-family verification of Claude-produced work | `opus` at high/xhigh; `fable` for fuzzy intent |
-| `gpt-6-sol` | Codex | high; xhigh for a harder slice | Bounded implementation, known-pattern migrations, focused research and routine review where the approach and acceptance criteria are clear; the cheap first stop for bounded code beyond Luna's reach | `opus` |
+| `gpt-6-sol` | Codex | high; xhigh for a harder slice | Routine cross-family review of Claude-produced work when Astra is not needed, focused research and relay work; writes code only under a tight spec whose wrong result a test or lint gate catches | `gpt-6-astra`; `opus` if the Codex lane is down |
 | `fable` | Claude | medium/high | Design taste, fuzzy intent and highest-stakes user-facing judgment. Delegate only a distinct question the seat cannot resolve as efficiently; a Fable seat seldom needs another Fable | `opus` |
-| `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default workhorse for long-horizon implementation, migrations, codebase audits, frontend builds, user-facing copy and API-shape proposals; work needing Claude harness tools; cross-family verification of Codex-produced work | `gpt-6-astra` for reasoning-heavy work, `gpt-6-sol` for bounded implementation, with degraded family coverage when applicable |
+| `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default workhorse for long-horizon implementation, migrations, codebase audits, frontend builds, user-facing copy and API-shape proposals; work needing Claude harness tools; cross-family verification of Codex-produced work | `gpt-6-astra`, with degraded family coverage when applicable |
 | `gpt-6-luna` | Codex | high | Map readers, extraction, classification, bulk transforms, small criterion-based reviews, and mechanical implementation under a tight spec whose wrong result a test or lint gate catches; findings are candidates, never decisions | `gpt-6-sol`; `opus` if the Codex lane is down |
 | `sonnet` | Claude | low for transport | Budget seat or foreground Codex adapter, not an execution worker | `opus` |
 | `haiku` | Claude | — | Off-limits, adapters included; Luna covers cheap work | `gpt-6-luna` |
 
 Astra is the first choice when the difficulty is reasoning, uncertainty or
-costly mistakes; `opus` when it is long-horizon or judgment-bearing
-implementation; Sol when the slice is bounded; Luna when it is also
-mechanical and gated. Do not run Sol or `opus`
+costly mistakes; `opus` for implementation, bounded or long-horizon; Luna
+when the work is mechanical and gated; Sol for routine review of Claude
+output when Astra is not needed. Do not run Sol or `opus`
 first merely to justify Astra through a failed attempt. Fable's taste and
 intent role does not imply a general reasoning advantage over Astra. State
 scope and acceptance criteria for any of them; a stronger model still needs
@@ -76,8 +77,8 @@ Sol and Luna accept `max`; `fable` supports `medium` and `high` only.
 Codex `ultra` stays off-limits because it may introduce nested delegation.
 
 **Escalate a quality miss once.** Name the missed acceptance criterion and
-why the next model can resolve it. Luna goes to Sol, bounded Sol work to
-`opus`, and reasoning failures to Astra. Taste or intent failures go to
+why the next model can resolve it. Luna goes to `opus`; a Sol review miss
+and reasoning failures go to Astra. Taste or intent failures go to
 Fable. A second miss goes back to the seat to fix the brief or investigate,
 not another reroll. Inspect partial writes before any retry; a failed
 `workspace-write` run never earns a blind rerun.
@@ -97,7 +98,7 @@ not verified by the requested model echoed in the helper envelope.
   result that can ship or is expensive to unwind earns it. Other work uses
   acceptance criteria, tests and mandatory seat review. Include the seat's
   contributions when determining the producer family: Claude-produced work
-  goes to Astra; Codex-produced work goes to `opus`, or Fable for design and
+  goes to Astra, or Sol for routine review; Codex-produced work goes to `opus`, or Fable for design and
   intent. Same-family coverage is degraded, usable when the other lane is
   unavailable and labeled as such. Report cross-provider, same-provider or
   none. Agreement never replaces checking evidence.
