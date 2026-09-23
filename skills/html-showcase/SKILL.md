@@ -3,7 +3,7 @@ name: html-showcase
 description: "Art-direct a single-file HTML page with editorial ambition, designing a fresh visual concept from the content each time: launches, showcases, announcements, flagship reports. Not for plain reading documents (html-brief), decks (html-slides), or web-app frontends."
 ---
 
-# Prettier HTML
+# html-showcase
 
 The deliverable is a page that looks individually designed. The reader
 should believe a designer art-directed it for exactly this content. This

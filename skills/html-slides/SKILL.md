@@ -3,7 +3,7 @@ name: html-slides
 description: "Build a presentation as one self-contained HTML file: bundled slide engine, inlined fonts and images, re-skinnable through a token block. For talks and decks that stand in for PowerPoint. Not for documents (html-brief), PDFs (pretty-pdf), or web-app frontends."
 ---
 
-# Pretty Slides
+# html-slides
 
 The deliverable is **one self-contained HTML file** that double-clicks open
 in any browser, offline. It comes from a template plus a tiny build script,

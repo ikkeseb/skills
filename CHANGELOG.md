@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.40.1 — 2026-09-23
+
+Rename and drift cleanup: `html-showcase` and `html-slides` open with their
+own names instead of the pre-0.34.0 ones; the README drops skill counts that
+went stale at every add or removal, and its orchestrate row drops the model
+roster the model map owns. The `disable-model-invocation` note in the README,
+orchestrate's field guards and `check-repo.mjs` now says the flag's effect
+varies by Claude Code version instead of claiming current behavior.
+
 ## 0.40.0 — 2026-09-23
 
 `verify-claims` is removed: no longer in use. The public inventory is 13

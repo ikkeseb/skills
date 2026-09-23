@@ -1,16 +1,17 @@
 # skills
 
 Agent skills for day-to-day work, published as one plugin.
-Claude Code ships the full set; Codex exposes the eleven skills marked for both
+Claude Code ships the full set; Codex exposes the skills marked for both
 harnesses.
 
-Browse all 13 skills on [skills.sh](https://skills.sh/ikkeseb/skills).
+Browse them on [skills.sh](https://skills.sh/ikkeseb/skills).
 
 ## Skills
 
 Invoke skills explicitly: `/name` in Claude Code, the `$` picker in Codex.
-No SKILL.md carries `disable-model-invocation`: on current Claude Code that
-flag hides the skill from the model and breaks the typed slash command too.
+No SKILL.md carries `disable-model-invocation`: its effect has changed across
+Claude Code versions, and on some it hid the skill from the model and broke
+the typed slash command too.
 For a symlink or personal install, keep the model from triggering a skill on
 its own with `skillOverrides: { "<name>": "name-only" }` in your Claude Code
 settings; `html-brief` is the one skill meant to be model-invoked. For a
@@ -35,7 +36,7 @@ Codex-supported skills that should stay explicit set
 | **[context-audit](skills/context-audit)** | Audits instruction reach and the document skeleton, proposing a leaner context structure without stranding mandatory rules. | `/context-audit` |
 | **[repo-cosplay](skills/repo-cosplay)** | Operates as a named repository from a session rooted elsewhere, loading that repository's own contract and gates. Explicit ask required. | `/repo-cosplay` |
 
-In Codex, invoke the same eleven skills through the `$` picker.
+In Codex, invoke the same skills through the `$` picker.
 
 ### Claude Code only
 
@@ -46,7 +47,7 @@ automation, image inspection) not yet verified under Codex.
 | Skill | What it does | Invoke |
 |---|---|---|
 | **[second-opinion](skills/second-opinion)** | One read-only Codex call on work that already exists, answered as a synthesis rather than a relay. GPT-6 Astra in a fresh review context, with family coverage stated. | `/second-opinion` |
-| **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes bounded, reviewable execution and reconnaissance to worker models by shape: cheap models cover independent slices, Opus handles implementation, Astra handles demanding reasoning, and Sol handles bounded execution on the Codex lane. Claude agents plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
+| **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes bounded, reviewable execution and reconnaissance to Claude and Codex worker models by tier. Claude agents plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
 
 Each skill folder contains its `SKILL.md`; Excalidraw also carries setup notes
 for its render-and-inspect pipeline.

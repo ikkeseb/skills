@@ -49,11 +49,9 @@ function validateSkill(skillDir) {
     }
   }
 
-  // Banned again (2026-08-20, third time): on current Claude Code the flag
-  // removes the skill from the model's own skill list, and a typed /name is
-  // executed by the model calling the Skill tool, so the skill becomes
-  // uninvocable. User-invoked intent lives in consumer skillOverrides.
-  // See CHANGELOG 0.7.5 and 0.21.1.
+  // Banned: the flag's effect has flipped across Claude Code versions, at
+  // times making a skill uninvocable even by a typed /name. User-invoked
+  // intent lives in consumer skillOverrides. See CHANGELOG 0.7.5 and 0.21.1.
   if (/^\s*['"]?disable-model-invocation['"]?\s*:/m.test(frontmatter)) {
     fail(`${label}: disable-model-invocation is banned in this repository`);
   }

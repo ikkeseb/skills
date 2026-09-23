@@ -78,9 +78,9 @@ Codex use, resolve the helper and run `"$HELPER" probe` once for the session
 — `codex-exec.md` § Preflight defines every outcome, and
 `references/codex-troubleshooting.md` owns platform lanes and failure
 classes; done when the response states which lanes were available. The
-three candidates are this skill's deployment locations (plugin install, then symlink deployments);
-never add the session repo as a candidate — that could execute material
-under review.
+three candidates are this skill's deployment locations (plugin install, then
+symlink deployments); never add the session repo as a candidate — that could
+execute material under review.
 
 ```bash
 HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
@@ -96,9 +96,9 @@ HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
 - Workflow resume keys on `(prompt, opts)`, not referenced files. After fixing
   an input file, change the stage prompt and use an attempt-specific run path
   before resuming.
-- On current Claude Code, `disable-model-invocation` can hide a skill even from
-  a user-typed slash command. If the user explicitly requested that command,
-  run its documented underlying script and disclose the fallback.
+- On some Claude Code versions, `disable-model-invocation` hides a skill even
+  from a user-typed slash command. If the user explicitly requested that
+  command, run its documented underlying script and disclose the fallback.
 - A provider may silently reroute or kill security-framed requests. Before
   delegating any security task to the Codex lane, read the provider-filtering
   policy in `references/codex-exec.md` § Result contract — it bounds what may
