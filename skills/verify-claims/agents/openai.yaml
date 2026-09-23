@@ -1,8 +1,0 @@
-interface:
-  display_name: verify-claims
-  short_description: >-
-    Audit factual claims in prose against traceable sources — produces a
-    classified table (verified / unverified / contradicted) plus a retract
-    list. Checks written assertions, not software behavior.
-policy:
-  allow_implicit_invocation: false

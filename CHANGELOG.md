@@ -4,6 +4,12 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.40.0 — 2026-09-23
+
+`verify-claims` is removed: no longer in use. The public inventory is 13
+skills, 11 Codex-supported. Symlink and personal installs keep a dangling
+`verify-claims` link until it is deleted by hand.
+
 ## 0.39.0 — 2026-09-23
 
 `orchestrate`: any Claude stage that needs an effort other than the
