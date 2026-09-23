@@ -10,8 +10,9 @@
 #                                CLI's built-in model (NOT config.toml, which
 #                                --ignore-user-config bypasses); name a model
 #                                when the tier or reproducibility matters.
-#       [--effort <level>]  passed through; the server rejects what a model
-#                           does not support        (default: high)
+#       [--effort none|minimal|low|medium|high|xhigh|max]  allowlisted here;
+#                           the server rejects what a model does not support
+#                                                   (default: high)
 #       [--sandbox read-only|workspace-write]               (default: read-only)
 #       [--workspace <dir>]                                 (default: $PWD)
 #       [--expected-base-sha <sha>]  fail unless HEAD matches at launch time
@@ -79,7 +80,7 @@ verify_cleanup() { [ -z "${VERIFY_TMP:-}" ] || rm -rf "$VERIFY_TMP"; }
 LOCK_TOKEN="$$-$RANDOM-$RANDOM"
 
 FAIL_RUN_DIR=""  # set once the run dir exists; lets every later failure mirror there
-fail_json() { # fail_json <error_class> <message> [run_dir]
+emit_failure() { # emit_failure <error_class> <message> [run_dir]
   local rd="${3:-$FAIL_RUN_DIR}" out
   out="$("$JQ_BIN" -n --arg class "$1" --arg msg "$2" --arg run_dir "$rd" \
     '{ok: false, error_class: $class, error: $msg}
@@ -91,8 +92,8 @@ fail_json() { # fail_json <error_class> <message> [run_dir]
       && mv -f "$rd/result.json.tmp" "$rd/result.json" 2>/dev/null || true
   fi
   printf '%s\n' "$out"
-  exit 0
 }
+fail_json() { emit_failure "$@"; exit 0; }
 
 # Every command resolves jq here first, so fail_json below always has a binary.
 # Same direct-executable contract as resolve_codex: `command -v` would happily
@@ -426,7 +427,9 @@ on_signal() {
   kill_worker_group
   release_locks
   trap - EXIT
-  "$JQ_BIN" -n '{ok: false, error_class: "interrupted", error: "runner received a termination signal"}'
+  # Mirrored like every other failure: a background dispatch whose stdout is
+  # lost still leaves a terminal verdict in the run dir for harvest.
+  emit_failure interrupted "runner received a termination signal"
   exit 1
 }
 
@@ -1176,7 +1179,7 @@ cmd_run() {
         else {error_class: $error_class, error: $error, api_error: $api_error} end)' \
     > "$run_dir/result.json.tmp"
   mv -f "$run_dir/result.json.tmp" "$run_dir/result.json"
-  cat "$run_dir/result.json"
+  "$CAT_BIN" "$run_dir/result.json"
 }
 
 case "${1:-}" in

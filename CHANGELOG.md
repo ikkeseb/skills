@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.40.2 — 2026-09-23
+
+`orchestrate` Codex helper: an `interrupted` runner now mirrors its envelope
+into the run dir like every other failure, so a signalled background
+dispatch whose stdout is lost still leaves a harvestable verdict (new suite
+check). The final envelope print goes through the resolved `cat`, closing
+the last bare text-tool call the shadowing guard missed, and the usage
+header lists the effort allowlist instead of claiming pass-through.
+
 ## 0.40.1 — 2026-09-23
 
 Rename and drift cleanup: `html-showcase` and `html-slides` open with their

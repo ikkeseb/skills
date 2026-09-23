@@ -116,9 +116,10 @@ terminal-state check a seat harvest uses:
 1. `RUN_DIR/result.json` exists: the helper finished and that file is the
    authoritative envelope; gate on `ok`. Done.
 2. No `result.json`: read the captured stdout. Failures before the run dir
-   passes its gates (`usage`, `codex_missing`, `missing_dependency`) and
-   `interrupted` emit their envelope on stdout only, with no `run_dir`
-   field. A stdout envelope is the verdict.
+   passes its gates (`usage`, `codex_missing`, `missing_dependency`) emit
+   their envelope on stdout only, with no `run_dir` field, and so does an
+   `interrupted` runner signalled before its run dir existed. A stdout
+   envelope is the verdict.
 3. Neither: the helper died mid-run. Establish death first (helper and
    codex processes gone). Then with a `turn.completed` event in
    `events.jsonl`

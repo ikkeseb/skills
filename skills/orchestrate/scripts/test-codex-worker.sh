@@ -94,6 +94,10 @@ fake_codex() {
     missing-result)
       printf '%s\n' '{"type":"turn.completed"}'
       return 0 ;;
+    hang)
+      # A worker still running when the runner is signalled.
+      sleep 30
+      return 0 ;;
     canary)
       # A worker that can see the workspace: reports canary.txt verbatim,
       # the shape `verify` asks for.
@@ -316,6 +320,25 @@ assert_json "$tmp/missing-result.json" '.spend.commands == 0 and .spend.input_to
   'spend degrades to zero commands and null tokens when the turn carries no usage'
 assert_json "$tmp/missing-result.json" '.ok == false and .error_class == "schema" and .turn_completed == true and .result == null' \
   'missing final payload fails closed as schema error'
+
+# A signalled runner kills the worker and still leaves a terminal verdict in
+# the run dir, so a background dispatch whose stdout is lost can be harvested.
+printf '%s\n' hang > "$fake_home/fake-mode"
+run_dir="$tmp/run-interrupted"
+HOME="$fake_home" PATH="$test_path" TMPDIR="$tmp" \
+  CODEX_WORKER_MAX_SLOTS=1 CODEX_WORKER_SLOT_WAIT=1 \
+  bash "$helper" run --model gpt-test --effort low --sandbox read-only \
+  --workspace "$tmp" --prompt-file "$prompt" --run-dir "$run_dir" --timeout 60 \
+  > "$tmp/interrupted.json" 2> "$tmp/interrupted.err" &
+runner_pid=$!
+for _ in $(seq 1 50); do [ -f "$run_dir/events.jsonl" ] && break; sleep 0.2; done
+sleep 1
+kill -TERM "$runner_pid" 2>/dev/null || true
+wait "$runner_pid" 2>/dev/null || true
+assert_json "$tmp/interrupted.json" '.ok == false and .error_class == "interrupted" and (.run_dir | endswith("run-interrupted"))' \
+  'a signalled runner reports interrupted with its run dir'
+assert_same "$tmp/interrupted.json" "$run_dir/result.json" \
+  'the interrupted verdict is mirrored into the run dir'
 
 # verify is a read canary: only a worker that reports the token written to
 # the workspace passes; a schema-valid guess or the wrong shape does not.
