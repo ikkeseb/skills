@@ -15,44 +15,40 @@ need to copy code out.
 
 ### Fix: suppress footer on code pages via a named `@page`
 
-CSS named pages let you scope `@page` rules to specific elements. Tag the `<pre>` as belonging
-to a `code-page` named page, and strip the margin boxes on that named page:
+CSS named pages let you scope `@page` rules to specific elements. The base stylesheet already
+puts `.code-block` on a `code-page` named page that drops the page number; a document that
+adds other margin boxes (a running header) must strip those on `code-page` too:
 
 ```css
 @page code-page {
-  margin: 20mm 22mm 22mm 22mm;
-  @bottom-left   { content: none; }
   @bottom-right  { content: none; }
-  @top-left      { content: none; }
-  @top-right     { content: none; }
-}
-
-pre.code-block {
-  page: code-page;
-  page-break-inside: auto;
+  @top-right     { content: none; }   /* only if the document adds a running header */
 }
 ```
 
 ```html
-<pre class="code-block"><code>... long code listing ...</code></pre>
+<section class="code-block">
+  <h2>Reference receiver</h2>
+  <pre><code>... long code listing ...</code></pre>
+</section>
 ```
 
-Any page that contains this `<pre>` renders under `code-page` rules → no footer → selecting
+Any page that contains the listing renders under `code-page` rules → no footer → selecting
 across page breaks no longer picks up footer text. Works in any actively-maintained weasyprint.
 
-**Caveat:** if only part of the pre spans page N, the whole of page N uses the code-page rules.
-Any other content that lands on that page also loses its footer. In practice long code blocks
-own their pages end-to-end, so this is rarely visible — but worth knowing.
+**Caveats:** switching to a named page always starts a new page, so a heading left outside the
+`.code-block` element strands at the bottom of the previous page (measured on WeasyPrint 70):
+wrap the heading and the listing together, as above. And every page the listing touches uses
+the code-page rules, so other content that lands there also loses its footer.
 
 ### Before reaching for named pages: try to fit on one page
 
 A multi-page code block is always worse UX than a single-page one. Before applying the named
 page trick, check if shrinking gets you onto a single page:
 
-- Reduce code font from 9–10pt to **7–8pt** (still readable in print)
-- Reduce `line-height` from 1.55 to **1.40–1.45**
-- Tighten padding: `padding: var(--space-xs) var(--space-sm)`
-- Remove the rounded border if present (small wins)
+- Reduce code font from about 8.5pt to **7–7.5pt** (still readable in print)
+- Reduce `line-height` from 1.5 to **1.35–1.4**
+- Tighten padding: `padding: 2mm 3mm`
 
 This buys roughly 40% more lines per page. Good enough for scripts up to ~150 lines of C#/Java
 or ~200 lines of Python.
@@ -199,17 +195,14 @@ size. Easy to miss because the render succeeds.
 Two options that both work:
 
 **(A) Raised cap — what `.lede` ships with.** Lower friction (no HTML wrapping needed),
-restrained look. The initial is sized up and baseline-shifted; text doesn't wrap around it.
+restrained look. The initial is sized up on the first line; text doesn't wrap around it.
 
 ```css
 .lede::first-letter {
-  font-family: var(--font-serif);
-  font-size: 3.2em;
-  line-height: 0.85;
-  padding-right: 4pt;
-  font-weight: 700;
-  color: var(--color-accent);
-  vertical-align: -0.2em;
+  font-size: 2em;
+  line-height: 0.8;
+  font-weight: 600;
+  color: var(--accent);
 }
 ```
 
@@ -217,20 +210,22 @@ restrained look. The initial is sized up and baseline-shifted; text doesn't wrap
 text-wraps-around-the-letter look. Costs one inline span on the first character.
 
 ```css
-.lede .dropcap {
-  font-family: var(--font-serif);
+.dropcap {
+  font-family: var(--serif);
   float: left;
   font-size: 4.2em;
   line-height: 0.85;
   padding: 2pt 6pt 0 0;
-  font-weight: 700;
-  color: var(--color-accent);
+  font-weight: 600;
+  color: var(--accent);
 }
 ```
 
 ```html
-<p class="lede"><span class="dropcap">T</span>here is a particular kind of light...</p>
+<p><span class="dropcap">T</span>here is a particular kind of light...</p>
 ```
+
+Leave `.lede` off that paragraph, or its `::first-letter` rule styles the span's letter twice.
 
 The `<span>` workaround works because the float crash is specific to `::first-letter` + float
 interaction, not float in general.

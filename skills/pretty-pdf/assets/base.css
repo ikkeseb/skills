@@ -1,637 +1,242 @@
-/* Google Fonts CSS only — the sole network request this stylesheet makes;
-   offline it degrades silently to the local fallback stacks below. See
-   references/base-styles.md "Technical notes" for self-hosting. */
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;600&display=swap');
+/* pretty-pdf base stylesheet for WeasyPrint.
+   One design, no network: every face comes from the machine's installed
+   fonts, first match wins. Documents set only what the content decides
+   (--accent, the voice, the density) in a small override stylesheet.
+   Class vocabulary and choices: references/design.md. */
 
 :root {
-  /* --- FONTS (default Inter Tight; override via references/base-styles.md) --- */
-  --font-serif: 'Inter Tight', Georgia, serif;
-  --font-sans: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'Source Code Pro', 'Courier New', monospace;
+  /* --- Faces. Serif for reading, sans for structure, mono for code. --- */
+  --serif: "Charter", "Bitstream Charter", "Iowan Old Style", "Cambria",
+           "Georgia", "DejaVu Serif", serif;
+  --sans: "Avenir Next", "Segoe UI", "Helvetica Neue", "Arial",
+          "DejaVu Sans", sans-serif;
+  --mono: "SF Mono", "Cascadia Mono", "Consolas", "Menlo",
+          "DejaVu Sans Mono", monospace;
+  --text-face: var(--serif);
 
-  /* --- TYPE SCALE (Editorial — default; override via body.scale-compact / body.scale-generous) --- */
-  --fs-h1: 24pt;
-  --fs-h2: 13.5pt;
-  --fs-h3: 11pt;
-  --fs-h4: 10pt;
+  /* --- Ink on white paper. The page itself is never tinted. --- */
+  --ink: #1c1b19;
+  --ink-2: #57544e;
+  --ink-3: #8a867e;
+  --rule: #d8d4cc;
+  --rule-strong: #1c1b19;
+  --wash: #f4f2ee;
+
+  /* --- One accent per document, chosen for the subject. --- */
+  --accent: #1d4f7c;
+  --accent-wash: #eef2f6;
+
+  /* --- State, only where the content has state. --- */
+  --ok: #2e6a4c;
+  --warn: #8a5a0c;
+  --bad: #9b2f24;
+
+  /* --- Scale (default: reading density). --- */
   --fs-body: 10.5pt;
-  --fs-small: 9pt;
-  --fs-code: 8.5pt;
-
-  --lh-body: 1.65;
-  --lh-list: 1.55;
-
-  --weight-h1: 700;
-  --weight-heading: 600;
-
-  /* --- EDGE LANGUAGE (Standard — default; override via body.edges-hairline / body.edges-chunky) --- */
-  --border-hair: 0.25pt;
-  --border-thin: 0.5pt;
-  --border-normal: 0.75pt;
-  --border-strong: 1.5pt;
-  --border-bold: 2pt;
-  --border-heavy: 2.5pt;
-  --radius-sm: 1mm;
-  --radius-md: 2mm;
-
-  /* --- PALETTE (Slate default — override these to change the feel) --- */
-  --color-text: #0f172a;
-  --color-text-secondary: #64748b;
-  --color-accent: #334155;
-  --color-accent-light: #f1f5f9;
-  --color-border: #e2e8f0;
-  --color-bg: #ffffff;
-  --color-bg-subtle: #f8fafc;
-
-  /* --- STATUS COLORS (override per palette so warm/cool palettes can re-tune them) --- */
-  --color-warn: #d97706;
-  --color-warn-bg: #fef9ee;
-  --color-ok: #16a34a;
-  --color-ok-bg: #f0fdf4;
-
-  /* --- SPACING SCALE (mm) --- */
-  --space-xs: 1.5mm;
-  --space-sm: 3mm;
-  --space-md: 5mm;
-  --space-lg: 8mm;
-  --space-xl: 12mm;
-  --space-2xl: 18mm;
-}
-
-/* ============================================
-   NAMED VARIANTS — apply to <body class="...">
-   ============================================ */
-
-/* Type scales: pick one or stay on default Editorial */
-body.scale-compact {
-  --fs-h1: 20pt;
-  --fs-h2: 12pt;
-  --fs-h3: 10pt;
-  --fs-h4: 9pt;
-  --fs-body: 9.5pt;
   --fs-small: 8.5pt;
-  --fs-code: 8pt;
-  --lh-body: 1.5;
-  --lh-list: 1.4;
+  --fs-h1: 22pt;
+  --fs-h2: 13pt;
+  --fs-h3: 10.5pt;
+  --lh: 1.55;
+  --gap: 4mm;
 }
 
-body.scale-generous {
-  --fs-h1: 30pt;
-  --fs-h2: 16pt;
-  --fs-h3: 12.5pt;
-  --fs-h4: 10.5pt;
-  --fs-body: 11.5pt;
-  --fs-small: 9.5pt;
-  --fs-code: 9pt;
-  --lh-body: 1.8;
-  --lh-list: 1.7;
+/* Denser documents: CVs, invoices, clinical summaries, one-pagers. */
+body.compact {
+  --fs-body: 9.5pt;
+  --fs-small: 8pt;
+  --fs-h1: 19pt;
+  --fs-h2: 11.5pt;
+  --fs-h3: 9.5pt;
+  --lh: 1.45;
+  --gap: 3mm;
 }
 
-/* Edge weights: hairline (refined / precise) or chunky (bold / editorial) */
-body.edges-hairline {
-  --border-hair: 0.15pt;
-  --border-thin: 0.25pt;
-  --border-normal: 0.4pt;
-  --border-strong: 0.75pt;
-  --border-bold: 1pt;
-  --border-heavy: 1.5pt;
-  --radius-sm: 0;
-  --radius-md: 0.5mm;
-}
+/* Scannable documents set everything in the sans. */
+body.sans { --text-face: var(--sans); }
 
-body.edges-chunky {
-  --border-hair: 0.5pt;
-  --border-thin: 1pt;
-  --border-normal: 1.5pt;
-  --border-strong: 2.5pt;
-  --border-bold: 3.5pt;
-  --border-heavy: 4.5pt;
-  --radius-sm: 2mm;
-  --radius-md: 4mm;
-}
-
-/* ============================================
-   PAGE SETUP
-   ============================================ */
+/* ============ Page ============ */
 
 @page {
   size: A4;
-  margin: 28mm 24mm 32mm 24mm;
-  /* Fills the full sheet incl. margins, so warm-bg palettes tint the whole page. */
-  background: var(--color-bg);
-
+  margin: 24mm 22mm 26mm 22mm;
   @bottom-right {
-    content: counter(page);
-    font-family: var(--font-sans);
-    font-size: 8pt;
-    color: var(--color-text-secondary);
-    letter-spacing: 0.05em;
+    content: counter(page) " / " counter(pages);
+    font-family: var(--sans);
+    font-size: 7.5pt;
+    color: var(--ink-3);
   }
 }
+@page :first { @bottom-right { content: none; } }
 
-@page :first {
-  /* Cover/first page: suppress the page number. */
-  @bottom-right { content: none; }
-}
-
-/* ============================================
-   BASE TYPOGRAPHY
-   ============================================ */
+/* ============ Type ============ */
 
 body {
-  font-family: var(--font-sans);
+  margin: 0;
+  font-family: var(--text-face);
   font-size: var(--fs-body);
-  line-height: var(--lh-body);
-  color: var(--color-text);
-  background: var(--color-bg);
-  /* OpenType niceties (kerning, ligatures, oldstyle figures); hyphens need <html lang>. */
+  line-height: var(--lh);
+  color: var(--ink);
   hyphens: auto;
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "onum" 1;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
-/* ---- Headings ---- */
-
-h1, h2, h3, h4 {
-  font-family: var(--font-sans);
-  line-height: 1.25;
+h1, h2, h3 {
+  font-family: var(--sans);
+  color: var(--ink);
+  line-height: 1.2;
   page-break-after: avoid;
-  /* Tabular figures off for headings; use lining figures for clean numeric titles */
-  font-feature-settings: "kern" 1, "liga" 1, "lnum" 1;
+  font-feature-settings: "kern" 1, "lnum" 1;
 }
+h1 { font-size: var(--fs-h1); font-weight: 600; letter-spacing: -0.015em; margin: 0 0 2mm; }
+h2 { font-size: var(--fs-h2); font-weight: 600; margin: 9mm 0 2.5mm; }
+h3 { font-size: var(--fs-h3); font-weight: 600; margin: 6mm 0 1.5mm; }
+h2 + h3 { margin-top: 3mm; }
 
-h1 {
-  font-size: var(--fs-h1);
-  font-weight: var(--weight-h1);
-  color: var(--color-accent);
-  margin: 0 0 var(--space-md) 0;
-  letter-spacing: -0.025em;
-}
+p { margin: 0 0 var(--gap); orphans: 3; widows: 3; }
+strong, b { font-weight: 600; }
+a { color: var(--accent); text-decoration: none; }
+small, .small { font-size: var(--fs-small); }
+.muted { color: var(--ink-2); }
+.num { font-variant-numeric: tabular-nums lining-nums; }
 
-h2 {
-  font-size: var(--fs-h2);
-  font-weight: var(--weight-heading);
-  color: var(--color-text);
-  margin: var(--space-xl) 0 var(--space-sm) 0;
-  padding-bottom: var(--space-xs);
-  border-bottom: var(--border-normal) solid var(--color-border);
-}
-
-h3 {
-  font-size: var(--fs-h3);
-  font-weight: var(--weight-heading);
-  color: var(--color-text);
-  margin: var(--space-lg) 0 var(--space-xs) 0;
-}
-
-h4 {
-  font-size: var(--fs-h4);
-  font-weight: var(--weight-heading);
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin: var(--space-md) 0 var(--space-xs) 0;
-}
-
-/* ---- Body text ---- */
-
-p {
-  margin: 0 0 var(--space-sm) 0;
-  orphans: 3;
-  widows: 3;
-}
-
-strong { font-weight: 600; }
-
-small, .small {
-  font-size: var(--fs-small);
-  color: var(--color-text-secondary);
-}
-
-/* ---- Links (for digital PDFs) ---- */
-
-a {
-  color: var(--color-accent);
-  text-decoration: underline;
-  text-decoration-thickness: var(--border-thin);
-  text-underline-offset: 1.5pt;
-}
-
-/* ---- Lists ---- */
-
-ul, ol {
-  margin: var(--space-xs) 0 var(--space-md) 0;
-  padding-left: 6mm;
-}
-
-li {
-  margin-bottom: var(--space-xs);
-  line-height: var(--lh-list);
-}
-
-li::marker {
-  color: var(--color-accent);
-  font-weight: var(--weight-heading);
-}
-
-/* ---- Blockquote ---- */
+ul, ol { margin: 0 0 var(--gap); padding-left: 5mm; }
+li { margin: 0 0 1.2mm; }
+li::marker { color: var(--ink-3); }
 
 blockquote {
-  border-left: var(--border-heavy) solid var(--color-accent);
-  margin: var(--space-md) 0;
-  padding: var(--space-xs) 0 var(--space-xs) var(--space-md);
-  color: var(--color-text-secondary);
-  font-style: italic;
+  margin: var(--gap) 0;
+  padding: 0 0 0 5mm;
+  border-left: 0.75pt solid var(--rule-strong);
+  color: var(--ink-2);
 }
+blockquote p:last-child { margin-bottom: 0; }
 
-blockquote p { margin-bottom: var(--space-xs); }
+hr { border: 0; border-top: 0.5pt solid var(--rule); margin: 7mm 0; }
 
-/* ---- Horizontal rule ---- */
+/* ============ Opening ============ */
 
-hr {
-  border: none;
-  border-top: var(--border-thin) solid var(--color-border);
-  margin: var(--space-lg) 0;
+/* The document opener: optional kicker, title, subtitle, meta line. */
+.doc-head { margin: 0 0 9mm; }
+.doc-head .kicker {
+  font-family: var(--sans); font-size: var(--fs-small); font-weight: 600;
+  color: var(--accent); margin: 0 0 3mm;
 }
-
-/* ============================================
-   TABLES
-   ============================================ */
-
-/* Default table is SOFT — hairline dividers, subtle header, no zebra; the data
-   carries the weight. Opt into an accent header bar with class="table-bold". */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: var(--space-md) 0 var(--space-lg) 0;
-  font-family: var(--font-sans);
-  font-size: 9.5pt;
-  page-break-inside: auto;
+.doc-head .subtitle {
+  font-family: var(--text-face); font-size: calc(var(--fs-body) * 1.25);
+  line-height: 1.4; color: var(--ink-2); margin: 0 0 3mm;
 }
-
-thead {
-  display: table-header-group;
+.doc-head .meta {
+  font-family: var(--sans); font-size: var(--fs-small); color: var(--ink-3); margin: 0;
 }
+/* A rule under the opener for documents with a formal front: specs, reports. */
+.doc-head.ruled { padding-bottom: 5mm; border-bottom: 1.25pt solid var(--rule-strong); }
+/* A cover page: the title carries the page, the body starts on page two. */
+.doc-head.cover { padding-top: 130mm; margin: 0; page-break-after: always; }
+.doc-head.cover h1 { font-size: calc(var(--fs-h1) * 1.9); line-height: 1.05; letter-spacing: -0.025em; margin-bottom: 5mm; }
 
-thead th {
-  font-weight: var(--weight-heading);
-  color: var(--color-text-secondary);
-  padding: 2mm 3.5mm;
-  text-align: left;
-  font-size: 8.5pt;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border-bottom: var(--border-strong) solid var(--color-text);
-}
-
-tbody td {
-  padding: 2.5mm 3.5mm;
-  border-bottom: var(--border-hair) solid var(--color-border);
-  vertical-align: top;
-}
-
-/* Bold variant — accent-filled header row. Use sparingly: one hero table per
-   document, not every table. */
-table.table-bold thead th {
-  background: var(--color-accent);
-  color: white;
-  border-bottom: none;
-}
-
-/* Right-align numbers */
-td.num, th.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums lining-nums;
-}
-
-/* ============================================
-   CODE
-   ============================================ */
-
-code {
-  font-family: var(--font-mono);
-  font-size: var(--fs-small);
-  background: var(--color-bg-subtle);
-  padding: 0.3mm 1.5mm;
-  border-radius: var(--radius-sm);
-  border: var(--border-hair) solid var(--color-border);
-}
-
-pre {
-  background: var(--color-bg-subtle);
-  border: var(--border-thin) solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-sm) var(--space-md);
-  font-family: var(--font-mono);
-  font-size: var(--fs-code);
-  line-height: 1.55;
-  overflow-wrap: break-word;
-  white-space: pre-wrap;
-  margin: var(--space-sm) 0 var(--space-md) 0;
-}
-
-pre code {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: inherit;
-}
-
-/* Multi-page code blocks: prevent PDF reading-order from pulling page footers
-   into the user's text selection. If a <pre> may span pages, tag it with
-   class="code-block" and opt it into the code-page named page defined below.
-   See references/gotchas.md §1 for the full story. */
-pre.code-block {
-  page: code-page;
-  page-break-inside: auto;
-}
-
-@page code-page {
-  margin: 20mm 22mm 22mm 22mm;
-  @bottom-left  { content: none; }
-  @bottom-right { content: none; }
-  @top-left     { content: none; }
-  @top-right    { content: none; }
-}
-
-/* ============================================
-   COMPONENTS
-   ============================================ */
-
-/* ---- Subtitle (below h1) ---- */
-
-.subtitle {
-  font-family: var(--font-sans);
-  font-size: calc(var(--fs-body) + 1.5pt);
-  color: var(--color-text-secondary);
-  margin: calc(-1 * var(--space-sm)) 0 var(--space-lg) 0;
-  font-weight: 300;
-  line-height: 1.4;
-}
-
-/* ---- Metadata line ---- */
-
-.meta {
-  font-family: var(--font-sans);
-  font-size: var(--fs-small);
-  color: var(--color-text-secondary);
-  margin-bottom: var(--space-lg);
-  letter-spacing: 0.01em;
-}
-
-/* ---- Opening paragraph treatment (raised cap + small-caps lede) ----
-   class="lede" on the FIRST paragraph gives a raised-cap literary opener.
-   USE SPARINGLY — a strong gesture that reads as "essay opener" and is an
-   AI-PDF tell when misapplied. Right for: formal letters, personal essays,
-   editorial longform. Wrong for: data-first docs, dense lists, short
-   summaries, specs, invoices, CVs, most reports.
-   This is a RAISED cap, not a wrapped dropcap — the float dropcap crashes
-   weasyprint 68.x; see gotchas.md §3. */
-
-.lede {
-  /* Hanging punctuation if the line starts with a quote (Inter doesn't ship
-     it but kept here for fonts that do — graceful no-op otherwise). */
-  hanging-punctuation: first;
-}
-
+/* Raised initial for literary openers only: essays, personal letters.
+   A raised cap, never a floated drop cap (gotchas.md §3). */
 .lede::first-letter {
-  font-family: var(--font-serif);
-  font-size: 3.2em;
-  line-height: 0.85;
-  padding-right: 4pt;
-  font-weight: 700;
-  color: var(--color-accent);
-  vertical-align: -0.2em;
+  font-size: 2em; line-height: 0.8; font-weight: 600; color: var(--accent);
 }
 
-.lede::first-line {
-  font-variant-caps: small-caps;
-  letter-spacing: 0.06em;
-}
+/* ============ Blocks ============ */
 
-/* ---- Callout / highlight box ---- */
-
+/* The one passage that must not be skimmed past. */
 .callout {
-  background: var(--color-accent-light);
-  border-left: var(--border-bold) solid var(--color-accent);
-  padding: var(--space-sm) var(--space-md);
-  margin: var(--space-md) 0;
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-}
-
-.callout p { margin: 0; }
-.callout p + p { margin-top: var(--space-xs); }
-
-/* Warning variant (override --color-warn / --color-warn-bg per palette to tune) */
-.callout-warn {
-  background: var(--color-warn-bg);
-  border-left-color: var(--color-warn);
-}
-
-/* Success variant (override --color-ok / --color-ok-bg per palette to tune) */
-.callout-ok {
-  background: var(--color-ok-bg);
-  border-left-color: var(--color-ok);
-}
-
-/* ============================================
-   HEADERS — pick ONE based on the document.
-   Ordered quiet → loud. Default toward the top.
-   ============================================ */
-
-/* ---- Pure-typesetting header (no geometry, refined and quiet) ----
-   The recommended default for most documents. No chrome — the title
-   IS the design moment. Works for letters, reports, summaries, anything
-   where the content carries the page. Use unless you have a reason not to. */
-
-.header-typeset {
-  margin-bottom: var(--space-2xl);
-}
-
-.header-typeset h1 {
-  font-family: var(--font-serif);
-  font-size: calc(var(--fs-h1) * 0.7);
-  font-weight: 400;
-  letter-spacing: 0;
-  color: var(--color-text);
-  margin: 0 0 var(--space-xs) 0;
-}
-
-.header-typeset .subtitle {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: var(--fs-body);
-  margin-top: 0;
-}
-
-/* ---- Minimal header (rule under title) ----
-   Slightly more structural than typeset. Suits technical docs, specs,
-   anything where a clear "this is the opener" demarcation helps. */
-
-.header-minimal {
-  border-bottom: var(--border-bold) solid var(--color-accent);
-  padding-bottom: var(--space-sm);
-  margin-bottom: var(--space-xl);
-}
-
-.header-minimal h1 {
-  margin-bottom: var(--space-xs);
-}
-
-/* ---- Side-rule header (vertical accent bar left of title) ----
-   Editorial / journalistic feel. Reports, essays, longform pieces. */
-
-.header-side-rule {
-  border-left: var(--border-bold) solid var(--color-accent);
-  padding-left: var(--space-md);
-  margin-bottom: var(--space-xl);
-}
-
-.header-side-rule h1 {
-  margin: 0 0 var(--space-xs) 0;
-}
-
-.header-side-rule .subtitle {
-  margin-top: 0;
-}
-
-/* ---- Centered header (no rule, pure typography, centered) ----
-   For personal / literary / formal documents that want a composed
-   opener. Pairs well with .lede on the first body paragraph. */
-
-.header-centered {
-  text-align: center;
-  margin-bottom: var(--space-2xl);
-}
-
-.header-centered h1 {
-  margin: 0 0 var(--space-sm) 0;
-}
-
-.header-centered .subtitle {
-  margin-top: 0;
-}
-
-/* ---- Large-numeral header (display-scale title) ----
-   USE SPARINGLY. The title itself carries the visual weight — covers,
-   issue openers, statement pieces. Wrong for letters or routine docs.
-   Best with a single short title (1-3 words); long titles wrap into
-   awkward equal-weight lines. Pair with text-wrap: balance if available. */
-
-.header-large-numeral {
-  margin-bottom: var(--space-2xl);
-}
-
-.header-large-numeral h1 {
-  font-size: calc(var(--fs-h1) * 1.8);
-  line-height: 1.05;
-  margin: 0 0 var(--space-md) 0;
-  font-weight: var(--weight-h1);
-  letter-spacing: -0.03em;
-  text-wrap: balance;
-}
-
-.header-large-numeral .subtitle {
-  font-size: var(--fs-body);
-  margin-top: 0;
-}
-
-/* ---- Header bar (accent banner) ----
-   USE SPARINGLY — loudest chrome in the system; every .header-bar doc looks
-   alike regardless of palette. Right for high-emphasis reports and banner-
-   convention cover pages, wrong for most things. Kept inside the body margin
-   (not a full-bleed) — negative-margin bleeds break when @page margins change. */
-
-.header-bar {
-  background: var(--color-accent);
-  color: white;
-  padding: var(--space-md) var(--space-lg);
-  margin: 0 0 var(--space-xl) 0;
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans);
-}
-
-.header-bar h1 {
-  color: white;
-  margin: 0;
-  font-size: calc(var(--fs-h1) * 0.83);
-}
-
-.header-bar .subtitle {
-  color: rgba(255,255,255,0.8);
-  margin: var(--space-xs) 0 0 0;
-  font-size: calc(var(--fs-body) + 0.5pt);
-}
-
-/* ---- Two-column layout ---- */
-
-.two-col {
-  columns: 2;
-  column-gap: var(--space-lg);
-}
-
-/* ---- Signature block ---- */
-
-.signature {
-  margin-top: var(--space-2xl);
-  font-family: var(--font-sans);
-  font-size: var(--fs-h4);
-  line-height: 1.5;
-}
-
-/* ---- Key-value pairs (for metadata, specs, patient info, etc.) ---- */
-
-.kv-grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--space-xs) var(--space-md);
-  font-family: var(--font-sans);
-  font-size: var(--fs-h4);
-  margin: var(--space-md) 0;
-}
-
-.kv-grid dt {
-  font-weight: var(--weight-heading);
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-}
-
-.kv-grid dd {
-  margin: 0;
-}
-
-/* ---- Figure / Image ---- */
-
-figure {
-  margin: var(--space-md) 0 var(--space-lg) 0;
-  text-align: center;
+  margin: var(--gap) 0 calc(var(--gap) * 1.5);
+  padding: 3.5mm 4.5mm;
+  background: var(--accent-wash);
+  border-left: 1.5pt solid var(--accent);
   page-break-inside: avoid;
 }
+.callout p:last-child { margin-bottom: 0; }
+.callout-warn { background: #f7f1e6; border-left-color: var(--warn); }
+.callout-ok { background: #ecf3ee; border-left-color: var(--ok); }
 
-figure img {
-  max-width: 100%;
-  /* No border-radius by default — rounded image corners are a screen-UI
-     convention and read as "screenshot exported to PDF" in print. Opt in
-     with class="img-rounded" if a soft edge is genuinely wanted (digital
-     reports, presentation handouts). */
+/* A few numbers that are the message, side by side. */
+.figures {
+  display: flex; margin: 0 0 7mm; padding-bottom: 4mm;
+  border-bottom: 0.5pt solid var(--rule);
+  page-break-inside: avoid;
 }
-
-img.img-rounded { border-radius: var(--radius-md); }
-
-figcaption {
-  font-family: var(--font-sans);
-  font-size: var(--fs-code);
-  color: var(--color-text-secondary);
-  margin-top: var(--space-xs);
+.figures > div { flex: 1; padding: 0 4mm 0 0; }
+.figures > div + div { padding-left: 4mm; border-left: 0.5pt solid var(--rule); }
+.figures b {
+  display: block; font-family: var(--sans); font-size: calc(var(--fs-h1) * 0.95);
+  font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums lining-nums;
 }
+.figures span { display: block; font-family: var(--sans); font-size: var(--fs-small); color: var(--ink-2); margin-top: 1mm; }
 
-/* ============================================
-   UTILITY CLASSES
-   ============================================ */
+/* Labelled facts: parties, metadata, patient or project details. */
+.facts {
+  display: grid; grid-template-columns: max-content 1fr; gap: 1.2mm 6mm;
+  margin: 0 0 var(--gap); font-family: var(--sans); font-size: var(--fs-small);
+}
+.facts dt { color: var(--ink-3); }
+.facts dd { margin: 0; color: var(--ink); }
+
+/* Side by side: sender and recipient, two options, two columns of facts. */
+.pair { display: flex; gap: 10mm; margin: 0 0 var(--gap); }
+.pair > * { flex: 1; min-width: 0; }
+
+.two-col { columns: 2; column-gap: 8mm; }
+
+/* ============ Tables ============ */
+
+table {
+  width: 100%; border-collapse: collapse; margin: 2mm 0 7mm;
+  font-family: var(--sans); font-size: calc(var(--fs-body) * 0.9);
+  line-height: 1.4;
+}
+thead { display: table-header-group; }
+th {
+  text-align: left; font-weight: 600; color: var(--ink-2);
+  padding: 0 4mm 2mm 0; border-bottom: 0.75pt solid var(--rule-strong);
+}
+td { padding: 2mm 4mm 2mm 0; border-bottom: 0.4pt solid var(--rule); vertical-align: top; }
+th:last-child, td:last-child { padding-right: 0; }
+th.num, td.num { text-align: right; font-variant-numeric: tabular-nums lining-nums; }
+tr { page-break-inside: avoid; }
+/* Totals close a table of amounts. */
+tr.total td { border-bottom: 0; border-top: 0.75pt solid var(--rule-strong); font-weight: 600; }
+
+/* State words inside tables and lists. */
+.ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+
+/* ============ Code ============ */
+
+code {
+  font-family: var(--mono); font-size: 0.86em;
+  background: var(--wash); padding: 0.2mm 1mm; border-radius: 0.6mm;
+}
+pre {
+  font-family: var(--mono); font-size: calc(var(--fs-body) * 0.82); line-height: 1.5;
+  background: var(--wash); padding: 3.5mm 4.5mm; margin: 0 0 var(--gap);
+  white-space: pre-wrap; overflow-wrap: break-word;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+
+/* A listing that may span pages gets class="code-block", on the <pre> or on
+   a <section> holding its heading too: its pages drop the footer so copied
+   code carries no page numbers, and it starts on a new page (gotchas.md §1). */
+.code-block { page: code-page; page-break-inside: auto; }
+@page code-page { @bottom-right { content: none; } }
+
+/* ============ Figures and images ============ */
+
+figure { margin: 2mm 0 7mm; page-break-inside: avoid; }
+figure img { max-width: 100%; display: block; }
+figcaption { font-family: var(--sans); font-size: var(--fs-small); color: var(--ink-2); margin-top: 2mm; }
+
+/* ============ Closing ============ */
+
+.signature { margin-top: 14mm; }
+.signature .name { font-weight: 600; margin: 0; }
+.signature .role { color: var(--ink-2); margin: 0; }
+
+/* ============ Pagination ============ */
 
 .page-break { page-break-before: always; }
 .no-break { page-break-inside: avoid; }
-.text-center { text-align: center; }
-.text-right { text-align: right; }
-.muted { color: var(--color-text-secondary); }
-.uppercase { text-transform: uppercase; letter-spacing: 0.06em; }
-.smallcaps { font-variant-caps: small-caps; letter-spacing: 0.04em; }

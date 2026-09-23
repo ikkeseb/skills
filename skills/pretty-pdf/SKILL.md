@@ -61,18 +61,11 @@ all HTML and CSS objects in a batch.
 
 1. Read the source completely. Identify document type, audience, reader relationship, tone,
    density, and reading context before choosing a visual treatment.
-2. Read `references/base-styles.md` and choose the five axes below from the content.
-3. Read exactly one matching template:
-   - report or business document: `references/templates/report.md`
-   - formal or personal letter: `references/templates/letter.md`
-   - medical or clinical summary: `references/templates/medical.md`
-   - invoice or financial summary: `references/templates/invoice.md`
-   - CV or resume: `references/templates/cv.md`
-   - one-page brief: `references/templates/one-pager.md`
-   - journal, travel log, or personal document: `references/templates/personal.md`
-   - technical specification: `references/templates/technical.md`
-
-   Skip templates and build from scratch when none fits. Do not read all templates to browse.
+2. Read `references/design.md` and make its four choices (voice, density, accent, opener)
+   from the content.
+3. Read the one matching section of `references/documents.md`: report, letter, invoice, CV,
+   clinical summary, one-pager, technical specification, or personal document. When none fits,
+   compose from the vocabulary in `design.md`.
 4. Read only the applicable section of `references/gotchas.md`:
    - §1 for long code blocks that may span pages;
    - §2 for docx sources containing images or crops;
@@ -81,10 +74,10 @@ all HTML and CSS objects in a batch.
    a small override; do not inline the entire base stylesheet.
 6. Render to the user's requested absolute output path. Treat missing fonts, images, or fetch
    warnings as defects, not harmless log noise.
-7. Create a temporary preview directory and render every PDF page to an image. Prefer an available
-   PDF renderer; with Poppler:
-   `pdftoppm -png -r 144 "<absolute-output.pdf>" "<preview-dir>/page"`. Confirm the image count
-   matches `page_count` from the final WeasyPrint render.
+7. Create a temporary preview directory and render every PDF page to an image with any available
+   PDF renderer: Poppler's `pdftoppm -png -r 144 "<absolute-output.pdf>" "<preview-dir>/page"`,
+   or PyMuPDF (`page.get_pixmap(dpi=144).save(...)` per page). Confirm the image count matches
+   `page_count` from the final WeasyPrint render.
 8. Open and inspect every final page image with the harness's image-capable reader. Check:
    - clipped, overlapping, or missing content;
    - awkward page breaks, stranded headings, sparse final pages, and broken tables;
@@ -100,22 +93,13 @@ all HTML and CSS objects in a batch.
 The workflow is done when the source is preserved, the final PDF exists at the intended absolute
 path, every final page has been visually inspected, and no known layout defect remains.
 
-## Design selection
+## Design
 
-Typography carries the design; whitespace creates hierarchy; decoration stays restrained. Use one
-dominant accent and make every choice serve the document.
-
-Guard against convergence: do not reach for Inter Tight + Slate because they are already present.
-Choose each axis from the source. If fewer than three axes move off their fallback, check whether
-that is genuine fit or reflex; similar content may legitimately produce a similar design.
-
-| Axis | Fallback | Choose by content |
-|---|---|---|
-| Font pairing | Inter Tight | Literary → Cormorant or EB Garamond; clinical → DM Sans; editorial → Fraunces + Work Sans; technical → Space Grotesk + IBM Plex |
-| Palette | Slate | Choose a complete palette block from the design reference or build a coherent custom one |
-| Header | `.header-typeset` | `.header-minimal`, `.header-side-rule`, `.header-centered`, `.header-large-numeral`, or the loud `.header-bar` |
-| Type scale | Editorial | `body class="scale-compact"` or `body class="scale-generous"` |
-| Edge weight | Standard | `body class="edges-hairline"` or `body class="edges-chunky"` |
+The base stylesheet is the design: white paper, one ink, a serif for reading and a sans for
+structure, hairline rules, generous but fixed spacing. Documents differ by their content and
+four small choices, not by restyling the base. Typography and whitespace carry the hierarchy;
+nothing on the page is decoration, and the one accent marks what matters instead of tinting
+surfaces.
 
 Use `.page-break` deliberately and `.no-break` for components that should stay together, then
 let visual inspection decide whether those constraints improve the actual pagination.

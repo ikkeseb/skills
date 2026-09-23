@@ -4,6 +4,24 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.41.0 — 2026-09-23
+
+`pretty-pdf` is rebuilt around one design instead of a menu. The base
+stylesheet sets white paper, one ink, a serif for reading and a sans for
+structure, hairline rules and fixed spacing; a document decides only its
+voice (`body.sans`), density (`body.compact`), accent and opener
+(`.doc-head`, `ruled`, `cover`). Gone: the Google Fonts import (fonts now
+come from the machine, so rendering needs no network), the eight Tailwind
+palettes, twelve font pairings, six header styles and the scale and edge
+variants. `references/design.md` holds the vocabulary and print-safe
+accents; `references/documents.md` replaces the eight template files with
+one section per document type. A long listing now goes in a
+`section.code-block` with its heading, because a named page always starts a
+new page and stranded the heading (measured on WeasyPrint 70). Page previews
+may come from PyMuPDF when Poppler is missing. Verified by rendering a
+report, letter, invoice, CV and a five-page specification on Windows; the
+macOS faces (Charter, Avenir Next) are unrendered.
+
 ## 0.40.2 — 2026-09-23
 
 `orchestrate` Codex helper: an `interrupted` runner now mirrors its envelope
