@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: "Delegation posture, invoked only by the user typing /orchestrate: the main loop keeps design, specification, review, and integration and routes bounded, reviewable execution and reconnaissance through Claude and Codex workers — cheap models cover independent slices, Opus handles implementation, Astra handles demanding reasoning, Sol handles bounded execution on the Codex lane, the seat decides. Single-task or sustained for the session. Not for one quick lookup, a single external review (second-opinion), or ordinary fan-out the harness's own subagents and Workflow tool already cover."
+description: "Delegation posture, invoked only by the user typing /orchestrate: the main loop keeps design, specification, review, and integration and routes bounded, reviewable execution and reconnaissance to Claude and Codex workers by model tier. Single-task or sustained for the session. Not for one quick lookup, a single external review (second-opinion), or ordinary fan-out the harness's own subagents and Workflow tool already cover."
 ---
 
 # orchestrate
@@ -52,9 +52,9 @@ inheriting the session; fan-out or multiple stages → a Workflow of `agent()`
 calls, every lane a labeled row in one tree. A Workflow carries a Codex
 stage only when a per-item pipeline must mix lanes; then the foreground
 `codex-worker` adapter makes one call over files the seat wrote. A one-row
-tree is an effort adapter, never a shape: only deep verification of another
-lane's work under a seat running below `high` earns it, with `effort` pinned
-on the `agent()` call. Invoking `/orchestrate` is the Workflow opt-in.
+tree is an effort adapter, never a shape: a Claude stage that needs an
+effort other than the session's earns it, with `effort` pinned on the
+`agent()` call. Invoking `/orchestrate` is the Workflow opt-in.
 `pipeline()` by default; a barrier only where a stage needs every prior
 result. Too small or too ambiguous to delegate well → state the sequential
 fallback and do it in the main loop.
@@ -70,10 +70,6 @@ Keep one-off dispatches anonymous — naming one turns it into an addressable
 teammate and may suppress automatic result delivery; name only for
 intentional mailbox-based collaboration.
 
-Seat dispatch is the Codex default at any run length; the foreground
-adapter is the one Workflow exception (`references/codex-exec.md`
-§ Dispatch patterns owns both recipes).
-
 Claude stages take harness aliases, never versioned Claude model IDs. Codex
 stages run OpenAI models through `scripts/codex-worker.sh`, the sole source
 of invocation mechanics: never hand-roll `codex` commands in prompts, and
@@ -81,8 +77,8 @@ read `references/codex-exec.md` before the first Codex stage. Before first
 Codex use, resolve the helper and run `"$HELPER" probe` once for the session
 — `codex-exec.md` § Preflight defines every outcome, and
 `references/codex-troubleshooting.md` owns platform lanes and failure
-classes; done when the response states which lanes were available. The three candidates are this
-skill's deployment locations (plugin install, then symlink deployments);
+classes; done when the response states which lanes were available. The
+three candidates are this skill's deployment locations (plugin install, then symlink deployments);
 never add the session repo as a candidate — that could execute material
 under review.
 
@@ -135,23 +131,22 @@ the session workflow-size guideline as a ceiling. If a stage limits coverage
 
 Open with `[orchestrate]` or `[orchestrate sustained]`, discretionary
 re-entries included. Every seat dispatch prints one stage line at start and
-one at harvest, so the lane and the cost stay visible in the terminal:
+one at harvest, so lane and cost stay visible in the terminal:
 `▸ <tag> — <model> @ <effort> — started, run dir <path>` and
 `✓ <tag> — <n> cmds, <fresh>k fresh + <cached>M cached in, <out>k out, <m>m<s>s`
 (`✗ <tag> — <error_class>` on failure), where fresh is `input_tokens`
-minus `cached_input_tokens`. The final report accounts for
-every delegated stage's requested model, effort and spend, plus the lane mix.
-Report the served model only when runtime evidence establishes it; the helper
-envelope echoes the request. For Claude aliases, give the resolved model when
-verified, otherwise mark resolution unknown. Compare cost per accepted task
-including readers, adapters, retries, seat synthesis and rework; worker spend
-alone is only part of it. At task close, total available usage by provider
-from existing stage results and harness telemetry, counting each attempt once.
-Keep providers' token categories separate and state which totals include cache.
-Codex input sums every model round's replayed context; a Claude harness
-token total counts differently, so never set the two side by side as one
-unit. Name what is missing (`seat spend unknown`), mark the total partial;
-collecting spend needs no extra model call or transcript review.
+minus `cached_input_tokens`.
+
+The final report gives every delegated stage's requested model, effort and
+spend, plus the lane mix. Name a served or resolved model only on runtime
+evidence, otherwise mark it unknown; the helper envelope echoes the request.
+Judge cost per accepted task, counting readers, adapters, retries, seat
+synthesis and rework, not worker spend alone. At task close, total usage per
+provider from existing stage results and harness telemetry, each attempt
+once, token categories kept apart and cache inclusion stated. Codex input
+sums every round's replayed context, so it is never one unit with a Claude
+harness total. Name what is missing (`seat spend unknown`) and mark the total
+partial; collecting spend needs no extra model call or transcript review.
 
 ## The split
 
@@ -181,20 +176,17 @@ a human decision returns the decision material and the seat relays it.
   When a criterion is a number, state what the number stands for and name one
   shortcut that would reach it without serving that.
   Prompts reject placeholders; inventories and bulk transforms require count
-  reconciliation against their named corpus. Workers
-  also inherit machine-level instructions this repo cannot inspect; treat
+  reconciliation against their named corpus. Workers also inherit machine-level instructions this repo cannot inspect; treat
   those as ambient drift and state anything outcome-critical explicitly.
 - **The lane is legible at dispatch: label first, prompt header second.** The
-  agent row renders the dispatch label, not the prompt body, so every
-  delegation's visible label carries `<model> @ <effort> — <task tag>`
-  (seat dispatches: the same text as the Bash `description` and the no-op
-  label line). The prompt body
-  opens with `model:` / `effort:` / `budget:` lines, then a blank line and
-  `Task:`, as the worker-side record. Both state the lane requested at
-  dispatch, never a verified one: write resolved values with provenance
-  (`effort: medium (inherited)`), write `unknown` when unresolvable, and
-  update both on any retry at a different tier. A missing label means the
-  lane is unknown, not a default.
+  agent row renders the label, not the prompt, so every dispatch label reads
+  `<model> @ <effort> — <task tag>` (seat dispatches: the same text as the
+  Bash `description` and the no-op label line). The prompt opens with
+  `model:` / `effort:` / `budget:` lines, a blank line, then `Task:`. Both
+  record the lane requested, never a verified one: resolved values carry
+  provenance (`effort: medium (inherited)`), unresolvable ones read
+  `unknown`, and a retry at another tier updates both. A missing label means
+  the lane is unknown, not a default.
 - **Every stage carries a budget and returns its spend.** The `budget:` line
   sizes the run to its shape — commands and minutes — and names the stop:
   acceptance criteria met or the bound reached, then return partial coverage
@@ -210,8 +202,8 @@ a human decision returns the decision material and the seat relays it.
   gets a full read against the acceptance criteria; a change whose
   deterministic gate would catch the wrong result (a rule-list deletion the
   suite covers, a formatter pass) gets the green gate plus a scan, declared as
-  such. Every named file,
-  deletion, generated and untracked file is accounted for. A worker summary
+  such. Every named file, deletion, generated and untracked file is
+  accounted for. A worker summary
   is never evidence and raw worker output never the deliverable. Check
   result shape and size before use: schema validity is model compliance, not
   a guarantee (a required key has arrived missing, 2026-08-24). Inspect
@@ -252,8 +244,8 @@ a human decision returns the decision material and the seat relays it.
   with bounded waits), terminal-state detection, harvest, and cleanup. A
   foreground adapter owns its strictly blocking call — an adapter turn that
   ends without an envelope is a lost delivery, since nothing re-invokes a
-  stage agent. Completion requires a returned result plus inspection of the relevant
-  artifact or diff. On idle without a result, check the durable locator, job
+  stage agent. Completion requires a returned result plus inspection of the
+  relevant artifact or diff. On idle without a result, check the durable locator, job
   state, workspace diff, PID, and log freshness; idle never transfers
   ownership, and no wrapper is pinged to resume delivery.
 - **Record identity at dispatch; declare freshness at harvest.** Record the

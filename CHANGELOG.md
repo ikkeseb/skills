@@ -4,6 +4,18 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.39.0 — 2026-09-23
+
+`orchestrate`: any Claude stage that needs an effort other than the
+session's runs as a one-agent Workflow with `effort` pinned, not only deep
+verification under a seat below `high`; a plain Agent call cannot pin
+effort, so the table's `opus` `high` rows were silently served at the
+session's level. The seat tier names Opus 5.5 as a strong, cheaper seat
+beside Fable 5.1, and notes that an `opus` seat delegating to `opus` buys
+parallelism and context isolation, not a second opinion. The description
+drops its model roster (the map owns it), and the reporting and lane-label
+prose is tightened without rule changes.
+
 ## 0.38.0 — 2026-09-23
 
 `orchestrate`: Luna also takes mechanical implementation under a tight spec

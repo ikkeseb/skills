@@ -9,8 +9,11 @@ token price alone does not establish which model is cheaper for the job.
 
 - **Seat**: the session model. Owns design, specification, cuts and seams,
   integration and final review. This skill never selects or replaces it.
-  Fable 5.1 is preferred for design taste and reading user intent; `sonnet`
-  is a budget seat. The seat verifies its own conclusions against evidence.
+  Opus 5.5 is a strong seat at far lower cost; Fable 5.1, the larger model,
+  may still read intent and the big picture a little better; `sonnet` is a
+  budget seat. An `opus` seat delegating to `opus` buys parallelism and
+  context isolation, not a second opinion. The seat verifies its own
+  conclusions against evidence.
 - **Workhorse**: judgment-bearing execution and review. `opus` is the
   default for long-horizon implementation, frontend and judgment-bearing
   builds; Sol handles well-bounded implementation at low cost; Astra
@@ -18,8 +21,8 @@ token price alone does not establish which model is cheaper for the job.
   The seat retains final say.
 - **Cheap**: Luna handles bounded readers, extraction, mechanical
   transforms, single-criterion checks and spec-bounded mechanical
-  implementation that a deterministic gate checks. Use independent slices when they
-  repay coordination. Its findings are candidates for the seat or a
+  implementation that a deterministic gate checks. Use independent slices
+  when they repay coordination. Its findings are candidates for the seat or a
   workhorse to judge. Open-ended decisions go to a workhorse.
 
 ## Delegates
@@ -56,8 +59,8 @@ ID fails loudly, never silently selects another model.
 
 **Pin every stage.** Pin `model`, and `effort` where the instrument accepts
 it. Workflow `agent()` calls and Codex helper calls pin both. Plain Agent
-calls pin the model and inherit the session's effort. Deep Claude verification
-under a seat below `high` uses a one-agent Workflow with effort pinned.
+calls pin the model and inherit the session's effort; a Claude stage that
+needs another effort uses a one-agent Workflow with effort pinned.
 Omitting a model inherits the seat and can accidentally buy its price or
 lose cross-family coverage.
 
