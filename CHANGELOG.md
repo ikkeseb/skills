@@ -4,6 +4,18 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.44.0 — 2026-09-24
+
+`orchestrate` gains an optional read-only Gemini lane through the
+Antigravity CLI. `scripts/gemini-worker.sh` gives every run a throwaway home
+whose permission rules deny writes, shell, web and MCP, sends the prompt on
+stdin, fails on any workspace change, and reports agy's own print timeout
+(which agy labels a success) as a timeout. `probe` checks the login;
+`verify` asserts a read canary and a denied write. The model map adds
+`gemini-3.8-flash-medium` as a reader beside Luna, never a verifier or a
+counter. `references/gemini-exec.md` owns the contract;
+`test-gemini-worker.sh` joins the aggregate gate.
+
 ## 0.43.0 — 2026-09-23
 
 `orchestrate` model map: `opus` takes bounded implementation too, and Sol

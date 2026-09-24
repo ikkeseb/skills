@@ -88,6 +88,9 @@ HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
 [ -x "$HELPER" ] || HELPER="$HOME/skills/skills/orchestrate/scripts/codex-worker.sh"
 ```
 
+Gemini stages are read-only readers run through `scripts/gemini-worker.sh`;
+read `references/gemini-exec.md` before the first one.
+
 ### Field guards
 
 - Workflow `args` may arrive as a JSON string, and a schema-typed stage has

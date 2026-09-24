@@ -47,7 +47,7 @@ automation, image inspection) not yet verified under Codex.
 | Skill | What it does | Invoke |
 |---|---|---|
 | **[second-opinion](skills/second-opinion)** | One read-only Codex call on work that already exists, answered as a synthesis rather than a relay. GPT-6 Astra in a fresh review context, with family coverage stated. | `/second-opinion` |
-| **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes bounded, reviewable execution and reconnaissance to Claude and Codex worker models by tier. Claude agents plus an optional Codex CLI lane. | `/orchestrate` · `/orchestrate sustained` |
+| **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes bounded, reviewable execution and reconnaissance to Claude and Codex worker models by tier. Claude agents plus optional Codex CLI and read-only Gemini (Antigravity CLI) lanes. | `/orchestrate` · `/orchestrate sustained` |
 
 Each skill folder contains its `SKILL.md`; Excalidraw also carries setup notes
 for its render-and-inspect pipeline.
@@ -112,6 +112,16 @@ agents, so `orchestrate` dispatches the same helper script through default
 agents instead; the lane works either way. (OpenAI's separate `codex`
 companion plugin is a different integration and isn't required by anything
 here.)
+
+### orchestrate's Gemini lane
+
+The optional read-only Gemini lane needs the
+[Antigravity CLI](https://antigravity.google/docs/cli/overview/) (`agy`),
+`jq`, and Bash, with `agy` logged in once interactively. Every run gets a
+throwaway home whose permission rules deny writes, shell, web and MCP, so
+these workers read and answer, nothing else. The helper's `probe` reports
+the login and the offered models; `verify` runs one small billed check of
+the read-only boundary.
 
 ## License
 

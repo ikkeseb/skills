@@ -24,6 +24,7 @@ while IFS= read -r -d '' script; do
 done < <(git ls-files -z '*.sh')
 
 bash skills/orchestrate/scripts/test-codex-worker.sh
+bash skills/orchestrate/scripts/test-gemini-worker.sh
 node skills/drawio/scripts/test-validate-drawio.mjs
 node skills/excalidraw/scripts/test-excalidraw.mjs
 

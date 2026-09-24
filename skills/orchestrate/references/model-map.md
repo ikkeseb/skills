@@ -24,7 +24,9 @@ token price alone does not establish which model is cheaper for the job.
   transforms, single-criterion checks and spec-bounded mechanical
   implementation that a deterministic gate checks. Use independent slices
   when they repay coordination. Its findings are candidates for the seat or a
-  workhorse to judge. Open-ended decisions go to a workhorse.
+  workhorse to judge. Open-ended decisions go to a workhorse. Gemini Flash
+  is a read-only reader beside Luna, not a replacement: no shell, no writes,
+  and too weak to carry verification.
 
 ## Delegates
 
@@ -35,6 +37,7 @@ token price alone does not establish which model is cheaper for the job.
 | `fable` | Claude | medium/high | Design taste, fuzzy intent and highest-stakes user-facing judgment. Delegate only a distinct question the seat cannot resolve as efficiently; a Fable seat seldom needs another Fable | `opus` |
 | `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default workhorse for long-horizon implementation, migrations, codebase audits, frontend builds, user-facing copy and API-shape proposals; work needing Claude harness tools; cross-family verification of Codex-produced work | `gpt-6-astra`, with degraded family coverage when applicable |
 | `gpt-6-luna` | Codex | high | Map readers, extraction, classification, bulk transforms, small criterion-based reviews, and mechanical implementation under a tight spec whose wrong result a test or lint gate catches; findings are candidates, never decisions | `gpt-6-sol`; `opus` if the Codex lane is down |
+| `gemini-3.8-flash-medium` | agy (read-only) | in the id: `-medium`; `-low` for plain extraction, `-high` for a harder read | Low-stakes Map readers, extraction, classification and general-knowledge questions; where its subscription quota would otherwise sit idle it may take such work ahead of Luna; never counts or inventories (no shell) and never the owed cross-family verifier; findings are candidates, never decisions | `gpt-6-luna` |
 | `sonnet` | Claude | low for transport | Budget seat or foreground Codex adapter, not an execution worker | `opus` |
 | `haiku` | Claude | — | Off-limits, adapters included; Luna covers cheap work | `gpt-6-luna` |
 
@@ -54,7 +57,8 @@ Codex probe does not test tool availability.
 **Lane naming.** Claude rows use harness aliases accepted by the Agent
 `model` parameter. Use the alias rather than a versioned ID and report the
 resolved model only when verified. Codex rows use exact IDs passed to
-`codex --model`. Resolve informal names here, or from the active CLI's
+`codex --model`; the agy row uses an exact id from the Gemini helper's
+`probe`, effort included. Resolve informal names here, or from the active CLI's
 models cache when absent. An ambiguous name needs clarification; an invalid
 ID fails loudly, never silently selects another model.
 
