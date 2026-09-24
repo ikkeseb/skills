@@ -28,8 +28,9 @@ only verify proves the read-only boundary still holds.
 ## What a worker can do
 
 Every run gets a throwaway HOME whose `settings.json` denies file writes,
-shell commands, web, browser and MCP; the login survives because it lives
-in the OS keyring. The user's own agy settings, plugins and grants never
+shell commands, web, browser and MCP. The login survives: it lives in the
+OS keyring or, where there is none (WSL), in agy's token file, which the
+helper copies in. The user's own agy settings, plugins and grants never
 load; instructions do: the helper copies `~/.gemini/GEMINI.md` into the
 throwaway HOME, and agy reads the workspace's `AGENTS.md` itself.
 
@@ -99,6 +100,7 @@ cached is `cache_read_tokens`; command count is not reported.
 ## Billing and platforms
 
 Runs use the subscription login; `GEMINI_API_KEY` and `GOOGLE_API_KEY` are
-stripped from the worker environment. Verified on native Windows. On macOS,
-Linux and WSL the keyring-backed login under a throwaway HOME is unverified:
-run probe and verify on the machine before relying on it.
+stripped from the worker environment. Verified on native Windows and WSL;
+elsewhere, run probe and verify on the machine before relying on it. On
+macOS over SSH, agy reported no login while a local terminal had one, so
+the lane reads `auth` there; run it from a local session.

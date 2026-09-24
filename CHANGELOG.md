@@ -4,6 +4,12 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.44.3 — 2026-09-24
+
+The Gemini lane works where agy has no OS keyring (WSL): agy keeps its login
+in a token file there, and the helper now copies it into the throwaway home,
+so a refresh during a run never touches the original. Verified on WSL.
+
 ## 0.44.2 — 2026-09-24
 
 Gemini workers keep the user's global instructions: the helper copies

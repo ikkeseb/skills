@@ -49,11 +49,14 @@ jq -e '.permissions.deny | index("write_file(*)") and index("command(*)") and in
 [ "$(to_unix "$adddir")" = "$(pwd)" ] || isolation="add-dir-mismatch:$adddir"
 content_len="$(jq -r '.message.content | length' <<<"$input" | tr -d '\r')"
 global="$(head -1 "$(to_unix "$HOME")/.gemini/GEMINI.md" 2>/dev/null | tr -d '\r')"
+token="$(to_unix "$HOME")/.gemini/antigravity-cli/antigravity-oauth-token"
+login="$(head -1 "$token" 2>/dev/null | tr -d '\r')"
+[ -z "$login" ] || printf 'REFRESHED\n' > "$token" # agy refreshes its token in place
 echo '{"event":"init","conversation_id":"c1","init":{}}'
 usage='{"input_tokens":100,"output_tokens":5,"thinking_tokens":2,"cache_read_tokens":50,"total_tokens":105}'
 case "${FAKE_AGY_MODE:-success}" in
   success)
-    jq -cn --argjson u "$usage" --arg t "isolation=$isolation global=${global:-none} len=$content_len"       '{event: "result", result: {conversation_id: "c1", status: "SUCCESS", response: ($t + "
+    jq -cn --argjson u "$usage" --arg t "isolation=$isolation global=${global:-none} login=${login:-none} len=$content_len"       '{event: "result", result: {conversation_id: "c1", status: "SUCCESS", response: ($t + "
 "), usage: $u}}' ;;
   schema)
     jq -cn --argjson u "$usage" --arg iso "$isolation" \
@@ -94,6 +97,9 @@ export GEMINI_API_KEY="must-not-reach-the-worker"
 export HOME="$tmp/userhome"
 mkdir -p "$HOME/.gemini"
 printf 'GLOBAL-RULE\n' > "$HOME/.gemini/GEMINI.md"
+# So must a file-based login (agy without an OS keyring).
+mkdir -p "$HOME/.gemini/antigravity-cli"
+printf 'FAKE-LOGIN\n' > "$HOME/.gemini/antigravity-cli/antigravity-oauth-token"
 
 printf 'Summarize a.txt.\n' > "$tmp/prompt.md"
 printf '%s\n' '{"type":"object","properties":{"answer":{"type":"string"}},"required":["answer"]}' > "$tmp/schema.json"
@@ -109,6 +115,8 @@ check "success: ok, text result, spend" \
 check "isolation: deny rules present, API key stripped, workspace is the add-dir" \
   '.result | test("^isolation=ok ")' "$out"
 check "the global GEMINI.md reaches the throwaway HOME" '.result | test(" global=GLOBAL-RULE ")' "$out"
+check "a file-based login reaches the throwaway HOME" '.result | test(" login=FAKE-LOGIN ")' "$out"
+if [ "$(cat "$HOME/.gemini/antigravity-cli/antigravity-oauth-token")" = FAKE-LOGIN ]; then pass "the real token file is untouched"; else fail "the real token file is untouched"; fi
 if [ "$(jq -c . "$(jq -r .run_dir <<<"$out" | tr -d '\r')/result.json")" = "$(jq -c . <<<"$out")" ]; then pass "result.json mirrors stdout"; else fail "result.json mirrors stdout"; fi
 
 head -c 60000 /dev/zero | tr '\0' 'x' > "$tmp/long.md"

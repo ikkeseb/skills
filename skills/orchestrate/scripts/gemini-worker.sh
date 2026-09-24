@@ -18,8 +18,9 @@
 #
 # Read-only by construction: every run gets a throwaway HOME whose
 # settings.json denies file writes, shell commands, web, browser and MCP.
-# Credentials live in the OS keyring, so the throwaway HOME keeps the login
-# while dropping the user's own agy settings, plugins and permission grants.
+# The login lives in the OS keyring or, without one, in a token file the helper
+# copies in, so the throwaway HOME keeps it while dropping the user's own agy
+# settings, plugins and permission grants.
 #
 # Output: exactly one JSON object on stdout, mirrored to RUN_DIR/result.json.
 # Dependencies: Bash, jq, agy; git for the workspace check in git workspaces.
@@ -28,6 +29,7 @@ set -euo pipefail
 DENY_RULES='["write_file(*)","command(*)","unsandboxed(*)","read_url(*)","execute_url(*)","mcp(*)"]'
 DEFAULT_TIMEOUT=900
 VERIFY_MODEL="${GEMINI_WORKER_VERIFY_MODEL:-gemini-3.8-flash-low}"
+TOKEN_FILE=.gemini/antigravity-cli/antigravity-oauth-token
 
 JQ_BIN="" AGY_BIN="" RUN_DIR="" WORK_HOME="" AGY_PID=""
 
@@ -84,6 +86,9 @@ make_work_home() {
   "$JQ_BIN" -n --argjson deny "$DENY_RULES" '{permissions: {deny: $deny}}' \
     > "$WORK_HOME/.gemini/antigravity-cli/settings.json"
   [ ! -f "$HOME/.gemini/GEMINI.md" ] || cp "$HOME/.gemini/GEMINI.md" "$WORK_HOME/.gemini/GEMINI.md"
+  # Without an OS keyring (Linux, WSL) agy keeps its login in this file. A copy,
+  # not a link: a token refresh inside a run never touches the real one.
+  [ ! -f "$HOME/$TOKEN_FILE" ] || cp "$HOME/$TOKEN_FILE" "$WORK_HOME/$TOKEN_FILE"
 }
 
 # Worker environment: the throwaway HOME, no API key (a key would switch
