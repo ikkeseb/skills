@@ -4,6 +4,13 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.44.2 — 2026-09-24
+
+Gemini workers keep the user's global instructions: the helper copies
+`~/.gemini/GEMINI.md` into the throwaway home (the workspace `AGENTS.md`
+already loaded). The model map makes Gemini Flash a low-priority extra,
+never ahead of Luna by default.
+
 ## 0.44.1 — 2026-09-24
 
 `gemini-worker.sh` ships executable, so the helper resolves on macOS and

@@ -30,7 +30,8 @@ only verify proves the read-only boundary still holds.
 Every run gets a throwaway HOME whose `settings.json` denies file writes,
 shell commands, web, browser and MCP; the login survives because it lives
 in the OS keyring. The user's own agy settings, plugins and grants never
-load.
+load; instructions do: the helper copies `~/.gemini/GEMINI.md` into the
+throwaway HOME, and agy reads the workspace's `AGENTS.md` itself.
 
 - It reads files with its own file tools, in `--workspace` and, like a
   Codex read-only worker, anywhere else the user can read. Brief only

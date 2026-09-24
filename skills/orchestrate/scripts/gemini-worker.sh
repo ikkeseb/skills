@@ -75,13 +75,15 @@ resolve_agy() {
   [ -n "$AGY_BIN" ] || fail_json agy_missing "agy not found on PATH or in its install locations"
 }
 
-# A throwaway HOME holding only the deny rules. HOME covers macOS and Linux,
-# USERPROFILE covers Windows.
+# A throwaway HOME holding the deny rules plus the user's global instruction
+# file (agy reads ~/.gemini/GEMINI.md; workspace AGENTS.md loads on its own).
+# HOME covers macOS and Linux, USERPROFILE covers Windows.
 make_work_home() {
   WORK_HOME="$(mktemp -d)"
   mkdir -p "$WORK_HOME/.gemini/antigravity-cli"
   "$JQ_BIN" -n --argjson deny "$DENY_RULES" '{permissions: {deny: $deny}}' \
     > "$WORK_HOME/.gemini/antigravity-cli/settings.json"
+  [ ! -f "$HOME/.gemini/GEMINI.md" ] || cp "$HOME/.gemini/GEMINI.md" "$WORK_HOME/.gemini/GEMINI.md"
 }
 
 # Worker environment: the throwaway HOME, no API key (a key would switch
