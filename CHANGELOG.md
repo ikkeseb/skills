@@ -4,6 +4,11 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.44.1 — 2026-09-24
+
+`gemini-worker.sh` ships executable, so the helper resolves on macOS and
+Linux clones.
+
 ## 0.44.0 — 2026-09-24
 
 `orchestrate` gains an optional read-only Gemini lane through the
