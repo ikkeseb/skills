@@ -89,6 +89,12 @@ make_work_home() {
   # Without an OS keyring (Linux, WSL) agy keeps its login in this file. A copy,
   # not a link: a token refresh inside a run never touches the real one.
   [ ! -f "$HOME/$TOKEN_FILE" ] || cp "$HOME/$TOKEN_FILE" "$WORK_HOME/$TOKEN_FILE"
+  # macOS resolves the login keychain under HOME; a link, since keychain access
+  # still goes through the OS (cleanup's rm -rf removes the link, not the target).
+  if [ "$(uname -s)" = Darwin ] && [ -d "$HOME/Library/Keychains" ]; then
+    mkdir -p "$WORK_HOME/Library"
+    ln -s "$HOME/Library/Keychains" "$WORK_HOME/Library/Keychains"
+  fi
 }
 
 # Worker environment: the throwaway HOME, no API key (a key would switch
@@ -112,20 +118,28 @@ fingerprint() { # fingerprint <dir> <out>
   } > "$2"
 }
 
+# list_models: the model ids the login under WORK_HOME sees, as a JSON array in
+# MODELS (MODELS_OUT keeps the raw output). Fails when agy is not logged in.
+MODELS="" MODELS_OUT=""
+list_models() {
+  local rc=0
+  MODELS_OUT="$( (agy_env "$AGY_BIN" models) 2>&1)" || rc=$?
+  MODELS="$(printf '%s\n' "$MODELS_OUT" | tr -d '\r' | awk -F'\t' 'NF >= 2 && $1 ~ /^[a-z0-9][a-z0-9.-]*$/ {print $1}' \
+    | "$JQ_BIN" -R . | "$JQ_BIN" -cs .)"
+  [ "$rc" -eq 0 ] && [ "$MODELS" != "[]" ]
+}
+NOT_LOGGED_IN="agy is not logged in on this machine: run \`agy\` once interactively"
+
 cmd_probe() {
   require_jq; resolve_agy; make_work_home
-  local version models rc=0 out
+  local version
   version="$(agy_version)"
-  out="$( (agy_env "$AGY_BIN" models) 2>&1)" || rc=$?
-  models="$(printf '%s\n' "$out" | tr -d '\r' | awk -F'\t' 'NF >= 2 && $1 ~ /^[a-z0-9][a-z0-9.-]*$/ {print $1}' \
-    | "$JQ_BIN" -R . | "$JQ_BIN" -cs .)"
-  if [ "$rc" -ne 0 ] || [ "$models" = "[]" ]; then
-    emit "$("$JQ_BIN" -cn --arg v "$version" --arg e "$(printf '%s' "$out" | tr -d '\r' | tail -5)" \
-      '{ok: false, error_class: "auth", agy_version: $v, authenticated: false,
-        error: ("agy models failed; log in once with an interactive `agy` session. " + $e)}')"
+  if ! list_models; then
+    emit "$("$JQ_BIN" -cn --arg v "$version" --arg m "$NOT_LOGGED_IN" --arg e "$(printf '%s' "$MODELS_OUT" | tr -d '\r' | tail -5)" \
+      '{ok: false, error_class: "auth", agy_version: $v, authenticated: false, error: $m, detail: $e}')"
     exit 0
   fi
-  emit "$("$JQ_BIN" -cn --arg v "$version" --arg bin "$AGY_BIN" --argjson m "$models" \
+  emit "$("$JQ_BIN" -cn --arg v "$version" --arg bin "$AGY_BIN" --argjson m "$MODELS" \
     '{ok: true, agy_version: $v, agy_bin: $bin, authenticated: true, models: $m,
       read_only: "enforced by per-run deny rules"}')"
 }
@@ -172,6 +186,9 @@ cmd_run() {
       fail_json usage "--run-dir must be outside the workspace: $rd" ;;
   esac
   resolve_agy; make_work_home
+  # Logged out, agy starts a login flow in the run itself and reads the prompt
+  # on stdin as the authorization code; check before the prompt leaves.
+  list_models || fail_json auth "$NOT_LOGGED_IN"
 
   # The prompt travels on stdin as one stream-json message: no command-line
   # length limit, and no slash-command expansion of a leading "/".
@@ -244,6 +261,9 @@ cmd_run() {
 
   if [ "$(jqr '.workspace_changed' <<<"$base")" = true ]; then
     class=workspace_changed; msg="workspace files changed during a read-only run (see changed_files); the seat's own edits also count"
+  # Before the timeout test: a failed login flow also says "timed out".
+  elif grep -qiE 'authentication required|authentication failed|not authenticated|log ?in' <<<"$err_text" && [ "$status" != SUCCESS ]; then
+    class=auth; msg="$NOT_LOGGED_IN"
   # agy reports its own --print-timeout as status SUCCESS with partial output;
   # only this stderr line tells the two apart.
   elif [ "$timed_out" = true ] || grep -qF '[agy] print timeout' "$RUN_DIR/stderr.log" 2>/dev/null \
@@ -251,8 +271,6 @@ cmd_run() {
     class=timeout; msg="no complete result within ${timeout}s; any result is partial"
   elif grep -qiE 'not recognized as a known model|invalid model' <<<"$err_text"; then
     class=model_unknown; msg="unknown model id: $model (list: gemini-worker.sh probe)"
-  elif grep -qiE 'authentication required|not authenticated|log ?in' <<<"$err_text" && [ "$status" != SUCCESS ]; then
-    class=auth; msg="agy is not logged in on this machine: run \`agy\` once interactively"
   elif grep -qiE 'quota|resource.?exhausted|capacity|rate.?limit|429' <<<"$err_text" && [ "$status" != SUCCESS ]; then
     class=quota; msg="provider quota or capacity exhausted"
   elif [ "$(jqr 'type' "$res")" != object ] || [ "$rc" -ne 0 ] || [ "$status" != SUCCESS ]; then

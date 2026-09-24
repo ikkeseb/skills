@@ -71,9 +71,12 @@ case "${FAKE_AGY_MODE:-success}" in
   unknown-model)
     jq -cn --arg m "$model" '{event: "result", result: {conversation_id: "", status: "ERROR", response: "", error: ("invalid model selection: model " + $m + " is not recognized as a known model")}}'
     exit 1 ;;
-  auth)
-    echo "error: authentication required" >&2
-    jq -cn '{event: "result", result: {status: "ERROR", response: "", error: "authentication required"}}'
+  auth) # a login that lapsed mid-session: the run's own flow fails, "timed out" included
+    printf 'Waiting for authentication (timeout 60s)...\nerror: authentication failed or timed out\n' >&2
+    jq -cn '{event: "result", result: {status: "ERROR", response: "", error: "authentication failed or timed out"}}'
+    exit 1 ;;
+  models-fail) # the precheck must stop the run before the prompt arrives
+    [ -z "$input" ] || echo "PROMPT-SENT" >&2
     exit 1 ;;
   quota)
     jq -cn '{event: "result", result: {status: "ERROR", response: "", error: "RESOURCE_EXHAUSTED: quota exceeded"}}'
@@ -129,7 +132,9 @@ check "schema without structured_output fails" '.ok == false and .error_class ==
 check "empty answer fails" '.ok == false and .error_class == "empty_result"' "$(run empty)"
 check "agy print timeout (reported as SUCCESS) is a timeout" '.ok == false and .error_class == "timeout"' "$(run print-timeout)"
 check "unknown model" '.ok == false and .error_class == "model_unknown"' "$(run unknown-model)"
-check "not logged in" '.ok == false and .error_class == "auth"' "$(run auth)"
+check "a failed login flow is auth, not timeout" '.ok == false and .error_class == "auth"' "$(run auth)"
+check "logged out: run fails auth before the prompt is sent" \
+  '.ok == false and .error_class == "auth" and (.status // null) == null' "$(run models-fail)"
 check "quota exhausted" '.ok == false and .error_class == "quota"' "$(run quota)"
 check "soft-denied tool fails and keeps the partial result" \
   '.ok == false and .error_class == "tool_denied" and .result == "partial" and (.denied_actions | length) == 1' "$(run denied)"

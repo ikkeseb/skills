@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.44.4 — 2026-09-25
+
+The Gemini lane works on macOS: the helper links `~/Library/Keychains` into
+the throwaway home, since macOS resolves the login keychain under HOME.
+`run` checks the login before sending the prompt (a logged-out agy starts
+its own login flow and reads the prompt as the authorization code), and a
+failed login flow now reports `auth`, not `timeout`. Verified on macOS.
+
 ## 0.44.3 — 2026-09-24
 
 The Gemini lane works where agy has no OS keyring (WSL): agy keeps its login

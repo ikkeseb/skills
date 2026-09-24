@@ -28,11 +28,15 @@ only verify proves the read-only boundary still holds.
 ## What a worker can do
 
 Every run gets a throwaway HOME whose `settings.json` denies file writes,
-shell commands, web, browser and MCP. The login survives: it lives in the
-OS keyring or, where there is none (WSL), in agy's token file, which the
-helper copies in. The user's own agy settings, plugins and grants never
-load; instructions do: the helper copies `~/.gemini/GEMINI.md` into the
-throwaway HOME, and agy reads the workspace's `AGENTS.md` itself.
+shell commands, web, browser and MCP. The login survives: Windows keeps it
+in the OS credential store, macOS in the login keychain (the helper links
+`~/Library/Keychains` in, since macOS resolves it under HOME), and WSL in
+agy's token file, which the helper copies in. The run checks the login
+before the prompt leaves: a logged-out agy would start its own login flow
+and read the prompt as the authorization code. The user's own agy settings,
+plugins and grants never load; instructions do: the helper copies
+`~/.gemini/GEMINI.md` into the throwaway HOME, and agy reads the workspace's
+`AGENTS.md` itself.
 
 - It reads files with its own file tools, in `--workspace` and, like a
   Codex read-only worker, anywhere else the user can read. Brief only
@@ -100,7 +104,7 @@ cached is `cache_read_tokens`; command count is not reported.
 ## Billing and platforms
 
 Runs use the subscription login; `GEMINI_API_KEY` and `GOOGLE_API_KEY` are
-stripped from the worker environment. Verified on native Windows and WSL;
-elsewhere, run probe and verify on the machine before relying on it. On
-macOS over SSH, agy reported no login while a local terminal had one, so
+stripped from the worker environment. Verified on native Windows, WSL and
+macOS; elsewhere, run probe and verify on the machine before relying on it.
+On macOS over SSH, agy reported no login while a local terminal had one, so
 the lane reads `auth` there; run it from a local session.
