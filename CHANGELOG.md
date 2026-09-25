@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.44.7 — 2026-09-25
+
+orchestrate's model map says each routing rule once: the tier descriptions
+and the routing summary merge into one Delegates section above the
+unchanged table, and rules `SKILL.md` now owns (pinning, context economy,
+the verification trigger, failed-writer retries, the adapter relay) leave
+the map. No model's role, default effort, fallback or escalation changes.
+
 ## 0.44.6 — 2026-09-25
 
 orchestrate states each rule once. `SKILL.md` runs in working order (modes,
