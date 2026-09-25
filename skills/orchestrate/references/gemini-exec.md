@@ -48,6 +48,12 @@ workspace's `AGENTS.md`.
 - It cannot write. The helper also compares a workspace fingerprint (paths,
   mtimes, git HEAD) before and after the run and fails on any difference,
   the seat's own edits included, so leave the workspace alone meanwhile.
+- It can generate images: agy's image tool stays allowed, and a plain
+  "generate an image of …" triggers it (Flash high, one image in 20 s,
+  field 2026-09-25). The image lands in the throwaway HOME; the helper keeps
+  it in `RUN_DIR/images/` and lists the paths in `images`. The
+  subscription's image quota is small and resets per time window (size
+  unmeasured); which error class an exhausted image quota yields is unknown.
 
 ## Running a worker
 
@@ -76,6 +82,7 @@ object).
 
 Fields: `result` (the structured object with a schema, otherwise the answer
 text), `status`, `denied_actions`, `workspace_changed` / `changed_files`,
+`images` (kept image paths, empty when none),
 `conversation_id`, `spend` (`input_tokens`, `cache_read_tokens` counted
 separately from input, `output_tokens`, `thinking_tokens`, `total_tokens`,
 `wall_seconds`), `run_dir` (`events.jsonl`, `stderr.log`, `cli.log`), and on

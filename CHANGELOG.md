@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.44.8 — 2026-09-25
+
+orchestrate's Gemini lane keeps the images a worker generates. agy's image
+tool was never denied, but its output landed in the throwaway HOME and went
+with it; the helper now copies generated images to `RUN_DIR/images/` and
+lists them in a new `images` field. `gemini-exec.md` says the lane can
+generate images on a small quota, and the model map points image work there
+under the Gemini row's existing rule.
+
 ## 0.44.7 — 2026-09-25
 
 orchestrate's model map says each routing rule once: the tier descriptions

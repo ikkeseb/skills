@@ -93,4 +93,7 @@ row's first fallback is another Codex model.
 - **Image-generation relay exception.** When the worker only prompts a
   separate image model, use `gpt-6-sol` at `medium`. The image model does
   the substantive work; this exception never applies to a stage doing its
-  own research or implementation.
+  own research or implementation. The Gemini lane generates images too
+  (`gemini-exec.md`), on a small quota and under its row's rule: only when
+  the user sends work there. Which image model suits which job is
+  unmeasured.

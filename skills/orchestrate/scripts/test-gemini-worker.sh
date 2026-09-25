@@ -87,6 +87,11 @@ case "${FAKE_AGY_MODE:-success}" in
   write)
     printf 'x\n' > "$(pwd)/written.txt"
     jq -cn '{event: "result", result: {status: "SUCCESS", response: "wrote"}}' ;;
+  image) # agy keeps generated images under HOME, beside the user's uploads
+    brain="$(to_unix "$HOME")/.gemini/antigravity-cli/brain/c1"
+    mkdir -p "$brain/.user_uploaded"
+    printf 'img\n' > "$brain/icon_1.jpg"; printf 'up\n' > "$brain/.user_uploaded/upload.png"
+    jq -cn '{event: "result", result: {status: "SUCCESS", response: "made icon_1.jpg"}}' ;;
   hang)
     sleep 30 ;;
   no-result)
@@ -142,6 +147,11 @@ out="$(run write)"
 check "a workspace write fails the run and names the file" \
   '.ok == false and .error_class == "workspace_changed" and (.changed_files | any(test("written.txt$")))' "$out"
 rm -f "$tmp/ws/written.txt"
+out="$(run image)"
+check "a generated image outlives the throwaway HOME; uploads stay out" \
+  '.ok == true and (.images | length) == 1 and (.images[0] | test("/images/icon_1.jpg$"))' "$out"
+if [ -f "$(jq -r '.images[0]' <<<"$out" | tr -d '\r')" ]; then pass "the kept image is on disk"; else fail "the kept image is on disk"; fi
+check "no image, empty list" '.images == []' "$(run success)"
 check "a crash without a result event" '.ok == false and .error_class == "agy_failed"' "$(run no-result)"
 check "the watchdog kills a process that outlives the deadline" \
   '.ok == false and .error_class == "timeout" and .spend.wall_seconds < 20' \

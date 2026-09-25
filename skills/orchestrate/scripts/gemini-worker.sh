@@ -23,6 +23,7 @@
 # settings, plugins and permission grants.
 #
 # Output: exactly one JSON object on stdout, mirrored to RUN_DIR/result.json.
+# Images agy generates are kept in RUN_DIR/images/ and listed in `images`.
 # Dependencies: Bash, jq, agy; git for the workspace check in git workspaces.
 set -euo pipefail
 
@@ -219,6 +220,20 @@ cmd_run() {
   AGY_PID=""
   local wall=$((SECONDS - start))
   cp "$WORK_HOME/.gemini/antigravity-cli/cli.log" "$RUN_DIR/cli.log" 2>/dev/null || true
+  # Generated images land in the throwaway HOME's conversation dir, which
+  # cleanup deletes: keep them in the run dir.
+  local images="[]"
+  if [ -d "$WORK_HOME/.gemini/antigravity-cli/brain" ]; then
+    mkdir -p "$RUN_DIR/images"
+    find "$WORK_HOME/.gemini/antigravity-cli/brain" -path '*/.user_uploaded' -prune -o -type f \
+      \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) \
+      -exec cp {} "$RUN_DIR/images/" \; 2>/dev/null || true
+    # Paths as jq arguments, so they take the same form as run_dir.
+    local files=() f
+    while IFS= read -r f; do files+=("$f"); done < <(find "$RUN_DIR/images" -type f | LC_ALL=C sort)
+    images="$("$JQ_BIN" -cn '$ARGS.positional' --args ${files[@]+"${files[@]}"})"
+    [ "$images" != "[]" ] || rmdir "$RUN_DIR/images" 2>/dev/null || true
+  fi
 
   cp "$RUN_DIR/before.marker" "$RUN_DIR/after.marker"
   touch -r "$RUN_DIR/before.marker" "$RUN_DIR/after.marker"
@@ -238,7 +253,7 @@ cmd_run() {
   local base
   base="$("$JQ_BIN" -c --arg model "$model" --arg ws "$workspace" \
     --arg rd "$RUN_DIR" --argjson wall "$wall" --argjson schema "$([ -n "$schema_file" ] && echo true || echo false)" \
-    --arg changed "$changed" '. as $r |
+    --arg changed "$changed" --argjson images "$images" '. as $r |
     {model: $model, lane: "agy", workspace: $ws, run_dir: $rd,
      status: ($r.status // null),
      result: (if $r == null then null
@@ -247,6 +262,7 @@ cmd_run() {
      denied_actions: ($r.denied_actions // []),
      workspace_changed: ($changed != ""),
      changed_files: ($changed | split("\n") | map(select(. != ""))),
+     images: $images,
      conversation_id: ($r.conversation_id // null),
      spend: {input_tokens: ($r.usage.input_tokens // null),
              cache_read_tokens: ($r.usage.cache_read_tokens // null),
