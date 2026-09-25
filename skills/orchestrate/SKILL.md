@@ -146,9 +146,9 @@ evidence, otherwise mark it unknown; the helper envelope echoes the request.
 Judge cost per accepted task, counting readers, adapters, retries, seat
 synthesis and rework, not worker spend alone. At task close, total usage per
 provider from existing stage results and harness telemetry, each attempt
-once, token categories kept apart and cache inclusion stated. Codex input
-sums every round's replayed context, so it is never one unit with a Claude
-harness total. Name what is missing (`seat spend unknown`) and mark the total
+once, token categories kept apart and cache inclusion stated. Codex and
+Gemini input sum every round's replayed context, so neither is one unit with
+a Claude harness total. Name what is missing (`seat spend unknown`) and mark the total
 partial; collecting spend needs no extra model call or transcript review.
 
 ## The split

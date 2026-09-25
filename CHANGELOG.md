@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.44.5 — 2026-09-25
+
+orchestrate's Gemini lane: the user can send Luna's read work to it when
+Codex usage is spent, the default model is `gemini-3.8-flash-high`, and the
+worker contract says how to brief it: it reads whole files even when told to
+search, so name the files it may open and paste excerpts of large ones. Its
+input, like Codex's, is replayed context, never one unit with a Claude total.
+
 ## 0.44.4 — 2026-09-25
 
 The Gemini lane works on macOS: the helper links `~/Library/Keychains` into

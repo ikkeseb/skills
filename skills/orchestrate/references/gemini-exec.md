@@ -41,6 +41,10 @@ plugins and grants never load; instructions do: the helper copies
 - It reads files with its own file tools, in `--workspace` and, like a
   Codex read-only worker, anywhere else the user can read. Brief only
   content that may leave the machine; never point it near secrets.
+- It reads whole files even when told to search or read line ranges, and
+  every step replays everything read so far. Name the files it may open and
+  forbid the rest, paste excerpts when a large file matters only in part,
+  and look up a known selector or symbol with the seat's own `rg`.
 - It cannot run anything: no tests, builds, `git` or `wc`. Never ask it
   to. Counts, line numbers and inventories are unreliable (every line
   count off by one in a 2026-09-24 check), so reconcile them against a
@@ -53,7 +57,7 @@ plugins and grants never load; instructions do: the helper copies
 
 ```bash
 "$GEMINI_HELPER" run \
-  --model gemini-3.8-flash-medium      # REQUIRED; exact id from probe, effort included
+  --model gemini-3.8-flash-high        # REQUIRED; exact id from probe, effort included
   --prompt-file "$DIR/prompt.md" \
   [--workspace "$PWD"]                 # the directory it reads
   [--schema-file "$DIR/schema.json"]   # JSON Schema for the final answer
@@ -94,7 +98,7 @@ cached is `cache_read_tokens`; command count is not reported.
 | `agy_missing` | no `agy` binary | lane down |
 | `auth` | not logged in | lane down; the user logs in once |
 | `model_unknown` | id not offered | pick an id from probe |
-| `quota` | subscription quota or capacity exhausted | lane down for now; route to Luna |
+| `quota` | subscription quota or capacity exhausted | lane down for now; take the model map's fallback |
 | `timeout` | deadline hit; agy reports its own as `SUCCESS` with partial output | narrow the task or raise `--timeout` once |
 | `tool_denied` | it needed a tool or path outside its grant | the result may be incomplete; rebrief without that need |
 | `schema_missing` / `empty_result` | no usable answer | one rebrief, then Luna |
