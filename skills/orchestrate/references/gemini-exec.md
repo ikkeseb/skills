@@ -20,23 +20,19 @@ Once per session before the first Gemini stage, `"$GEMINI_HELPER" probe`
 (no model call) returns `{ok, agy_version, authenticated, models}`.
 `ok: false` means the lane is down: route to Luna or the Claude lane and say
 so. `authenticated: false` needs one interactive `agy` login on that
-machine, which only the user can do. After an `agy` upgrade,
-`"$GEMINI_HELPER" verify` runs one small billed run and asserts a read
-canary, a denied write and an unchanged workspace. Probe proves the login;
-only verify proves the read-only boundary still holds.
+machine, which only the user can do. On macOS over SSH, agy has reported no
+login while a local terminal had one; run the lane from a local session.
+After an `agy` upgrade, `"$GEMINI_HELPER" verify` runs one small billed run
+and asserts a read canary, a denied write and an unchanged workspace. Probe
+proves the login; only verify proves the read-only boundary still holds.
 
 ## What a worker can do
 
-Every run gets a throwaway HOME whose `settings.json` denies file writes,
-shell commands, web, browser and MCP. The login survives: Windows keeps it
-in the OS credential store, macOS in the login keychain (the helper links
-`~/Library/Keychains` in, since macOS resolves it under HOME), and WSL in
-agy's token file, which the helper copies in. The run checks the login
-before the prompt leaves: a logged-out agy would start its own login flow
-and read the prompt as the authorization code. The user's own agy settings,
-plugins and grants never load; instructions do: the helper copies
-`~/.gemini/GEMINI.md` into the throwaway HOME, and agy reads the workspace's
-`AGENTS.md` itself.
+Every run gets a throwaway HOME whose settings deny file writes, shell
+commands, web, browser and MCP; the login carries over, and the run checks
+it before the prompt leaves. The user's own agy settings, plugins and
+grants never load; instructions do: `~/.gemini/GEMINI.md` and the
+workspace's `AGENTS.md`.
 
 - It reads files with its own file tools, in `--workspace` and, like a
   Codex read-only worker, anywhere else the user can read. Brief only
@@ -45,13 +41,13 @@ plugins and grants never load; instructions do: the helper copies
   every step replays everything read so far. Name the files it may open and
   forbid the rest, paste excerpts when a large file matters only in part,
   and look up a known selector or symbol with the seat's own `rg`.
-- It cannot run anything: no tests, builds, `git` or `wc`. Never ask it
-  to. Counts, line numbers and inventories are unreliable (every line
-  count off by one in a 2026-09-24 check), so reconcile them against a
-  deterministic inventory the seat produced.
+- It cannot run anything: no tests, builds, `git` or `wc`. Counts, line
+  numbers and inventories are unreliable (every line count off by one in
+  one check), so reconcile them against a deterministic inventory the seat
+  produced.
 - It cannot write. The helper also compares a workspace fingerprint (paths,
   mtimes, git HEAD) before and after the run and fails on any difference,
-  including the seat's own edits, so leave the workspace alone meanwhile.
+  the seat's own edits included, so leave the workspace alone meanwhile.
 
 ## Running a worker
 
@@ -67,21 +63,16 @@ plugins and grants never load; instructions do: the helper copies
 
 The prompt travels on stdin, so its size has no command-line limit. The
 model id carries the effort (`-low`, `-medium`, `-high`); there is no
-separate effort flag. Prompts follow `SKILL.md` § Delegation contract, header
-lines included.
-
-**Dispatch** is seat dispatch only, exactly as in `codex-exec.md`
-§ Dispatch patterns: background Bash call labeled with the stage, stdout
-redirected to a file, harvest `RUN_DIR/result.json` when the harness reports
-the exit. No Workflow adapter. At most four Gemini runs in flight; the
-subscription quota behind them is shared and its depth is unknown.
+separate effort flag. Dispatch is seat dispatch only (`SKILL.md`
+§ Dispatch), never a Workflow adapter; the subscription quota behind the
+four in-flight runs is shared, and its depth is unknown.
 
 ## Result contract
 
 One JSON object on stdout, mirrored to `RUN_DIR/result.json`. `ok: true`
-means: exit 0, status `SUCCESS`, no soft-denied tool, an unchanged workspace,
-and a non-empty answer (with a schema: a `structured_output` object).
-Schema conformance is the model's compliance; check the shape before use.
+means: exit 0, status `SUCCESS`, no soft-denied tool, an unchanged
+workspace, and a non-empty answer (with a schema: a `structured_output`
+object).
 
 Fields: `result` (the structured object with a schema, otherwise the answer
 text), `status`, `denied_actions`, `workspace_changed` / `changed_files`,
@@ -105,10 +96,6 @@ cached is `cache_read_tokens`; command count is not reported.
 | `workspace_changed` | files changed during the run | check `changed_files`; unexplained changes are a stop |
 | `agy_failed` | anything else | read `detail` and `stderr.log` |
 
-## Billing and platforms
-
 Runs use the subscription login; `GEMINI_API_KEY` and `GOOGLE_API_KEY` are
 stripped from the worker environment. Verified on native Windows, WSL and
 macOS; elsewhere, run probe and verify on the machine before relying on it.
-On macOS over SSH, agy reported no login while a local terminal had one, so
-the lane reads `auth` there; run it from a local session.

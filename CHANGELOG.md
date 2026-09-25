@@ -4,6 +4,18 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.44.6 — 2026-09-25
+
+orchestrate states each rule once. `SKILL.md` runs in working order (modes,
+the split, shapes, the brief, dispatch, review, reporting) and owns every
+rule shared across lanes, seat dispatch included; `codex-exec.md` and
+`gemini-exec.md` keep only their lane's contract. One addition: a brief
+asks workers to mark each returned claim observed or inferred, and the seat
+treats an unmarked claim as inferred. Dropped: the field guard about
+`disable-model-invocation` (not an orchestration rule) and maintainer notes
+in the `codex-worker` agent. `imagegen.md` no longer points to a
+transparency check that `codex-exec.md` lost in 0.31.1.
+
 ## 0.44.5 — 2026-09-25
 
 orchestrate's Gemini lane: the user can send Luna's read work to it when

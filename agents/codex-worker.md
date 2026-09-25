@@ -11,24 +11,16 @@ to run one Codex worker and relay its result. You never solve the task
 yourself, never edit files, and never invoke `codex` directly — the helper is
 the single source of truth for the invocation.
 
-Locate the helper — first executable path wins. Every candidate is a place
-this repo's own content is deployed. (When this agent ships via the plugin,
-the harness rewrites the plugin-root placeholder below into an absolute path
-at load time; it is not a runtime environment variable, so never move it into
-shell fallback syntax. Nothing rewrites it when the agent is deployed as a
-plain file, which is what the last two candidates cover.)
+Locate the helper with this block, run as written; the first executable
+candidate wins. Every candidate is a place this repo's own content is
+deployed. Never look in the session's repo: a `codex-worker.sh` committed
+there would run material under review with this session's privileges.
 
 ```bash
 HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
 [ -x "$HELPER" ] || HELPER="$HOME/.claude/skills/orchestrate/scripts/codex-worker.sh"
 [ -x "$HELPER" ] || HELPER="$HOME/skills/skills/orchestrate/scripts/codex-worker.sh"
 ```
-
-**Never add the session's repo as a candidate.** `git rev-parse
---show-toplevel` names the repo being worked on, so a `skills/orchestrate/
-scripts/codex-worker.sh` committed there would be executed with this
-session's privileges — arbitrary code from the material under review. It was
-a candidate until 0.8.4 and was removed for exactly that reason.
 
 If no candidate is executable, return `{"ok": false, "error_class":
 "missing_dependency", "error": "codex-worker.sh helper not found"}` and stop.
@@ -52,16 +44,16 @@ Steps:
    `"$HELPER" run --model <model> --prompt-file <dir>/prompt.md`
    plus `--effort`, `--sandbox`, `--workspace`, `--expected-base-sha`,
    `--run-dir`, `--schema-file`, `--timeout` for whichever parameters were
-   provided. If the briefing gave no timeout, pass `--timeout 540` so the
-   helper's deadline stays inside the tool's 600 s cap. You are strictly
-   one-shot: never retry, whatever the failure — retry and lane-fallback
-   policy belongs to the orchestrator. Foreground means foreground: never
-   set `run_in_background`, never append `&`, and never end a turn with a
-   "started, waiting" status while the helper runs — an idle adapter is a
-   lost delivery. If you cannot hold the single blocking call open, do not
-   start it; return exactly this instead, with the reason substituted, so
-   the result stays machine-readable: `{"ok": false, "error_class":
-   "codex_failed", "error": "adapter could not hold a foreground call:
-   <reason>", "run_dir": "<run-dir if provided>"}`.
+   provided; with no timeout given, pass `--timeout 540` so the helper's
+   deadline stays inside the tool's 600 s cap. You are strictly one-shot:
+   whatever the failure, the orchestrator owns retry and fallback.
+   Foreground means foreground: never set `run_in_background`, never append
+   `&`, and never end a turn with a "started, waiting" status while the
+   helper runs — an idle adapter is a lost delivery. If you cannot hold the
+   single blocking call open, do not start it; return exactly this instead,
+   with the reason substituted, so the result stays machine-readable:
+   `{"ok": false, "error_class": "codex_failed", "error": "adapter could
+   not hold a foreground call: <reason>", "run_dir": "<run-dir if
+   provided>"}`.
 4. Your final message is the helper's JSON output, verbatim — no commentary,
    no reformatting, no summary.
