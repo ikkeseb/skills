@@ -7,7 +7,8 @@
 #   gemini-worker.sh run --model <agy model id> --prompt-file <file>
 #       --model <id>             required; an exact id from `agy models`
 #                                (the id carries the effort, e.g.
-#                                gemini-3.8-flash-medium)
+#                                gemini-3.8-flash-high); ids below
+#                                the floor are refused (model_floor)
 #       [--workspace <dir>]      the directory the worker may read (default: $PWD)
 #       [--schema-file <file>]   JSON Schema for the final answer
 #       [--timeout <seconds>]    total deadline (default: 900)
@@ -29,7 +30,7 @@ set -euo pipefail
 
 DENY_RULES='["write_file(*)","command(*)","unsandboxed(*)","read_url(*)","execute_url(*)","mcp(*)"]'
 DEFAULT_TIMEOUT=900
-VERIFY_MODEL="${GEMINI_WORKER_VERIFY_MODEL:-gemini-3.8-flash-low}"
+VERIFY_MODEL="${GEMINI_WORKER_VERIFY_MODEL:-gemini-3.8-flash-high}"
 TOKEN_FILE=.gemini/antigravity-cli/antigravity-oauth-token
 
 JQ_BIN="" AGY_BIN="" RUN_DIR="" WORK_HOME="" AGY_PID=""
@@ -145,6 +146,14 @@ cmd_probe() {
       read_only: "enforced by per-run deny rules"}')"
 }
 
+# The lane's floor is gemini-3.8-flash-high: a Gemini id at version 3.8 or
+# later, effort -high. Older versions (Pro included), lower efforts and agy's
+# non-Gemini models are refused.
+meets_floor() {
+  [[ "$1" =~ ^gemini-([0-9]+)\.([0-9]+)-[a-z]+-high$ ]] || return 1
+  [ "${BASH_REMATCH[1]}" -gt 3 ] || { [ "${BASH_REMATCH[1]}" -eq 3 ] && [ "${BASH_REMATCH[2]}" -ge 8 ]; }
+}
+
 cmd_run() {
   require_jq
   local model="" prompt_file="" workspace="$PWD" schema_file="" timeout="$DEFAULT_TIMEOUT" run_dir_opt=""
@@ -186,6 +195,7 @@ cmd_run() {
     "$workspace/"*) local rd="$RUN_DIR"; RUN_DIR=""; [ -z "$run_dir_opt" ] || rmdir "$rd" 2>/dev/null || true
       fail_json usage "--run-dir must be outside the workspace: $rd" ;;
   esac
+  meets_floor "$model" || fail_json model_floor "model below the lane's floor (gemini-3.8-flash-high or newer, -high only): $model"
   resolve_agy; make_work_home
   # Logged out, agy starts a login flow in the run itself and reads the prompt
   # on stdin as the authorization code; check before the prompt leaves.

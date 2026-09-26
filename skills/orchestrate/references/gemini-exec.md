@@ -59,7 +59,7 @@ workspace's `AGENTS.md`.
 
 ```bash
 "$GEMINI_HELPER" run \
-  --model gemini-3.8-flash-high        # REQUIRED; exact id from probe, effort included
+  --model gemini-3.8-flash-high        # REQUIRED; exact id from probe, effort included, at or above the floor
   --prompt-file "$DIR/prompt.md" \
   [--workspace "$PWD"]                 # the directory it reads
   [--schema-file "$DIR/schema.json"]   # JSON Schema for the final answer
@@ -95,6 +95,7 @@ cached is `cache_read_tokens`; command count is not reported.
 | `usage` | bad arguments | fix the call |
 | `agy_missing` | no `agy` binary | lane down |
 | `auth` | not logged in | lane down; the user logs in once |
+| `model_floor` | id below `gemini-3.8-flash-high` (older version, lower effort, non-Gemini) | pick `gemini-3.8-flash-high` or a newer Gemini at `-high` |
 | `model_unknown` | id not offered | pick an id from probe |
 | `quota` | subscription quota or capacity exhausted | lane down for now; take the model map's fallback |
 | `timeout` | deadline hit; agy reports its own as `SUCCESS` with partial output | narrow the task or raise `--timeout` once |

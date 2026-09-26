@@ -29,7 +29,7 @@ case "${1:-}" in
   models)
     [ "${FAKE_AGY_MODE:-}" = models-fail ] && { echo "error: authentication required" >&2; exit 1; }
     printf 'Fetching available models...\n'
-    printf 'gemini-3.8-flash-low\tGemini 3.8 Flash (Low)\ngemini-3.8-flash-medium\tGemini 3.8 Flash (Medium)\n'
+    printf 'gemini-3.8-flash-high\tGemini 3.8 Flash (High)\ngemini-3.1-pro-high\tGemini 3.1 Pro (High)\n'
     exit 0 ;;
 esac
 schema="" model="" adddir=""
@@ -113,7 +113,7 @@ printf 'Summarize a.txt.\n' > "$tmp/prompt.md"
 printf '%s\n' '{"type":"object","properties":{"answer":{"type":"string"}},"required":["answer"]}' > "$tmp/schema.json"
 run() { # run <mode> [extra helper args...]; called in $(...), so no counters
   local mode="$1"; shift
-  FAKE_AGY_MODE="$mode" bash "$helper" run --model gemini-3.8-flash-low \
+  FAKE_AGY_MODE="$mode" bash "$helper" run --model gemini-3.8-flash-high \
     --workspace "$tmp/ws" --prompt-file "$tmp/prompt.md" --run-dir "$(mktemp -d "$tmp/run-$mode.XXXXXX")" "$@"
 }
 
@@ -128,7 +128,7 @@ if [ "$(cat "$HOME/.gemini/antigravity-cli/antigravity-oauth-token")" = FAKE-LOG
 if [ "$(jq -c . "$(jq -r .run_dir <<<"$out" | tr -d '\r')/result.json")" = "$(jq -c . <<<"$out")" ]; then pass "result.json mirrors stdout"; else fail "result.json mirrors stdout"; fi
 
 head -c 60000 /dev/zero | tr '\0' 'x' > "$tmp/long.md"
-out="$(FAKE_AGY_MODE=success bash "$helper" run --model gemini-3.8-flash-low --workspace "$tmp/ws" \
+out="$(FAKE_AGY_MODE=success bash "$helper" run --model gemini-3.8-flash-high --workspace "$tmp/ws" \
   --prompt-file "$tmp/long.md" --run-dir "$tmp/run-long")"
 check "a 60 KB prompt arrives whole on stdin" '.ok == true and (.result | test("len=60000$"))' "$out"
 
@@ -157,6 +157,13 @@ check "the watchdog kills a process that outlives the deadline" \
   '.ok == false and .error_class == "timeout" and .spend.wall_seconds < 20' \
   "$(GEMINI_WORKER_GRACE=2 run hang --timeout 1)"
 
+for m in gemini-3.1-pro-high gemini-3.7-flash-high gemini-3.8-flash-medium claude-opus-4-6-thinking gemini-4.0-flash-lite-high; do
+  check "floor: $m refused before agy runs" '.ok == false and .error_class == "model_floor" and (.status // null) == null' \
+    "$(FAKE_AGY_MODE=success bash "$helper" run --model "$m" --workspace "$tmp/ws" --prompt-file "$tmp/prompt.md" --run-dir "$(mktemp -d "$tmp/run-floor.XXXXXX")")"
+done
+check "floor: a newer Gemini at -high passes" '.ok == true' \
+  "$(FAKE_AGY_MODE=success bash "$helper" run --model gemini-4.0-pro-high --workspace "$tmp/ws" --prompt-file "$tmp/prompt.md" --run-dir "$(mktemp -d "$tmp/run-floor.XXXXXX")")"
+
 check "usage: --model required" '.error_class == "usage"' \
   "$(bash "$helper" run --prompt-file "$tmp/prompt.md")"
 mkdir -p "$tmp/full"; : > "$tmp/full/x"
@@ -168,7 +175,7 @@ if [ -e "$tmp/ws/run" ]; then fail "refused run dir left nothing behind"; else p
 check "usage: bad timeout" '.error_class == "usage"' \
   "$(bash "$helper" run --model m --prompt-file "$tmp/prompt.md" --timeout 0)"
 
-check "probe: models listed" '.ok == true and .authenticated == true and .models == ["gemini-3.8-flash-low","gemini-3.8-flash-medium"]' \
+check "probe: models listed" '.ok == true and .authenticated == true and .models == ["gemini-3.8-flash-high","gemini-3.1-pro-high"]' \
   "$(bash "$helper" probe)"
 check "probe: failing models call reads as not logged in" '.ok == false and .authenticated == false and .error_class == "auth"' \
   "$(FAKE_AGY_MODE=models-fail bash "$helper" probe)"

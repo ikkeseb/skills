@@ -30,7 +30,9 @@ transforms, single-criterion checks and spec-bounded mechanical
 implementation that a deterministic gate checks. Its findings are
 candidates for the seat or a workhorse to judge; open-ended decisions go to
 a workhorse. Gemini Flash is a low-priority read-only extra, not a Luna
-replacement: no shell, no writes, and too weak to carry verification.
+replacement: no shell, no writes, and too weak to carry verification. Its
+floor is `gemini-3.8-flash-high`: never an older version (Pro included),
+a lower effort or agy's non-Gemini models; the helper refuses them.
 
 Research requiring live web or other harness tools uses a lane verified to
 provide them; the Codex probe does not test tool availability.

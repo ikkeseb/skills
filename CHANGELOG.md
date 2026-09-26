@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.44.9 — 2026-09-26
+
+orchestrate's Gemini lane has a floor: `gemini-3.8-flash-high`. The helper
+refuses, before agy runs, any id below it (an older Gemini such as
+`gemini-3.1-pro-high`, a lower effort, or one of agy's non-Gemini models)
+with the new `model_floor` error class, and `verify` now runs at `-high`.
+The model map states the floor beside the Gemini tier.
+
 ## 0.44.8 — 2026-09-25
 
 orchestrate's Gemini lane keeps the images a worker generates. agy's image
