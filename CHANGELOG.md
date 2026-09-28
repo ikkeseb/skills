@@ -4,6 +4,12 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.46.1 — 2026-09-28
+
+second-opinion is rewritten tighter (about a fifth fewer words) in four
+dispatch steps: helper, packet, run, harvest. Behaviour is meant unchanged;
+the description now names plans among the work it reviews.
+
 ## 0.46.0 — 2026-09-28
 
 orchestrate's model map gives `sonnet` an execution role. It takes bounded
