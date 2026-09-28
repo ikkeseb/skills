@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.46.3 — 2026-09-29
+
+orchestrate, from two field runs: a seat design in § Review's risk classes
+gets a cross-family counter-case read before a Build rests on it (a
+state-bearing design was built, reviewed and reverted when the recon had
+already flagged the counter-case), and a brief states the answer language,
+since worker machine instructions can switch it. The Claude lane names
+every `sonnet` stage as effort-sensitive, matching 0.46.2.
+
 ## 0.46.2 — 2026-09-29
 
 orchestrate corrects the Claude lane: a plain Agent call cannot set effort,

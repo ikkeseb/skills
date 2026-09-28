@@ -63,7 +63,9 @@ reading each result before choosing the next. No shape is mandatory.
   expensive gate, not beside it.
 - **Sweep**: one bulk transform pipelined over a discovered list (rename
   sites, test updates against a changed API, rule-driven deletions).
-- **Second look**: one cross-family reader on a finished result.
+- **Second look**: one cross-family reader on a finished result. A seat
+  design in § Review's risk classes gets its counter-case read before a
+  Build rests on it.
 
 **Scout inline.** Discover the work-list with cheap listings, search and
 diff stats, and read what the brief needs. A tightly coupled problem may be
@@ -91,7 +93,7 @@ The brief is the senior deliverable; every stage gets one.
   serving that. No placeholders; inventories and bulk transforms reconcile
   their count against the named corpus. Workers also load machine-level
   instructions the seat cannot inspect, so state anything outcome-critical
-  explicitly.
+  explicitly, the answer language included.
 - **Context economy.** Pass relevant excerpts and source locations, and ask
   for the same back: excerpts, locations and unknowns, so the next stage
   does not redo the reconnaissance. Every command round replays the
@@ -135,10 +137,10 @@ seat briefs the next piece.
 Agent call with `model` pinned. The call cannot set effort, and a model
 override does not take the session's: it runs at that model's saved effort
 or the vendor default. Fan-out, several stages, or a stage whose effort
-matters: a Workflow of `agent()` calls with `model` and `effort` pinned,
-every lane a labeled row in one tree. Invoking `/orchestrate` is the
-Workflow opt-in. `pipeline()` by default; a barrier only where a stage
-needs every prior result.
+matters (every `sonnet` stage, pinned per the model map): a Workflow of
+`agent()` calls with `model` and `effort` pinned, every lane a labeled row
+in one tree. Invoking `/orchestrate` is the Workflow opt-in. `pipeline()`
+by default; a barrier only where a stage needs every prior result.
 
 **Codex lane.** OpenAI models through `scripts/codex-worker.sh`. Read
 `references/codex-exec.md` before the first Codex stage, and its
