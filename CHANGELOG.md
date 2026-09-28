@@ -4,6 +4,20 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.46.0 — 2026-09-28
+
+orchestrate's model map gives `sonnet` an execution role. It takes bounded
+Claude-lane work whose wrong result a test or lint gate catches, when `opus`
+judgment is not needed: spec-bounded implementation, Sweep transforms,
+shell-heavy agentic work and bounded work needing Claude harness tools. It
+runs at `high` only: work that would need more goes to `opus`, which reaches
+that level for less. It shares the Claude quota with `opus` and gives no
+cross-family coverage, so it never carries owed verification and Luna stays
+first for cheap mechanical work while the Codex lane is up. A `sonnet` miss
+escalates to `opus`, and Luna's fallback when the Codex lane is down is
+now `sonnet`. `opus` stays the default for long-horizon, frontend and
+judgment-bearing builds.
+
 ## 0.45.0 — 2026-09-28
 
 Codex effort defaults tighten. In orchestrate's model map and in
