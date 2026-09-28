@@ -267,6 +267,8 @@ synthesis and rework, not worker spend alone. At task close,
 total usage per provider from existing stage results and harness
 telemetry: each attempt once, token categories kept apart, cache inclusion
 stated. Codex and Gemini input sums every round's replayed context, so
-neither is one unit with a Claude total. Name what is missing
-(`seat spend unknown`) and mark the total partial; collecting spend needs
-no extra model call or transcript review.
+neither is one unit with a Claude total. The totals cover delegated
+stages (workers, reviewers, adapters); name missing stage data and mark
+that total partial.
+Never report or flag the seat's own consumption: the user's harness shows
+it. Collecting spend needs no extra model call or transcript review.

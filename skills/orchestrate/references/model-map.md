@@ -29,8 +29,12 @@ advantage over Astra.
 transforms, single-criterion checks and spec-bounded mechanical
 implementation that a deterministic gate checks. Its findings are
 candidates for the seat or a workhorse to judge; open-ended decisions go to
-a workhorse. Gemini Flash is a low-priority read-only extra, not a Luna
-replacement: no shell, no writes, and too weak to carry verification. Its
+a workhorse. Gemini Flash is a read-only third-family voice on its own
+quota, separate from the Codex and Claude lanes: a standing extra in ideation, product and UX
+discussion, vision work, research from supplied sources and general
+knowledge, and first-pass review triage that a stronger model verifies. It
+is not a Luna replacement or a code writer: no shell, no writes, too weak to
+carry verification, and never the only source for a fact. Its
 floor is `gemini-3.8-flash-high`: never an older version (Pro included),
 a lower effort or agy's non-Gemini models; the helper refuses them.
 
@@ -39,12 +43,12 @@ provide them; the Codex probe does not test tool availability.
 
 | Model | Lane | Default effort | Role | Availability fallback |
 |---|---|---|---|---|
-| `gpt-6-astra` | Codex | high; xhigh for difficult reasoning | Demanding research and synthesis, hard root-cause work, critical review and architectural counter-cases; cross-family verification of Claude-produced work | `opus` at high/xhigh; `fable` for fuzzy intent |
-| `gpt-6-sol` | Codex | high; xhigh for a harder slice | Routine cross-family review of Claude-produced work when Astra is not needed, focused research and relay work; writes code only under a tight spec whose wrong result a test or lint gate catches | `gpt-6-astra`; `opus` if the Codex lane is down |
+| `gpt-6-astra` | Codex | high; xhigh/max only on the user's word | Demanding research and synthesis, hard root-cause work, critical review and architectural counter-cases; cross-family verification of Claude-produced work | `opus` at high/xhigh; `fable` for fuzzy intent |
+| `gpt-6-sol` | Codex | high; xhigh/max only on the user's word | Routine cross-family review of Claude-produced work when Astra is not needed, focused research and relay work; writes code only under a tight spec whose wrong result a test or lint gate catches | `gpt-6-astra`; `opus` if the Codex lane is down |
 | `fable` | Claude | medium/high | Design taste, fuzzy intent and highest-stakes user-facing judgment. Delegate only a distinct question the seat cannot resolve as efficiently; a Fable seat seldom needs another Fable | `opus` |
 | `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default workhorse for long-horizon implementation, migrations, codebase audits, frontend builds, user-facing copy and API-shape proposals; work needing Claude harness tools; cross-family verification of Codex-produced work | `gpt-6-astra`, with degraded family coverage when applicable |
 | `gpt-6-luna` | Codex | high | Map readers, extraction, classification, bulk transforms, small criterion-based reviews, and mechanical implementation under a tight spec whose wrong result a test or lint gate catches; findings are candidates, never decisions | `gpt-6-sol`; `opus` if the Codex lane is down |
-| `gemini-3.8-flash-high` | agy (read-only) | in the id: `-high` | Low priority, never ahead of Luna unless the user sends work here (Codex usage spent, or Google models asked for): an extra third-family opinion on a read, or bounded reads, extraction and general-knowledge questions; never counts or inventories (no shell) and never the owed cross-family verifier; findings are candidates, never decisions | `gpt-6-luna` |
+| `gemini-3.8-flash-high` | agy (read-only) | in the id: `-high` | Extra third-family voice in ideation, product and UX rounds, reading screenshots and UI images, research from supplied sources and general knowledge, and first-pass review triage; never ahead of Luna for bounded reads and extraction unless the user sends work here (Codex usage spent, or Google models asked for); never writes code, never counts or inventories (no shell) and never the owed cross-family verifier; findings are candidates, never decisions | `gpt-6-luna` |
 | `sonnet` | Claude | low for transport | Budget seat or foreground Codex adapter, not an execution worker | `opus` |
 | `haiku` | Claude | — | Off-limits, adapters included; Luna covers cheap work | `gpt-6-luna` |
 
@@ -62,9 +66,13 @@ difficulty left after the brief: a tight brief has already made the
 decisions, so its implementer may run a notch below the default; a thin
 brief earns no discount. `medium` suits bounded substantive work; `low`
 suits transport and tightly mechanical work with deterministic validation.
-Raise to `xhigh` for a named difficult reasoning problem. `max` needs a
-specific reason beyond file count or importance; it is not the default for
-every review or cheap writer. Astra, Sol and Luna accept `max`; `fable`
+On the Claude lane, raise to `xhigh` for a named difficult reasoning
+problem; `max` needs a specific reason beyond file count or importance and
+is not the default for every review or cheap writer. On the Codex lane,
+`high` is the ceiling unless the user explicitly asks for a higher level:
+every run draws on the user's weekly subscription quota, and `xhigh` and
+`max` drain it fastest. When a Codex stage looks too hard for `high`, say so
+and let the user choose, or route the hard part to `opus` at `xhigh`. Astra, Sol and Luna accept `max`; `fable`
 supports `medium` and `high` only. Codex `ultra` stays off-limits because
 it may introduce nested delegation.
 
@@ -96,6 +104,6 @@ row's first fallback is another Codex model.
   separate image model, use `gpt-6-sol` at `medium`. The image model does
   the substantive work; this exception never applies to a stage doing its
   own research or implementation. The Gemini lane generates images too
-  (`gemini-exec.md`), on a small quota and under its row's rule: only when
-  the user sends work there. Which image model suits which job is
+  (`gemini-exec.md`), on a small quota and only when the user sends image
+  work there. Which image model suits which job is
   unmeasured.

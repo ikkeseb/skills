@@ -90,11 +90,10 @@ established. A stale review may still contain unaffected findings; recheck any
 finding that depends on changed material against the current artifact, or earn
 a new call.
 
-The command pins GPT-6 Astra and `high` effort. Use `xhigh` when the named
-question needs deeper reasoning; `max` needs a specific unresolved difficulty,
-not merely an important task. Explicit user
-wording may override either: effort language maps to `--effort`, and a model
-name maps to `--model`. Use conversational judgment; ask if the reading is
+The command pins GPT-6 Astra and `high` effort. Explicit user wording may
+override either: effort language maps to `--effort`, and a model name maps to
+`--model`. `xhigh` and `max` drain the user's weekly Codex quota fastest, so
+raise effort only when the user explicitly names a higher level. Use conversational judgment; ask if the reading is
 ambiguous. Invalid values must fail loudly, never substituting a different
 model or effort silently.
 

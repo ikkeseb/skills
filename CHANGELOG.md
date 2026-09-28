@@ -4,6 +4,26 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.45.0 — 2026-09-28
+
+Codex effort defaults tighten. In orchestrate's model map and in
+second-opinion, `high` is the Codex ceiling unless the user asks for more:
+every Codex run draws on the user's weekly subscription quota, and `xhigh`
+and `max` drain it fastest. A stage that looks too hard for `high` is raised with the
+user or routed to `opus` at `xhigh`. The Claude lane keeps `xhigh` for a
+named hard problem and `max` for a specific reason.
+
+orchestrate's Gemini lane gets a wider read-only role: a standing extra
+voice in ideation, product and UX discussion, vision tasks, research from
+supplied sources and general knowledge, and first-pass review triage that a
+stronger model verifies, on its own quota. It is never the only source for
+a fact, and it still writes no code, carries no verification
+and never stands ahead of Luna for bounded reads unless the user sends work
+there.
+
+orchestrate's close-out usage totals cover delegated stages only;
+the seat's own consumption is never reported or flagged as missing.
+
 ## 0.44.9 — 2026-09-26
 
 orchestrate's Gemini lane has a floor: `gemini-3.8-flash-high`. The helper
