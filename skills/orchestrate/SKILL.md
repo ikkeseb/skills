@@ -131,12 +131,14 @@ seat's price and can lose cross-family coverage. Every stage returns typed
 data: a Workflow `schema` or a helper envelope. While a worker runs, the
 seat briefs the next piece.
 
-**Claude lane.** One short stage: a plain Agent call with `model` pinned;
-its effort inherits the session. Fan-out, several stages, or a stage that
-needs an effort other than the session's: a Workflow of `agent()` calls
-with `model` and `effort` pinned, every lane a labeled row in one tree.
-Invoking `/orchestrate` is the Workflow opt-in. `pipeline()` by default; a
-barrier only where a stage needs every prior result.
+**Claude lane.** One short stage whose effort does not matter: a plain
+Agent call with `model` pinned. The call cannot set effort, and a model
+override does not take the session's: it runs at that model's saved effort
+or the vendor default. Fan-out, several stages, or a stage whose effort
+matters: a Workflow of `agent()` calls with `model` and `effort` pinned,
+every lane a labeled row in one tree. Invoking `/orchestrate` is the
+Workflow opt-in. `pipeline()` by default; a barrier only where a stage
+needs every prior result.
 
 **Codex lane.** OpenAI models through `scripts/codex-worker.sh`. Read
 `references/codex-exec.md` before the first Codex stage, and its

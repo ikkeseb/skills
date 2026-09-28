@@ -4,6 +4,13 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.46.2 — 2026-09-29
+
+orchestrate corrects the Claude lane: a plain Agent call cannot set effort,
+and a model override runs at that model's saved effort or the vendor
+default, not the session's. A stage whose effort matters, including every
+`sonnet` stage, goes through a Workflow `agent()` with `effort` pinned.
+
 ## 0.46.1 — 2026-09-28
 
 second-opinion is rewritten tighter (about a fifth fewer words) in four
