@@ -16,14 +16,13 @@ second opinion. The seat verifies its own conclusions against evidence.
 ## Delegates
 
 **Workhorses** carry judgment-bearing execution and review; the seat keeps
-final say. Astra is the first choice when the difficulty is reasoning,
-uncertainty or costly mistakes, and handles critical cross-family review of
-Claude output. `opus` is the default for long-horizon implementation,
-frontend and judgment-bearing builds. Sol handles routine
-cross-family review of Claude output at low cost when Astra is not needed.
-Do not run Sol or `opus` first merely to justify Astra through a failed
-attempt. Fable's taste and intent role does not imply a general reasoning
-advantage over Astra.
+final say. `opus` is the default delegate for most work, hard reasoning
+and root-cause work included. Astra is the cross-family reader: critical
+review of Claude output, and a counter-case where a mistake is costly. Sol
+handles routine cross-family review of Claude output at low cost when Astra
+is not needed. Cross-family review is preferred; an `opus` review of Claude
+output is a same-family check, labeled as such. Fable's taste and intent
+role does not imply a general reasoning advantage over `opus` or Astra.
 
 **Claude-lane mid tier.** `sonnet` takes the bounded, gate-checked
 execution its row lists when a weaker model handles the task fine, and runs
@@ -50,10 +49,10 @@ provide them; the Codex probe does not test tool availability.
 
 | Model | Lane | Default effort | Role | Availability fallback |
 |---|---|---|---|---|
-| `gpt-6-astra` | Codex | high; xhigh/max only on the user's word | Demanding research and synthesis, hard root-cause work, critical review and architectural counter-cases; cross-family verification of Claude-produced work | `opus` at high/xhigh; `fable` for fuzzy intent |
+| `gpt-6-astra` | Codex | high; xhigh/max only on the user's word | Critical review and architectural counter-cases; cross-family verification of Claude-produced work; research, synthesis or root-cause work when a cross-family view is wanted | `opus` at high/xhigh; `fable` for fuzzy intent |
 | `gpt-6.1-sol` | Codex | high; xhigh/max only on the user's word | Routine cross-family review of Claude-produced work when Astra is not needed, focused research and relay work; writes code only under a tight spec whose wrong result a test or lint gate catches | `gpt-6-astra`; `opus` if the Codex lane is down |
 | `fable` | Claude | medium/high | Design taste, fuzzy intent and highest-stakes user-facing judgment. Delegate only a distinct question the seat cannot resolve as efficiently; a Fable seat seldom needs another Fable | `opus` |
-| `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default workhorse for long-horizon implementation, migrations, codebase audits, frontend builds, user-facing copy and API-shape proposals; judgment-bearing work needing Claude harness tools; cross-family verification of Codex-produced work | `gpt-6-astra`, with degraded family coverage when applicable |
+| `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default workhorse for long-horizon implementation, hard root-cause work and diagnosis, migrations, codebase audits, frontend builds, user-facing copy and API-shape proposals; judgment-bearing work needing Claude harness tools; cross-family verification of Codex-produced work | `gpt-6-astra`, with degraded family coverage when applicable |
 | `gpt-6-luna` | Codex | high | Map readers, extraction, classification, bulk transforms, small criterion-based reviews, and mechanical implementation under a tight spec whose wrong result a test or lint gate catches; findings are candidates, never decisions | `gpt-6.1-sol`; `sonnet` if the Codex lane is down |
 | `gemini-3.8-flash-high` | agy (read-only) | in the id: `-high` | Extra third-family voice in ideation, product and UX rounds, reading screenshots and UI images, research from supplied sources and general knowledge, and first-pass review triage; never ahead of Luna for bounded reads and extraction unless the user sends work here (Codex usage spent, or Google models asked for); never writes code, never counts or inventories (no shell) and never the owed cross-family verifier; findings are candidates, never decisions | `gpt-6-luna` |
 | `sonnet` | Claude | high only; low for transport | Execution whose wrong result a test or lint gate catches: spec-bounded implementation, Sweep transforms, shell-heavy agentic work and bounded work needing Claude harness tools; also the budget seat and the foreground Codex adapter. Never design, fuzzy intent or owed verification; findings are candidates, never decisions | `opus` |
@@ -64,8 +63,9 @@ provide them; the Codex probe does not test tool availability.
 **Lane naming.** Claude rows use harness aliases accepted by the Agent
 `model` parameter, never a versioned ID. Codex rows use exact IDs passed
 to `codex --model`; the agy row uses an exact id from the Gemini helper's
-`probe`, effort included. Resolve informal names here, or from the active
-CLI's models cache when absent. An ambiguous name needs clarification; an invalid ID fails loudly,
+`probe`, effort included. Resolve informal names here, or when absent from
+the live catalog (`codex debug models`: about a second, no model call; the
+models cache it refreshes can lag a new release). An ambiguous name needs clarification; an invalid ID fails loudly,
 never silently selects another model.
 
 **Effort follows difficulty.** Use the table defaults, judged on the

@@ -237,6 +237,11 @@ the suite covers, a formatter pass) gets the green gate plus a scan,
 declared as such.
 
 - Account for every named file, deletion, generated and untracked file.
+- A rewrite or slimming of rule text gets a loss check aimed at one class:
+  a dropped test condition or machine bound that makes a local measurement
+  read as a general rule. The producer's own list of doubtful cuts does not
+  find these. When a reader listed the at-risk clauses before the draft,
+  the checker reconciles that list row by row.
 - Worker findings are candidates. A worker summary is never evidence, and
   raw worker output is never the deliverable.
 - Check result shape and size before use: schema validity is model

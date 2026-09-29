@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.46.5 — 2026-09-29
+
+orchestrate's model map makes `opus` the default delegate for most work,
+hard reasoning and root-cause work included (the maintainer's direction);
+Astra becomes the cross-family reader for critical review and costly
+counter-cases, and cross-family review stays preferred. Unknown model names
+resolve from the live Codex catalog (`codex debug models`) rather than the
+models cache, which can lag a release. § Review adds a loss check for
+rewrites of rule text, aimed at dropped test conditions and machine bounds.
+
 ## 0.46.4 — 2026-09-29
 
 orchestrate's Sol row, Luna's first fallback and the image-generation relay
