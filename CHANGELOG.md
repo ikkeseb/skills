@@ -4,6 +4,13 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.46.4 — 2026-09-29
+
+orchestrate's Sol row, Luna's first fallback and the image-generation relay
+pin move from `gpt-6-sol` to `gpt-6.1-sol`, which the Codex catalog now lists
+as the current workhorse (`gpt-6-sol` is "previous generation"). Roles and
+efforts are unchanged; Astra and Luna keep their IDs.
+
 ## 0.46.3 — 2026-09-29
 
 orchestrate, from two field runs: a seat design in § Review's risk classes
