@@ -242,6 +242,10 @@ declared as such.
   read as a general rule. The producer's own list of doubtful cuts does not
   find these. When a reader listed the at-risk clauses before the draft,
   the checker reconciles that list row by row.
+- When a stage moved or rewrote tests and the seat doubts they still bite,
+  a mutation probe settles it: a few deliberate small breaks in the code
+  under test, run by the seat, which the tests must catch. Seat's judgment,
+  no extra stage.
 - Worker findings are candidates. A worker summary is never evidence, and
   raw worker output is never the deliverable.
 - Check result shape and size before use: schema validity is model

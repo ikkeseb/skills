@@ -4,6 +4,13 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.46.6 — 2026-09-29
+
+orchestrate § Review: when a stage moved or rewrote tests and the seat
+doubts they still bite, a mutation probe (a few deliberate small breaks the
+tests must catch) settles it, at the seat's judgment and without an extra
+stage.
+
 ## 0.46.5 — 2026-09-29
 
 orchestrate's model map makes `opus` the default delegate for most work,
