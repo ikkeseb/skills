@@ -17,11 +17,12 @@ second opinion. The seat verifies its own conclusions against evidence.
 
 **Workhorses** carry judgment-bearing execution and review; the seat keeps
 final say. `opus` is the default delegate for most work, hard reasoning
-and root-cause work included. Astra is the cross-family reader: critical
-review of Claude output, and a counter-case where a mistake is costly. Sol
-handles routine cross-family review of Claude output at low cost when Astra
-is not needed. Cross-family review is preferred; an `opus` review of Claude
-output is a same-family check, labeled as such. Fable's taste and intent
+and root-cause work included. Sol is the standing cross-family partner:
+most review of Claude output, investigation, root-cause second views and
+focused research. Astra is kept for planning and architectural
+counter-cases, large reviews, and work where a mistake is costliest.
+Cross-family review is preferred; an `opus` review of Claude output is a
+same-family check, labeled as such. Fable's taste and intent
 role does not imply a general reasoning advantage over `opus` or Astra.
 
 **Claude-lane mid tier.** `sonnet` takes the bounded, gate-checked
@@ -49,8 +50,8 @@ provide them; the Codex probe does not test tool availability.
 
 | Model | Lane | Default effort | Role | Availability fallback |
 |---|---|---|---|---|
-| `gpt-6-astra` | Codex | high; xhigh/max only on the user's word | Critical review and architectural counter-cases; cross-family verification of Claude-produced work; research, synthesis or root-cause work when a cross-family view is wanted | `opus` at high/xhigh; `fable` for fuzzy intent |
-| `gpt-6.1-sol` | Codex | high; xhigh/max only on the user's word | Routine cross-family review of Claude-produced work when Astra is not needed, focused research and relay work; writes code only under a tight spec whose wrong result a test or lint gate catches | `gpt-6-astra`; `opus` if the Codex lane is down |
+| `gpt-6-astra` | Codex | high; xhigh only on the user's word | Planning and architectural counter-cases; large reviews and cross-family verification where a missed defect is costliest; research, synthesis or root-cause work at the same stakes | `opus` at high/xhigh; `fable` for fuzzy intent |
+| `gpt-6.1-sol` | Codex | high; xhigh only on the user's word | Default cross-family partner: review and verification of Claude-produced work, investigation, root-cause second views, focused research and relay work; writes code only under a tight spec whose wrong result a test or lint gate catches | `gpt-6-astra`; `opus` if the Codex lane is down |
 | `fable` | Claude | medium/high | Design taste, fuzzy intent and highest-stakes user-facing judgment. Delegate only a distinct question the seat cannot resolve as efficiently; a Fable seat seldom needs another Fable | `opus` |
 | `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default workhorse for long-horizon implementation, hard root-cause work and diagnosis, migrations, codebase audits, frontend builds, user-facing copy and API-shape proposals; judgment-bearing work needing Claude harness tools; cross-family verification of Codex-produced work | `gpt-6-astra`, with degraded family coverage when applicable |
 | `gpt-6-luna` | Codex | high | Map readers, extraction, classification, bulk transforms, small criterion-based reviews, and mechanical implementation under a tight spec whose wrong result a test or lint gate catches; findings are candidates, never decisions | `gpt-6.1-sol`; `sonnet` if the Codex lane is down |
@@ -70,18 +71,19 @@ never silently selects another model.
 
 **Effort follows difficulty.** Use the table defaults, judged on the
 difficulty left after the brief: a tight brief has already made the
-decisions, so its implementer may run a notch below the default; a thin
-brief earns no discount. `medium` suits bounded substantive work; `low`
-suits transport and tightly mechanical work with deterministic validation.
-On the Claude lane, raise to `xhigh` for a named difficult reasoning
-problem; `max` needs a specific reason beyond file count or importance and
-is not the default for every review or cheap writer. On the Codex lane,
-`high` is the ceiling unless the user explicitly asks for a higher level:
-every run draws on the user's weekly subscription quota, and `xhigh` and
-`max` drain it fastest. When a Codex stage looks too hard for `high`, say so
-and let the user choose, or route the hard part to `opus` at `xhigh`. Astra, Sol and Luna accept `max`; `fable`
-supports `medium` and `high` only. Codex `ultra` stays off-limits because
-it may introduce nested delegation.
+decisions, so its implementer may run a notch below the default, never
+below `medium`; a thin brief earns no discount. `medium` suits bounded
+substantive work. `low` and `max` are off-limits for work on every lane:
+`low` leaves too little reasoning, and `max` forces reasoning at many times
+the tokens for little gain. Transport is the one exception: the Codex
+adapter and the helper's `probe` run a script and relay its result. On the
+Claude lane, raise to `xhigh` for a named difficult reasoning problem. On
+the Codex lane, `high` is the ceiling unless the user explicitly asks for
+`xhigh`: every run draws on the user's weekly subscription quota, and
+`xhigh` drains it fastest. When a Codex stage looks too hard for `high`, say
+so and let the user choose, or route the hard part to `opus` at `xhigh`.
+`fable` supports `medium` and `high` only. Codex `ultra` stays off-limits
+because it may introduce nested delegation.
 
 **Escalate a quality miss once.** Name the missed acceptance criterion and
 why the next model can resolve it. Luna and `sonnet` go to `opus`; a Sol
@@ -102,8 +104,9 @@ row's first fallback is another Codex model.
   token price alone.
 - **Verification routing.** When verification is owed (`SKILL.md`
   § Review), the producer family includes the seat's contributions:
-  Claude-produced work goes to Astra, or Sol for routine review;
-  Codex-produced work goes to `opus`, or Fable for design and intent.
+  Claude-produced work goes to Sol, or Astra for plans, large reviews and
+  the highest stakes; Codex-produced work goes to `opus`, or Fable for
+  design and intent.
   Same-family coverage is degraded: usable when the other lane is
   unavailable, and labeled as such. Report cross-provider, same-provider or
   none. Agreement never replaces checking evidence.

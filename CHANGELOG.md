@@ -4,6 +4,18 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.47.0 — 2026-10-01
+
+orchestrate's model map makes GPT-6.1 Sol the standing cross-family partner
+(most review of Claude output, investigation, root-cause second views,
+focused research) and keeps GPT-6 Astra for planning and architectural
+counter-cases, large reviews and the highest stakes (the maintainer's
+direction). `low` and `max` are off-limits for work on every lane;
+transport (the Codex adapter and the helper's probe) keeps `low`, and Codex
+`xhigh` still needs the user's word. second-opinion follows: Sol by default,
+Astra for plans, large reviews and the highest stakes, never `low` or
+`max`.
+
 ## 0.46.6 — 2026-09-29
 
 orchestrate § Review: when a stage moved or rewrote tests and the seat

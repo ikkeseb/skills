@@ -69,7 +69,7 @@ reading each result before choosing the next. No shape is mandatory.
 
 **Scout inline.** Discover the work-list with cheap listings, search and
 diff stats, and read what the brief needs. A tightly coupled problem may be
-cheaper and clearer in one Astra context than across readers whose
+cheaper and clearer in one Sol or Astra context than across readers whose
 summaries the seat must reconcile and reread.
 
 **Scale to the ask.** A worker earns its slot with a named, distinct slice

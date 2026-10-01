@@ -1,11 +1,11 @@
 ---
 name: second-opinion
-description: "Send existing work (a design, plan, diff, diagnosis, or claim) to GPT-6 Astra through the Codex CLI for one independent read-only review, synthesized back. The work leaves the machine. Not for delegating execution (orchestrate)."
+description: "Send existing work (a design, plan, diff, diagnosis, or claim) through the Codex CLI to GPT-6.1 Sol, or GPT-6 Astra for plans and the highest stakes, for one independent read-only review, synthesized back. The work leaves the machine. Not for delegating execution (orchestrate)."
 ---
 
 # second-opinion
 
-One read-only GPT-6 Astra call pressure-tests existing work; the main agent
+One read-only Codex call pressure-tests existing work; the main agent
 synthesizes the answer, and agreement is not authority. Not for lookups,
 work that does not exist yet, or taste. When the producer used OpenAI, label
 coverage same-family; a cross-family Claude review is a separate choice,
@@ -42,17 +42,19 @@ embedded diff.
 never an appended `&`:
 
 ```bash
-: "second-opinion gpt-6-astra@high — TOPIC"
-HELPER_ABS_PATH run --model gpt-6-astra --effort high --sandbox read-only \
+: "second-opinion MODEL@high — TOPIC"
+HELPER_ABS_PATH run --model MODEL --effort high --sandbox read-only \
   --workspace WORKSPACE --prompt-file TEMP_DIR/prompt.md --run-dir TEMP_DIR/run
 ```
 
-The no-op first line is the job's visible label: name the real model,
-effort and topic. `WORKSPACE` is the current workspace. The user's
-explicit wording may change `--model` or `--effort`; raise to `xhigh` or
-`max` only when the user names that level, since those drain the weekly
-Codex quota fastest. Ask when the wording is ambiguous; an invalid value
-fails loudly and is never silently replaced. Record the task ID and
+`MODEL` is `gpt-6.1-sol`; use `gpt-6-astra` for a plan or architecture, a
+large review, or work where a missed defect is costliest. The no-op first
+line is the job's visible label: name the real model, effort and topic.
+`WORKSPACE` is the current workspace. The user's explicit wording may
+change `--model` or `--effort`; raise to `xhigh` only when the user names
+it, since it drains the weekly Codex quota fastest, and never use `low` or
+`max`. Ask when the wording is ambiguous; an invalid value fails loudly and
+is never silently replaced. Record the task ID and
 output-file path and say the independent review started. The main session
 owns delivery: continue useful local work, otherwise wait for the terminal
 notification, and do not end the session before harvest. Never poll output
