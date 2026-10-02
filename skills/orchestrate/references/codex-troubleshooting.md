@@ -102,6 +102,10 @@ closed as `wsl_bridge_failed`. Traps the bridge does not absorb:
 - `interrupted`: the runner took a termination signal. Whether the worker
   survived is unknown; establish ground truth from the run dir before
   redispatching, and inspect the worktree first on write runs.
+- `codex_failed` with `Selected model is at capacity` (stderr or
+  `events.jsonl`): availability, not a quality miss, and it can strike
+  after the worker's closing message. Brief what `RUN_DIR/events.jsonl`
+  holds into one retry, or route to the model's fallback.
 - `timeout`, `codex_failed`, `schema`, `slots_exhausted`: judgment call;
   read `run_dir` evidence first. On `codex_failed` or suspicious stderr,
   check § Known stderr signals before deciding.

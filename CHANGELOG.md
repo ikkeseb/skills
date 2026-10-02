@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.47.1 — 2026-10-02
+
+orchestrate: a seat dispatch sets the Bash call's own `timeout` above the
+helper's `--timeout`, since the 30-minute background default killed a
+finished run; worktrees live under the session repo's `.claude/worktrees/`,
+since edits in a worktree outside the project directory prompted for
+permission through an unattended run; `codex_failed` on "Selected model is
+at capacity" is an availability failure whose surviving findings are
+briefed into one retry. repo-cosplay: a verification that lands after the
+commit reopens the target's status document.
+
 ## 0.47.0 — 2026-10-01
 
 orchestrate's model map makes GPT-6.1 Sol the standing cross-family partner

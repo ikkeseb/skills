@@ -166,9 +166,12 @@ flight per lane with the next launched as one harvests, no relay agent. The
 seat writes the prompt and schema files outside the run dir, mints an empty
 run dir (`RUN_DIR="$(mktemp -d)"`), and starts the helper with the Bash
 tool's `run_in_background`, the stage label as both `description` and the
-command's leading no-op line (`: "<label>"`), stdout redirected to a file.
-When the harness reports the exit, harvest `RUN_DIR/result.json` and accept
-the payload only on `ok: true`. A harness without an exit signal waits in
+command's leading no-op line (`: "<label>"`), stdout redirected to a file,
+and the call's own `timeout` (ms) set above the helper's `--timeout` (s)
+× 1,000 plus queue margin, at most 7,200,000 ms (shorten `--timeout` to
+fit): the 30-minute background default kills a longer run and loses its
+result. When the harness reports the exit,
+harvest `RUN_DIR/result.json` and accept the payload only on `ok: true`. A harness without an exit signal waits in
 bounded foreground calls (540 s each, repeated):
 `sh -c 'i=0; until [ -f "$RUN_DIR/result.json" ] || [ $i -ge 108 ]; do sleep 5; i=$((i+1)); done'`
 
@@ -204,16 +207,18 @@ in one checkout (the Codex helper locks the whole workspace and refuses a
 dirty tree), a target linked into live configuration, or a cheap-tier
 writer outside a machine-gated mechanical task.
 
-Create worktrees in the main loop at current HEAD with
-`git worktree add --relative-paths` (so a worker reaching the checkout
-through another platform view, the WSL lane over `/mnt/c`, can resolve
-it), plus the dependency install the repo's docs prescribe; the harness's
-`isolation: 'worktree'` has based on session-start HEAD and installs
-nothing. A worktree isolates the working tree, not the repository: `.git`,
-hooks and `--local` config are shared, and a write through a tracked
+Create worktrees in the main loop at current HEAD, under the session
+repo's `.claude/worktrees/` with that path in `.git/info/exclude`: outside
+the project directory, Claude-lane edits there can each prompt for
+permission, unattended runs included. Use `git worktree add --relative-paths` (so a worker
+reaching the checkout through another platform view, the WSL lane over
+`/mnt/c`, can resolve it), plus the dependency install the repo's docs
+prescribe; the harness's `isolation: 'worktree'` has based on
+session-start HEAD and installs nothing. A worktree isolates the working
+tree, not the repository: `.git`, hooks and `--local` config are shared, and a write through a tracked
 symlink pointing outside the repo reaches live state with nothing in the
-worktree's status or diff. Worktrees inside the repo are visible to repo
-tooling: exclude paths like `.claude/worktrees/` from test globs.
+worktree's status or diff. Repo tooling sees `.claude/worktrees/`: keep
+it out of test globs.
 
 ### Field guards
 

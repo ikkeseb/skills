@@ -30,7 +30,9 @@ supplies native-session discipline.
 3. Follow every repository boundary you find. A symlink target, nested
    repository, or external owner needs its own explicit grant.
 4. Finish the target's normal bookkeeping, commit and push only the authorized
-   work, and verify it by the target's standard.
+   work, and verify it by the target's standard. A verification that lands
+   after the commit that updated the target's status document reopens that
+   document: fold the result in before you finish.
 
 If the ask is read-only, stop after answering it. Use coordination for work
 that should happen later, not for a change the user asked to make now.
