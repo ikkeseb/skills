@@ -84,7 +84,16 @@ phases or run side by side. Pick each stage's lane from the model map: an
 readers beside it, one Astra read where a miss costs most, Luna for cheap
 reads. A worker still earns its slot with a named, distinct slice and
 acceptance criteria; a one-line fix needs no fan-out, and file count alone
-never forces a Map. An exhaustive search names its corpus: where a
+never forces a Map. Slot counts are capacity, not a target: the seat's
+review throughput bounds what is in flight. Readers fan out as far as the
+seat can triage their harvest; writers run only as many at once as the
+seat can review in full and integrate without a backlog building, the
+next started as one lands, since integration and owed verification are
+serial at the seat. Local load counts too: native builds, browser probes
+and hardware tests sharing one machine slow each other and can flake
+timing-sensitive checks. Spend spare quota on depth (another independent
+reviewer, the Astra read where a miss costs most); review throughput keeps
+setting the width. An exhaustive search names its corpus: where a
 deterministic file or symbol inventory exists, it reconciles coverage
 against it and repeats only to close a specific gap; where none can exist
 (defects, edge cases), discovery loops until rounds come back with nothing

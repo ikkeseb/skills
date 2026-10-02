@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.48.2 — 2026-10-02
+
+orchestrate: slot counts are capacity, not a target. The seat's review
+throughput bounds what is in flight: readers fan out as far as the seat can
+triage their harvest, writers only as many as it can review and integrate
+without a backlog building, local builds and probes count as load, and
+spare quota goes to verification depth while review throughput sets the
+width. From the first field run of 0.48.0's wider fan-out, where about
+twelve concurrent agents plus native builds outran the seat's integration.
+
 ## 0.48.1 — 2026-10-02
 
 second-opinion catches up with orchestrate: the background Bash call gets
