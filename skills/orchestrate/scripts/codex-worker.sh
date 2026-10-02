@@ -52,7 +52,7 @@ ALWAYS_EXEC_FLAGS="--ignore-user-config --ephemeral --disable --config
                    --sandbox --cd --json --output-last-message"
 ALWAYS_ROOT_FLAGS="--ask-for-approval"
 CONDITIONAL_EXEC_FLAGS="--model --output-schema --skip-git-repo-check"
-MAX_SLOTS="${CODEX_WORKER_MAX_SLOTS:-4}"
+MAX_SLOTS="${CODEX_WORKER_MAX_SLOTS:-10}"
 SLOT_WAIT_SECS="${CODEX_WORKER_SLOT_WAIT:-1800}"
 # Per-uid suffix + ownership check (ensure_slot_root): a world-writable /tmp
 # must not let another user squat the lock tree or plant a symlink there.

@@ -72,11 +72,21 @@ diff stats, and read what the brief needs. A tightly coupled problem may be
 cheaper and clearer in one Sol or Astra context than across readers whose
 summaries the seat must reconcile and reread.
 
-**Scale to the ask.** A worker earns its slot with a named, distinct slice
-and acceptance criteria. A one-line fix needs no fan-out, and file count
-alone never forces a Map. An exhaustive search names its corpus and
-reconciles coverage against a deterministic file or symbol inventory,
-repeating only to close a specific gap.
+**Scale to the ask.** Breadth matches the harness's own workflow fan-out,
+with lanes mixed per stage. When quality depends on coverage or
+independent views (audits, reviews, research, migrations, broad sweeps),
+fan out wide: parallel finders, adversarial or multi-lens verifiers, judge
+panels, discovery rounds, and several workflows chained across
+phases or run side by side. Pick each stage's lane from the model map: an
+`opus` Workflow where Claude tools or Claude judgment carry the work, Sol
+readers beside it, one Astra read where a miss costs most, Luna for cheap
+reads. A worker still earns its slot with a named, distinct slice and
+acceptance criteria; a one-line fix needs no fan-out, and file count alone
+never forces a Map. An exhaustive search names its corpus: where a
+deterministic file or symbol inventory exists, it reconciles coverage
+against it and repeats only to close a specific gap; where none can exist
+(defects, edge cases), discovery loops until rounds come back with nothing
+new.
 
 ## The brief
 
@@ -145,9 +155,9 @@ by default; a barrier only where a stage needs every prior result.
 **Codex lane.** OpenAI models through `scripts/codex-worker.sh`. Read
 `references/codex-exec.md` before the first Codex stage, and its
 § Provider filtering before routing any security task there. A Workflow
-carries a Codex stage only when a per-item pipeline must mix lanes; then
-the foreground `codex-worker` adapter makes one call over files the seat
-wrote. Before first use, resolve the helper and run `"$HELPER" probe` once
+that mixes lanes may carry a confidently short Codex stage through the
+foreground `codex-worker` adapter, one call over files the seat wrote;
+longer Codex stages run beside the Workflow as seat dispatches. Before first use, resolve the helper and run `"$HELPER" probe` once
 for the session; done when your response states which lanes are available.
 The candidates are this skill's deployment locations; the session repo is
 never one, since that could execute material under review.
@@ -161,8 +171,9 @@ HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
 **Gemini lane.** Read-only readers through `scripts/gemini-worker.sh`; read
 `references/gemini-exec.md` before the first Gemini stage.
 
-**Seat dispatch** (Codex and Gemini): one call per stage, at most four in
-flight per lane with the next launched as one harvests, no relay agent. The
+**Seat dispatch** (Codex and Gemini): one call per stage, at most ten in
+flight on the Codex lane (the helper's semaphore) and four on Gemini, the
+next launched as one harvests, no relay agent. The
 seat writes the prompt and schema files outside the run dir, mints an empty
 run dir (`RUN_DIR="$(mktemp -d)"`), and starts the helper with the Bash
 tool's `run_in_background`, the stage label as both `description` and the
@@ -218,7 +229,14 @@ session-start HEAD and installs nothing. A worktree isolates the working
 tree, not the repository: `.git`, hooks and `--local` config are shared, and a write through a tracked
 symlink pointing outside the repo reaches live state with nothing in the
 worktree's status or diff. Repo tooling sees `.claude/worktrees/`: keep
-it out of test globs.
+it out of test globs. Once the seat has verified that everything worth
+keeping from a worktree is on its target branch, it runs `git worktree
+remove <path>` and `git branch -d <branch>`; otherwise it reports the
+worktree and why it stays. Neither command checks landing (`remove` checks
+cleanliness, `-d` ancestry against the upstream or `HEAD`), and a squashed
+or applied diff can leave `-d` refusing: inspect every refusal, and force
+(`--force`, `-D`) only after accounting for everything forcing would
+discard.
 
 ### Field guards
 

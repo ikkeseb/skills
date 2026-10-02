@@ -4,6 +4,25 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.48.0 — 2026-10-02
+
+orchestrate scales like the harness's own workflow fan-out, with lanes
+mixed per stage: wide finders, adversarial verifiers, judge panels and
+chained or parallel workflows when quality depends on coverage, and a
+mixed-lane Workflow may carry short Codex stages through the adapter. The
+Codex helper's default semaphore rises from four to ten concurrent workers
+(ten concurrent trivial runs held on one 16-CPU machine; long runs at ten
+are unmeasured, and `CODEX_WORKER_MAX_SLOTS` lowers it); its docs now say
+the semaphore is shared per `$TMPDIR` and user, not per orchestrator. The
+model map, on the maintainer's direction: Luna is read-only, at `xhigh` by
+default, never below `high`, `max` allowed; cheap mechanical writes go to
+Sol at `medium`; the Codex rows are an allowlist that the live catalog only
+confirms, and `gpt-5.6-terra` is never dispatched. Exhaustive discovery
+without a deterministic inventory loops until a round finds nothing new.
+§ Writers: once the seat has verified that a worktree's work is on its
+target branch, it removes the worktree and its branch, and forces past
+git's refusal only after accounting for what forcing would discard.
+
 ## 0.47.1 — 2026-10-02
 
 orchestrate: a seat dispatch sets the Bash call's own `timeout` above the

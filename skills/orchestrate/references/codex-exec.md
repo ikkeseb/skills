@@ -97,8 +97,8 @@ adapter is the Workflow exception. Pick at dispatch and never switch owners
 mid-job.
 
 ```bash
-: "r1 authority — gpt-6-luna @ high"
-"$HELPER" run --model gpt-6-luna --effort high --sandbox read-only \
+: "r1 authority — gpt-6-luna @ xhigh"
+"$HELPER" run --model gpt-6-luna --effort xhigh --sandbox read-only \
   --workspace "$PWD" --prompt-file "$DIR/prompt.md" \
   --schema-file "$DIR/schema.json" --run-dir "$RUN_DIR" > "$DIR/stdout.json"
 ```
@@ -107,9 +107,9 @@ Stdout goes to a file because some failures emit their envelope there
 only. In the stage line, fresh is `spend` `input_tokens` minus
 `cached_input_tokens`.
 
-**Foreground adapter.** Only a per-item pipeline that must mix lanes puts a
-Codex stage inside a Workflow, because every Workflow stage is a Claude
-agent that replays its own context (~25k tokens) on every tool call. The
+**Foreground adapter.** A Workflow that mixes lanes may carry a Codex
+stage, at a price: every Workflow stage is a Claude agent that replays its
+own context (~25k tokens) on every tool call. The
 seat writes the prompt and schema files before the workflow starts and
 passes their paths in the briefing. The Bash tool's timeout is hard-capped
 at 600000 ms and auto-backgrounds past it, which silently breaks a
@@ -215,13 +215,16 @@ Workers authenticate via the Codex login (subscription quota);
 `CODEX_API_KEY` / `CODEX_ACCESS_TOKEN` reach them only with
 `CODEX_WORKER_ALLOW_API_KEY=1` set explicitly.
 
-The helper holds a semaphore of four concurrent workers
-(`CODEX_WORKER_MAX_SLOTS`), per orchestrator (its lock tree lives under
-`$TMPDIR`), not machine-global. Extra workers queue up to 30 minutes, then
+The helper holds a semaphore of ten concurrent workers
+(`CODEX_WORKER_MAX_SLOTS`), shared by every helper run with the same
+`$TMPDIR` and user (its lock tree lives there), so parallel sessions on one
+machine share it. Ten concurrent trivial runs all succeeded in 11 s wall on
+one 16-CPU, 15 GB WSL machine; long runs at ten are unmeasured, so lower
+the variable where memory runs short or `rate_limit` failures appear. Extra workers queue up to 30 minutes, then
 fail as `slots_exhausted`; queue wait counts against each run's own
 `--timeout`, so a short-timeout run that sits in the queue fails as
-`timeout`. In a Workflow, batch adapter stages in groups of at most four,
-since queued workers burn agent slots doing nothing.
+`timeout`. In a Workflow, batch adapter stages in groups of at most the
+slot count, since queued workers burn agent slots doing nothing.
 
 Done when: every dispatched worker ends in exactly one of a seat harvest
 from its `--run-dir`, adapter-relayed JSON typed via the Workflow `schema`,
