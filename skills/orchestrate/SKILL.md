@@ -42,7 +42,9 @@ material and the seat relays it.
 
 **Floor:** if writing the brief costs more than doing the work, keep it.
 Work too small or too ambiguous to delegate well: say so and do it in the
-main loop.
+main loop. Near the floor, lean toward delegating reads: what a worker
+reads stays out of the seat's context, so a long session stays sharp
+longer.
 
 ## Shapes
 

@@ -39,12 +39,15 @@ harvest; for repo state also record the base SHA and the hash of any
 embedded diff.
 
 **Run** one Bash background job through the tool's background mode,
-never an appended `&`:
+never an appended `&`, with the Bash call's own `timeout` set to
+3,600,000 ms: the 30-minute background default kills a longer review and
+loses its result.
 
 ```bash
 : "second-opinion MODEL@high — TOPIC"
 HELPER_ABS_PATH run --model MODEL --effort high --sandbox read-only \
-  --workspace WORKSPACE --prompt-file TEMP_DIR/prompt.md --run-dir TEMP_DIR/run
+  --workspace WORKSPACE --prompt-file TEMP_DIR/prompt.md --run-dir TEMP_DIR/run \
+  --timeout 3300
 ```
 
 `MODEL` is `gpt-6.1-sol`; use `gpt-6-astra` for a plan or architecture, a
@@ -52,15 +55,16 @@ large review, or work where a missed defect is costliest. The no-op first
 line is the job's visible label: name the real model, effort and topic.
 `WORKSPACE` is the current workspace. The user's explicit wording may
 change `--model` or `--effort`; raise to `xhigh` only when the user names
-it, since it drains the weekly Codex quota fastest, and never use `low` or
-`max`. Ask when the wording is ambiguous; an invalid value fails loudly and
+it, since it drains the weekly Codex quota fastest. Never use `low`, `max`
+only for a user-named `gpt-6-luna`, and never `gpt-5.6-terra`, whoever names
+it. Ask when the wording is ambiguous; an invalid value fails loudly and
 is never silently replaced. Record the task ID and
 output-file path and say the independent review started. The main session
 owns delivery: continue useful local work, otherwise wait for the terminal
 notification, and do not end the session before harvest. Never poll output
 for liveness: `events.jsonl` logs transitions, not heartbeats, and a
 high-effort run can sit at `turn.started` for minutes. The helper's
-one-hour deadline includes queueing, so a `timeout` may be slot
+deadline includes queueing, so a `timeout` may be slot
 contention; never kill a job for being quiet.
 
 **Harvest** exactly once, after the job is terminal:

@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.48.1 — 2026-10-02
+
+second-opinion catches up with orchestrate: the background Bash call gets
+its own one-hour `timeout` and the helper `--timeout 3300`, since the
+30-minute background default kills a longer review and loses its result;
+`max` only for a user-named Luna, and `gpt-5.6-terra` never. orchestrate:
+near the delegation floor, lean toward delegating reads, since what a
+worker reads stays out of the seat's context and long sessions stay sharp.
+
 ## 0.48.0 — 2026-10-02
 
 orchestrate scales like the harness's own workflow fan-out, with lanes
