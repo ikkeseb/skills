@@ -1,7 +1,8 @@
 # Gemini lane: worker contract
 
 Read this before dispatching the first Gemini-lane stage. The lane runs
-Google models through the Antigravity CLI (`agy`) as **read-only** workers.
+Google models, and the model map's reserve Claude readers, through the
+Antigravity CLI (`agy`) as **read-only** workers.
 The invocation (flags, isolation, permission rules, validation) lives in
 `scripts/gemini-worker.sh`; never hand-roll `agy` commands.
 
@@ -95,7 +96,7 @@ cached is `cache_read_tokens`; command count is not reported.
 | `usage` | bad arguments | fix the call |
 | `agy_missing` | no `agy` binary | lane down |
 | `auth` | not logged in | lane down; the user logs in once |
-| `model_floor` | id below `gemini-3.8-flash-high` (older version, lower effort, non-Gemini) | pick `gemini-3.8-flash-high` or a newer Gemini at `-high` |
+| `model_floor` | id outside the lane's floors: a Gemini below `gemini-3.8-flash-high` (older version, lower effort), a Claude model other than `opus` at `-medium`/`-high` or `sonnet` at `-high` (5.5 or later), or any other model | pick `gemini-3.8-flash-high` (or a newer Gemini at `-high`), or a reserve Claude id from the model map |
 | `model_unknown` | id not offered | pick an id from probe |
 | `quota` | subscription quota or capacity exhausted | lane down for now; take the model map's fallback |
 | `timeout` | deadline hit; agy reports its own as `SUCCESS` with partial output | narrow the task or raise `--timeout` once |

@@ -34,7 +34,9 @@ is up, Sol at `medium` stays first for cheap mechanical writes and Luna for
 cheap reads.
 
 **Cheap tier.** Luna is read-only: bounded readers, extraction,
-classification and single-criterion checks. It never writes, however
+classification and single-criterion checks, image files given by path
+included (screenshots, rendered UI; verified on the WSL lane,
+`codex-exec.md` § Running a worker). It never writes, however
 simple the edit; cheap mechanical writes go to Sol at `medium`. Its
 findings are candidates for the seat or a workhorse to judge; open-ended
 decisions go to a workhorse. Gemini Flash is a read-only third-family voice on its own
@@ -43,8 +45,17 @@ discussion, vision work, research from supplied sources and general
 knowledge, and first-pass review triage that a stronger model verifies. It
 is not a Luna replacement or a code writer: no shell, no writes, too weak to
 carry verification, and never the only source for a fact. Its
-floor is `gemini-3.8-flash-high`: never an older version (Pro included),
-a lower effort or agy's non-Gemini models; the helper refuses them.
+floor is `gemini-3.8-flash-high`: never an older version (Pro included)
+or a lower effort; the helper refuses them.
+
+**agy Claude reserve.** The same agy subscription serves `opus` and
+`sonnet` models as read-only readers on the Google quota: recon, Map
+reads, summaries and Claude-judgment reads when the Anthropic quota is
+tight or the user sends work there. It is a reserve, not a default: its
+quota has been reported to drain fast. Same family as the Claude lane, so
+never the cross-family verifier of Claude-produced work; no shell and no
+writes, as on the Gemini row. The helper allows `opus` at `-medium` or
+`-high` and `sonnet` at `-high`, version 5.5 or later.
 
 Research requiring live web or other harness tools uses a lane verified to
 provide them; the Codex probe does not test tool availability.
@@ -55,8 +66,9 @@ provide them; the Codex probe does not test tool availability.
 | `gpt-6.1-sol` | Codex | high; medium for cheap mechanical writes; xhigh only on the user's word | Default cross-family partner: review and verification of Claude-produced work, investigation, root-cause second views, focused research and relay work; writes code only under a tight spec whose wrong result a test or lint gate catches, Sweep transforms and simple low-risk edits included | `gpt-6-astra`; `opus` if the Codex lane is down |
 | `fable` | Claude | medium/high | Design taste, fuzzy intent and highest-stakes user-facing judgment. Delegate only a distinct question the seat cannot resolve as efficiently; a Fable seat seldom needs another Fable | `opus` |
 | `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default workhorse for long-horizon implementation, hard root-cause work and diagnosis, migrations, codebase audits, frontend builds, user-facing copy and API-shape proposals; judgment-bearing work needing Claude harness tools; cross-family verification of Codex-produced work | `gpt-6-astra`, with degraded family coverage when applicable |
-| `gpt-6-luna` | Codex | xhigh; never below high; max allowed | Read-only: Map readers, extraction, classification and small criterion-based reviews; never writes; findings are candidates, never decisions | `gpt-6.1-sol`; `sonnet` if the Codex lane is down |
-| `gemini-3.8-flash-high` | agy (read-only) | in the id: `-high` | Extra third-family voice in ideation, product and UX rounds, reading screenshots and UI images, research from supplied sources and general knowledge, and first-pass review triage; never ahead of Luna for bounded reads and extraction unless the user sends work here (Codex usage spent, or Google models asked for); never writes code, never counts or inventories (no shell) and never the owed cross-family verifier; findings are candidates, never decisions | `gpt-6-luna` |
+| `gpt-6-luna` | Codex | xhigh; never below high; max allowed | Read-only: Map readers, extraction, classification and small criterion-based reviews, screenshots and UI images included; never writes; findings are candidates, never decisions | `gpt-6.1-sol`; `sonnet` if the Codex lane is down |
+| `gemini-3.8-flash-high` | agy (read-only) | in the id: `-high` | Extra third-family voice in ideation, product and UX rounds, an extra reader of screenshots and UI images beside Luna, research from supplied sources and general knowledge, and first-pass review triage; never ahead of Luna for bounded reads and extraction unless the user sends work here (Codex usage spent, or Google models asked for); never writes code, never counts or inventories (no shell) and never the owed cross-family verifier; findings are candidates, never decisions | `gpt-6-luna` |
+| `claude-opus-5-5-high`, `claude-opus-5-5-medium`, `claude-sonnet-5-5-high` | agy (read-only) | in the id | Reserve Claude readers on the Google quota (§ Delegates): recon, Map reads, summaries and Claude-judgment reads when Anthropic quota is tight or the user sends work here; never the cross-family verifier of Claude-produced work, never writes, never counts or inventories (no shell); findings are candidates, never decisions | `opus` or `sonnet` on the Claude lane |
 | `sonnet` | Claude | high only; low for transport | Execution whose wrong result a test or lint gate catches: spec-bounded implementation, Sweep transforms, shell-heavy agentic work and bounded work needing Claude harness tools; also the budget seat and the foreground Codex adapter. Never design, fuzzy intent or owed verification; findings are candidates, never decisions | `opus` |
 | `haiku` | Claude | — | Off-limits, adapters included; Luna covers cheap reads, Sol at `medium` cheap writes | `gpt-6-luna` |
 
@@ -64,13 +76,13 @@ provide them; the Codex probe does not test tool availability.
 
 **Lane naming.** Claude rows use harness aliases accepted by the Agent
 `model` parameter, never a versioned ID. Codex rows use exact IDs passed
-to `codex --model`; the agy row uses an exact id from the Gemini helper's
+to `codex --model`; agy rows use an exact id from the Gemini helper's
 `probe`, effort included. The Codex rows are an allowlist: dispatch only a
 Codex model the table names, or one the user names explicitly, and never
 `gpt-5.6-terra`, whoever names it. The live catalog (`codex debug models`:
 about a second, no model call; the models cache it refreshes can lag a new
-release) confirms that an ID exists and never adds a model. The agy row
-follows its floor (§ Delegates). An ambiguous or unmapped name needs
+release) confirms that an ID exists and never adds a model. The agy rows
+follow their floors (§ Delegates). An ambiguous or unmapped name needs
 clarification; an invalid ID fails loudly, never silently selects another
 model.
 

@@ -7,8 +7,8 @@
 #   gemini-worker.sh run --model <agy model id> --prompt-file <file>
 #       --model <id>             required; an exact id from `agy models`
 #                                (the id carries the effort, e.g.
-#                                gemini-3.8-flash-high); ids below
-#                                the floor are refused (model_floor)
+#                                gemini-3.8-flash-high); ids outside
+#                                the floors are refused (model_floor)
 #       [--workspace <dir>]      the directory the worker may read (default: $PWD)
 #       [--schema-file <file>]   JSON Schema for the final answer
 #       [--timeout <seconds>]    total deadline (default: 900)
@@ -146,12 +146,18 @@ cmd_probe() {
       read_only: "enforced by per-run deny rules"}')"
 }
 
-# The lane's floor is gemini-3.8-flash-high: a Gemini id at version 3.8 or
-# later, effort -high. Older versions (Pro included), lower efforts and agy's
-# non-Gemini models are refused.
+# The lane's floors: a Gemini id at version 3.8 or later with effort -high;
+# or, as the reserve Claude readers, opus at -medium or -high and sonnet at
+# -high, version 5.5 or later. Everything else (older versions, older Pro
+# models included, lower efforts, other models) is refused.
 meets_floor() {
-  [[ "$1" =~ ^gemini-([0-9]+)\.([0-9]+)-[a-z]+-high$ ]] || return 1
-  [ "${BASH_REMATCH[1]}" -gt 3 ] || { [ "${BASH_REMATCH[1]}" -eq 3 ] && [ "${BASH_REMATCH[2]}" -ge 8 ]; }
+  if [[ "$1" =~ ^gemini-([0-9]+)\.([0-9]+)-[a-z]+-high$ ]]; then
+    [ "${BASH_REMATCH[1]}" -gt 3 ] || { [ "${BASH_REMATCH[1]}" -eq 3 ] && [ "${BASH_REMATCH[2]}" -ge 8 ]; }
+    return
+  fi
+  [[ "$1" =~ ^claude-(opus|sonnet)-([0-9]+)-([0-9]+)-(medium|high)$ ]] || return 1
+  [ "${BASH_REMATCH[1]}" = opus ] || [ "${BASH_REMATCH[4]}" = high ] || return 1
+  [ "${BASH_REMATCH[2]}" -gt 5 ] || { [ "${BASH_REMATCH[2]}" -eq 5 ] && [ "${BASH_REMATCH[3]}" -ge 5 ]; }
 }
 
 cmd_run() {
@@ -195,7 +201,7 @@ cmd_run() {
     "$workspace/"*) local rd="$RUN_DIR"; RUN_DIR=""; [ -z "$run_dir_opt" ] || rmdir "$rd" 2>/dev/null || true
       fail_json usage "--run-dir must be outside the workspace: $rd" ;;
   esac
-  meets_floor "$model" || fail_json model_floor "model below the lane's floor (gemini-3.8-flash-high or newer, -high only): $model"
+  meets_floor "$model" || fail_json model_floor "model outside the lane's floors (gemini-3.8-flash-high or newer at -high; claude-opus 5.5+ at -medium/-high; claude-sonnet 5.5+ at -high): $model"
   resolve_agy; make_work_home
   # Logged out, agy starts a login flow in the run itself and reads the prompt
   # on stdin as the authorization code; check before the prompt leaves.

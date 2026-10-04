@@ -179,7 +179,8 @@ HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
 [ -x "$HELPER" ] || HELPER="$HOME/skills/skills/orchestrate/scripts/codex-worker.sh"
 ```
 
-**Gemini lane.** Read-only readers through `scripts/gemini-worker.sh`; read
+**Gemini lane.** Read-only agy readers (Gemini, and the model map's reserve
+Claude row) through `scripts/gemini-worker.sh`; read
 `references/gemini-exec.md` before the first Gemini stage.
 
 **Seat dispatch** (Codex and Gemini): one call per stage, at most ten in

@@ -4,6 +4,22 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.48.4 — 2026-10-04
+
+orchestrate: Codex-lane workers view image files given by absolute path,
+without a shell command and also outside `--workspace`; verified for Luna
+on the WSL lane (one probe, then 36 before-and-after screenshot pairs, where
+a few readers mixed up which image was new, so findings stay candidates);
+Sol, Astra and native Windows get a probe first. Gemini becomes an extra
+image reader beside Luna. The agy subscription's Claude models join as a
+read-only reserve row on the Google quota (`opus` at medium or high,
+`sonnet` at high, version 5.5 or later): recon, Map reads and summaries
+when Anthropic quota is tight, never the cross-family verifier of
+Claude-produced work, and a reserve rather than a default since that quota
+is reported to drain fast. The Gemini helper's floor admits exactly those
+ids, with suite cases; a live verify with the reserve Sonnet id passed
+(read canary, denied write, unchanged workspace).
+
 ## 0.48.3 — 2026-10-04
 
 history-audit: the friction scan reads every Claude Code config dir it finds

@@ -157,12 +157,17 @@ check "the watchdog kills a process that outlives the deadline" \
   '.ok == false and .error_class == "timeout" and .spend.wall_seconds < 20' \
   "$(GEMINI_WORKER_GRACE=2 run hang --timeout 1)"
 
-for m in gemini-3.1-pro-high gemini-3.7-flash-high gemini-3.8-flash-medium claude-opus-4-6-thinking gemini-4.0-flash-lite-high; do
+for m in gemini-3.1-pro-high gemini-3.7-flash-high gemini-3.8-flash-medium claude-opus-4-6-thinking gemini-4.0-flash-lite-high \
+    claude-opus-5-5-low claude-sonnet-5-5-medium claude-opus-4-8-high gpt-oss-120b-medium claude-opus-5-5-high-x; do
   check "floor: $m refused before agy runs" '.ok == false and .error_class == "model_floor" and (.status // null) == null' \
     "$(FAKE_AGY_MODE=success bash "$helper" run --model "$m" --workspace "$tmp/ws" --prompt-file "$tmp/prompt.md" --run-dir "$(mktemp -d "$tmp/run-floor.XXXXXX")")"
 done
 check "floor: a newer Gemini at -high passes" '.ok == true' \
   "$(FAKE_AGY_MODE=success bash "$helper" run --model gemini-4.0-pro-high --workspace "$tmp/ws" --prompt-file "$tmp/prompt.md" --run-dir "$(mktemp -d "$tmp/run-floor.XXXXXX")")"
+for m in claude-opus-5-5-high claude-opus-5-5-medium claude-sonnet-5-5-high claude-opus-6-0-medium; do
+  check "floor: reserve Claude reader $m passes" '.ok == true' \
+    "$(FAKE_AGY_MODE=success bash "$helper" run --model "$m" --workspace "$tmp/ws" --prompt-file "$tmp/prompt.md" --run-dir "$(mktemp -d "$tmp/run-floor.XXXXXX")")"
+done
 
 check "usage: --model required" '.error_class == "usage"' \
   "$(bash "$helper" run --prompt-file "$tmp/prompt.md")"
