@@ -22,7 +22,8 @@ most review of Claude output, investigation, root-cause second views and
 focused research. Astra takes planning and architectural counter-cases,
 large reviews, and work where a mistake is costliest: one or two Astra
 stages in a workflow is normal when the work warrants them, with Sol
-staying the standing partner.
+staying the standing partner. A second opinion on the seat's own thinking
+comes from the strongest models, not from Sol (§ Review and spend).
 Cross-family review is preferred; an `opus` review of Claude output is a
 same-family check, labeled as such. Fable's taste and intent
 role does not imply a general reasoning advantage over `opus` or Astra.
@@ -64,10 +65,10 @@ provide them; the Codex probe does not test tool availability.
 
 | Model | Lane | Default effort | Role | Availability fallback |
 |---|---|---|---|---|
-| `gpt-6-astra` | Codex | high; medium for bounded work; xhigh only on the user's word | Planning and architectural counter-cases; large reviews and cross-family verification where a missed defect is costliest; research, synthesis or root-cause work at the same stakes | `opus` at high/xhigh; `fable` for fuzzy intent |
-| `gpt-6.1-sol` | Codex | high; xhigh on the seat's judgment for hard work; medium for cheap mechanical writes | Default cross-family partner: review and verification of Claude-produced work, investigation, root-cause second views, focused research and relay work; writes code only under a tight spec whose wrong result a test or lint gate catches, Sweep transforms and simple low-risk edits included | `gpt-6-astra`; `opus` if the Codex lane is down |
-| `fable` | Claude | medium/high | Design taste, fuzzy intent and highest-stakes user-facing judgment. Delegate only a distinct question the seat cannot resolve as efficiently; a Fable seat seldom needs another Fable | `opus` |
-| `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default workhorse for long-horizon implementation, hard root-cause work and diagnosis, migrations, codebase audits, frontend builds, user-facing copy and API-shape proposals; judgment-bearing work needing Claude harness tools; cross-family verification of Codex-produced work | `gpt-6-astra`, with degraded family coverage when applicable |
+| `gpt-6-astra` | Codex | high; medium for bounded work; xhigh only on the user's word | Planning and architectural counter-cases; the outside-family second opinion for a Claude seat; large reviews and cross-family verification where a missed defect is costliest; research, synthesis or root-cause work at the same stakes | `opus` at high/xhigh; `fable` for fuzzy intent |
+| `gpt-6.1-sol` | Codex | high; xhigh on the seat's judgment for hard work; medium for cheap mechanical writes | Default cross-family partner: review and verification of Claude-produced work, investigation, root-cause second views, focused research and relay work; writes code only under a tight spec whose wrong result a test or lint gate catches, Sweep transforms and simple low-risk edits included; a second opinion only on the user's explicit word | `gpt-6-astra`; `opus` if the Codex lane is down |
+| `fable` | Claude | medium/high | Design taste, fuzzy intent and highest-stakes user-facing judgment; the same-family second opinion for an `opus` seat. Delegate only a distinct question the seat cannot resolve as efficiently; a Fable seat seldom needs another Fable | `opus` |
+| `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default workhorse for long-horizon implementation, hard root-cause work and diagnosis, migrations, codebase audits, frontend builds, user-facing copy and API-shape proposals; judgment-bearing work needing Claude harness tools; cross-family verification of Codex-produced work; the same-family second opinion for a `fable` seat | `gpt-6-astra`, with degraded family coverage when applicable |
 | `gpt-6-luna` | Codex | xhigh; never below high; max allowed | Read-only: Map readers, extraction, classification and small criterion-based reviews, screenshots and UI images included; never writes; findings are candidates, never decisions | `gpt-6.1-sol`; `sonnet` if the Codex lane is down |
 | `gemini-3.8-flash-high` | agy (read-only) | in the id: `-high` | Extra third-family voice in ideation, product and UX rounds, an extra reader of screenshots and UI images beside Luna, research from supplied sources and general knowledge, and first-pass review triage; never ahead of Luna for bounded reads and extraction unless the user sends work here (Codex usage spent, or Google models asked for); never writes code, never counts or inventories (no shell) and never the owed cross-family verifier; findings are candidates, never decisions | `gpt-6-luna` |
 | `claude-opus-5-5-high`, `claude-opus-5-5-medium`, `claude-sonnet-5-5-high` | agy (read-only) | in the id | Reserve Claude readers on the Google quota (§ Delegates): recon, Map reads, summaries and Claude-judgment reads when Anthropic quota is tight or the user sends work here; never the cross-family verifier of Claude-produced work, never writes, never counts or inventories (no shell); findings are candidates, never decisions | `opus` or `sonnet` on the Claude lane |
@@ -136,6 +137,17 @@ row's first fallback is another Codex model.
   Same-family coverage is degraded: usable when the other lane is
   unavailable, and labeled as such. Report cross-provider, same-provider or
   none. Agreement never replaces checking evidence.
+- **Adversarial reads and second opinions.** The seat's own design, plan,
+  architecture decision or big-picture judgment is challenged by the
+  strongest models, never by Sol by default: an `opus` seat asks
+  `gpt-6-astra`, `fable`, or both; a `fable` seat asks `opus` and may also
+  ask `gpt-6-astra`. The counter-case owed before a Build (`SKILL.md`
+  § Shapes, Second look) comes from outside the seat's family, so on a
+  Claude seat it is Astra's. `fable` and `opus` are one family: a
+  Claude-lane second opinion is labeled same-family and never replaces
+  owed outside-family verification. Sol stays the standing reviewer of
+  diffs and rule text and the cross-family verifier `SKILL.md` § Review
+  owes; it gives a second opinion only on the user's explicit word.
 - **Image-generation relay exception.** When the worker only prompts a
   separate image model, use `gpt-6.1-sol` at `medium`. The image model does
   the substantive work; this exception never applies to a stage doing its

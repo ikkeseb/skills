@@ -46,7 +46,7 @@ automation, image inspection) not yet verified under Codex.
 
 | Skill | What it does | Invoke |
 |---|---|---|
-| **[second-opinion](skills/second-opinion)** | One read-only Codex call on work that already exists, answered as a synthesis rather than a relay. GPT-6.1 Sol in a fresh review context, or GPT-6 Astra for plans and the highest stakes, with family coverage stated. | `/second-opinion` |
+| **[second-opinion](skills/second-opinion)** | One read-only review of work that already exists, answered as a synthesis rather than a relay. The session model picks the reader from the strongest models: GPT-6 Astra through the Codex CLI, Fable or Opus through a Claude subagent, with family coverage stated. | `/second-opinion` |
 | **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes bounded, reviewable execution and reconnaissance to Claude and Codex worker models by tier. Claude agents plus optional Codex CLI and read-only Gemini (Antigravity CLI) lanes. | `/orchestrate` · `/orchestrate sustained` |
 
 Each skill folder contains its `SKILL.md`; Excalidraw also carries setup notes

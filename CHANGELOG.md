@@ -4,6 +4,27 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.49.0 — 2026-10-05
+
+orchestrate, consolidated on the maintainer's approval: `SKILL.md` goes from
+3057 to 2882 words with behaviour meant unchanged. Seat-dispatch and adapter
+mechanics move into `references/codex-exec.md` (the Gemini reference points
+to both owners), a repeated model parade gives way to the model map, and
+three incident narrations leave while their rules stay. A reader listed 270
+at-risk clauses before the draft and a cross-family check reconciled every
+row against it: none lost. Two additions, on the maintainer's direction. The
+seat runs adversarial reads on its own when the task calls for it: a design,
+plan or architecture decision in the review risk classes gets a counter-case
+from outside the seat's family before a Build rests on it, and a big-picture
+judgment gets the strongest available model. second-opinion routes by
+session model and no longer defaults to Sol: an `opus` session asks Astra,
+`fable` or both, a `fable` session asks `opus` and may ask Astra, any other
+asks Astra; the skill gains a Claude-subagent path beside its Codex path,
+labels a Claude-lane read same-family, and Sol gives a second opinion only on
+the user's explicit word. Measured correction in both skills: the 30-minute
+background kill applies to unattended sessions; the explicit timeout stays.
+Prose only, no field run.
+
 ## 0.48.9 — 2026-10-05
 
 orchestrate, from field runs and two independent second opinions that asked

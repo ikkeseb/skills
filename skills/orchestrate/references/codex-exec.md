@@ -98,16 +98,33 @@ stages read `references/imagegen.md` before the prompt is written.
 
 ## Dispatch
 
-Seat dispatch (`SKILL.md` § Dispatch) is the default; the foreground
-adapter is the Workflow exception. Pick at dispatch and never switch owners
-mid-job.
+Seat dispatch is the default; the foreground adapter is the Workflow
+exception. Pick at dispatch and never switch owners mid-job.
+
+**Seat dispatch.** Read this paragraph before the first seat dispatch on
+the Codex or the Gemini lane; it governs both (the Gemini helper is
+`"$GEMINI_HELPER"`). `SKILL.md` § Dispatch owns what stays lane-neutral:
+one call per stage, the in-flight caps, the label format, delivery
+ownership and the harvest. The seat writes the prompt and schema files outside the run dir,
+mints an empty run dir (`RUN_DIR="$(mktemp -d)"`), and starts the helper
+with the Bash tool's `run_in_background`, the stage label as both
+`description` and the command's leading no-op line (`: "<label>"`), stdout
+redirected to a file, stderr left unredirected, and the call's own
+`timeout` (ms) set above the helper's `--timeout` (s) × 1,000 plus queue
+margin, at most 7,200,000 ms (shorten `--timeout` to fit): in an
+unattended session the 30-minute background default kills a longer run and
+loses its result.
 
 ```bash
-: "r1 authority — gpt-6-luna @ xhigh"
+: "gpt-6-luna @ xhigh — r1 authority"
 "$HELPER" run --model gpt-6-luna --effort xhigh --sandbox read-only \
   --workspace "$PWD" --prompt-file "$DIR/prompt.md" \
   --schema-file "$DIR/schema.json" --run-dir "$RUN_DIR" > "$DIR/stdout.json"
 ```
+
+A harness without an exit signal waits in bounded foreground calls (540 s
+each, repeated):
+`sh -c 'i=0; until [ -f "$RUN_DIR/result.json" ] || [ $i -ge 108 ]; do sleep 5; i=$((i+1)); done'`
 
 Stdout goes to a file because some failures emit their envelope there
 only. Stderr stays unredirected because the helper prints the user's live
@@ -121,14 +138,17 @@ since a quiet stream still proves nothing. `--no-progress` turns them off
 and keeps the banner. In the stage line, fresh is `spend` `input_tokens`
 minus `cached_input_tokens`.
 
-**Foreground adapter.** A Workflow that mixes lanes may carry a Codex
-stage, at a price: every Workflow stage is a Claude agent that replays its
-own context (~25k tokens) on every tool call. The
+**Foreground adapter.** A Workflow that mixes lanes may carry a
+confidently short Codex stage through the foreground `codex-worker`
+adapter, one call over files the seat wrote, at a price: every Workflow
+stage is a Claude agent that replays its own context (~25k tokens) on
+every tool call. The
 seat writes the prompt and schema files before the workflow starts and
 passes their paths in the briefing. The Bash tool's timeout is hard-capped
 at 600000 ms and auto-backgrounds past it, which silently breaks a
 foreground relay, so the helper runs with `--timeout 540` and the stage
-must be confidently short; a run that may need more is seat dispatch. It
+must be confidently short; a longer Codex stage runs beside the Workflow
+as a seat dispatch. It
 also runs with `--no-progress`, because the Bash tool result mixes stderr
 into the text the adapter must relay verbatim. An
 adapter turn that ends without an envelope is a lost delivery, never a

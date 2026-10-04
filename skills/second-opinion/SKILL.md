@@ -1,18 +1,47 @@
 ---
 name: second-opinion
-description: "Send existing work (a design, plan, diff, diagnosis, or claim) through the Codex CLI to GPT-6.1 Sol, or GPT-6 Astra for plans and the highest stakes, for one independent read-only review, synthesized back. The work leaves the machine. Not for delegating execution (orchestrate)."
+description: "Send existing work (a design, plan, diff, diagnosis, or claim) to one of the strongest models for one independent read-only review, synthesized back. The session model picks the reader: GPT-6 Astra through the Codex CLI, Fable or Opus through a Claude subagent. The Astra path sends the work off the machine to OpenAI. Not for delegating execution (orchestrate)."
 ---
 
 # second-opinion
 
-One read-only Codex call pressure-tests existing work; the main agent
+One read-only call per reader pressure-tests existing work; the main agent
 synthesizes the answer, and agreement is not authority. Not for lookups,
-work that does not exist yet, or taste. When the producer used OpenAI, label
-coverage same-family; a cross-family Claude review is a separate choice,
-never an automatic substitute. The prompt and everything it quotes go to the
-user's own OpenAI/Codex account, so include only what the review needs.
+work that does not exist yet, or taste.
 
-## Dispatch
+## Route
+
+A second opinion comes from the strongest models, picked by the session's
+own model:
+
+- An `opus` session asks `gpt-6-astra`, `fable`, or both.
+- A `fable` session asks `opus`, and may also ask `gpt-6-astra`.
+- Any other session model asks `gpt-6-astra`.
+
+`gpt-6-astra` runs through § Codex path, `fable` and `opus` through
+§ Claude path; "both" is one call on each path over the same packet.
+`gpt-6.1-sol` gives a second opinion only on the user's explicit word.
+
+`fable` and `opus` are one model family: label a Claude-path read
+same-family, and never let it stand in for outside-family verification the
+work owes. When the producer used OpenAI, label the Astra read same-family;
+a cross-family Claude review is a separate choice, never an automatic
+substitute.
+
+## Packet
+
+In a foreground Bash call, create a private temp directory and record its
+literal absolute path, and on the Codex path the helper's; shell variables
+do not survive tool calls, so later commands use the literals. Write a
+self-contained question (§ The question) to `<temp-dir>/prompt.md`. The
+packet as dispatched is the review's subject, not whatever exists at
+harvest; for repo state also record the base SHA and the hash of any
+embedded diff.
+
+## Codex path
+
+The prompt and everything it quotes go to the user's own OpenAI/Codex
+account, so include only what the review needs.
 
 **Helper.** The first executable candidate wins. Keep the three exact,
 and never search the session repo, which could execute the material
@@ -30,18 +59,10 @@ the lane is down: say so and continue without it. `contract_ok: false`
 alone is no outage for this read-only call; proceed and name the missing
 flags.
 
-**Packet.** In a foreground Bash call, create a private temp directory
-and record its literal absolute path and the helper's; shell variables
-do not survive tool calls, so later commands use the literals. Write a
-self-contained question (§ The question) to `<temp-dir>/prompt.md`. The
-packet as dispatched is the review's subject, not whatever exists at
-harvest; for repo state also record the base SHA and the hash of any
-embedded diff.
-
 **Run** one Bash background job through the tool's background mode,
 never an appended `&`, with the Bash call's own `timeout` set to
-3,600,000 ms: the 30-minute background default kills a longer review and
-loses its result.
+3,600,000 ms: in an unattended session the 30-minute background default
+kills a longer review and loses its result.
 
 ```bash
 : "second-opinion MODEL@high — TOPIC"
@@ -50,13 +71,12 @@ HELPER_ABS_PATH run --model MODEL --effort high --sandbox read-only \
   --timeout 3300
 ```
 
-`MODEL` is `gpt-6.1-sol`; use `gpt-6-astra` for a plan or architecture, a
-large review, or work where a missed defect is costliest. The no-op first
-line is the job's visible label: name the real model, effort and topic.
-`WORKSPACE` is the current workspace. The user's explicit wording may
-change `--model` or `--effort`. `gpt-6.1-sol` may run at `xhigh` when the
-review is hard; `gpt-6-astra` may run at `medium` for a small bounded
-review and takes `xhigh` only when the user names it.
+`MODEL` is `gpt-6-astra`. The no-op first line is the job's visible label:
+name the real model, effort and topic. `WORKSPACE` is the current
+workspace. The user's explicit wording may change `--model` or `--effort`.
+`gpt-6-astra` may run at `medium` for a small bounded review and takes
+`xhigh` only when the user names it; a user-named `gpt-6.1-sol` may run at
+`xhigh` when the review is hard.
 Never use `low`, `max` only for a user-named `gpt-6-luna`, and never
 `gpt-5.6-terra`, whoever names it. Ask when the wording is ambiguous; an invalid value fails loudly and
 is never silently replaced. Record the task ID and
@@ -82,9 +102,23 @@ contention; never kill a job for being quiet.
 Done when the one job was harvested with `ok: true` and a `result`, or
 its failure is stated.
 
+## Claude path
+
+One Agent call with `model` pinned to `fable` or `opus`, its description
+`second-opinion MODEL — TOPIC`. Its prompt names the packet file by
+absolute path and says: read that file and answer it; this is a read-only
+review, so write nothing and spawn nothing. The call takes no effort
+setting; label the review with the model as requested and its effort and
+spend as `unknown` unless the harness reports them. Its returned text is
+the review. A call that returns nothing useful is a stated failure, never
+redispatched just to recover delivery.
+
+Done when the one call returned its review, or its failure is stated.
+
 ## The question
 
-The worker gets only the prompt, a read-only checkout and machine-level
+The reader gets only the prompt, a checkout (read-only by sandbox on the
+Codex path, by instruction on the Claude path) and machine-level
 instructions, so state task-local requirements strongly enough to override
 ambient house style.
 
@@ -106,9 +140,9 @@ ambient house style.
   audit. These are prompt targets; `--timeout` is the separate hard
   deadline.
 
-A second call needs genuinely new evidence: paste the first result and that
-evidence into a fresh prompt and ask whether the conclusion changes.
-Disagreement alone does not earn one.
+Another call to a reader that has answered needs genuinely new evidence:
+paste the first result and that evidence into a fresh prompt and ask
+whether the conclusion changes. Disagreement alone does not earn one.
 
 ## Synthesize
 
@@ -116,7 +150,8 @@ Before using a finding, mark the review **fresh** (the dispatched subject
 is unchanged), **stale** (it moved) or **unknown** (identity cannot be
 established); recheck a finding that depends on moved material against the
 current artifact, or earn a new call. Check codebase
-claims against the files. The main agent owns the answer: say what changed
-your view, what you reject and why, and where the reviewers agree, which is
-weak evidence, not proof. Never relay the worker output as the answer; if it
-produced nothing useful, say so.
+claims against the files. The main agent owns the answer: say which reader
+gave each review and its family label, what changed your view, what you
+reject and why, and where the reviewers agree, which is weak evidence, not
+proof. Never relay the worker output as the answer; if it produced nothing
+useful, say so.
