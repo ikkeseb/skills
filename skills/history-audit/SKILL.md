@@ -15,8 +15,9 @@ Deterministic where possible; agents only where judgment is needed.
 
 Quick friction pass, no agents: `python3 scripts/friction-scan.py --days 14`
 counts failed tool calls (hook blocks, permission denials, read-before-edit,
-edit mismatches, exit codes, Codex `Script failed`) per harness, lane and
-model with dated pointers. Run it first; it answers "what breaks mechanically"
+edit mismatches, exit codes, Codex `Script failed`) per harness, Claude Code
+config dir, lane and model with dated pointers; `--exclude <regex>` drops
+project dirs the user wants left out. Run it first; it answers "what breaks mechanically"
 so the pipeline below can stay on "what the user corrected". Before blaming a
 prompt or instruction line for a failure cluster, follow one sampled failed
 `tool_result` back to the `tool_use` that produced it (the scan already maps
@@ -27,12 +28,15 @@ says how often; the parent call says whose.
 ## Pipeline
 
 1. **Detect and index the corpora by script, not agents.** Probe what exists
-   on this machine: Claude Code at `~/.claude/projects/*/*.jsonl`, Codex at
+   on this machine: Claude Code in its config dirs (`~/.claude*` with a
+   `projects/` folder, plus `$CLAUDE_CONFIG_DIR`; both scripts discover them
+   the same way and take `--claude-dir` instead), Codex at
    `~/.codex/sessions/**/rollout-*.jsonl`. Run on what is found; a corpus
    that does not exist is reported as **unknown, never as zero failures**.
    File mtime is unreliable (observed: every file touched recently), so take
-   dates from content (first `"timestamp"` in Claude transcripts; the
-   `rollout-YYYY-MM-DD` filename for Codex). Take the model set from the
+   dates from content (record `"timestamp"` fields; a Codex rollout's
+   `rollout-YYYY-MM-DD` filename says when it started, not when it was
+   active). Take the model set from the
    corpus itself, not from a hard-coded list, and record the date window the
    corpus actually covers. Exclude automated corpora (single-shot
    scheduled/headless sessions, 1 user message per session): they pollute
@@ -44,16 +48,26 @@ says how often; the parent call says whose.
    identify spawned threads. Done when the index lists sessions with harness,
    model, date, and cwd, records the covered window and every exclusion count,
    and states which corpora were absent.
-2. **Extract user messages only, per session**, into compact text files in a
-   local scratch directory, with a header (harness, model, date, cwd). Skip
+2. **Extract the user's messages, per session**, into compact text files in
+   a local scratch directory, with a header (harness, model, date, cwd); at
+   most a short tail of the agent's preceding text may ride along as
+   context. Skip
    tool results, meta lines, command wrappers, and environment blocks; this
    typically shrinks the corpus by two orders of magnitude. Redact by script
    before any model reads an extract: mask credential-shaped strings (API
-   keys, tokens, passwords, private-key blocks). A secret pasted into a
-   past session must never survive into extracts, quotes, or the report.
-   Extracts and report stay on this machine. Done when every indexed
-   session has a redacted extract containing its header and user messages
-   only.
+   keys, tokens, passwords, private-key blocks). Masking is shape matching,
+   best effort: an unusual secret can survive it, so readers never quote
+   anything secret-looking, the report carries no secret, and extracts and
+   report stay on this machine until step 5's OK. For Claude Code,
+   `python3 scripts/extract-user-messages.py --out <new dir> --days N`
+   does steps 1 and 2; its header lists what it keeps, marks and skips.
+   Codex rollouts still need both steps by other means. Whatever does the
+   extraction keeps slash-command arguments (the task often sits there)
+   and treats a rewound re-send (a typed message sharing its parent with an
+   earlier one) as replacing that message: not a double send, and not
+   counted twice in denominators. Done when every indexed session has a
+   redacted extract holding its header and the user's messages, with no
+   other content than that agent-tail context.
 3. **Mine correction events** over size-balanced batches (fan out readers
    where the harness supports subagents; otherwise batch sequentially), with
    a fixed category enum and a confidence field (high/medium), quoting the

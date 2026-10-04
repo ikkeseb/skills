@@ -27,6 +27,11 @@ bash skills/orchestrate/scripts/test-codex-worker.sh
 bash skills/orchestrate/scripts/test-gemini-worker.sh
 node skills/drawio/scripts/test-validate-drawio.mjs
 node skills/excalidraw/scripts/test-excalidraw.mjs
+if command -v python3 >/dev/null 2>&1 && python3 -c 'import sys; sys.exit(sys.version_info < (3, 7))' 2>/dev/null; then
+  python3 skills/history-audit/scripts/test-history-audit.py
+else
+  printf 'SKIP: history-audit tests need python3 >= 3.7\n'
+fi
 
 bash skills/orchestrate/scripts/check-helper-resolution.sh
 

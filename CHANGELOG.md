@@ -4,6 +4,26 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.48.3 — 2026-10-04
+
+history-audit: the friction scan reads every Claude Code config dir it finds
+(one row group per dir), finds subagent transcripts by their `subagents/`
+folder as well as their name, compares timestamps as instants (Codex by
+record time, not file name, with session metadata kept), masks whole tool
+output with a shared, stricter redaction module before choosing lines,
+tolerates odd records, and takes `--exclude` for project dirs the user wants
+left out, reporting a fully excluded corpus as such. A new
+`extract-user-messages.py` does pipeline steps 1 and 2 for Claude Code:
+window from content timestamps, automated sessions excluded before
+deduplication, fork prefixes counted once without eating a fork's own
+suffix, slash-command arguments kept, interrupts marked, a rewound re-send
+marked and the message it replaced left out of counts (never across a
+compaction), secrets masked in text, metadata and file names before any
+cut, and a fresh output directory required. Masking stays best-effort shape
+matching, now said so in the skill, which keeps extracts on the machine. Synthetic tests for both
+scripts run in the gate. From a field run where a second config dir was
+invisible to the scan and re-sends read as duplicate messages.
+
 ## 0.48.2 — 2026-10-02
 
 orchestrate: slot counts are capacity, not a target. The seat's review
