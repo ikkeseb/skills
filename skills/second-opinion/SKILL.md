@@ -75,7 +75,7 @@ contention; never kill a job for being quiet.
   cost comparison counts failed attempts. Label the model as requested
   unless runtime evidence verifies the served one.
 - No valid file: find the JSON envelope in the recorded background output
-  (a stderr banner plus stdout), where early failures report.
+  (stderr lines plus stdout), where early failures report.
 - Neither: report `codex_failed` with the job state and run-dir evidence.
   Never redispatch just to recover delivery.
 

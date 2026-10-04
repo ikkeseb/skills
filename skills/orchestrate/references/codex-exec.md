@@ -57,6 +57,7 @@ invocation; only verify proves it still behaves.
   [--schema-file "$DIR/schema.json"]   # JSON Schema the result must satisfy
   [--timeout 3600]                     # total deadline, queue wait included
   [--run-dir "$RUN_DIR"]               # orchestrator-minted empty dir
+  [--no-progress]                      # no live progress lines on stderr (§ Dispatch)
 ```
 
 **Run dir.** Fresh per attempt: the helper refuses a non-empty dir. Suffix
@@ -109,8 +110,16 @@ mid-job.
 ```
 
 Stdout goes to a file because some failures emit their envelope there
-only. In the stage line, fresh is `spend` `input_tokens` minus
-`cached_input_tokens`.
+only. Stderr stays unredirected because the helper prints the user's live
+view of the job there: the start banner, then one line per command start,
+failed command and agent message, then a closing `end` line. Every line
+after the banner is best effort, and early refusals and interrupted runs
+print no `end` line. Over the WSL bridge, or with no `perl` on PATH, there
+are no progress lines.
+Harvest from the envelope only and never read those lines as liveness,
+since a quiet stream still proves nothing. `--no-progress` turns them off
+and keeps the banner. In the stage line, fresh is `spend` `input_tokens`
+minus `cached_input_tokens`.
 
 **Foreground adapter.** A Workflow that mixes lanes may carry a Codex
 stage, at a price: every Workflow stage is a Claude agent that replays its
@@ -119,7 +128,9 @@ seat writes the prompt and schema files before the workflow starts and
 passes their paths in the briefing. The Bash tool's timeout is hard-capped
 at 600000 ms and auto-backgrounds past it, which silently breaks a
 foreground relay, so the helper runs with `--timeout 540` and the stage
-must be confidently short; a run that may need more is seat dispatch. An
+must be confidently short; a run that may need more is seat dispatch. It
+also runs with `--no-progress`, because the Bash tool result mixes stderr
+into the text the adapter must relay verbatim. An
 adapter turn that ends without an envelope is a lost delivery, never a
 pause: never ping or re-invoke it; recover from the run dir
 (troubleshooting § Lost delivery).
@@ -140,7 +151,7 @@ You are a one-shot Codex-lane adapter. Do EXACTLY this, nothing else:
    HELPER_ABS_PATH run --model MODEL --effort EFFORT \
      --sandbox read-only --workspace WORKSPACE \
      --prompt-file PROMPT_FILE --schema-file SCHEMA_FILE \
-     --run-dir RUN_DIR --timeout 540
+     --run-dir RUN_DIR --timeout 540 --no-progress
 2. Return the helper's ENTIRE stdout verbatim as your result.
 Rules: strictly one-shot — never retry, never interpret or summarize the
 result, never touch the repo. Foreground means foreground: never set

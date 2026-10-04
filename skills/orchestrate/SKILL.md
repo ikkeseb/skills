@@ -190,6 +190,8 @@ seat writes the prompt and schema files outside the run dir, mints an empty
 run dir (`RUN_DIR="$(mktemp -d)"`), and starts the helper with the Bash
 tool's `run_in_background`, the stage label as both `description` and the
 command's leading no-op line (`: "<label>"`), stdout redirected to a file,
+stderr left unredirected because the Codex helper prints the user's live
+view of the worker there,
 and the call's own `timeout` (ms) set above the helper's `--timeout` (s)
 × 1,000 plus queue margin, at most 7,200,000 ms (shorten `--timeout` to
 fit): the 30-minute background default kills a longer run and loses its

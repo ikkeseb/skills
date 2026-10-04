@@ -22,6 +22,8 @@
 #       [--run-dir <dir>]  caller-minted run dir (must be empty/nonexistent);
 #                          lets the orchestrator harvest from disk if the
 #                          adapter relaying stdout is lost (default: mktemp)
+#       [--no-progress]  no live progress lines on stderr (the start banner
+#                        stays); for a caller that relays stderr as text
 #   codex-worker.sh probe     auth + CLI contract, no model call
 #   codex-worker.sh verify    end-to-end smoke test (one tiny billed run)
 #
@@ -31,9 +33,12 @@
 #   CODEX_WORKER_WSL_DISTRO     VM to use with that lane (default: wsl.exe's
 #                               default distribution)
 #
-# Output: exactly one JSON object on stdout. Everything else goes to stderr.
+# Output: exactly one JSON object on stdout. Everything else goes to stderr:
+# for `run`, a start banner, then live progress lines while the worker runs
+# (see the progress section).
 # Dependencies: Bash and jq for every command; Codex for probe/run/verify;
-# git plus shasum or sha256sum for workspace-write runs.
+# git plus shasum or sha256sum for workspace-write runs. Optional: perl, for
+# the progress lines only.
 set -euo pipefail
 
 # The recipe's real dependency is this flag surface, not a version number.
@@ -69,7 +74,7 @@ ensure_slot_root() {
 
 SLOT_DIR="" WS_LOCK="" CODEX_PID="" VERIFY_TMP=""
 CODEX_BIN="" WORKSPACE_HASH_BIN="" WORKSPACE_HASH_KIND=""
-JQ_BIN="" GIT_BIN=""
+JQ_BIN="" GIT_BIN="" PERL_BIN=""
 GREP_BIN="" HEAD_BIN="" TAIL_BIN="" TR_BIN="" CUT_BIN="" AWK_BIN="" CAT_BIN=""
 # Script-scope, not `local`: the EXIT trap fires after the function returns, so
 # a function-local would be unbound there and `set -u` would abort the run.
@@ -230,6 +235,7 @@ bridge_to_wsl() { # $@ = this helper's own argv: run|probe|verify [options]
         "the minted run dir has no drvfs form: $run_dir_win"
       argv+=(--run-dir "$run_dir_wsl")
     fi
+    argv+=(--no-progress) # replayed only at the end: volume, no live view
     FAIL_RUN_DIR="$run_dir_win"
   else
     argv=("$@")
@@ -684,6 +690,126 @@ cmd_verify() {
      + (if $d.error == "" then {} else {error: $d.error} end)'
 }
 
+# --- progress -----------------------------------------------------------------
+# The user's live view of a run. A background job's remaining output is this
+# helper's stderr, and a start banner alone says nothing for the minutes a
+# worker takes. So each wait-loop tick, and one final flush after the worker
+# exits, prints the events.jsonl lines not printed yet:
+#   $ <command>     a command starts (a `bash -lc '<inner>'` wrapper prints
+#                   as <inner>; any other shape prints as it is)
+#     exit <N>      a command completes with a non-zero exit code
+#   > <text>        an agent message completes
+# Every other event, a line that is not JSON and any unexpected shape print
+# nothing. cmd_run closes the view with one `end ok=… cmds=… <seconds>s` line
+# taken from the envelope. The WSL bridge turns the view off, because it
+# replays the VM side's stderr only when the run ends.
+#
+# It is a view, never a result channel, so it must not be able to cost the
+# run anything:
+#   * Reading is guarded and bounded. tail and jq get two seconds each; a
+#     step that fails or runs out prints nothing, and the next tick reads
+#     the same lines again.
+#   * Writing is bounded and best effort. A foreground perl child does each
+#     write and ends itself after one second. What it did not write by then
+#     is dropped and never retried, so a stderr reader that stops reading
+#     costs lines and that second per write.
+#   * The view runs inside the wait loop's five-second poll and its time
+#     comes out of that poll's sleep: three seconds at most, so it does not
+#     shift when the worker and the deadline are next looked at, and the
+#     deadline is checked before a tick prints. After the worker exits the
+#     final flush and the closing line add at most five seconds.
+#   * The text is worker-controlled, so every rendered line is bounded
+#     (commands at 160 characters, messages at 200, exit codes at 20) and
+#     every control character (C0, DEL, C1) becomes a space. Nothing in it
+#     can drive the terminal showing it.
+#   * The position is a line count, which no byte a worker emits can skew.
+#     `split("\n")[:-1]` holds exactly the newline-terminated lines, so a
+#     line still being written waits for the next tick.
+# Left out on purpose: handling for a truncated or replaced events.jsonl. The
+# helper creates it once by redirection and only the worker appends.
+# The jq program is ASCII-only (the ellipsis and the single quote are built
+# from code points) and runs with MSYS path conversion off: a native Windows
+# jq would otherwise receive "/bin/" rewritten as a Windows path, and it ends
+# its lines with CRLF, which is stripped below.
+PROGRESS=true PROGRESS_SEEN=0
+# No perl, no view: the banner stays and nothing else changes. Same
+# direct-executable contract as resolve_codex.
+resolve_perl() {
+  PERL_BIN="$(type -P perl || true)"
+  [ -n "$PERL_BIN" ]
+}
+# One bounded write to stderr, by a foreground child that ends itself. perl
+# arms a one-second alarm, reads the text from stdin and writes it to the
+# helper's stderr, handed over through fd 3. Nothing runs in the background, so
+# no exit path has a writer to clean up: bash holds a trapped signal until
+# the child is gone, and a helper killed outright leaves a child that ends
+# within the same second. The child's stdout is /dev/null, never the envelope
+# channel. It exits through its own ALRM handler, and the group's stderr is
+# /dev/null, so bash has nothing to report down the pipe the write was stuck
+# on.
+progress_write() { # $1 = text; always returns 0
+  {
+    printf '%s\n' "$1" 3>&- \
+      | "$PERL_BIN" -e '
+          $SIG{ALRM} = sub { exit 0 }; $SIG{PIPE} = "IGNORE"; alarm 1;
+          local $/; my $text = <STDIN>; my $off = 0;
+          while ($off < length $text) {
+            my $n = syswrite(STDERR, $text, length($text) - $off, $off);
+            last unless defined $n;
+            $off += $n;
+          }' >/dev/null 2>&3 3>&-
+  } 3>&2 2>/dev/null || true
+  return 0
+}
+print_progress() { # $1 = events.jsonl; always returns 0
+  [ "$PROGRESS" = true ] || return 0
+  local out n
+  # tail and jq each run under a two-second alarm that perl arms before it
+  # execs them, and the subshell's own stderr is /dev/null, so bash cannot
+  # report a step the alarm ended down a stalled stderr.
+  out="$(exec 2>/dev/null
+    "$PERL_BIN" -e 'alarm 2; exec @ARGV' "$TAIL_BIN" -n "+$((PROGRESS_SEEN + 1))" "$1" \
+    | MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' "$PERL_BIN" -e 'alarm 2; exec @ARGV' "$JQ_BIN" -Rrs '
+      def ellipsis: [8230] | implode;
+      def quote: [39] | implode;
+      def clip($max): if length > $max then .[0:$max] + ellipsis else . end;
+      def safe:
+        explode | map(if . < 32 or (. >= 127 and . < 160) then 32 else . end)
+        | implode;
+      def unwrap:
+        . as $cmd
+        | ltrimstr("/bin/")
+        | if startswith("bash -lc " + quote) and endswith(quote)
+             and length > 11 and (.[10:-1] | contains(quote) | not)
+          then .[10:-1] else $cmd end;
+      split("\n")[:-1] as $lines
+      | ($lines | length),
+        ($lines[]
+         | try (fromjson
+                | select(type == "object")
+                | .type as $t | .item as $i
+                | select(($i | type) == "object")
+                | if $t == "item.started" and $i.type == "command_execution"
+                     and ($i.command | type) == "string"
+                  then "$ " + ($i.command | unwrap | clip(160) | safe)
+                  elif $t == "item.completed" and $i.type == "command_execution"
+                     and ($i.exit_code | type) == "number" and $i.exit_code != 0
+                  then "  exit " + ($i.exit_code | tostring | clip(20))
+                  elif $t == "item.completed" and $i.type == "agent_message"
+                     and ($i.text | type) == "string"
+                  then "> " + ($i.text | clip(200) | safe)
+                  else empty end
+                | "[codex-worker] " + .)
+           catch empty)')" || return 0
+  out="${out//$'\r'/}"
+  # First output line: how many complete lines this pass consumed.
+  n="${out%%$'\n'*}"
+  case "$n" in ''|*[!0-9]*) return 0 ;; esac
+  PROGRESS_SEEN=$((PROGRESS_SEEN + 10#$n))
+  [ "$out" = "$n" ] || progress_write "${out#*$'\n'}"
+  return 0
+}
+
 # --- run ----------------------------------------------------------------------
 cmd_run() {
   require_jq
@@ -712,9 +838,11 @@ cmd_run() {
           --run-dir)           run_dir_opt="$2" ;;
         esac
         shift 2 ;;
+      --no-progress) PROGRESS=false; shift ;;
       *) fail_json usage "unknown argument: $1" ;;
     esac
   done
+  [ "$PROGRESS" = false ] || resolve_perl || PROGRESS=false
   [ -n "$model" ] || fail_json usage "--model is required (use 'default' for the CLI's built-in model)"
   [ -f "$prompt_file" ] || fail_json usage "--prompt-file missing or unreadable: $prompt_file"
   [ -z "$schema_file" ] || [ -f "$schema_file" ] || fail_json usage "--schema-file unreadable: $schema_file"
@@ -1011,7 +1139,7 @@ cmd_run() {
     < "$effective_prompt_file" > "$run_dir/events.jsonl" 2> "$run_dir/stderr.log" &
   CODEX_PID=$!
   set +m
-  local elapsed=0 timed_out=false read_policy_denied=false
+  local timed_out=false read_policy_denied=false next_poll="$SECONDS" poll_now poll_wait
   while kill -0 "$CODEX_PID" 2>/dev/null; do
     if [ "$read_mode" = allowlisted-single-command ] \
        && "$GREP_BIN" -qiE 'CreateProcess.*blocked by policy' \
@@ -1020,16 +1148,34 @@ cmd_run() {
       kill_worker_group
       break
     fi
-    if [ "$elapsed" -ge "$remaining_secs" ]; then
+    # The deadline is read off the clock, directly after the liveness check
+    # above and before this tick prints: a timeout is declared only for a
+    # worker just seen running past it, whatever the view is doing.
+    if [ "$(( $(date +%s) - start_ts ))" -ge "$timeout_secs" ]; then
       timed_out=true
       kill_worker_group
       break
     fi
-    sleep 5; elapsed=$((elapsed + 5))
+    print_progress "$run_dir/events.jsonl"
+    # Polls keep a five-second schedule, and the time the view took comes
+    # out of the sleep, which is always one to five seconds. The clock is
+    # read once per tick; a wait outside that range means the clock stepped
+    # or the tick overran its slot, and the schedule restarts from here.
+    next_poll=$((next_poll + 5))
+    poll_now="$SECONDS"
+    poll_wait=$((next_poll - poll_now))
+    if [ "$poll_wait" -gt 5 ]; then poll_wait=5; next_poll=$((poll_now + 5)); fi
+    if [ "$poll_wait" -lt 1 ]; then next_poll="$poll_now"; else sleep "$poll_wait"; fi
   done
   wait "$CODEX_PID" 2>/dev/null
   local exit_code=$?
   CODEX_PID=""
+  # spend.seconds ends here, before the final flush can add its write bound.
+  local end_ts
+  end_ts="$(date +%s)"
+  # Final flush: the events of the worker's last seconds, written after the
+  # loop's last tick.
+  print_progress "$run_dir/events.jsonl" || true
   set -e
   if [ "$read_policy_denied" = false ] \
      && [ "$read_mode" = allowlisted-single-command ] \
@@ -1074,7 +1220,7 @@ cmd_run() {
   # ran 27 command items and 3.4M cumulative input tokens with no budget).
   local spend='{"commands":0,"input_tokens":null,"cached_input_tokens":null,"output_tokens":null,"reasoning_output_tokens":null,"seconds":0}'
   if [ -s "$run_dir/events.jsonl" ]; then
-    spend="$("$JQ_BIN" -Rsc --argjson seconds "$(( $(date +%s) - start_ts ))" '
+    spend="$("$JQ_BIN" -Rsc --argjson seconds "$(( end_ts - start_ts ))" '
       [split("\n")[] | fromjson?] as $ev
       | ([$ev[] | select(.type == "turn.completed")] | last | .usage // {}) as $u
       | {commands: ([$ev[] | select(.type == "item.completed" and .item.type == "command_execution")] | length),
@@ -1179,6 +1325,19 @@ cmd_run() {
         else {error_class: $error_class, error: $error, api_error: $api_error} end)' \
     > "$run_dir/result.json.tmp"
   mv -f "$run_dir/result.json.tmp" "$run_dir/result.json"
+  # Closing progress line, read back from the envelope just written so the two
+  # cannot disagree. Best effort like every progress write: guarded, bounded
+  # (one second to read it back, one to write it), dropped when stderr does
+  # not take it. The delivery below never waits on it for longer than that.
+  if [ "$PROGRESS" = true ]; then
+    local end_line
+    end_line="$(exec 2>/dev/null
+      MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' "$PERL_BIN" -e 'alarm 1; exec @ARGV' "$JQ_BIN" -r \
+      '"[codex-worker] end ok=\(.ok) cmds=\(.spend.commands) \(.spend.seconds)s"' \
+      < "$run_dir/result.json")" || end_line=""
+    end_line="${end_line//$'\r'/}"
+    [ -z "$end_line" ] || progress_write "$end_line" || true
+  fi
   "$CAT_BIN" "$run_dir/result.json"
 }
 

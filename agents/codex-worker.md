@@ -41,7 +41,7 @@ Steps:
 3. Run the helper exactly once, as a single FOREGROUND Bash call with the
    Bash tool's timeout parameter set to 600000 — it may legitimately take
    several minutes, worker-slot queue wait included:
-   `"$HELPER" run --model <model> --prompt-file <dir>/prompt.md`
+   `"$HELPER" run --model <model> --prompt-file <dir>/prompt.md --no-progress`
    plus `--effort`, `--sandbox`, `--workspace`, `--expected-base-sha`,
    `--run-dir`, `--schema-file`, `--timeout` for whichever parameters were
    provided; with no timeout given, pass `--timeout 540` so the helper's

@@ -4,6 +4,25 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.48.7 — 2026-10-04
+
+orchestrate: the Codex helper shows what a worker is doing. While a worker
+runs, `codex-worker.sh` prints one stderr line per command start, failed
+command and agent message after the start banner, then a closing `end` line
+read back from the envelope, so a person watching the background job sees
+more than a banner. Callers leave stderr unredirected; `--no-progress` turns
+the lines off for a caller that relays stderr as text (the foreground
+adapter passes it), and there are none over the WSL bridge or without `perl`
+on PATH. The view cannot cost the run: reads and writes run under alarms
+(two seconds, one second) whose time comes out of the wait loop's
+five-second poll, worker text is cut to length with control characters
+replaced, the deadline is read off the clock before a tick prints, and
+`spend.seconds` stops when the worker is reaped. The suite grows to 93
+checks, among them a stalled stderr reader with backpressure shown first, a
+termination signal during a stalled write, a clock jump, a worker finishing
+during a stalled write and a hanging read. Six cross-family review rounds.
+Run on Linux (WSL) and macOS; native Windows (Git Bash) not run.
+
 ## 0.48.6 — 2026-10-04
 
 handoff: an invocation that asks for no saved copy ("without doc", "no
