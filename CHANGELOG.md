@@ -4,6 +4,22 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.48.5 — 2026-10-04
+
+orchestrate, on the maintainer's direction: Sol may run at `xhigh` on the
+seat's judgment for hard work and goes below `high` only for cheap
+mechanical writes, whatever the brief; Astra runs at `high`, or `medium` for bounded work, with `xhigh`
+still on the user's word, and one or two Astra stages in a workflow is
+stated as normal when the work warrants them. The sentence that capped
+Codex effort because of the weekly quota (0.45.0) is gone, replaced by a
+quota posture: pick model and effort from what the work needs, treat
+remaining quota as an input only when the user says it is tight, drop
+optional depth first then, and keep owed verification. "Spend spare quota
+on depth" becomes "add depth where a miss would cost most". second-opinion
+follows. A cross-family counter-case read advised against giving
+agents a quota reading (a displayed number invites informal rationing), so
+none was built. Prose only, no field run.
+
 ## 0.48.4 — 2026-10-04
 
 orchestrate: Codex-lane workers view image files given by absolute path,
