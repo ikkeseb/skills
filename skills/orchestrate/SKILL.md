@@ -123,20 +123,22 @@ The brief is the senior deliverable; every stage gets one.
 - **Evidence.** Ask for every returned claim marked observed (with its
   source location or command) or inferred; a schema carries the mark as a
   field. The seat treats an unmarked claim as inferred.
-- **Header.** The prompt opens with `model:` / `effort:` / `budget:` lines,
-  a blank line, then `Task:`. They record the lane requested, never a
-  verified one: resolved values carry provenance (`effort: medium
-  (inherited)`), unresolvable ones read `unknown`, and a retry at another
-  tier updates them.
-- **Budget.** The `budget:` line sizes the run to its shape, in commands and
-  minutes, and names the stop: acceptance criteria met or the bound
-  reached, then return partial coverage and unknowns. Reuse briefed
-  evidence with its provenance; inspect sources for disputed or
-  load-bearing claims. The budget is a prompt target, not an enforced cap;
-  a lane's `--timeout` is the separate hard deadline, and hitting it proves
-  the deadline elapsed, not that the model hung. An overrun earns
-  inspection of scope, environment and task difficulty before another
-  dispatch, not an automatic retry.
+- **Header.** The prompt opens with `model:` / `effort:` lines, a blank
+  line, then `Task:`. They record the lane requested, never a verified one:
+  resolved values carry provenance (`effort: medium (inherited)`),
+  unresolvable ones read `unknown`, and a retry at another tier updates
+  them.
+- **Stop.** The brief names the stop: acceptance criteria met, or the
+  criteria out of reach, then return partial coverage and unknowns instead
+  of widening. Reuse briefed evidence with its provenance; inspect sources
+  for disputed or load-bearing claims. A Codex or Gemini reader may also
+  get a command count as a size hint, since every round replays its
+  context; the hint is a prompt target, not an enforced cap, and a reader
+  that spends it stops the same way. Never a time budget: a worker cannot
+  measure time, and a lane's `--timeout` is the hard deadline, where
+  hitting it proves the deadline elapsed, not that the model hung. An
+  overrun earns inspection of scope, environment and task difficulty before
+  another dispatch, not an automatic retry.
 - **Secrets stay on their owning host.** When a stage may touch live
   credentials or secrets, the brief states the boundary: never copy secret
   values into local files, prompts, logs or output; inspect them on the
@@ -233,9 +235,11 @@ dirty tree), a target linked into live configuration, or a cheap-tier
 writer outside a machine-gated mechanical task.
 
 Create worktrees in the main loop at current HEAD, under the session
-repo's `.claude/worktrees/` with that path in `.git/info/exclude`: outside
-the project directory, Claude-lane edits there can each prompt for
-permission, unattended runs included. Use `git worktree add --relative-paths` (so a worker
+repo's `.claude/worktrees/`: outside the project directory, Claude-lane
+edits there can each prompt for permission, unattended runs included. Git
+must ignore that path: add it to `.git/info/exclude` only when
+`git check-ignore -q .claude/worktrees/` fails, since a write under `.git`
+is one a harness's permission classifier can refuse. Use `git worktree add --relative-paths` (so a worker
 reaching the checkout through another platform view, the WSL lane over
 `/mnt/c`, can resolve it), plus the dependency install the repo's docs
 prescribe; the harness's `isolation: 'worktree'` has based on
@@ -282,7 +286,9 @@ declared as such.
 - When a stage moved or rewrote tests and the seat doubts they still bite,
   a mutation probe settles it: a few deliberate small breaks in the code
   under test, run by the seat, which the tests must catch. Seat's judgment,
-  no extra stage.
+  no extra stage. Run it in a copy no reviewer is reading, or finish and
+  restore it before a reviewer of that tree is dispatched: a mutation probe
+  never alters a reviewer's tree between dispatch and harvest.
 - Worker findings are candidates. A worker summary is never evidence, and
   raw worker output is never the deliverable.
 - Check result shape and size before use: schema validity is model

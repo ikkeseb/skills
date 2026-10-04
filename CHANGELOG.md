@@ -4,6 +4,24 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.48.8 — 2026-10-04
+
+orchestrate, on the maintainer's direction: briefs carry no time budget and
+no `budget:` header line. A worker cannot measure time and each lane has its
+own hard `--timeout`; what stays is the stop rule (criteria met or out of
+reach, then partial coverage and unknowns) and a command count as an
+optional size hint for Codex and Gemini readers. second-opinion keeps its
+`budget:` line without minutes. From field runs: a worktree path is checked
+with `git check-ignore` first and written to `.git/info/exclude` only when
+needed, since a harness's permission classifier can refuse a write under
+`.git` (one refusal in a repository whose `.gitignore` already covered the
+path); a mutation probe runs in a copy no reviewer is reading, or ends
+before that reviewer is dispatched (two runs where a reviewer saw planted
+breaks come and go). html-brief's done-check accepts a page served over
+localhost, because browser automation refuses `file://`. The repository
+ignores Python bytecode caches. Prose only; a cross-family loss check read
+the rule-text changes.
+
 ## 0.48.7 — 2026-10-04
 
 orchestrate: the Codex helper shows what a worker is doing. While a worker

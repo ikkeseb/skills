@@ -100,10 +100,11 @@ ambient house style.
 - Security-adjacent reviews keep the artifact as the subject and ask for
   failure modes, never bypass instructions.
 - Name exclusions, and bound the run with a `budget:` line: commands,
-  minutes, output size and stop condition. Answer from the packet, inspect
-  only what tests the conclusion, and at the bound return findings plus open
-  questions instead of widening into an audit. These are prompt targets;
-  `--timeout` is the separate hard deadline.
+  output size and stop condition. Leave time out: a worker cannot measure
+  it. Answer from the packet, inspect only what tests the conclusion, and at
+  the bound return findings plus open questions instead of widening into an
+  audit. These are prompt targets; `--timeout` is the separate hard
+  deadline.
 
 A second call needs genuinely new evidence: paste the first result and that
 evidence into a fresh prompt and ask whether the conclusion changes.

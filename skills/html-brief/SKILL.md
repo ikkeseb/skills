@@ -67,6 +67,7 @@ and icons left out.
 
 ## Done when
 
-You opened the file from `file://`, saw no console errors, and looked at it:
+You opened the page in a browser via `file://` or localhost, saw no console
+errors, and looked at it:
 the glance alone carries the point, every catalogue placeholder is gone,
 nothing overflows at a narrow width, and the user would forward it unedited.
