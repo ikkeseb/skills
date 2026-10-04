@@ -35,7 +35,26 @@ fi
 
 bash skills/orchestrate/scripts/check-helper-resolution.sh
 
-claude plugin validate . --strict
+# Strict validation with one known warning allowed: the root CLAUDE.md is the
+# import adapter for agent sessions working in this repository, not plugin
+# context, so "not loaded as project context" is expected. Any error, any
+# other warning, or a second warning fails as --strict would.
+validate_out="$(claude plugin validate . 2>&1)" || {
+  printf '%s\n' "$validate_out" >&2
+  exit 1
+}
+warnings="$(printf '%s\n' "$validate_out" \
+  | sed -n 's/.*Found \([0-9][0-9]*\) warning.*/\1/p' \
+  | awk '{ n += $1 } END { print n + 0 }')"
+# Anchored to the warning's own line, and read from a here-string: `grep -q`
+# behind a pipe can exit early and fail the pipeline under pipefail.
+known_warning='^[[:space:]]*❯ root: CLAUDE\.md at the plugin root is not loaded as project context\.'
+if [ "$warnings" -gt 1 ] \
+  || { [ "$warnings" -eq 1 ] && ! grep -qE "$known_warning" <<<"$validate_out"; }; then
+  printf '%s\n' "$validate_out" >&2
+  printf 'FAIL: plugin validation warnings beyond the root CLAUDE.md adapter\n' >&2
+  exit 1
+fi
 claude plugin validate .claude-plugin/plugin.json
 git diff --check
 git diff --check "$(git hash-object -t tree /dev/null)"
