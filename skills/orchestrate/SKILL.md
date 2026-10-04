@@ -104,14 +104,16 @@ new.
 The brief is the senior deliverable; every stage gets one.
 
 - **Content.** The project context the stage needs, the relevant files or
-  symbols, the decisions already made, acceptance criteria and output
+  symbols, the decisions already made (for a review, the residual the
+  design accepts), acceptance criteria (for code that runs on several
+  platforms, a run on each, which review does not replace) and output
   bounds. Carry verified findings forward with source locations and
   remaining unknowns, hypotheses labeled as such; they are starting points,
   not a read allowlist, so the worker follows the dependencies its criterion
   needs. A writing stage that owes regression coverage gets the test seam
   and cases named, not a follow-up. A numeric criterion states what the
-  number stands for and names one shortcut that would reach it without
-  serving that. No placeholders; inventories and bulk transforms reconcile
+  number stands for, the case it must be measured on, and one shortcut
+  that would reach it without serving that. No placeholders; inventories and bulk transforms reconcile
   their count against the named corpus. Workers also load machine-level
   instructions the seat cannot inspect, so state anything outcome-critical
   explicitly, the answer language included.
@@ -210,7 +212,9 @@ mailbox collaboration.
 
 **One delivery owner, fixed at dispatch.** A seat dispatch is seat-owned
 from the start: record its run dir before dispatch, then own the exit
-signal, terminal-state detection, harvest and cleanup. A foreground adapter
+signal, terminal-state detection, harvest and cleanup: what the harvest
+holds beyond the seat's distillation (ideas, proposed wording) is saved or
+dropped on purpose, then the run's scratch is removed. A foreground adapter
 owns only its single blocking call. Idle is not completion: completion
 needs a returned result plus inspection of the artifact or diff. On idle
 without a result, check the run dir, job state, workspace diff, PID and log
@@ -223,6 +227,10 @@ Classify each result fresh, stale or unknown before use; keep stale
 findings unaffected by later changes and revalidate the affected ones.
 
 ### Writers
+
+This section governs worker writes, and workers write only in the
+session's own repository: in any other the seat makes the edits itself,
+and workers read, review or return a patch as text.
 
 One exclusive writer may use the main tree on a branch when the tree is
 clean at dispatch and nothing else writes there until it returns: record

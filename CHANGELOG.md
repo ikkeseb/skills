@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.48.9 — 2026-10-05
+
+orchestrate, from field runs and two independent second opinions that asked
+for folds instead of new lines: a review brief names the residual the
+design accepts, a brief's acceptance names a run on each platform the code runs
+on, and a numeric criterion names the case it is measured on. The delivery
+owner's cleanup keeps or deliberately drops what the harvest holds beyond
+the seat's distillation, then removes the run's scratch. In a repository
+other than the session's own the seat is the writer; workers read, review
+or return a patch as text. Prose only.
+
 ## 0.48.8 — 2026-10-04
 
 orchestrate, on the maintainer's direction: briefs carry no time budget and
