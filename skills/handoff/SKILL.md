@@ -34,8 +34,10 @@ Use `# Handoff: [task]`, the disclaimer below, `## Goal`, `## Next` near the top
 
 Save the exact handoff to a uniquely named `.md` file in the operating system's temporary directory and verify its contents. Create the file once, under its final `.md` name, so the temporary directory holds that file alone. Do not maintain or prune a persistent handoff directory. State `Saved temporary copy to <absolute path>.` in a brief status line before the final message, never inside it.
 
-The final message is the copy surface: exactly one `markdown` fence, longer than any backtick run inside it, containing the same handoff that was saved. Nothing before the fence, nothing after it.
+When the invocation asks for the handoff without a saved copy ("without doc", "no file", a close paraphrase in any language), write no file and no status line: the fence is the only copy. That wording is an output option, never a next-session focus.
+
+The final message is the copy surface: exactly one `markdown` fence, longer than any backtick run inside it, containing the handoff, identical to the saved copy when there is one. Nothing before the fence, nothing after it.
 
 If saving fails, report that briefly in the status line and still deliver the final message.
 
-Done when: the fence contains exactly the saved handoff and the final message contains only the fence, or the save failure is reported without losing the snippet.
+Done when: the final message contains only the fence, and the fence holds exactly the saved handoff, or the save failure is reported without losing the snippet, or no file was asked for.

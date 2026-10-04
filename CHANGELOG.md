@@ -4,6 +4,12 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.48.6 — 2026-10-04
+
+handoff: an invocation that asks for no saved copy ("without doc", "no
+file", a close paraphrase) skips the temporary file and its status line and
+returns the fence alone; the default still saves. Prose only, no field run.
+
 ## 0.48.5 — 2026-10-04
 
 orchestrate, on the maintainer's direction: Sol may run at `xhigh` on the
