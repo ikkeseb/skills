@@ -58,10 +58,13 @@ reading each result before choosing the next. No shape is mandatory.
   workers build, in parallel where the pieces touch different files. A
   piece in § Review's risk classes runs as one Workflow: the writer, the
   gate, then its checkers and the cross-family reader at once
-  (`codex-exec.md` § Dispatch, Relay). A gate the seat must judge by eye or
-  a mutation probe splits it there; a lone writer in a one-stage Workflow
-  is for work below that bar. The seat triages those findings before any
-  fix stage, and a fix owes the gate and a read of its delta again.
+  (`codex-exec.md` § Dispatch, Relay). A Workflow reports only when it
+  ends, so a gate the seat must judge by eye, a mutation probe or a writer
+  waiting to start on the piece's tip ends it at the gate; the seat then
+  dispatches the checkers and the reader, beside any such writer. A lone
+  writer in a one-stage Workflow is for work below that bar. The seat
+  triages those findings before any fix stage, and a fix owes the gate and
+  a read of its delta again.
 - **Check**: on one diff, at once: cheap single-dimension checkers (one
   acceptance criterion or one risk each), the test/lint gate, and a
   cross-family reviewer when verification is owed. Fix-ups fold into the

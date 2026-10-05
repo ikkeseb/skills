@@ -4,6 +4,25 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.50.5 — 2026-10-05
+
+orchestrate: the one-Workflow Build ends at the gate when a writer is
+waiting to start on the piece's tip. A Workflow reports only when it ends,
+so with the review inside it the seat could not start the next writer at
+the gate, and the cross-family read sat on the critical path of every
+dependent piece, which undid the stacking 0.49.1 introduced. The gate
+judged by eye and the mutation probe already ended the Workflow there; the
+stacked writer joins them, and the seat dispatches the checkers and the
+reader beside it. A piece nothing builds on keeps the full Workflow, where
+one completion hands the seat gate, checkers and review together. Two
+second opinions on the default, one outside-family and one same-family,
+each held that the relay had not earned its place as the default for every
+piece without a timed field run. A probe settled what the harness offers
+instead: a Workflow agent's background command is terminated when the agent
+gives its final response, so the relay's detached run remains the way to
+keep a reader longer than one foreground call inside a Workflow.
+Unmeasured: seat turns and wall-clock for a real piece under each form.
+
 ## 0.50.4 — 2026-10-05
 
 orchestrate: the Codex helper's locks no longer rest on a bare `mkdir`,
