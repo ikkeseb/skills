@@ -1,73 +1,89 @@
 ---
 name: html-brief
-description: "Turn content into a dark, self-contained HTML brief that reads at a glance: summaries, status reports, decision briefs, meeting notes, prep docs, comparisons. Not for showcase pages (html-showcase), decks (html-slides), or web-app frontends."
+description: "Turn content into one self-contained, dark, editorial HTML document: plans, summaries, breakdowns, explanations, decisions, run sheets, day sheets, prep docs, status, comparisons, multi-part packs. Triggers on any ask for a polished HTML page or 'an html'. Not for showcase pages (html-showcase), decks (html-slides), or web-app frontends."
 ---
 
 # HTML brief
 
-A brief is one finished file the user opens locally, screen-shares or sends
-onward. Its reader gets the point from the first screen and scrolls only for
-depth. The bar: useful and good-looking with zero follow-up fixes.
+One finished file the user opens locally, screen-shares or forwards. "Brief"
+is loose: a plan, a day sheet, a status, a decision, an explanation, a
+breakdown, a multi-part pack. The reader gets the point from the first screen
+and scrolls only for depth. Least noise, fastest overview: every element must
+make the document quicker to grasp, or it goes.
 
-Start from a copy of `assets/template.html`. Its stylesheet is the design:
-surfaces, ink, the sans type and the spacing are fixed, so the result stays
-clean whoever builds it. Its body is a catalogue of shapes. Empty it, then
-compose the brief from the shapes this content calls for.
+Start from `assets/template.html`. Its stylesheet is the design and stays as
+it is, type sizes included; its body is a catalogue to empty and compose from.
 
 ## Invariants
 
-1. **One self-contained file.** All CSS inline, system fonts, zero network
-   requests. It renders from `file://` offline.
-2. **Dark, in the template's type.** Keep its surfaces, ink and sans stack.
-   Set another typeface only when the user asks for one.
-3. **The glance answers.** The brief opens with a `.glance` block: the
-   verdict, status or recommendation in one sentence, then the few facts
-   behind it. A reader who stops there has the brief. Background, method and
-   caveats follow it, or fold into `details`.
-4. **Every section earns its place.** When the brief runs long, cut content
-   or fold it into `details`; the template's spacing stays as it is.
-5. **Language follows the audience** of the document, whatever the chat uses.
+1. **One self-contained file.** Inline CSS, zero network requests, renders
+   from `file://` offline. Fonts: Build, step 2.
+2. **Dark on screen, light in print**, handled by the stylesheet. No theme
+   toggle, hero image, icons or emoji.
+3. **One box: the glance.** It holds what the reader must not miss.
+   Everything else sits on hairlines, with the left rail carrying the spine
+   (`.row` > `.rail`).
+4. **Every section earns its place.** Long? Cut, or fold into `details`;
+   never shrink type or spacing. **Language follows the audience.**
 
 ## Compose
 
-Two briefs on different subjects look different, because each is composed
-from its own material:
+**The spine.** Pick what the rail carries from this content:
 
-- **The glance.** A decision leads with the verdict, a status with figures or
-  a short board, a comparison with the pick, a plan with the next date and
-  step.
-- **The shapes.** Match shape to data: `figures` for a few numbers, `board`
-  for items with a state, `cols` for options or parties, `steps` for order,
-  `timeline` for time, `meter` for a share, `table` for three or more
-  attributes, `callout` for the one warning. Two or three shapes carry most
-  briefs, and prose is a shape: a short brief may be a glance and four
-  paragraphs. A board shows what differs, so items sharing a state with
-  nothing to add collapse into one row. Headings name the content.
-- **`--hue`.** One accent per document, chosen for the subject: 150 green
-  for money or health, 25 rust for personal, 235 blue for neutral work, 300
-  violet for creative, or your own. `good`, `warn` and `bad` mark state only.
-- **Width.** Add `wide` to `.wrap` when boards, columns or tables carry the
-  brief.
+| Document | Rail carries | Body shapes |
+|---|---|---|
+| Meeting prep | act numerals I II III + minutes | `.act` rows, `.list` with say-lines, one `.quote` |
+| Day / run sheet | times | `.slot` rows, `.cols` for the week |
+| Plan | phase numbers or dates | `.act` rows 01.., `.cols` for options |
+| Status / summary | area or workstream | `.row.tagged` entries, `table` with `.tag` states |
+| Decision / comparison | option or criterion | `.cols` with `.now` on the pick, `table` |
+| Explanation | part numbers 01.. | `.act` rows, `.quote` for the key line |
+| Breakdown | category | `table`, `.bar` for shares |
+| Pack with many segments | one tab per segment | `.tabs`, each panel with its own spine |
 
-When the content has a shape the catalogue lacks, build it from the
-template's variables and spacing so it belongs. Everything on the page
-carries information: text, numbers, hairlines and flat surfaces, with emoji
-and icons left out.
+**The glance.** After the `header` (mono `.label`, an `h1` that is a
+sentence, a one-line `.lede`): the `.verdict` in one sentence with `em` on
+the phrase that matters, then three to five `.figs` when numbers or dates
+carry the answer, such as the total, the gap or the next step. A run sheet may
+open with its anchor slot instead.
 
-## Routing and delivery
+**The body.** One `.block` per section: a `.row` head (rail label, `h2`
+sentence, `.sub`), then `.act` rows (parts, phases) or `.slot` rows (times,
+dates). Rail content is a time, a numeral or one or two words, never a
+sentence. Two or three shapes carry a document; prose is a shape too
+(`.wrap.narrow`).
 
-- **Save** where the owning repo's rules say, otherwise in its natural
-  artifacts location, or the session scratchpad for throwaways. Content about
-  named people or otherwise sensitive material goes where the repo keeps
-  uncommitted files.
-- **Deliver** the rendered file directly to the user (in Claude Code:
-  SendUserFile with `display: render`).
-- **Publish** (Artifact tool, external hosting) only on the user's explicit
-  ask.
+- **Headings are sentences from the content.** "Agenda" is the `.label`;
+  the `h2` says "Three parts, in your order." `.say[data-tag]` holds words
+  to say verbatim.
+- **One accent** in `--accent`: amber `#E9B44C` for personal and prep work,
+  teal `#3E8A85` for product and project work. `.now` marks the anchor
+  (today, the pick, the ask); `.tag.good/.warn/.bad` mark state. Nothing
+  else is coloured.
+- **Bars only when relative size is the point**: shares of a total, budget
+  used, one option against another. Never on a single number or as decoration.
+- **Tabs only for four or more distinct segments.** Panels are `.tab` with
+  `data-tab`; the first is the overview. No-JS and print show every panel.
+- **Missing shape?** Build it from the template's variables. The footer
+  names sources, date and what was not read.
 
-## Done when
+## Build
 
-You opened the page in a browser via `file://` or localhost, saw no console
-errors, and looked at it:
-the glance alone carries the point, every catalogue placeholder is gone,
-nothing overflows at a narrow width, and the user would forward it unedited.
+1. Copy the template, keep the `/* FONTS */` line, write the document.
+2. Splice the fonts (Archivo + IBM Plex Mono, about 180 KB) without reading them:
+   `awk 'NR==FNR{f=f $0 RS;next} /\/\* FONTS \*\//{printf "%s",f;next}1' assets/fonts.css doc.html > out.html && mv out.html doc.html`
+   PowerShell: `[IO.File]::WriteAllText($p,[IO.File]::ReadAllText($p).Replace('/* FONTS */',[IO.File]::ReadAllText($fonts)))`
+   with full paths in `$p` and `$fonts`.
+3. Read the result with `grep -v base64`, never raw.
+
+## Deliver and check
+
+Save where the owning repo's rules say, else its artifacts location or the
+session scratchpad; content about named people goes where the repo keeps
+uncommitted files. Hand the file to the user (Claude Code: SendUserFile,
+`display: render`). Publish only on explicit ask.
+
+Done when you opened it via `file://` with no console errors and looked: the
+glance alone carries the point, no catalogue placeholder is left, the fonts
+are embedded, nothing overflows at a narrow width, and the user would forward
+it unedited.

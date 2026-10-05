@@ -4,6 +4,29 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.50.0 — 2026-10-05
+
+html-brief, redesigned after the maintainer judged the old output rigid.
+The look turns editorial: a left rail carries each section's time, numeral
+or theme, hairlines replace cards, labels are mono, and the glance is the
+one boxed surface. Archivo and IBM Plex Mono ship in `assets/fonts.css`
+(about 180 KB, SIL OFL 1.1, license text in `assets/OFL.txt`) and are
+spliced into each document by one command the agent runs without reading
+the font data. Scope widens from briefs to any document: plans,
+explanations, breakdowns, run sheets, multi-part packs, with a table that
+maps document kind to what the rail carries and which shapes fit. New
+shapes: tabs for packs of four or more segments (no anchor jumps; print and
+no-script show every panel) and share bars, used only when relative size is
+the point. Type minimums go up; dark on screen, light in print; the hue
+variable gives way to two accents. A/B on five requests (a decision, an
+explanation requested in another language, a status, a multi-part plan, a
+cost breakdown), one fresh Sonnet 5.5 session at medium effort per run:
+every run embedded the fonts, left no placeholder and followed the
+request's language; tabs appeared only in the multi-part plan, bars only
+where shares mattered. Cost per document about 23% above the old skill.
+`SKILL.md` goes from 73 to 89 lines, the template from 176 to 201;
+documents grow from about 10 KB to about 190 KB, almost all fonts.
+
 ## 0.49.1 — 2026-10-05
 
 orchestrate, from a field run on a web-app repo and two independent second
