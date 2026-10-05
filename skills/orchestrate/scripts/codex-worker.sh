@@ -24,6 +24,16 @@
 #                          adapter relaying stdout is lost (default: mktemp)
 #       [--no-progress]  no live progress lines on stderr (the start banner
 #                        stays); for a caller that relays stderr as text
+#   codex-worker.sh relay --run-dir <dir> [--max <seconds>] <run options>
+#       One read-only `run` carried across bounded foreground calls, for a
+#       caller whose single call is capped below the worker's runtime. The
+#       first call starts the run detached and waits up to --max seconds
+#       (default 540); a later call with the same --run-dir only waits. Each
+#       call prints a status object, never the envelope: {pending: true,
+#       run_dir}, or {pending: false, ok, run_dir} once <run-dir>/result.json
+#       holds the run's envelope, with error_class beside a false ok. A call
+#       relay itself refuses prints {pending: false, ok: false, error_class:
+#       "usage", error} and starts nothing (see the relay section).
 #   codex-worker.sh probe     auth + CLI contract, no model call
 #   codex-worker.sh verify    end-to-end smoke test (one tiny billed run)
 #
@@ -38,7 +48,7 @@
 # (see the progress section).
 # Dependencies: Bash and jq for every command; Codex for probe/run/verify;
 # git plus shasum or sha256sum for workspace-write runs. Optional: perl, for
-# the progress lines only.
+# the progress lines, and for relay's detach where setsid is missing.
 set -euo pipefail
 
 # The recipe's real dependency is this flag surface, not a version number.
@@ -1341,13 +1351,137 @@ cmd_run() {
   "$CAT_BIN" "$run_dir/result.json"
 }
 
+# --- relay --------------------------------------------------------------------
+# A Workflow stage is one agent behind a tool timeout, so a worker that
+# outlives one foreground call cannot be relayed by blocking on `run`. relay
+# splits the wait instead: the first call starts `run` detached and every call
+# waits a bounded time on the runner process. The caller repeats the same
+# command until `pending` is false, then harvests <run-dir>/result.json.
+#   * The wait is on the runner's pid, never on result.json appearing: the WSL
+#     bridge rewrites that file after the VM side has published it, and a
+#     refusal before the run dir exists reaches stdout only. Once the runner is
+#     gone, an envelope that only reached stdout is mirrored into result.json,
+#     so the harvest file is the one authority either way.
+#   * State lives beside the run dir (<run-dir>.relay/: pid, stdout.json),
+#     because `run` requires the run dir itself empty. Creating that directory
+#     is the claim to start, so a repeated or concurrent call never starts a
+#     second run.
+#   * Read-only runs only. A caller that stops calling leaves the runner to
+#     its own --timeout; an orphaned reader costs quota, an orphaned writer
+#     would keep changing a tree nobody is watching. To end one sooner:
+#     kill -TERM "$(cat <run-dir>.relay/pid)". Over the WSL bridge that pid
+#     is the bridge, which forwards no signal: the VM-side reader runs on.
+#   * The bound counts the loop's own one-second sleeps, never the clock, so
+#     a clock step cannot stretch a call past the caller's tool timeout.
+#   * The runner gets its own session where the platform has a way (setsid, or
+#     perl's POSIX::setsid), so a harness that reaps a tool call's process
+#     group leaves it running; without either it runs under nohup alone.
+relay_refuse() { # a call relay itself refuses: one status object, nothing started
+  "$JQ_BIN" -n --arg error "$1" \
+    '{pending: false, ok: false, error_class: "usage", error: $error}'
+  exit 0
+}
+cmd_relay() {
+  require_jq
+  local max=540 run_dir="" sandbox="read-only"
+  local -a run_args=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --max|--run-dir|--sandbox)
+        [ $# -ge 2 ] || relay_refuse "missing value for $1"
+        case "$1" in
+          --max)     max="$2" ;;
+          --run-dir) run_dir="$2"; run_args+=("$1" "$2") ;;
+          --sandbox) sandbox="$2"; run_args+=("$1" "$2") ;;
+        esac
+        shift 2 ;;
+      *) run_args+=("$1"); shift ;;
+    esac
+  done
+  case "$max" in 0*) max="" ;; esac
+  is_pos_int "$max" && [ ${#max} -le 4 ] \
+    || relay_refuse "--max must be an integer between 1 and 9999"
+  [ -n "$run_dir" ] || relay_refuse "relay requires --run-dir"
+  [ "$sandbox" = read-only ] || relay_refuse "relay carries read-only runs only"
+  mkdir -p "$run_dir" 2>/dev/null || relay_refuse "cannot create --run-dir: $run_dir"
+  local state="${run_dir%/}.relay"
+
+  if mkdir "$state" 2>/dev/null; then
+    # Only the call that holds the claim judges the run dir, so a call racing
+    # the start never mistakes the new run's own files for an earlier run's.
+    # A dir that holds anything at this point belongs to another run: its
+    # result.json must never be reported as this one's.
+    if [ -n "$(ls -A "$run_dir" 2>/dev/null)" ]; then
+      rmdir "$state" 2>/dev/null || true
+      relay_refuse "--run-dir must be empty: $run_dir"
+    fi
+    local -a detach=()
+    local bin
+    if bin="$(type -P setsid)" && [ -n "$bin" ]; then
+      detach=("$bin")
+    elif bin="$(type -P perl)" && [ -n "$bin" ]; then
+      detach=("$bin" -MPOSIX -e 'setsid(); exec @ARGV')
+    fi
+    # The runner records its own pid before it execs the helper, so the pid
+    # is the runner's whether or not the detach step forked on the way.
+    nohup ${detach[@]+"${detach[@]}"} bash -c \
+      'printf "%s\n" "$$" > "$1/pid.tmp" && mv -f "$1/pid.tmp" "$1/pid" || exit 1; shift; exec bash "$@"' \
+      _ "$state" "${BASH_SOURCE[0]}" run "${run_args[@]}" --no-progress \
+      > "$state/stdout.json" 2>/dev/null < /dev/null &
+  elif [ ! -d "$state" ]; then
+    relay_refuse "cannot create the relay state dir: $state"
+  fi
+
+  # The runner publishes its pid within milliseconds; this wait sits outside
+  # --max and is bounded on its own (about 3 s, 15 s where sleep takes whole
+  # seconds only). Nothing is mirrored on this path: with no pid there is no
+  # telling whose run dir this is.
+  local pid="" tries=0
+  while [ "$tries" -lt 15 ]; do
+    pid="$(cat "$state/pid" 2>/dev/null || true)"
+    [ -z "$pid" ] || break
+    sleep 0.2 2>/dev/null || sleep 1; tries=$((tries + 1))
+  done
+  is_pos_int "$pid" || {
+    "$JQ_BIN" -n --arg run_dir "$run_dir" --arg state "$state" \
+      '{pending: false, ok: false, run_dir: $run_dir, error_class: "codex_failed",
+        error: ("relay: the runner never recorded its pid in " + $state)}'
+    exit 0; }
+
+  local waited=0
+  while kill -0 "$pid" 2>/dev/null; do
+    if [ "$waited" -ge "$max" ]; then
+      "$JQ_BIN" -n --arg run_dir "$run_dir" '{pending: true, run_dir: $run_dir}'
+      return 0
+    fi
+    sleep 1 || true
+    waited=$((waited + 1))
+  done
+
+  if [ ! -s "$run_dir/result.json" ]; then
+    if "$JQ_BIN" -e 'type == "object"' "$state/stdout.json" >/dev/null 2>&1; then
+      # Per-call temp name: two calls that both find the runner gone must not
+      # lose each other's rename.
+      cp "$state/stdout.json" "$run_dir/result.json.$$.tmp" 2>/dev/null \
+        && mv -f "$run_dir/result.json.$$.tmp" "$run_dir/result.json" 2>/dev/null || true
+    else
+      emit_failure codex_failed "relay: the runner exited without an envelope" "$run_dir" >/dev/null
+    fi
+  fi
+  "$JQ_BIN" --arg run_dir "$run_dir" \
+    '{pending: false, ok: (.ok == true), run_dir: $run_dir}
+     + (if .ok == true then {} else {error_class: (.error_class // "codex_failed")} end)' \
+    "$run_dir/result.json"
+}
+
 case "${1:-}" in
   run|probe|verify)
     if wsl_lane_requested; then bridge_to_wsl "$@"; exit 0; fi ;;
 esac
 case "${1:-}" in
   run)    shift; cmd_run "$@" ;;
+  relay)  shift; cmd_relay "$@" ;;
   probe)  cmd_probe ;;
   verify) cmd_verify ;;
-  *)      require_jq; fail_json usage "usage: codex-worker.sh run|probe|verify (see header comment)" ;;
+  *)      require_jq; fail_json usage "usage: codex-worker.sh run|relay|probe|verify (see header comment)" ;;
 esac

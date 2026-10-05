@@ -4,6 +4,32 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.50.1 — 2026-10-05
+
+orchestrate: a Codex reader of any length can be a Workflow stage. The
+helper gains `relay`, which carries one read-only `run` across bounded
+foreground calls: the first call starts the run detached and waits, later
+calls with the same run dir only wait, and each prints a small status
+object while the envelope stays in the run dir for the seat to harvest. The
+loop lives in the Workflow script, one one-shot agent per call, so the
+adapter's one-shot rules hold. Before this a Codex stage inside a Workflow
+was capped at 540 seconds by the tool timeout of its single blocking call,
+so cross-family reviews ran beside the Workflow and the seat carried every
+hand-off between build, review and fix. `SKILL.md` names the Build recipe
+this allows: writer, gate, then checkers and the cross-family reader at
+once in one Workflow; the seat triages the findings before any fix stage,
+and a fix owes the gate and a read of its delta again. An automatic fix
+round was designed and dropped on two independent second opinions: it
+would invalidate the gate and the review before it. Measured on one WSL
+machine: a 700-second dummy job relayed in two waits, then two real
+readers through a Workflow. A cross-family review of the helper change
+found eleven issues and a second read of the fixes four more; twelve were
+fixed, among them a false success from a used run dir and a racing first
+call that could be refused. Left as documented limits: the stop signal
+does not reach a reader behind the WSL bridge, and survival of the
+detached runner on macOS and native Windows is unprobed. Read-only runs
+only. Helper suite 114 checks; `SKILL.md` is 3010 words.
+
 ## 0.50.0 — 2026-10-05
 
 html-brief, redesigned after the maintainer judged the old output rigid.

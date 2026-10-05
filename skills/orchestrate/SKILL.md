@@ -55,7 +55,12 @@ reading each result before choosing the next. No shape is mandatory.
   coupling). Worth it when the slices repay dispatch and synthesis; the
   seat may still read directly to frame the work and verify findings.
 - **Build**: the seat cuts the work at file seams and briefs each piece;
-  workers build, in parallel where the pieces touch different files.
+  workers build, in parallel where the pieces touch different files. A
+  piece in § Review's risk classes can run as one Workflow: the writer, the
+  gate, then its checkers and the cross-family reader at once
+  (`codex-exec.md` § Dispatch, Relay). The seat triages those findings
+  before any fix stage, and a fix owes the gate and a read of its delta
+  again.
 - **Check**: on one diff, at once: cheap single-dimension checkers (one
   acceptance criterion or one risk each), the test/lint gate, and a
   cross-family reviewer when verification is owed. Fix-ups fold into the
@@ -170,8 +175,8 @@ every prior result.
 **Codex lane.** OpenAI models through `scripts/codex-worker.sh`. Read
 `references/codex-exec.md` before the first Codex stage, and its
 § Provider filtering before routing any security task there; its
-§ Dispatch owns the foreground adapter, the one Workflow exception to seat
-dispatch. Before first use, resolve the helper and run `"$HELPER" probe`
+§ Dispatch owns the two Workflow exceptions to seat dispatch, the
+foreground adapter and the relay. Before first use, resolve the helper and run `"$HELPER" probe`
 once for the session; done when your response states which lanes are
 available. The candidates are this skill's deployment locations; the
 session repo is never one, since that could execute material under review.

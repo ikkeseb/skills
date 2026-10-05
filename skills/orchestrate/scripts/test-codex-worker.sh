@@ -1272,5 +1272,125 @@ assert_json "$tmp/progress-readhang.json" '.ok == true and .result.answer == "ok
 assert_same "$tmp/progress-readhang.json" "$run_dir/result.json" \
   'hanging read: the envelope equals result.json'
 
+# relay: one read-only run carried across bounded calls. The fake worker
+# stands at its gate until the suite releases it, so "still running" is a
+# fact about the worker, never about the clock.
+relay_gate() { # arm a worker that waits at its gate
+  printf '%s\n' scripted > "$fake_home/fake-mode"
+  : > "$events"
+  printf '%s\n' '{"type":"turn.completed"}' > "$fake_home/fake-events-late"
+  rm -f "$fake_home/fake-go" "$fake_home/fake-released" "$fake_home/fake-waiting"
+}
+relay_gate
+run_dir="$tmp/run-relay"
+relay_args=(relay --max 2 --model default --effort low --sandbox read-only
+  --workspace "$tmp" --prompt-file "$prompt" --schema-file "$schema"
+  --run-dir "$run_dir" --timeout 300)
+before="$(exec_count)"
+# Two calls race for the start; the claim lets one of them start the run.
+run_worker "$tmp/relay-race.json" "$tmp/relay-race.err" "${relay_args[@]}" &
+race_pid=$!
+relay_started="$SECONDS"
+run_worker "$tmp/relay-1.json" "$tmp/relay-1.err" "${relay_args[@]}"
+relay_took=$((SECONDS - relay_started))
+wait "$race_pid" 2>/dev/null || true
+for _ in $(seq 1 300); do [ -e "$fake_home/fake-waiting" ] && break; sleep 0.2; done
+assert_json "$tmp/relay-1.json" '.pending == true and (has("ok") | not)' \
+  'relay: a worker that outlives --max returns pending'
+assert_json "$tmp/relay-race.json" '.pending == true' \
+  'relay: a call racing the start waits on the same run'
+if [ "$relay_took" -le 12 ]; then
+  ok 'relay: a pending call returns near its --max'
+else
+  fail 'relay: a pending call returns near its --max'
+fi
+assert_single_json "$tmp/relay-1.json" 'relay: a pending call prints exactly one object'
+if [ ! -e "$run_dir/result.json" ] && [ -e "$fake_home/fake-waiting" ] \
+   && [ ! -e "$fake_home/fake-released" ] \
+   && kill -0 "$(cat "$run_dir.relay/pid")" 2>/dev/null; then
+  ok 'relay: the runner outlives the call that started it, with no envelope yet'
+else
+  fail 'relay: the runner outlives the call that started it, with no envelope yet'
+fi
+run_worker "$tmp/relay-2.json" "$tmp/relay-2.err" "${relay_args[@]}"
+assert_json "$tmp/relay-2.json" '.pending == true' \
+  'relay: a repeated call waits on the same run'
+: > "$fake_home/fake-go"
+relay_args[2]=60
+run_worker "$tmp/relay-3.json" "$tmp/relay-3.err" "${relay_args[@]}"
+assert_json "$tmp/relay-3.json" '.pending == false and .ok == true and (has("error_class") | not)' \
+  'relay: the call after the worker finishes reports the verdict'
+assert_json "$run_dir/result.json" '.ok == true and .result.answer == "ok" and .turn_completed == true' \
+  'relay: result.json is the run'"'"'s own envelope'
+run_worker "$tmp/relay-4.json" "$tmp/relay-4.err" "${relay_args[@]}"
+assert_same "$tmp/relay-3.json" "$tmp/relay-4.json" \
+  'relay: a call after the end repeats the verdict'
+if [ "$(exec_count)" -eq "$((before + 1))" ]; then
+  ok 'relay: five calls on one run dir, two of them racing, start one worker'
+else
+  fail 'relay: five calls on one run dir, two of them racing, start one worker'
+fi
+
+# The documented stop: TERM to the recorded pid ends the runner through its
+# own signal path, and the next call reports that envelope.
+relay_gate
+run_dir="$tmp/run-relay-term"
+relay_args[2]=2
+relay_args[${#relay_args[@]}-3]="$run_dir"
+run_worker "$tmp/relay-term-1.json" "$tmp/relay-term-1.err" "${relay_args[@]}"
+for _ in $(seq 1 300); do [ -e "$fake_home/fake-waiting" ] && break; sleep 0.2; done
+term_worker="$(cat "$fake_home/fake-pid" 2>/dev/null || true)"
+kill -TERM "$(cat "$run_dir.relay/pid")" 2>/dev/null || true
+relay_args[2]=60
+run_worker "$tmp/relay-term-2.json" "$tmp/relay-term-2.err" "${relay_args[@]}"
+assert_json "$tmp/relay-term-2.json" '.pending == false and .ok == false and .error_class == "interrupted"' \
+  'relay: TERM to the recorded pid ends the run as interrupted'
+if [ -n "$term_worker" ] && ! kill -0 "$term_worker" 2>/dev/null; then
+  ok 'relay: the worker is gone once the interrupted verdict is back'
+else
+  fail 'relay: the worker is gone once the interrupted verdict is back'
+fi
+rm -f "$fake_home/fake-events-late" "$fake_home/fake-go" "$fake_home/fake-released" "$fake_home/fake-waiting"
+printf '%s\n' success > "$fake_home/fake-mode"
+
+# A refusal before the run dir is used reaches the runner's stdout only;
+# relay mirrors it so the harvest file is still the one authority.
+before="$(exec_count)"
+run_dir="$tmp/run-relay-usage"
+run_worker "$tmp/relay-usage.json" "$tmp/relay-usage.err" relay --max 30 \
+  --sandbox read-only --workspace "$tmp" --prompt-file "$prompt" --run-dir "$run_dir"
+assert_json "$tmp/relay-usage.json" '.pending == false and .ok == false and .error_class == "usage"' \
+  'relay: an early refusal comes back as a verdict, not as pending'
+assert_json "$run_dir/result.json" '.ok == false and .error_class == "usage" and (.error | contains("--model is required"))' \
+  'relay: an envelope that only reached stdout is mirrored into result.json'
+run_worker "$tmp/relay-write.json" "$tmp/relay-write.err" relay \
+  --model default --sandbox workspace-write --workspace "$tmp" \
+  --prompt-file "$prompt" --run-dir "$tmp/run-relay-write"
+assert_json "$tmp/relay-write.json" '.pending == false and .ok == false and .error_class == "usage" and (.error | contains("read-only"))' \
+  'relay: a write run is refused with a status object'
+run_worker "$tmp/relay-nodir.json" "$tmp/relay-nodir.err" relay \
+  --model default --workspace "$tmp" --prompt-file "$prompt"
+assert_json "$tmp/relay-nodir.json" '.pending == false and .ok == false and .error_class == "usage" and (.error | contains("--run-dir"))' \
+  'relay: a call without --run-dir is refused'
+run_worker "$tmp/relay-max.json" "$tmp/relay-max.err" relay --max 00 \
+  --model default --workspace "$tmp" --prompt-file "$prompt" --run-dir "$tmp/run-relay-write"
+assert_json "$tmp/relay-max.json" '.pending == false and .error_class == "usage" and (.error | contains("--max"))' \
+  'relay: --max 00 is refused'
+# A finished run's directory with no relay claim beside it: its old success
+# must not come back as this call's verdict.
+run_worker "$tmp/relay-stale.json" "$tmp/relay-stale.err" relay --max 30 \
+  --model default --workspace "$tmp" --prompt-file "$prompt" --run-dir "$tmp/run-success"
+assert_json "$tmp/relay-stale.json" '.pending == false and .ok == false and .error_class == "usage" and (.error | contains("must be empty"))' \
+  'relay: a used run dir is refused, its old result is not reported'
+assert_single_json "$tmp/relay-stale.json" 'relay: a refusal prints exactly one object'
+assert_same "$tmp/success.json" "$tmp/run-success/result.json" \
+  'relay: a refusal leaves the used run dir'"'"'s envelope untouched'
+if [ "$(exec_count)" = "$before" ] && [ ! -e "$tmp/run-relay-write.relay" ] \
+   && [ ! -e "$tmp/run-success.relay" ]; then
+  ok 'relay: refusals start no worker and leave no state'
+else
+  fail 'relay: refusals start no worker and leave no state'
+fi
+
 printf '\n%s checks, %s failures\n' "$((checks + fails))" "$fails"
 exit "$fails"

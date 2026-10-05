@@ -98,8 +98,8 @@ stages read `references/imagegen.md` before the prompt is written.
 
 ## Dispatch
 
-Seat dispatch is the default; the foreground adapter is the Workflow
-exception. Pick at dispatch and never switch owners mid-job.
+Seat dispatch is the default; the foreground adapter and the relay are the
+Workflow exceptions. Pick at dispatch and never switch owners mid-job.
 
 **Seat dispatch.** Read this paragraph before the first seat dispatch on
 the Codex or the Gemini lane; it governs both (the Gemini helper is
@@ -147,8 +147,8 @@ seat writes the prompt and schema files before the workflow starts and
 passes their paths in the briefing. The Bash tool's timeout is hard-capped
 at 600000 ms and auto-backgrounds past it, which silently breaks a
 foreground relay, so the helper runs with `--timeout 540` and the stage
-must be confidently short; a longer Codex stage runs beside the Workflow
-as a seat dispatch. It
+must be confidently short; a longer read-only stage rides the relay below,
+and a longer write stage runs beside the Workflow as a seat dispatch. It
 also runs with `--no-progress`, because the Bash tool result mixes stderr
 into the text the adapter must relay verbatim. An
 adapter turn that ends without an envelope is a lost delivery, never a
@@ -188,6 +188,53 @@ Pair the adapter with a matching Workflow `schema`, and treat the run dir
 as ground truth even on success: adapters have wrapped the JSON in fences
 or prose despite the instruction, so when the relayed text is off, parse
 `RUN_DIR/result.json` and gate on its `ok`.
+
+**Relay.** A read-only Codex stage that may outlive one foreground call
+rides in a Workflow through `"$HELPER" relay`: the options of `run` plus
+`--max`, with `--run-dir` required (the path need not exist yet). The first
+call starts the run detached and waits up to `--max` seconds (default 540);
+every later call with the same run dir only waits. A call prints
+`{pending: true, run_dir}` or, once the runner has exited, `{pending:
+false, ok, run_dir}`, with `error_class` beside a false `ok`; a call the
+relay itself refuses (a write run, a used run dir) adds `error` and starts
+nothing. The envelope stays in `RUN_DIR/result.json`, which the seat
+harvests after the Workflow returns, so no agent transcribes a review. The
+loop lives in the Workflow script, one one-shot agent per call, so no
+agent ever holds a pending state:
+
+```js
+const RELAY = {type: 'object', required: ['pending'], properties: {
+  pending: {type: 'boolean'}, ok: {type: 'boolean'},
+  error_class: {type: 'string'}, error: {type: 'string'}}}
+const relay = async (command, label) => {
+  for (let call = 1; call <= 8; call++) {
+    let r = await agent(
+      `You are a one-shot relay (call ${call}). Run this exact command with ` +
+      `Bash in a SINGLE FOREGROUND call with the Bash timeout set to 600000. ` +
+      `Never set run_in_background, never append &, never run it twice, ` +
+      `never touch the repo. Return its JSON output unchanged.\n${command}`,
+      {model: 'sonnet', effort: 'low', schema: RELAY, label: `${label} (relay ${call})`})
+    if (typeof r === 'string') { try { r = JSON.parse(r) } catch { r = null } }
+    if (r && r.pending === false) return r
+  }
+  return {pending: true}
+}
+```
+
+`command` is the full relay line with absolute paths the seat minted before
+the Workflow started: `HELPER_ABS_PATH relay --model MODEL --effort EFFORT
+--sandbox read-only --workspace WORKSPACE --prompt-file PROMPT_FILE
+--run-dir RUN_DIR`, plus `--schema-file` and `--timeout` as needed. Eight
+calls cover the default one-hour `--timeout`; a loop that ends still
+pending is a lost delivery the seat recovers from the run dir. A resumed
+Workflow replays its cached `pending` results without looking at the
+runner, so after a stop the seat harvests the run dir instead of resuming
+the relay calls. A stopped Workflow leaves the reader running until its own
+`--timeout`; end it sooner with `kill -TERM "$(cat RUN_DIR.relay/pid)"`,
+which lands an `interrupted` envelope on a native lane and does not reach
+the VM-side reader over the WSL bridge. Verified on WSL only: whether a
+detached runner survives between tool calls on macOS or native Windows is
+unprobed.
 
 ## Result contract
 
