@@ -108,7 +108,8 @@ one call per stage, the in-flight caps, the label format and the harvest
 rule. The seat writes the prompt and schema files outside the run dir,
 mints an empty run dir (`RUN_DIR="$(mktemp -d)"`), and starts the helper
 with the Bash tool's `run_in_background`, the stage label as both
-`description` and the command's leading no-op line (`: "<label>"`), stdout
+`description` and the command's leading comment line (`# <label>`, which
+is what a harness's background list shows for the job), stdout
 redirected to a file, stderr left unredirected, and the call's own
 `timeout` (ms) set above the helper's `--timeout` (s) × 1,000 plus queue
 margin, at most 7,200,000 ms (shorten `--timeout` to fit): in an
@@ -116,7 +117,7 @@ unattended session the 30-minute background default kills a longer run and
 loses its result.
 
 ```bash
-: "gpt-6-luna @ xhigh — r1 authority"
+# gpt-6-luna @ xhigh — r1 authority
 "$HELPER" run --model gpt-6-luna --effort xhigh --sandbox read-only \
   --workspace "$PWD" --prompt-file "$DIR/prompt.md" \
   --schema-file "$DIR/schema.json" --run-dir "$RUN_DIR" > "$DIR/stdout.json"
@@ -148,12 +149,13 @@ without a result, check the run dir, job state, workspace diff, PID and log
 freshness; idle never transfers ownership, and no wrapper is pinged to
 resume delivery.
 
-Every seat dispatch prints one stage line at start and one at harvest:
-`▸ <tag> — <model> @ <effort> — started, run dir <path>` and
-`✓ <tag> — <n> cmds, <fresh>k fresh + <cached>M cached in, <out>k out, <m>m<s>s`
-(`✗ <tag> — <error_class>` on failure). Each lane file maps its `spend`
-fields onto these numbers; here, fresh is `spend` `input_tokens` minus
-`cached_input_tokens`.
+Every seat dispatch prints one stage line at start and one at harvest, both
+opening with the dispatch label: `▸ <model> @ <effort> — <task tag>` and
+`✓ <model> @ <effort> — <task tag> — <m>m<s>s`, then what it found in a
+sentence (`✗ <model> @ <effort> — <task tag> — <error_class>` on failure). Spend stays out of
+the stage lines and goes in the final report as one number per stage:
+fresh input plus output, in thousands. Here, fresh is `spend`
+`input_tokens` minus `cached_input_tokens`.
 
 **Foreground adapter.** A Workflow that mixes lanes may carry a
 confidently short Codex stage through the foreground `codex-worker`

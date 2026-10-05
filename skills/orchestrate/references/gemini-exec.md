@@ -92,8 +92,8 @@ text), `status`, `denied_actions`, `workspace_changed` / `changed_files`,
 separately from input, `output_tokens`, `thinking_tokens`, `total_tokens`,
 `wall_seconds`), `run_dir` (`events.jsonl`, `stderr.log`, `cli.log`), and on
 failure `error_class`, `error` and `detail`. Failures still carry the
-worker's answer and spend. In the stage line, fresh is `input_tokens` and
-cached is `cache_read_tokens`; command count is not reported.
+worker's answer and spend. In the final report, the stage's token figure
+is `input_tokens` plus `output_tokens`.
 
 | `error_class` | Meaning | Move |
 |---|---|---|

@@ -65,7 +65,7 @@ never an appended `&`, with the Bash call's own `timeout` set to
 kills a longer review and loses its result.
 
 ```bash
-: "second-opinion MODEL@high — TOPIC"
+# second-opinion MODEL@high — TOPIC
 HELPER_ABS_PATH run --model MODEL --effort high --sandbox read-only \
   --workspace WORKSPACE --prompt-file TEMP_DIR/prompt.md --run-dir TEMP_DIR/run \
   --timeout 3300

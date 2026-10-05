@@ -4,6 +4,26 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.51.1 — 2026-10-05
+
+orchestrate: quieter output, from three real sessions run on 0.51.0 (one
+headless, two in a terminal). The response tag is `[orch]` in both modes.
+A stage line opens with the dispatch label and carries no spend:
+`▸ <model> @ <effort> — <task tag>` at start, the same with the elapsed
+time and one sentence of findings at harvest; the task tag is plain words,
+never a bare letter. The final report closes with one line per stage
+(model and effort, tag, what it found, one token figure, time) instead of
+a table with per-provider totals; the token figure is fresh input plus
+output. A seat-dispatched job's command now opens with a comment line
+carrying the label (`# <label>`), which is what a harness's background
+list shows; the earlier no-op form showed its quoting. second-opinion uses
+the same form. One loss from 0.51.0 is restored: the mutation probe is run
+by the seat itself, never as a delegated stage; that sentence had moved to
+`writers.md`, which a read-only review never opens, and a review session
+handed the probe to an agent for thirteen minutes. The sessions otherwise
+read `writers.md` before their first writer, fanned out four readers on a
+review, and chose lanes from the model map unprompted. Prose only.
+
 ## 0.51.0 — 2026-10-05
 
 orchestrate: `SKILL.md` is restructured and shortened from 3069 to 2464

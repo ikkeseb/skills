@@ -148,17 +148,17 @@ row's first fallback is another Codex model.
   owed outside-family verification. Sol stays the standing reviewer of
   diffs and rule text and the cross-family verifier `SKILL.md` § Review
   owes; it gives a second opinion only on the user's explicit word.
-- **Reporting.** Name a served model only on runtime evidence, otherwise
-  `unknown`: the helper envelope echoes the request and proves nothing
-  about provider-side substitution. Judge cost per accepted task, counting
+- **Reporting.** The report's token figure per stage is fresh input plus
+  output, from existing stage results and harness telemetry, each attempt
+  once; a Claude-lane stage reports the total its harness gives. Codex and
+  Gemini input sums every round's replayed context, so cached input stays
+  out of the figure and the figures are never summed across providers. A
+  stage without data reads `unknown`. The lines name the requested model:
+  the helper envelope echoes the request and proves nothing about
+  provider-side substitution, so name a served model only on runtime
+  evidence that it differed. Judge cost per accepted task, counting
   readers, adapters, retries, seat synthesis and rework, not worker spend
-  alone. At task close, total usage per provider from existing stage
-  results and harness telemetry: each attempt once, token categories kept
-  apart, cache inclusion stated. Codex and Gemini input sums every round's
-  replayed context, so neither is one unit with a Claude total. The totals
-  cover delegated stages (workers, reviewers, adapters); name missing stage
-  data and mark that total partial. Collecting spend needs no extra model
-  call or transcript review.
+  alone. Collecting spend needs no extra model call or transcript review.
 - **Image-generation relay exception.** When the worker only prompts a
   separate image model, use `gpt-6.1-sol` at `medium`. The image model does
   the substantive work; this exception never applies to a stage doing its
