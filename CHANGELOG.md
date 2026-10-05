@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.50.2 — 2026-10-05
+
+orchestrate: three small hardenings of `relay` from a third cross-family
+read of 0.50.1. The pid file is read once more after the last wait, a
+failed `sleep` can no longer end the helper without output, and the final
+status prints even when no envelope in the run dir is readable. One
+trailing space leaves `html-brief/assets/OFL.txt`, which had turned the
+repository gate's whitespace check red. Declined as out of proportion:
+tests that force the start race into a fixed order.
+
 ## 0.50.1 — 2026-10-05
 
 orchestrate: a Codex reader of any length can be a Workflow stage. The

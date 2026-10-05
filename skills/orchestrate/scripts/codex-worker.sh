@@ -1440,8 +1440,10 @@ cmd_relay() {
   while [ "$tries" -lt 15 ]; do
     pid="$(cat "$state/pid" 2>/dev/null || true)"
     [ -z "$pid" ] || break
-    sleep 0.2 2>/dev/null || sleep 1; tries=$((tries + 1))
+    sleep 0.2 2>/dev/null || sleep 1 || true; tries=$((tries + 1))
   done
+  # One more look: the pid may have landed during the last sleep.
+  [ -n "$pid" ] || pid="$(cat "$state/pid" 2>/dev/null || true)"
   is_pos_int "$pid" || {
     "$JQ_BIN" -n --arg run_dir "$run_dir" --arg state "$state" \
       '{pending: false, ok: false, run_dir: $run_dir, error_class: "codex_failed",
@@ -1468,10 +1470,16 @@ cmd_relay() {
       emit_failure codex_failed "relay: the runner exited without an envelope" "$run_dir" >/dev/null
     fi
   fi
-  "$JQ_BIN" --arg run_dir "$run_dir" \
+  # The status is printed whatever became of the mirror: an unwritable run
+  # dir, or two calls sharing emit_failure's temp file, must still end in
+  # one object.
+  "$JQ_BIN" -e --arg run_dir "$run_dir" \
     '{pending: false, ok: (.ok == true), run_dir: $run_dir}
      + (if .ok == true then {} else {error_class: (.error_class // "codex_failed")} end)' \
-    "$run_dir/result.json"
+    "$run_dir/result.json" 2>/dev/null \
+    || "$JQ_BIN" -n --arg run_dir "$run_dir" \
+      '{pending: false, ok: false, run_dir: $run_dir, error_class: "codex_failed",
+        error: "relay: no readable envelope in the run dir"}'
 }
 
 case "${1:-}" in
