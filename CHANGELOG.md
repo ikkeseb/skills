@@ -4,6 +4,22 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.51.2 — 2026-10-06
+
+orchestrate: a brief now says how a worker waits. Measured over a month of
+one machine's session transcripts, a Claude-lane worker's prompt cache
+lasted five minutes between requests and the seat's an hour: 255 worker
+requests came back with the cache gone after one tool call had waited
+longer, most after a polling loop or a foreground gate held near the shell
+tool's ten-minute cap, each rewriting the worker's whole context. § The
+brief, Context economy, tells the seat to brief a slow gate, build or job
+as a background start plus waits of at most four minutes per call, on a
+named condition. One real session on the new text: the seat wrote the rule
+into its writer's brief unprompted, and the writer held a
+six-and-a-half-minute gate in two wait calls with its cache intact. The
+Codex relay and adapter keep their 540-second calls: their agents are
+one-shot with small contexts, so shorter calls would cost more. Prose only.
+
 ## 0.51.1 — 2026-10-05
 
 orchestrate: quieter output, from three real sessions run on 0.51.0 (one

@@ -138,7 +138,14 @@ The brief is the senior deliverable; every stage gets one.
   for the same back, unknowns included, so the next stage does not redo
   the reconnaissance. Every command round replays the worker's growing
   context, so fewer, larger reads are the lever; command count is a
-  diagnostic, not a bill.
+  diagnostic, not a bill. A Claude-lane worker's prompt cache has been
+  measured to last five minutes between its requests, the seat's an hour:
+  one tool call that waits longer makes the worker rewrite its whole
+  context. A brief whose worker runs or awaits anything that can pass four
+  minutes (a test gate, a build, another job) says how to wait: start it in
+  the background with its output in a file, then wait on its completion in
+  calls of at most four minutes each, repeated until it ends. Name the
+  condition; a harness may refuse a bare `sleep`.
 - **Evidence.** Ask for every returned claim marked observed (with its
   source location or command) or inferred; a schema carries the mark as a
   field. The seat treats an unmarked claim as inferred.
