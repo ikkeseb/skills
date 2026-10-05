@@ -104,8 +104,8 @@ Workflow exceptions. Pick at dispatch and never switch owners mid-job.
 **Seat dispatch.** Read this paragraph before the first seat dispatch on
 the Codex or the Gemini lane; it governs both (the Gemini helper is
 `"$GEMINI_HELPER"`). `SKILL.md` § Dispatch owns what stays lane-neutral:
-one call per stage, the in-flight caps, the label format, delivery
-ownership and the harvest. The seat writes the prompt and schema files outside the run dir,
+one call per stage, the in-flight caps, the label format and the harvest
+rule. The seat writes the prompt and schema files outside the run dir,
 mints an empty run dir (`RUN_DIR="$(mktemp -d)"`), and starts the helper
 with the Bash tool's `run_in_background`, the stage label as both
 `description` and the command's leading no-op line (`: "<label>"`), stdout
@@ -135,8 +135,25 @@ print no `end` line. Over the WSL bridge, or with no `perl` on PATH, there
 are no progress lines.
 Harvest from the envelope only and never read those lines as liveness,
 since a quiet stream still proves nothing. `--no-progress` turns them off
-and keeps the banner. In the stage line, fresh is `spend` `input_tokens`
-minus `cached_input_tokens`.
+and keeps the banner.
+
+One delivery owner, fixed at dispatch. A seat dispatch is seat-owned from
+the start: record its run dir before dispatch, then own the exit signal,
+terminal-state detection, harvest and cleanup: what the harvest holds
+beyond the seat's distillation (ideas, proposed wording) is saved or
+dropped on purpose, then the run's scratch is removed. A foreground adapter
+owns only its single blocking call. Idle is not completion: completion
+needs a returned result plus inspection of the artifact or diff. On idle
+without a result, check the run dir, job state, workspace diff, PID and log
+freshness; idle never transfers ownership, and no wrapper is pinged to
+resume delivery.
+
+Every seat dispatch prints one stage line at start and one at harvest:
+`▸ <tag> — <model> @ <effort> — started, run dir <path>` and
+`✓ <tag> — <n> cmds, <fresh>k fresh + <cached>M cached in, <out>k out, <m>m<s>s`
+(`✗ <tag> — <error_class>` on failure). Each lane file maps its `spend`
+fields onto these numbers; here, fresh is `spend` `input_tokens` minus
+`cached_input_tokens`.
 
 **Foreground adapter.** A Workflow that mixes lanes may carry a
 confidently short Codex stage through the foreground `codex-worker`
@@ -277,7 +294,7 @@ without evidence.
 
 ## Write-worker gates
 
-- Pass the writer's workspace (`SKILL.md` § Writers) with `--workspace`;
+- Pass the writer's workspace (`writers.md`) with `--workspace`;
   the helper holds an exclusive per-workspace lock during write runs as a
   backstop.
 - The helper refuses `workspace-write` on a dirty tree (untracked files

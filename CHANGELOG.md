@@ -4,6 +4,28 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.51.0 — 2026-10-05
+
+orchestrate: `SKILL.md` is restructured and shortened from 3069 to 2464
+words with no rule removed. § Shapes becomes § Legs and opens by naming
+the unit a run is planned in: a leg is the work that runs under briefs
+already written until it needs a seat decision, and stages share a leg only
+where no seat judgment falls between them. "Scale to the ask" is now
+"Width". The writer mechanics (the writer's brief, the exclusive main-tree
+writer, the worktree recipe, the mutation probe and cleanup) move to a new
+`references/writers.md`, read before the first writing stage. Delivery
+ownership and the stage-line formats move into `codex-exec.md` § Dispatch,
+Seat dispatch, and the final-report totals into `model-map.md` § Review and
+spend; both files are already read before the step they govern. An
+outside-family read at high effort compared the two versions: no dropped
+machine or test qualification, every moved rule behind a pointer that fires
+in time, no dangling reference, and two weakenings, both restored (no
+shape is mandatory; the Workflow itself ends at the gate). The same read
+argued against a first draft's "plan a run as few legs": it made decision
+count a target without evidence, so the paragraph now only names the unit
+and its boundary. The restored wording had no second outside read. Prose
+only; no field run.
+
 ## 0.50.5 — 2026-10-05
 
 orchestrate: the one-Workflow Build ends at the gate when a writer is

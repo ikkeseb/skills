@@ -142,12 +142,23 @@ row's first fallback is another Codex model.
   strongest models, never by Sol by default: an `opus` seat asks
   `gpt-6-astra`, `fable`, or both; a `fable` seat asks `opus` and may also
   ask `gpt-6-astra`. The counter-case owed before a Build (`SKILL.md`
-  § Shapes, Second look) comes from outside the seat's family, so on a
+  § Legs, Second look) comes from outside the seat's family, so on a
   Claude seat it is Astra's. `fable` and `opus` are one family: a
   Claude-lane second opinion is labeled same-family and never replaces
   owed outside-family verification. Sol stays the standing reviewer of
   diffs and rule text and the cross-family verifier `SKILL.md` § Review
   owes; it gives a second opinion only on the user's explicit word.
+- **Reporting.** Name a served model only on runtime evidence, otherwise
+  `unknown`: the helper envelope echoes the request and proves nothing
+  about provider-side substitution. Judge cost per accepted task, counting
+  readers, adapters, retries, seat synthesis and rework, not worker spend
+  alone. At task close, total usage per provider from existing stage
+  results and harness telemetry: each attempt once, token categories kept
+  apart, cache inclusion stated. Codex and Gemini input sums every round's
+  replayed context, so neither is one unit with a Claude total. The totals
+  cover delegated stages (workers, reviewers, adapters); name missing stage
+  data and mark that total partial. Collecting spend needs no extra model
+  call or transcript review.
 - **Image-generation relay exception.** When the worker only prompts a
   separate image model, use `gpt-6.1-sol` at `medium`. The image model does
   the substantive work; this exception never applies to a stage doing its
