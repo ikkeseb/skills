@@ -40,6 +40,9 @@ fake_codex() {
         printf '%s\n' '--ignore-user-config' '--ephemeral' '--disable' '--config' \
           '--sandbox' '--cd' '--json' '--output-last-message' '--model' \
           '--output-schema' '--skip-git-repo-check'
+        # fake-help-pad: a help text longer than a pipe buffer, so a reader
+        # that leaves at its first match leaves the writer mid-write.
+        [ ! -e "$HOME/fake-help-pad" ] || seq 1 40000
         return 0
       fi ;;
   esac
@@ -256,6 +259,17 @@ if [ ! -e "$fake_home/wrapper-calls" ]; then
 else
   fail 'PATH executable bypasses the imported codex shell function'
 fi
+
+# The contract check finds a flag wherever grep stops reading. Fed down a
+# pipe, `grep -q` left at its first match, the writer died of SIGPIPE on the
+# rest, and pipefail reported an advertised flag as missing: always with a
+# help text longer than a pipe buffer, now and then with a short one on a
+# loaded machine.
+: > "$fake_home/fake-help-pad"
+run_worker "$tmp/probe-longhelp.json" "$tmp/probe-longhelp.err" probe
+rm -f "$fake_home/fake-help-pad"
+assert_json "$tmp/probe-longhelp.json" '.contract_ok == true and .missing_flags == []' \
+  'probe finds every advertised flag in a help text longer than a pipe buffer'
 
 # A sandbox that rejects workspace writes must gate write_ready even though
 # every dependency passes — the exact false-green that shipped a doomed write
@@ -1297,10 +1311,14 @@ wait "$race_pid" 2>/dev/null || true
 for _ in $(seq 1 300); do [ -e "$fake_home/fake-waiting" ] && break; sleep 0.2; done
 assert_json "$tmp/relay-1.json" '.pending == true and (has("ok") | not)' \
   'relay: a worker that outlives --max returns pending'
-# Seen red about one run in ten with the runner gone right after its start
-# and the cause not found: print what the runner left when it happens.
+# This went red about one run in ten while a bare mkdir was the claim: both
+# racing calls started a runner, and the pid file named the one that died. If
+# it goes red again, read the recorded pid against the slot's owner first, so
+# both are printed with what the runner left.
 if ! jq -e '.pending == true' "$tmp/relay-1.json" >/dev/null 2>&1; then
   { printf 'relay diagnostics: %s\n' "$(tr -d '\n' < "$tmp/relay-1.json")"
+    printf 'recorded pid: %s, slot owner: %s\n' "$(cat "$run_dir.relay/pid" 2>/dev/null)" \
+      "$(cat "$tmp"/codex-worker-slots-*/slot-1/owner 2>/dev/null)"
     cat "$run_dir.relay/stderr.log" "$run_dir/stderr.log" 2>/dev/null
     ls -la "$run_dir" "$run_dir.relay" 2>/dev/null; } >&2
 fi
@@ -1357,6 +1375,95 @@ if [ -n "$term_worker" ] && ! kill -0 "$term_worker" 2>/dev/null; then
 else
   fail 'relay: the worker is gone once the interrupted verdict is back'
 fi
+
+# Locks hold under a mkdir that is not exclusive. uutils mkdir reports success
+# when another process creates the directory between its existence check and
+# its own create; the `mkdir` on the helper's PATH here does so every time,
+# for any directory that already exists. With a bare mkdir as the lock, a
+# second relay call took the claim again, a second run took an occupied slot,
+# and a second writer entered a locked workspace.
+real_mkdir="$(type -P mkdir)"
+cat > "$fake_bin/mkdir" <<EOF
+#!/usr/bin/env bash
+"$real_mkdir" "\$@" 2>/dev/null && exit 0
+for last in "\$@"; do :; done
+[ -d "\$last" ]
+EOF
+chmod +x "$fake_bin/mkdir"
+# One relay run, its worker at the gate, holds the claim and the only slot.
+relay_gate
+run_dir="$tmp/run-lock-claim"
+relay_args[2]=2
+relay_args[${#relay_args[@]}-3]="$run_dir"
+before="$(exec_count)"
+run_worker "$tmp/lock-claim-1.json" "$tmp/lock-claim-1.err" "${relay_args[@]}"
+for _ in $(seq 1 300); do [ -e "$fake_home/fake-waiting" ] && break; sleep 0.2; done
+run_worker "$tmp/lock-claim-2.json" "$tmp/lock-claim-2.err" "${relay_args[@]}"
+assert_json "$tmp/lock-claim-2.json" '.pending == true' \
+  'locks: a second relay call waits on the run when mkdir hands the claim out twice'
+# --timeout bounds the red case, where this run starts a worker of its own.
+run_worker "$tmp/lock-slot.json" "$tmp/lock-slot.err" run \
+  --model default --effort low --sandbox read-only --workspace "$tmp" \
+  --prompt-file "$prompt" --schema-file "$schema" --run-dir "$tmp/run-lock-slot" --timeout 20
+assert_json "$tmp/lock-slot.json" '.ok == false and .error_class == "slots_exhausted"' \
+  'locks: a run finds the slot taken when mkdir hands it out twice'
+# Both verdicts stand only if the holder's worker was at its gate throughout:
+# a worker that runs out its gate bound ends the run and frees the slot.
+if [ -e "$fake_home/fake-waiting" ] && [ ! -e "$fake_home/fake-released" ]; then
+  ok 'locks: the holder stood at its gate while the claim and the slot were tried'
+else
+  fail 'locks: the holder stood at its gate while the claim and the slot were tried'
+fi
+: > "$fake_home/fake-go"
+relay_args[2]=60
+run_worker "$tmp/lock-claim-3.json" "$tmp/lock-claim-3.err" "${relay_args[@]}"
+assert_json "$tmp/lock-claim-3.json" '.pending == false and .ok == true' \
+  'locks: the run that held the claim and the slot ends with its own verdict'
+if [ "$(exec_count)" -eq "$((before + 1))" ]; then
+  ok 'locks: the claim and the slot let one worker start'
+else
+  fail 'locks: the claim and the slot let one worker start'
+fi
+# One writer, its worker at the gate, holds a workspace; a second slot is
+# free, so the second writer is stopped by the workspace lock alone.
+lock_repo="$tmp/lock-repo"
+mkdir -p "$lock_repo"
+HOME="$fake_home" git -C "$lock_repo" init -q
+HOME="$fake_home" git -C "$lock_repo" config core.autocrlf false
+printf '%s\n' clean > "$lock_repo/tracked.txt"
+HOME="$fake_home" git -C "$lock_repo" add tracked.txt
+HOME="$fake_home" git -C "$lock_repo" -c user.name=Test -c user.email=test@example.invalid commit -qm init
+lock_sha="$(HOME="$fake_home" git -C "$lock_repo" rev-parse HEAD)"
+lock_writer() { # stdout-file stderr-file run-dir timeout
+  HOME="$fake_home" PATH="$test_path" TMPDIR="$tmp" \
+    CODEX_WORKER_MAX_SLOTS=2 CODEX_WORKER_SLOT_WAIT=1 \
+    bash "$helper" run --model default --effort low --sandbox workspace-write \
+    --workspace "$lock_repo" --expected-base-sha "$lock_sha" --prompt-file "$prompt" \
+    --schema-file "$schema" --run-dir "$3" --timeout "$4" > "$1" 2> "$2"
+}
+relay_gate
+before="$(exec_count)"
+lock_writer "$tmp/lock-ws-1.json" "$tmp/lock-ws-1.err" "$tmp/run-lock-ws-1" 300 &
+runner_pid=$!
+for _ in $(seq 1 300); do [ -e "$fake_home/fake-waiting" ] && break; sleep 0.2; done
+lock_writer "$tmp/lock-ws-2.json" "$tmp/lock-ws-2.err" "$tmp/run-lock-ws-2" 20
+assert_json "$tmp/lock-ws-2.json" '.ok == false and .error_class == "workspace_locked"' \
+  'locks: a second writer finds the workspace held when mkdir hands the lock out twice'
+if [ -e "$fake_home/fake-waiting" ] && [ ! -e "$fake_home/fake-released" ]; then
+  ok 'locks: the writer stood at its gate while the workspace was tried'
+else
+  fail 'locks: the writer stood at its gate while the workspace was tried'
+fi
+: > "$fake_home/fake-go"
+wait "$runner_pid" 2>/dev/null || true
+assert_json "$tmp/lock-ws-1.json" '.ok == true and .workspace_changed == false' \
+  'locks: the writer that held the workspace ends with its own verdict'
+if [ "$(exec_count)" -eq "$((before + 1))" ]; then
+  ok 'locks: the workspace lock let one writer start'
+else
+  fail 'locks: the workspace lock let one writer start'
+fi
+rm -f "$fake_bin/mkdir"
 rm -f "$fake_home/fake-events-late" "$fake_home/fake-go" "$fake_home/fake-released" "$fake_home/fake-waiting"
 printf '%s\n' success > "$fake_home/fake-mode"
 

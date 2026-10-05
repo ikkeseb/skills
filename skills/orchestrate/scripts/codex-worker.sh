@@ -359,6 +359,11 @@ codex_version() { "$CODEX_BIN" --version 2>/dev/null | "$GREP_BIN" -oE '[0-9]+\.
 # or a deprecation notice satisfy `--model`. A help invocation that fails
 # outright is reported as the whole set missing rather than silently passing on
 # truncated output.
+#
+# The help text reaches grep as a here-string, never down a pipe: `grep -q`
+# leaves at its first match, a `printf` still writing the rest then dies of
+# SIGPIPE, and pipefail turns that into a missing flag. On a loaded machine
+# that refused a write run over a flag the CLI advertises.
 missing_contract_flags() {
   local scope="${1:-always}" help_exec help_root out="" f
   local exec_set="$ALWAYS_EXEC_FLAGS"
@@ -373,10 +378,10 @@ missing_contract_flags() {
     return
   fi
   for f in $exec_set; do
-    printf '%s' "$help_exec" | "$GREP_BIN" -qE -- "(^|[^[:alnum:]_-])$f([^[:alnum:]_-]|$)" || out="$out $f"
+    "$GREP_BIN" -qE -- "(^|[^[:alnum:]_-])$f([^[:alnum:]_-]|$)" <<< "$help_exec" || out="$out $f"
   done
   for f in $ALWAYS_ROOT_FLAGS; do
-    printf '%s' "$help_root" | "$GREP_BIN" -qE -- "(^|[^[:alnum:]_-])$f([^[:alnum:]_-]|$)" || out="$out $f"
+    "$GREP_BIN" -qE -- "(^|[^[:alnum:]_-])$f([^[:alnum:]_-]|$)" <<< "$help_root" || out="$out $f"
   done
   printf '%s' "${out# }"
 }
@@ -402,12 +407,31 @@ build_worker_env() {
 }
 
 # --- locks --------------------------------------------------------------------
+# A lock is a directory and the `owner` file inside it, and the owner file is
+# the claim: bash creates it under noclobber, which opens with O_EXCL, so one
+# caller gets it. mkdir alone is not a lock. uutils mkdir 0.8.0, the default
+# on Ubuntu 26.04, tests for the directory and then creates it, and reports
+# success when another process created it in between: 93 of 3000 two-way races
+# ended with both callers told they made the directory (GNU mkdir: none). Two
+# helpers then held one slot, one workspace lock or one relay claim. mkdir
+# still stands in front of the claim: it refuses a directory that was there
+# when the call began, so a caller arriving at a held or stale lock stops
+# before the owner file.
+claim_lock() { # $1 = lock dir, $2 = owner text; succeeds for one caller only
+  mkdir "$1" 2>/dev/null || return 1
+  ( set -o noclobber; printf '%s' "$2" > "$1/owner" ) 2>/dev/null
+}
 lock_owner_pid()   { "$CUT_BIN" -d' ' -f1 "$1/owner" 2>/dev/null || true; }
 lock_owner_token() { "$CUT_BIN" -d' ' -f2 "$1/owner" 2>/dev/null || true; }
 
-release_lock_dir() { # only the token holder may delete a lock
+# Only the token holder releases a lock, and it removes its own owner file,
+# then the directory only if that left it empty: a claim that was told its
+# mkdir succeeded and writes its owner in between keeps the lock.
+release_lock_dir() {
   [ -n "$1" ] && [ -d "$1" ] || return 0
-  [ "$(lock_owner_token "$1")" = "$LOCK_TOKEN" ] && rm -rf "$1" 2>/dev/null || true
+  [ "$(lock_owner_token "$1")" = "$LOCK_TOKEN" ] || return 0
+  rm -f "$1/owner" 2>/dev/null || true
+  rmdir "$1" 2>/dev/null || true
 }
 release_locks() {
   release_lock_dir "$SLOT_DIR"; release_lock_dir "$WS_LOCK"
@@ -458,7 +482,7 @@ reclaim_stale_slots() {
   if [ -d "$lock" ] && [ -n "$(find "$lock" -maxdepth 0 -mmin +5 2>/dev/null)" ]; then
     rm -rf "$lock" 2>/dev/null || true
   fi
-  mkdir "$lock" 2>/dev/null || return 0
+  claim_lock "$lock" "$$ $LOCK_TOKEN" || return 0
   local d owner_pid
   # All lock dirs (slots and workspace locks) share one reclaim protocol,
   # serialized under this lock, with ownership re-read just before deletion.
@@ -473,7 +497,9 @@ reclaim_stale_slots() {
       rm -rf "$d" 2>/dev/null || true
     fi
   done
-  rmdir "$lock" 2>/dev/null || true
+  # Token-checked like every release, so a reclaimer that lost this lock to
+  # an age takeover before it got here leaves its successor's alone.
+  release_lock_dir "$lock"
 }
 
 acquire_slot() {
@@ -482,12 +508,13 @@ acquire_slot() {
   while :; do
     for i in $(seq 1 "$MAX_SLOTS"); do
       slot="$SLOT_ROOT/slot-$i"
-      if mkdir "$slot" 2>/dev/null; then
+      if claim_lock "$slot" "$$ $LOCK_TOKEN"; then
+        # The claim publishes ownership, so a helper killed before these
+        # traps are armed leaves a slot whose owner is dead, and reclaim
+        # frees that at once.
         SLOT_DIR="$slot"
-        # Cleanup is armed before ownership is published.
         trap on_exit EXIT
         trap on_signal INT TERM HUP
-        printf '%s %s' "$$" "$LOCK_TOKEN" > "$slot/owner"
         return 0
       fi
     done
@@ -509,9 +536,9 @@ acquire_workspace_lock() { # exclusive per-repository lock for writing workers
     "workspace-write requires shasum or sha256sum on PATH"
   key="$(printf '%s' "$ws_root" | workspace_hash | "$CUT_BIN" -c1-16)"
   lock="$SLOT_ROOT/ws-$key"
-  while ! mkdir "$lock" 2>/dev/null; do
+  while ! claim_lock "$lock" "$$ $LOCK_TOKEN"; do
     # Stale recovery goes through the serialized reclaim protocol; this loop
-    # only ever *acquires* via mkdir, so two contenders can't trade deletes.
+    # only ever *acquires*, so two contenders can't trade deletes.
     reclaim_stale_slots
     tries=$((tries + 1))
     [ "$tries" -lt 3 ] || fail_json workspace_locked \
@@ -519,7 +546,6 @@ acquire_workspace_lock() { # exclusive per-repository lock for writing workers
     sleep 2
   done
   WS_LOCK="$lock"
-  printf '%s %s' "$$" "$LOCK_TOKEN" > "$lock/owner"
 }
 
 # Functional write test through the real OS sandbox — dependency presence is
@@ -1288,9 +1314,11 @@ cmd_run() {
     error_class=codex_failed
     local diag
     diag="$api_error $("$TAIL_BIN" -c 2000 "$run_dir/stderr.log" 2>/dev/null || true)"
-    if printf '%s' "$diag" | "$GREP_BIN" -qiE '401|unauthorized|not logged in'; then error_class=auth
-    elif printf '%s' "$diag" | "$GREP_BIN" -qiE '429|rate.?limit|usage.?limit|quota'; then error_class=rate_limit
-    elif printf '%s' "$diag" | "$GREP_BIN" -qiE 'unsupported_value|invalid_request|config|invalid value|unexpected argument'; then error_class=config
+    # Here-strings for the reason given at missing_contract_flags: down a
+    # pipe, a match can read as no match and the class falls through.
+    if "$GREP_BIN" -qiE '401|unauthorized|not logged in' <<< "$diag"; then error_class=auth
+    elif "$GREP_BIN" -qiE '429|rate.?limit|usage.?limit|quota' <<< "$diag"; then error_class=rate_limit
+    elif "$GREP_BIN" -qiE 'unsupported_value|invalid_request|config|invalid value|unexpected argument' <<< "$diag"; then error_class=config
     elif [ "$result_ok" = false ] && [ "$exit_code" -eq 0 ]; then error_class=schema
     fi
     error="exit=$exit_code turn_completed=$turn_completed result_valid=$result_ok"
@@ -1362,10 +1390,11 @@ cmd_run() {
 #     refusal before the run dir exists reaches stdout only. Once the runner is
 #     gone, an envelope that only reached stdout is mirrored into result.json,
 #     so the harvest file is the one authority either way.
-#   * State lives beside the run dir (<run-dir>.relay/: pid, stdout.json and
-#     the runner's stderr.log, the place to look when a runner died silent),
-#     because `run` requires the run dir itself empty. Creating that directory
-#     is the claim to start, so a repeated or concurrent call never starts a
+#   * State lives beside the run dir (<run-dir>.relay/: owner, pid,
+#     stdout.json and the runner's stderr.log, the place to look when a runner
+#     died silent), because `run` requires the run dir itself empty. Claiming
+#     that directory (claim_lock; owner holds the pid of the call that did) is
+#     the claim to start, so a repeated or concurrent call never starts a
 #     second run.
 #   * Read-only runs only. A caller that stops calling leaves the runner to
 #     its own --timeout; an orphaned reader costs quota, an orphaned writer
@@ -1407,12 +1436,13 @@ cmd_relay() {
   mkdir -p "$run_dir" 2>/dev/null || relay_refuse "cannot create --run-dir: $run_dir"
   local state="${run_dir%/}.relay"
 
-  if mkdir "$state" 2>/dev/null; then
+  if claim_lock "$state" "$$"; then
     # Only the call that holds the claim judges the run dir, so a call racing
     # the start never mistakes the new run's own files for an earlier run's.
     # A dir that holds anything at this point belongs to another run: its
     # result.json must never be reported as this one's.
     if [ -n "$(ls -A "$run_dir" 2>/dev/null)" ]; then
+      rm -f "$state/owner" 2>/dev/null || true
       rmdir "$state" 2>/dev/null || true
       relay_refuse "--run-dir must be empty: $run_dir"
     fi

@@ -4,6 +4,35 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.50.4 — 2026-10-05
+
+orchestrate: the Codex helper's locks no longer rest on a bare `mkdir`,
+which closes the relay defect 0.50.3 left open. On a machine whose `mkdir`
+is uutils coreutils 0.8.0 (the default on Ubuntu 26.04), two processes
+racing to create one new directory are both told they made it: 93 of 3000
+races, against none with GNU mkdir on the same machine. Both racing `relay`
+calls then started a runner, the two shared a temp file, one exited, and
+the pid file named the one that died while the other ran on; the caller
+read that as a runner gone without an envelope (3 of 480 two-call races,
+each with two launches logged). The same hole sat under the worker-slot
+semaphore, the per-repository write lock and the lock that serializes
+reclamation. A lock is now a directory plus an `owner` file that bash
+creates with `O_EXCL`, so one caller gets it whatever `mkdir` reports, and
+a release removes its own owner file and then the directory only if that
+left it empty. Also fixed, found by the same reproduction: the CLI contract
+check and the error-class tests fed text to `grep -q` down a pipe, and
+under `pipefail` a writer killed by SIGPIPE read as "flag missing" (44 of
+25,600 under CPU contention), which refused a write run over a flag the CLI
+advertises; they read here-strings now. The suite gains ten checks, 124 in
+all: a `mkdir` that reports success for any existing directory must not
+hand out the relay claim, an occupied slot or a held workspace twice, and a
+help text longer than a pipe buffer must still show every flag. Left as
+they were, each needing a process delayed at one exact step and a suite
+case before a fix: a reclaimer that reads a holder's pid, is overtaken by
+that holder's release and a new claim, and then removes the new lock; an
+acquirer that stalls past the two-minute grace between creating a lock and
+publishing its owner; and the age-based takeover of the reclamation lock.
+
 ## 0.50.3 — 2026-10-05
 
 orchestrate: the one-Workflow Build is the default for a piece in the
