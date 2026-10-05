@@ -86,9 +86,11 @@ a one-line fix needs no fan-out, and file count alone never forces a Map.
 Slot counts are capacity, not a target: the seat's review throughput
 bounds what is in flight. Readers fan out as far as the seat can triage
 their harvest; writers run only as many at once as the seat can review in
-full and integrate without a backlog building, the next started as one
-lands, since integration and owed verification are serial at the seat.
-Local load counts too: native builds, browser probes and hardware tests
+full and integrate without a backlog building, since integration and owed
+verification are serial at the seat. A piece in review does not hold the
+next: once any owed design check has passed, the next writer starts on its
+tip where it edits other files and relies on nothing an open finding may
+change; the seat rebases and rechecks at integration. Local load counts too: native builds, browser probes and hardware tests
 sharing one machine slow each other and can flake timing-sensitive checks.
 Where a miss would cost most, add depth (another independent reviewer, an
 Astra read), never width past that bound. An exhaustive search names its
@@ -111,7 +113,9 @@ The brief is the senior deliverable; every stage gets one.
   needs. A writing stage that owes regression coverage gets the test seam
   and cases named, not a follow-up. A numeric criterion states what the
   number stands for, the case it must be measured on, and one shortcut
-  that would reach it without serving that. No placeholders; inventories
+  that would reach it without serving that. A stage that launches a real
+  harness instance gets its working directory named, and returns a trust
+  prompt there as a blocker. No placeholders; inventories
   and bulk transforms reconcile their count against the named corpus.
   Workers also load machine-level instructions the seat cannot inspect, so
   state anything outcome-critical explicitly, the answer language included.
@@ -216,7 +220,8 @@ findings unaffected by later changes and revalidate the affected ones.
 ### Writers
 
 Workers write only in the session's own repository: in any other the seat
-makes the edits itself, and workers read, review or return a patch as text.
+says so before the first Build and makes the edits itself, and workers
+read, review or return a patch as text.
 
 One exclusive writer may use the main tree on a branch when the tree is
 clean at dispatch and nothing else writes there until it returns: record
@@ -227,7 +232,8 @@ integration. Every other writer gets its own worktree: concurrent writers
 in one checkout, a target linked into live configuration, or a cheap-tier
 writer outside a machine-gated mechanical task.
 
-Create worktrees in the main loop at current HEAD, under the session
+Create worktrees in the main loop at current HEAD (a stacked piece at its
+predecessor's tip), under the session
 repo's `.claude/worktrees/`: outside the project directory, Claude-lane
 edits there can each prompt for permission, unattended runs included. Git
 must ignore that path: add it to `.git/info/exclude` only when

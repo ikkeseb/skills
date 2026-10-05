@@ -4,6 +4,23 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.49.1 — 2026-10-05
+
+orchestrate, from a field run on a web-app repo and two independent second
+opinions. A piece in review no longer holds the next: once any owed design
+check has passed, the next writer starts on its tip where it edits other
+files and relies on nothing an open finding may change, and the seat
+rebases and rechecks at integration. The ambiguous "the next started as one
+lands" is gone, and the worktree recipe names the stacked base. In the run,
+one writer had worked strictly serially through two fix rounds while
+finished briefs waited. Both readers added the interface condition; a
+proposed line calling remote readers free of machine load was declined,
+since a Codex reader runs its commands locally. Two folds from earlier
+field notes: a seat whose target is another repository says so before the
+first Build, and a stage that launches a real harness instance gets its
+working directory named and returns a trust prompt as a blocker. `SKILL.md`
+goes from 2882 to 2956 words. Prose only, no field run.
+
 ## 0.49.0 — 2026-10-05
 
 orchestrate, consolidated on the maintainer's approval: `SKILL.md` goes from
