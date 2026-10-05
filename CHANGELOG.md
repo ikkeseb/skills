@@ -4,6 +4,22 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.50.3 — 2026-10-05
+
+orchestrate: the one-Workflow Build is the default for a piece in the
+review risk classes, no longer an option. Two field sessions with the
+0.50.1 text loaded still ran a lone writer in a one-stage Workflow, and one
+said on being asked that it had been a mistake. Named exceptions: a gate
+the seat must judge by eye, or a mutation probe, splits the Workflow at the
+gate; work below the risk bar keeps the lone writer. The relay paragraph
+adds that the reader returns the hash of the diff it read, since the seat
+is absent when it starts. A same-family second opinion proposed dropping
+the relay's wait loop for a detached start alone; kept, because the loop is
+what makes the Workflow's completion mean the review is in hand. Open: about
+one run of the helper suite in ten shows the relay's runner gone right
+after its start, cause not found; `relay` now keeps the runner's stderr
+beside the run dir and the suite prints it when that happens.
+
 ## 0.50.2 — 2026-10-05
 
 orchestrate: three small hardenings of `relay` from a third cross-family

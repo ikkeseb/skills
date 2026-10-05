@@ -199,6 +199,9 @@ false, ok, run_dir}`, with `error_class` beside a false `ok`; a call the
 relay itself refuses (a write run, a used run dir) adds `error` and starts
 nothing. The envelope stays in `RUN_DIR/result.json`, which the seat
 harvests after the Workflow returns, so no agent transcribes a review. The
+seat is absent when the reader starts, so the reader's prompt asks it to
+return the hash of the diff it read, and the seat compares that at harvest.
+The
 loop lives in the Workflow script, one one-shot agent per call, so no
 agent ever holds a pending state:
 

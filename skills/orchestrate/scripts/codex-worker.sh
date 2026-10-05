@@ -1362,7 +1362,8 @@ cmd_run() {
 #     refusal before the run dir exists reaches stdout only. Once the runner is
 #     gone, an envelope that only reached stdout is mirrored into result.json,
 #     so the harvest file is the one authority either way.
-#   * State lives beside the run dir (<run-dir>.relay/: pid, stdout.json),
+#   * State lives beside the run dir (<run-dir>.relay/: pid, stdout.json and
+#     the runner's stderr.log, the place to look when a runner died silent),
 #     because `run` requires the run dir itself empty. Creating that directory
 #     is the claim to start, so a repeated or concurrent call never starts a
 #     second run.
@@ -1427,7 +1428,7 @@ cmd_relay() {
     nohup ${detach[@]+"${detach[@]}"} bash -c \
       'printf "%s\n" "$$" > "$1/pid.tmp" && mv -f "$1/pid.tmp" "$1/pid" || exit 1; shift; exec bash "$@"' \
       _ "$state" "${BASH_SOURCE[0]}" run "${run_args[@]}" --no-progress \
-      > "$state/stdout.json" 2>/dev/null < /dev/null &
+      > "$state/stdout.json" 2> "$state/stderr.log" < /dev/null &
   elif [ ! -d "$state" ]; then
     relay_refuse "cannot create the relay state dir: $state"
   fi

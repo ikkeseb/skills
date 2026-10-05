@@ -1297,6 +1297,13 @@ wait "$race_pid" 2>/dev/null || true
 for _ in $(seq 1 300); do [ -e "$fake_home/fake-waiting" ] && break; sleep 0.2; done
 assert_json "$tmp/relay-1.json" '.pending == true and (has("ok") | not)' \
   'relay: a worker that outlives --max returns pending'
+# Seen red about one run in ten with the runner gone right after its start
+# and the cause not found: print what the runner left when it happens.
+if ! jq -e '.pending == true' "$tmp/relay-1.json" >/dev/null 2>&1; then
+  { printf 'relay diagnostics: %s\n' "$(tr -d '\n' < "$tmp/relay-1.json")"
+    cat "$run_dir.relay/stderr.log" "$run_dir/stderr.log" 2>/dev/null
+    ls -la "$run_dir" "$run_dir.relay" 2>/dev/null; } >&2
+fi
 assert_json "$tmp/relay-race.json" '.pending == true' \
   'relay: a call racing the start waits on the same run'
 if [ "$relay_took" -le 12 ]; then
