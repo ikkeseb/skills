@@ -4,6 +4,12 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.53.3 — 2026-10-06
+
+second-opinion: the Claude path pins `effort` to `high` on its Agent call,
+matching the Codex path, and labels the read `MODEL@high`; where the Agent
+call takes no `effort` it stays unset and is labelled `unknown`.
+
 ## 0.53.2 — 2026-10-06
 
 orchestrate: a single Claude stage is an Agent call with `model` and

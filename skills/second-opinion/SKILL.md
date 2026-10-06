@@ -104,12 +104,12 @@ its failure is stated.
 
 ## Claude path
 
-One Agent call with `model` pinned to `fable` or `opus`, its description
-`second-opinion MODEL — TOPIC`. Its prompt names the packet file by
-absolute path and says: read that file and answer it; this is a read-only
-review, so write nothing and spawn nothing. The call takes no effort
-setting; label the review with the model as requested and its effort and
-spend as `unknown` unless the harness reports them. Its returned text is
+One Agent call with `model` pinned to `fable` or `opus` and `effort` to
+`high`, its description `second-opinion MODEL@high — TOPIC`. Its prompt
+names the packet file by absolute path and says: read that file and
+answer it; this is a read-only review, so write nothing and spawn nothing.
+Where the Agent call takes no `effort`, leave it unset and label the
+effort `unknown`; spend is `unknown` unless the harness reports it. Its returned text is
 the review. A call that returns nothing useful is a stated failure, never
 redispatched just to recover delivery.
 
