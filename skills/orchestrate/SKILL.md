@@ -19,6 +19,13 @@ verification routing.
 - `/orchestrate sustained` routes every task through the split until an
   explicit stop signal in any language; questions and redirects do not end
   it.
+- A finished release or deploy pauses the run in either mode: work already
+  dispatched finishes with the gate and review it owes, no new leg starts,
+  and the seat does the repo's close-out, names what is pending and asks
+  before the next leg; sustained stays on. Run on past it only when the
+  user asked for that (to a named endpoint, or until the work runs out);
+  invoking sustained is not that ask, nor are the next steps a handoff
+  lists.
 
 The grant belongs to this session's main loop alone: subagents and forks
 never inherit it, however much session context they carry, and a new
@@ -71,7 +78,10 @@ reading each result before choosing the next. No shape is mandatory.
   probe, or a writer due to start on the piece's tip; the seat then dispatches the checkers and the
   reader, beside any such writer. A lone writer in a one-stage Workflow is
   for work below that bar. The seat triages the findings before any fix
-  stage, and a fix owes the gate and a read of its delta again.
+  stage. A fix owes the gate again and the seat's read of its delta. That
+  delta needs no fresh cross-family read when it stays within the findings
+  and a test pins each fixed finding; one that goes further (a new design
+  choice or surface, a test weakened or rewritten) earns one.
 - **Check**: on one diff, at once: cheap single-dimension checkers (one
   acceptance criterion or one risk each), the test/lint gate, and a
   cross-family reviewer when verification is owed. Fix-ups fold into the
@@ -242,7 +252,7 @@ regression) gets a full read against the acceptance criteria and owes
 verification by a reader outside the producer's model family, the seat's
 contributions included, its designs and plans before a Build rests on
 them (§ Legs) as much as its diffs (routing: model map § Review and
-spend). A change whose deterministic gate would catch the wrong result (a
+spend); a fix to reviewed findings follows Build's delta rule. A change whose deterministic gate would catch the wrong result (a
 rule-list deletion the suite covers, a formatter pass) gets the green gate
 plus a scan, declared as such.
 

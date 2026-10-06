@@ -84,7 +84,10 @@ forbid shell reads (a prompt that did so bricked its retry). Image files
 given by absolute path are viewed directly, without a shell command, also
 outside `--workspace`: verified for Luna on the WSL lane (one probe, then
 36 before-and-after screenshot pairs, where a few readers described the
-reference as the new image, so findings stay candidates). Sol, Astra and
+reference as the new image; a later run of 50 pairs did the same, and none
+of its 30 flagged differences held). A comparison brief names the
+reference and the new path of every pair and asks each difference for its
+region; one the seat cannot find there is dropped, not re-read. Sol, Astra and
 native Windows are unprobed: probe once before relying on them. A worker reviewing
 uncommitted state must be told to fail loudly rather than fall back to a
 remote copy of the repo. `$CODEX_HOME/AGENTS.md` still loads under

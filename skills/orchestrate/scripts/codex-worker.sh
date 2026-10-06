@@ -1143,7 +1143,14 @@ cmd_run() {
     --ask-for-approval never exec
     --ignore-user-config
     --ephemeral
+    # A worker neither delegates nor reaches account-side tools. The model
+    # catalog picks the multi-agent surface (v2 for current models), which
+    # `--disable multi_agent` alone leaves in place; `agents.enabled=false`
+    # turns off every version. `apps` adds ChatGPT connectors (GitHub writes
+    # among them) that run on the account, outside the sandbox.
     --disable multi_agent
+    --disable apps
+    --config agents.enabled=false
     --config "model_reasoning_effort=\"$effort\""
     --config 'shell_environment_policy.inherit="core"'
     --sandbox "$sandbox"

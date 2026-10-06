@@ -324,7 +324,7 @@ else
 fi
 actual_call="$(grep '^EXEC ' "$fake_home/fake-calls" | tail -n 1)"
 case "$actual_call" in
-  *'--ask-for-approval never exec'*'--ignore-user-config'*'--disable multi_agent'*'--sandbox read-only'*'--output-schema'*)
+  *'--ask-for-approval never exec'*'--ignore-user-config'*'--disable multi_agent --disable apps --config agents.enabled=false'*'--sandbox read-only'*'--output-schema'*)
     ok 'Claude-facing invocation keeps required safety and schema flags' ;;
   *) fail 'Claude-facing invocation keeps required safety and schema flags' ;;
 esac

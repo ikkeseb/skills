@@ -4,6 +4,37 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.52.0 — 2026-10-06
+
+orchestrate: Codex workers can no longer delegate or reach account-side
+tools, a release pauses the run, and a small tested fix skips its second
+cross-family read.
+
+- The Codex helper passes `--config agents.enabled=false` and
+  `--disable apps` on every run. Current model catalogs select the v2
+  multi-agent surface, which `--disable multi_agent` alone left in place: a
+  worker's sub-agent spawn failed only on an unrelated ephemeral-session
+  error. `apps` exposed ChatGPT connector tools that run on the account,
+  outside the sandbox; a read-only worker called a GitHub connector
+  successfully. With both settings a real worker reports neither tool.
+  Measured on Codex 0.160.1 (Linux); 0.155.0 to 0.160.1 accept both
+  settings. Suite 124 checks.
+- A release or deploy is a pause in either mode: dispatched work finishes
+  with the gate and review it owes, no new leg starts, and the seat closes
+  out and asks, unless the user asked the run to continue past it. From a
+  field run where a sustained seat chained build legs after a release
+  because a handoff listed them. Real headless sessions on a scratch repo:
+  told to continue where a handoff left off, the seat released and paused;
+  told to run until the list was empty, it continued and said why. A
+  wording that tied the exception to continuing "past it" made one seat
+  stop before the release; the rule names a finished release.
+- A fix delta that stays within the reviewed findings, each pinned by a
+  test, takes the gate and the seat's read without a second cross-family
+  read; § Review points to the rule. Field runs: first reads found real
+  defects each time, second reads of such deltas found nothing.
+- An image-comparison brief names the reference and the new path of every
+  pair and asks each difference for its region.
+
 ## 0.51.2 — 2026-10-06
 
 orchestrate: a brief now says how a worker waits. Measured over a month of
