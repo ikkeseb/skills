@@ -101,8 +101,7 @@ stages read `references/imagegen.md` before the prompt is written.
 
 ## Dispatch
 
-Seat dispatch is the default; the foreground adapter and the relay are the
-Workflow exceptions. Pick at dispatch and never switch owners mid-job.
+Every Codex stage is a seat dispatch; no Workflow carries one.
 
 **Seat dispatch.** Read this paragraph before the first seat dispatch on
 the Codex or the Gemini lane; it governs both (the Gemini helper is
@@ -145,8 +144,7 @@ One delivery owner, fixed at dispatch. A seat dispatch is seat-owned from
 the start: record its run dir before dispatch, then own the exit signal,
 terminal-state detection, harvest and cleanup: what the harvest holds
 beyond the seat's distillation (ideas, proposed wording) is saved or
-dropped on purpose, then the run's scratch is removed. A foreground adapter
-owns only its single blocking call. Idle is not completion: completion
+dropped on purpose, then the run's scratch is removed. Idle is not completion: completion
 needs a returned result plus inspection of the artifact or diff. On idle
 without a result, check the run dir, job state, workspace diff, PID and log
 freshness; idle never transfers ownership, and no wrapper is pinged to
@@ -160,106 +158,7 @@ the stage lines and goes in the final report as one number per stage:
 fresh input plus output, in thousands. Here, fresh is `spend`
 `input_tokens` minus `cached_input_tokens`.
 
-**Foreground adapter.** A Workflow that mixes lanes may carry a
-confidently short Codex stage through the foreground `codex-worker`
-adapter, one call over files the seat wrote, at a price: every Workflow
-stage is a Claude agent that replays its own context (~25k tokens) on
-every tool call. The
-seat writes the prompt and schema files before the workflow starts and
-passes their paths in the briefing. The Bash tool's timeout is hard-capped
-at 600000 ms and auto-backgrounds past it, which silently breaks a
-foreground relay, so the helper runs with `--timeout 540` and the stage
-must be confidently short; a longer read-only stage rides the relay below,
-and a longer write stage runs beside the Workflow as a seat dispatch. It
-also runs with `--no-progress`, because the Bash tool result mixes stderr
-into the text the adapter must relay verbatim. An
-adapter turn that ends without an envelope is a lost delivery, never a
-pause: never ping or re-invoke it; recover from the run dir
-(troubleshooting § Lost delivery).
 
-Prefer the `codex-worker` agent type when the session's agent list has it
-(plugin installs namespace it as `ikkeseb-skills:codex-worker`). Otherwise
-spawn a default agent as the adapter, `sonnet` at `low`, with this prompt
-(fill the UPPERCASE slots; keep the rules verbatim, each guards an observed
-failure; `HELPER_ABS_PATH` is `"$HELPER"` expanded, since the adapter
-resolves nothing for itself; for write workers add the write-gate flags):
-
-```
-You are a one-shot Codex-lane adapter. Do EXACTLY this, nothing else:
-1. Run this exact command with Bash in a SINGLE FOREGROUND invocation, with
-   the Bash tool's timeout parameter set to 600000 — it may legitimately
-   take several minutes (including a worker-slot queue wait); do NOT kill,
-   re-run, or modify it:
-   HELPER_ABS_PATH run --model MODEL --effort EFFORT \
-     --sandbox read-only --workspace WORKSPACE \
-     --prompt-file PROMPT_FILE --schema-file SCHEMA_FILE \
-     --run-dir RUN_DIR --timeout 540 --no-progress
-2. Return the helper's ENTIRE stdout verbatim as your result.
-Rules: strictly one-shot — never retry, never interpret or summarize the
-result, never touch the repo. Foreground means foreground: never set
-run_in_background, never append `&`, never end your turn with a "started,
-waiting" style status while the command runs — an idle adapter is a lost
-delivery. If you cannot keep the single blocking call open, do not start
-it; return exactly this instead, with the reason substituted, so the
-result stays machine-readable:
-{"ok": false, "error_class": "codex_failed", "error": "adapter could not
-hold a foreground call: REASON", "run_dir": "RUN_DIR"}
-```
-
-Pair the adapter with a matching Workflow `schema`, and treat the run dir
-as ground truth even on success: adapters have wrapped the JSON in fences
-or prose despite the instruction, so when the relayed text is off, parse
-`RUN_DIR/result.json` and gate on its `ok`.
-
-**Relay.** A read-only Codex stage that may outlive one foreground call
-rides in a Workflow through `"$HELPER" relay`: the options of `run` plus
-`--max`, with `--run-dir` required (the path need not exist yet). The first
-call starts the run detached and waits up to `--max` seconds (default 540);
-every later call with the same run dir only waits. A call prints
-`{pending: true, run_dir}` or, once the runner has exited, `{pending:
-false, ok, run_dir}`, with `error_class` beside a false `ok`; a call the
-relay itself refuses (a write run, a used run dir) adds `error` and starts
-nothing. The envelope stays in `RUN_DIR/result.json`, which the seat
-harvests after the Workflow returns, so no agent transcribes a review. The
-seat is absent when the reader starts, so the reader's prompt asks it to
-return the hash of the diff it read, and the seat compares that at harvest.
-The
-loop lives in the Workflow script, one one-shot agent per call, so no
-agent ever holds a pending state:
-
-```js
-const RELAY = {type: 'object', required: ['pending'], properties: {
-  pending: {type: 'boolean'}, ok: {type: 'boolean'},
-  error_class: {type: 'string'}, error: {type: 'string'}}}
-const relay = async (command, label) => {
-  for (let call = 1; call <= 8; call++) {
-    let r = await agent(
-      `You are a one-shot relay (call ${call}). Run this exact command with ` +
-      `Bash in a SINGLE FOREGROUND call with the Bash timeout set to 600000. ` +
-      `Never set run_in_background, never append &, never run it twice, ` +
-      `never touch the repo. Return its JSON output unchanged.\n${command}`,
-      {model: 'sonnet', effort: 'low', schema: RELAY, label: `${label} (relay ${call})`})
-    if (typeof r === 'string') { try { r = JSON.parse(r) } catch { r = null } }
-    if (r && r.pending === false) return r
-  }
-  return {pending: true}
-}
-```
-
-`command` is the full relay line with absolute paths the seat minted before
-the Workflow started: `HELPER_ABS_PATH relay --model MODEL --effort EFFORT
---sandbox read-only --workspace WORKSPACE --prompt-file PROMPT_FILE
---run-dir RUN_DIR`, plus `--schema-file` and `--timeout` as needed. Eight
-calls cover the default one-hour `--timeout`; a loop that ends still
-pending is a lost delivery the seat recovers from the run dir. A resumed
-Workflow replays its cached `pending` results without looking at the
-runner, so after a stop the seat harvests the run dir instead of resuming
-the relay calls. A stopped Workflow leaves the reader running until its own
-`--timeout`; end it sooner with `kill -TERM "$(cat RUN_DIR.relay/pid)"`,
-which lands an `interrupted` envelope on a native lane and does not reach
-the VM-side reader over the WSL bridge. Verified on WSL only: whether a
-detached runner survives between tool calls on macOS or native Windows is
-unprobed.
 
 ## Result contract
 
@@ -331,10 +230,8 @@ one 16-CPU, 15 GB WSL machine; long runs at ten are unmeasured, so lower
 the variable where memory runs short or `rate_limit` failures appear. Extra workers queue up to 30 minutes, then
 fail as `slots_exhausted`; queue wait counts against each run's own
 `--timeout`, so a short-timeout run that sits in the queue fails as
-`timeout`. In a Workflow, batch adapter stages in groups of at most the
-slot count, since queued workers burn agent slots doing nothing.
+`timeout`.
 
 Done when: every dispatched worker ends in exactly one of a seat harvest
-from its `--run-dir`, adapter-relayed JSON typed via the Workflow `schema`,
-or a recorded failure with `run_dir` evidence; every failure path degrades
+from its `--run-dir` or a recorded failure with `run_dir` evidence; every failure path degrades
 loudly.

@@ -112,10 +112,9 @@ closed as `wsl_bridge_failed`. Traps the bridge does not absorb:
 
 ## Lost delivery
 
-A foreground adapter that dies, returns no JSON, or sits idle after its
-run is terminal is a lost delivery, not a paused one: never ping or
-re-invoke it. Recover from the orchestrator-minted run dir, the same
-terminal-state check a seat harvest uses:
+A seat dispatch whose job ended without a delivered envelope is a lost
+delivery: never redispatch it to recover the result. Recover from the
+orchestrator-minted run dir:
 
 1. `RUN_DIR/result.json` exists: the helper finished and that file is the
    authoritative envelope; gate on `ok`. Done.

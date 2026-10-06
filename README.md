@@ -106,12 +106,9 @@ helper's `probe` subcommand reports auth plus whether the installed CLI still
 advertises every flag the runner passes. The recipe gates on that flag
 surface, not on a pinned version.
 
-The plugin install also ships the lane's adapter subagent (exposed as
-`ikkeseb-skills:codex-worker`). Symlink installs carry skills only, no
-agents, so `orchestrate` dispatches the same helper script through default
-agents instead; the lane works either way. (OpenAI's separate `codex`
-companion plugin is a different integration and isn't required by anything
-here.)
+The main session runs the helper as a background job; no subagent is
+involved. (OpenAI's separate `codex` companion plugin is a different
+integration and isn't required by anything here.)
 
 ### orchestrate's Gemini lane
 

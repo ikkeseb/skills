@@ -4,6 +4,38 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.53.0 — 2026-10-06
+
+orchestrate, slimmed: Codex and Gemini stages run only as visible
+seat-dispatched background jobs, Workflows carry Claude lanes, and the seat
+schedules every ready piece at once.
+
+- Removed: the foreground Codex adapter, the in-Workflow relay recipe, the
+  `codex-worker` adapter subagent, the rule that a risk-class piece runs as
+  one Workflow (writer, gate, checkers, cross-family reader) and its
+  exceptions for ending at the gate, and the leg and shape vocabulary. The
+  helper's `relay` subcommand stays for now, undocumented. Two outside
+  reads (one cross-family, one same-family) independently recommended the
+  change: the relay moved one seat wake into up to eight transport agents,
+  hid gates and reviews from the user, and had no measured benefit.
+- New § Cut and schedule: pieces with disjoint write sets whose
+  prerequisites are met start together; a dependent piece starts on its
+  predecessor's tip once that writer returns; review holds only work its
+  findings could change; a writer runs only the checks its change needs,
+  and gates that run for minutes are the seat's, visible, independent ones
+  at once against one frozen candidate; a Workflow ends where its result
+  unlocks a decision or another lane.
+- `SKILL.md` 2718 to about 2000 words, references about 1000 words
+  shorter. A cross-family loss check listed what the first draft dropped;
+  the safety and verification clauses were restored, finer wording was
+  dropped on purpose.
+- Two real headless sessions on a fixture repo with two independent
+  features and two slow independent gates: Codex writers in two worktrees
+  at once, then both gates at once; Claude writers in one Workflow at once,
+  then the cross-family review and both gates as three visible jobs, a
+  design-changing fix that earned a fresh review, stale gate runs stopped,
+  and main updated only after both gates passed on the exact commit.
+
 ## 0.52.0 — 2026-10-06
 
 orchestrate: Codex workers can no longer delegate or reach account-side

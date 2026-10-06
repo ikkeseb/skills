@@ -41,8 +41,7 @@ helper="$repo/skills/orchestrate/scripts/codex-worker.sh"
 rel_helper="skills/orchestrate/scripts/codex-worker.sh"
 
 # Every surface that must carry the candidate list, named explicitly.
-SURFACES="agents/codex-worker.md
-skills/orchestrate/SKILL.md
+SURFACES="skills/orchestrate/SKILL.md
 skills/second-opinion/SKILL.md"
 EXPECTED_CANDIDATES=3
 

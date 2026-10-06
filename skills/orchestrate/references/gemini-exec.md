@@ -70,8 +70,7 @@ workspace's `AGENTS.md`.
 
 The prompt travels on stdin, so its size has no command-line limit. The
 model id carries the effort (`-low`, `-medium`, `-high`); there is no
-separate effort flag. Dispatch is seat dispatch only, never a Workflow
-adapter: `SKILL.md` § Dispatch owns the caps, labels and the harvest
+separate effort flag. Dispatch is seat dispatch only: `SKILL.md` § Dispatch owns the caps, labels and the harvest
 rule, and `codex-exec.md` § Dispatch, Seat dispatch owns the packet,
 background call, streams, timeout, wait, delivery ownership and stage
 lines, shared by both lanes; read

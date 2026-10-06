@@ -21,7 +21,7 @@ and root-cause work included. Sol is the standing cross-family partner:
 most review of Claude output, investigation, root-cause second views and
 focused research. Astra takes planning and architectural counter-cases,
 large reviews, and work where a mistake is costliest: one or two Astra
-stages in a workflow is normal when the work warrants them, with Sol
+stages in a run is normal when the work warrants them, with Sol
 staying the standing partner. A second opinion on the seat's own thinking
 comes from the strongest models, not from Sol (§ Review and spend).
 Cross-family review is preferred; an `opus` review of Claude output is a
@@ -72,8 +72,8 @@ provide them; the Codex probe does not test tool availability.
 | `gpt-6-luna` | Codex | xhigh; never below high; max allowed | Read-only: Map readers, extraction, classification and small criterion-based reviews, screenshots and UI images included; never writes; findings are candidates, never decisions | `gpt-6.1-sol`; `sonnet` if the Codex lane is down |
 | `gemini-3.8-flash-high` | agy (read-only) | in the id: `-high` | Extra third-family voice in ideation, product and UX rounds, an extra reader of screenshots and UI images beside Luna, research from supplied sources and general knowledge, and first-pass review triage; never ahead of Luna for bounded reads and extraction unless the user sends work here (Codex usage spent, or Google models asked for); never writes code, never counts or inventories (no shell) and never the owed cross-family verifier; findings are candidates, never decisions | `gpt-6-luna` |
 | `claude-opus-5-5-high`, `claude-opus-5-5-medium`, `claude-sonnet-5-5-high` | agy (read-only) | in the id | Reserve Claude readers on the Google quota (§ Delegates): recon, Map reads, summaries and Claude-judgment reads when Anthropic quota is tight or the user sends work here; never the cross-family verifier of Claude-produced work, never writes, never counts or inventories (no shell); findings are candidates, never decisions | `opus` or `sonnet` on the Claude lane |
-| `sonnet` | Claude | high only; low for transport | Execution whose wrong result a test or lint gate catches: spec-bounded implementation, Sweep transforms, shell-heavy agentic work and bounded work needing Claude harness tools; also the budget seat and the foreground Codex adapter. Never design, fuzzy intent or owed verification; findings are candidates, never decisions | `opus` |
-| `haiku` | Claude | — | Off-limits, adapters included; Luna covers cheap reads, Sol at `medium` cheap writes | `gpt-6-luna` |
+| `sonnet` | Claude | high only | Execution whose wrong result a test or lint gate catches: spec-bounded implementation, Sweep transforms, shell-heavy agentic work and bounded work needing Claude harness tools; also the budget seat. Never design, fuzzy intent or owed verification; findings are candidates, never decisions | `opus` |
+| `haiku` | Claude | — | Off-limits; Luna covers cheap reads, Sol at `medium` cheap writes | `gpt-6-luna` |
 
 ## Routing rules
 
@@ -95,9 +95,7 @@ decisions, so its implementer may run a notch below the default, never
 below `medium`; a thin brief earns no discount. `medium` suits bounded
 substantive work. `low` and `max` are off-limits for work on every lane:
 `low` leaves too little reasoning, and `max` forces reasoning at many times
-the tokens for little gain. Two exceptions: transport (the Codex adapter
-and the helper's `probe` run a script and relay its result) and Luna, whose
-reads run at `xhigh` by default and may take `max`, never below `high`. On
+the tokens for little gain. One exception: Luna, whose reads run at `xhigh` by default and may take `max`, never below `high`. On
 the Claude lane, raise to `xhigh` for a named difficult reasoning problem.
 On the Codex lane, Sol takes `xhigh` on the seat's judgment for hard work
 and goes below `high` only for cheap mechanical writes, tight brief or not.
@@ -141,8 +139,8 @@ row's first fallback is another Codex model.
   architecture decision or big-picture judgment is challenged by the
   strongest models, never by Sol by default: an `opus` seat asks
   `gpt-6-astra`, `fable`, or both; a `fable` seat asks `opus` and may also
-  ask `gpt-6-astra`. The counter-case owed before a Build (`SKILL.md`
-  § Legs, Second look) comes from outside the seat's family, so on a
+  ask `gpt-6-astra`. The counter-case owed before a build rests on a
+  seat design (`SKILL.md` § Cut and schedule) comes from outside the seat's family, so on a
   Claude seat it is Astra's. `fable` and `opus` are one family: a
   Claude-lane second opinion is labeled same-family and never replaces
   owed outside-family verification. Sol stays the standing reviewer of
@@ -157,7 +155,7 @@ row's first fallback is another Codex model.
   the helper envelope echoes the request and proves nothing about
   provider-side substitution, so name a served model only on runtime
   evidence that it differed. Judge cost per accepted task, counting
-  readers, adapters, retries, seat synthesis and rework, not worker spend
+  readers, retries, seat synthesis and rework, not worker spend
   alone. Collecting spend needs no extra model call or transcript review.
 - **Image-generation relay exception.** When the worker only prompts a
   separate image model, use `gpt-6.1-sol` at `medium`. The image model does
