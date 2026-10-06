@@ -4,6 +4,21 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.53.2 — 2026-10-06
+
+orchestrate: a single Claude stage is an Agent call with `model` and
+`effort` pinned, now that the Agent tool takes `effort` (Claude Code
+2.1.292); a one-agent Workflow remains the form on a harness whose Agent
+call takes none. Workflows stay for fan-out and several stages. Measured on
+2.1.292: a pinned stage ran at the pinned level, an unpinned one at the
+model's default. The Gemini reference names two field failures: a number in
+a schema `enum` is refused before any work (reproduced; a string field
+with string values passes), and a brief that names a folder instead of
+exact paths has come back `tool_denied`. A stage's typed result may be the
+fields an Agent call's brief names. One headless session on a fixture repo
+dispatched its single stage as a pinned Agent call; a cross-family read
+found no lost rule.
+
 ## 0.53.1 — 2026-10-06
 
 orchestrate: the Codex helper's `relay` subcommand is gone, with its detach

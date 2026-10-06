@@ -39,8 +39,9 @@ workspace's `AGENTS.md`.
   Codex read-only worker, anywhere else the user can read. Brief only
   content that may leave the machine; never point it near secrets.
 - It reads whole files even when told to search or read line ranges, and
-  every step replays everything read so far. Name the files it may open and
-  forbid the rest, paste excerpts when a large file matters only in part,
+  every step replays everything read so far. Name the files it may open by
+  exact path (given a folder, it has guessed file names and come back
+  `tool_denied` with a partial result) and forbid the rest, paste excerpts when a large file matters only in part,
   and look up a known selector or symbol with the seat's own `rg`.
 - It cannot run anything: no tests, builds, `git` or `wc`. Counts, line
   numbers and inventories are unreliable (every line count off by one in
@@ -63,7 +64,7 @@ workspace's `AGENTS.md`.
   --model gemini-3.8-flash-high        # REQUIRED; exact id from probe, effort included, at or above the floor
   --prompt-file "$DIR/prompt.md" \
   [--workspace "$PWD"]                 # the directory it reads
-  [--schema-file "$DIR/schema.json"]   # JSON Schema for the final answer
+  [--schema-file "$DIR/schema.json"]   # JSON Schema for the final answer; an `enum` field is a string type with string values
   [--timeout 900]                      # total deadline in seconds
   [--run-dir "$RUN_DIR"]               # empty, outside the workspace
 ```
@@ -106,7 +107,7 @@ is `input_tokens` plus `output_tokens`.
 | `tool_denied` | it needed a tool or path outside its grant | the result may be incomplete; rebrief without that need |
 | `schema_missing` / `empty_result` | no usable answer | one rebrief, then Luna |
 | `workspace_changed` | files changed during the run | check `changed_files`; unexplained changes are a stop |
-| `agy_failed` | anything else | read `detail` and `stderr.log` |
+| `agy_failed` | anything else | read `detail` and `stderr.log`; seen once: `enum[0]: cannot be empty` for a number in a schema `enum`, refused before any work; a string field with string values passed |
 
 Runs use the subscription login; `GEMINI_API_KEY` and `GOOGLE_API_KEY` are
 stripped from the worker environment. Verified on native Windows, WSL and

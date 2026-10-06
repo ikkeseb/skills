@@ -134,16 +134,17 @@ Every stage gets one; it is the senior deliverable.
 ## Dispatch
 
 Every stage pins `model`, and `effort` where the instrument takes one, and
-returns typed data: a Workflow `schema` or a helper envelope. Labels read
+returns typed data: a Workflow `schema`, a helper envelope, or the fields
+an Agent call's brief names. Labels read
 `<model> @ <effort> — <task tag>`, the tag in plain words; a missing label
 means the lane is unknown. Keep one-off dispatches anonymous: a `name`
 makes an addressable teammate and may suppress automatic result delivery.
 
-**Claude lane.** One short stage whose effort does not matter: an Agent
-call with `model` pinned (it cannot set effort). Fan-out, several stages,
-or effort that matters (every `sonnet` stage): a Workflow of `agent()`
-calls with `model` and `effort` pinned, `pipeline()` by default and a
-barrier only where a stage needs every prior result. Workflow `args` and a
+**Claude lane.** One stage: an Agent call with `model` and `effort`
+pinned (a harness whose Agent call takes no `effort`: a one-agent
+Workflow). Fan-out or several stages: a Workflow of `agent()` calls
+pinned the same way, `pipeline()` by default and a barrier only where a
+stage needs every prior result. Workflow `args` and a
 schema-typed result may arrive as a JSON string: parse before use. Resume
 keys on `(prompt, opts)`, not on referenced files: after fixing an input,
 change the prompt and the run path.
