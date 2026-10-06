@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.53.1 — 2026-10-06
+
+orchestrate: the Codex helper's `relay` subcommand is gone, with its detach
+code and 21 relay checks; `relay` is now a usage error. The lock tests hold
+the slot with a backgrounded `run` at the fake worker's gate and confirm the
+holder reached the gate before the contender tries; the check for a second
+relay call on one claim went with relay. New: `run` refuses a used
+`--run-dir` before any worker starts and leaves its envelope untouched (a
+mutation of the guard fails both new checks). Suite 105 checks. A
+cross-family read found no change outside relay.
+
 ## 0.53.0 — 2026-10-06
 
 orchestrate, slimmed: Codex and Gemini stages run only as visible
