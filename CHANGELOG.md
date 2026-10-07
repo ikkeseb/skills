@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.54.1 — 2026-10-07
+
+orchestrate: the seat's triage of findings has a test. A finding that no
+acceptance criterion or risk class needs is dropped or named to the user,
+not fixed; a cross-family reader's findings are candidates, and some are
+hardening or scope the task never asked for. One headless session on a
+fixture repo got a review with one real defect, one hardening item and
+one scope extension: it fixed the defect, dropped the other two with the
+criterion that rules them out, and named a new reviewer finding to the
+user instead of fixing it.
+
 ## 0.54.0 — 2026-10-07
 
 orchestrate: shorter rounds, from four field sessions measured from their

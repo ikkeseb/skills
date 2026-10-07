@@ -185,7 +185,9 @@ regression) gets a full read against the acceptance criteria and owes
 verification by a reader outside the producer's family, the seat's own
 designs and diffs included (routing: model map § Review and spend). A
 change whose wrong result a deterministic gate would catch gets the green
-gate plus a scan, declared as such. The seat triages findings before any fix. A fix owes the
+gate plus a scan, declared as such. The seat triages findings before any fix; a finding no acceptance
+criterion or risk class above needs is dropped or named to the user, not
+fixed. A fix owes the
 gate again and the seat's read of its delta; that delta needs no fresh
 cross-family read when it stays within the findings and a test pins each
 fixed finding, and earns one when it goes further (a new design choice or
