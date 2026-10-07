@@ -4,6 +4,29 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.54.0 — 2026-10-07
+
+orchestrate: shorter rounds, from four field sessions measured from their
+transcripts. The review a candidate owes and its fixes run before the
+expensive gate, unless that review needs evidence the gate makes; running
+them side by side had spent gate time on candidates the review then
+changed. The seat's read and the review go back to the writer together in
+one fix brief: each finding's evidence, the files the fix may touch and
+the case a test should pin; the writer says when a finding does not
+reproduce, and several findings from one cause go back to the seat as a
+design question. A write set may be named regions of one file when the
+behavior is independent, so pieces that meet in one large file can run at
+once. Inline scouting stops at what the briefs need; wider reconnaissance
+goes to readers. Later briefs carry what earlier reviews in the run kept
+finding. The model map says rule text and docs are written by the seat,
+`opus` or `fable`; other models give input and review. A rule stated twice
+keeps one copy, so the model map's prose no longer restates its table and
+the references drop their own read-me lines and dated anecdotes: the
+skill's text is about 430 words shorter. One headless session on a fixture
+repo ran two writers on one file at once, reviewed and fixed before its
+gate, and gated once; a cross-family loss check named seven points, four
+taken and three judged already covered.
+
 ## 0.53.3 — 2026-10-06
 
 second-opinion: the Claude path pins `effort` to `high` on its Agent call,

@@ -1,6 +1,6 @@
 # Gemini lane: worker contract
 
-Read this before dispatching the first Gemini-lane stage. The lane runs
+The lane runs
 Google models, and the model map's reserve Claude readers, through the
 Antigravity CLI (`agy`) as **read-only** workers.
 The invocation (flags, isolation, permission rules, validation) lives in

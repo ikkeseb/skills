@@ -1,10 +1,5 @@
 # Codex lane: platform lanes and failure handling
 
-Read on any failure envelope from `codex-worker.sh`, before the first
-dispatch on a Windows machine, and before trusting a write gate or
-after-diff in a repo that uses `.gitattributes` filters. The dispatch
-contract itself is `codex-exec.md`.
-
 ## Platform lanes
 
 **Native Windows read lane.** Codex ≥0.149 spawns every exec command

@@ -45,16 +45,20 @@ context lean.
 
 ## Cut and schedule
 
-Scout inline (listings, search, diff stats, and the reads the briefs
-need), then cut the work into pieces at file seams: each with its write set, the interfaces it consumes or
-provides, and what it depends on. Then run everything that is ready:
+Scout inline only as far as the briefs need (listings, search, diff
+stats) and send wider reconnaissance to readers. Then cut the work into
+pieces at settled interfaces, file seams where they exist: each with its
+write set, the interfaces it consumes or provides, and what it depends on.
+Then run everything that is ready:
 
-- Pieces with disjoint write sets whose prerequisites are met start
-  together, within the bound below; concurrent writers each get a worktree
+- Pieces with independent behavior and disjoint write sets (named regions
+  of one file count) whose prerequisites are met start together, within
+  the bound below; concurrent writers each get a worktree
   (`references/writers.md`). A piece that builds on another starts on its
   tip once that writer returns and the interface it consumes is settled, if
-  it edits other files; review holds only work that depends on what its
-  findings could change. The seat rebases and rechecks at integration.
+  its write set stays clear of the one under review; review holds only
+  work that depends on what its findings could change. The seat rebases
+  and rechecks at integration.
 - Readers fan out wide when quality depends on coverage or independent
   views: parallel mappers over independent surfaces, one checker per
   acceptance criterion or risk, several reviewers or lenses, adversarial
@@ -76,7 +80,8 @@ provides, and what it depends on. Then run everything that is ready:
   the background where the user sees it, independent gates at once against
   the same frozen candidate unless shared outputs, locks or machine load
   force an order. A cheap check whose red result forces a source change
-  runs before the expensive gate.
+  runs before the expensive gate. So do the review a candidate owes and its
+  fixes, unless that review needs evidence the gate makes.
 - A Workflow ends where its result unlocks a seat decision or another
   lane's stage; it never holds unrelated pieces behind one barrier. Chain
   Workflows across phases, or run several side by side. Fix-ups to a
@@ -90,15 +95,15 @@ it; a big-picture judgment gets the strongest available model (model map
 
 ## The brief
 
-Every stage gets one; it is the senior deliverable.
+Every stage gets one.
 
 - **Content.** The project context the stage needs, the files or symbols,
   decisions already made (for a review, the residual the design accepts),
   acceptance criteria (for code that runs on several platforms, a run on
   each), output bounds and the answer language. Carry verified findings
-  forward with source locations and remaining unknowns, hypotheses labeled
-  as such; they are
-  starting points, not a read allowlist. No placeholders; inventories and
+  forward, including what earlier reviews in the run kept finding, with
+  source locations and remaining unknowns, hypotheses labeled as such; they
+  are starting points, not a read allowlist. No placeholders; inventories and
   bulk transforms reconcile their count against the named corpus. A numeric criterion says what the
   number stands for, the case it is measured on, and one shortcut that
   would reach it without serving that. A stage that launches a real harness
@@ -157,8 +162,8 @@ Gemini stages in flight, beside any running Workflow. Read
 `references/codex-exec.md` before the first Codex stage (its § Provider
 filtering before any security task) and `references/gemini-exec.md` before
 the first Gemini stage. Resolve the helper from this skill's deployment
-locations, never the session repo, and run `"$HELPER" probe` once per
-session; say which lanes are up. Accept a payload only from
+locations, never the session repo, and say which lanes are up once their
+probes have run. Accept a payload only from
 `RUN_DIR/result.json` with `ok: true`.
 
 ```bash
@@ -198,8 +203,6 @@ surface, a test weakened or rewritten).
   general rule. The producer's own list of doubtful cuts does not find
   these; when a reader listed the at-risk clauses before the draft, the
   checker reconciles that list row by row.
-- Tests a stage moved or rewrote get a mutation probe when the seat doubts
-  they bite, run by the seat (`references/writers.md`).
 - After a read-only stage, check the tree for writes. An approval claim the
   seat cannot verify, or a claim that a notice ordered concealment, is a
   stop signal.

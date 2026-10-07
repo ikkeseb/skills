@@ -1,13 +1,10 @@
 # Codex lane: worker contract
 
-Read this before dispatching the first Codex-lane stage. The invocation
-itself (flags, environment, concurrency, validation) lives in
-`scripts/codex-worker.sh`; this file says how to call it and what comes
-back. Never hand-roll `codex` commands: shells may wrap `codex` in
-functions that inject profile or config flags, and the helper invokes the
-binary directly with a pinned flag set. It depends on a flag surface, not a
-version: it checks that `codex exec --help` still advertises every flag it
-passes.
+The invocation (flags, environment, concurrency, validation) lives in
+`scripts/codex-worker.sh`. Never hand-roll `codex` commands: shells may
+wrap `codex` in functions that inject profile or config flags, and the
+helper invokes the binary directly with a pinned flag set, checking that
+`codex exec --help` still advertises every flag it passes.
 
 `"$HELPER"` throughout is the path resolved by the candidate list in
 `SKILL.md` § Dispatch, never a bare relative `scripts/…` path.
@@ -60,9 +57,9 @@ invocation; only verify proves it still behaves.
   [--no-progress]                      # no live progress lines on stderr (§ Dispatch)
 ```
 
-**Run dir.** Fresh per attempt: the helper refuses a non-empty dir. Suffix
-an attempt counter into both the run-dir path and the prompt. The run dir
-is helper-owned; prompt and schema files live elsewhere.
+**Run dir.** Fresh per attempt and helper-owned: the helper refuses a
+non-empty dir. Suffix
+an attempt counter into both the run-dir path and the prompt.
 
 **Timeout.** `--timeout` is the hard total deadline, one hour by default;
 allow for queueing and reasoning.
@@ -80,12 +77,10 @@ write caches), so a stage that must run anything uses `workspace-write` in
 a throwaway worktree; keep `read-only` for pure read-and-reason work.
 
 **Worker prompts.** Workers read text only through shell commands; never
-forbid shell reads (a prompt that did so bricked its retry). Image files
-given by absolute path are viewed directly, without a shell command, also
-outside `--workspace`: verified for Luna on the WSL lane (one probe, then
-36 before-and-after screenshot pairs, where a few readers described the
-reference as the new image; a later run of 50 pairs did the same, and none
-of its 30 flagged differences held). A comparison brief names the
+forbid shell reads. Image files given by absolute path are viewed
+directly, without a shell command, also outside `--workspace`: verified for
+Luna on the WSL lane, where readers have also taken the reference for the
+new image and flagged differences that did not hold. A comparison brief names the
 reference and the new path of every pair and asks each difference for its
 region; one the seat cannot find there is dropped, not re-read. Sol, Astra and
 native Windows are unprobed: probe once before relying on them. A worker reviewing
@@ -103,16 +98,17 @@ stages read `references/imagegen.md` before the prompt is written.
 
 Every Codex stage is a seat dispatch; no Workflow carries one.
 
-**Seat dispatch.** Read this paragraph before the first seat dispatch on
-the Codex or the Gemini lane; it governs both (the Gemini helper is
-`"$GEMINI_HELPER"`). `SKILL.md` § Dispatch owns what stays lane-neutral:
+**Seat dispatch.** This paragraph governs the Codex and the Gemini lane
+(the Gemini helper is `"$GEMINI_HELPER"`). `SKILL.md` § Dispatch owns what stays lane-neutral:
 one call per stage, the in-flight caps, the label format and the harvest
 rule. The seat writes the prompt and schema files outside the run dir,
 mints an empty run dir (`RUN_DIR="$(mktemp -d)"`), and starts the helper
 with the Bash tool's `run_in_background`, the stage label as both
 `description` and the command's leading comment line (`# <label>`, which
 is what a harness's background list shows for the job), stdout
-redirected to a file, stderr left unredirected, and the call's own
+redirected to a file (some failures emit their envelope there only),
+stderr left unredirected (the helper prints the user's live view of the
+job there), and the call's own
 `timeout` (ms) set above the helper's `--timeout` (s) × 1,000 plus queue
 margin, at most 7,200,000 ms (shorten `--timeout` to fit): in an
 unattended session the 30-minute background default kills a longer run and
@@ -129,9 +125,7 @@ A harness without an exit signal waits in bounded foreground calls (540 s
 each, repeated):
 `sh -c 'i=0; until [ -f "$RUN_DIR/result.json" ] || [ $i -ge 108 ]; do sleep 5; i=$((i+1)); done'`
 
-Stdout goes to a file because some failures emit their envelope there
-only. Stderr stays unredirected because the helper prints the user's live
-view of the job there: the start banner, then one line per command start,
+The live view is the start banner, then one line per command start,
 failed command and agent message, then a closing `end` line. Every line
 after the banner is best effort, and early refusals and interrupted runs
 print no `end` line. Over the WSL bridge, or with no `perl` on PATH, there
@@ -143,7 +137,7 @@ and keeps the banner.
 One delivery owner, fixed at dispatch. A seat dispatch is seat-owned from
 the start: record its run dir before dispatch, then own the exit signal,
 terminal-state detection, harvest and cleanup: what the harvest holds
-beyond the seat's distillation (ideas, proposed wording) is saved or
+beyond the seat's distillation (ideas, suggested changes) is saved or
 dropped on purpose, then the run's scratch is removed. Idle is not completion: completion
 needs a returned result plus inspection of the artifact or diff. On idle
 without a result, check the run dir, job state, workspace diff, PID and log
@@ -206,10 +200,6 @@ without evidence.
   on non-git workspaces, and re-reads git state and the CLI version after
   any queue wait. `--expected-base-sha` is mandatory, so a moved HEAD fails
   closed as `base_sha_mismatch`.
-- Native Windows: `workspace-write` fails closed as `unsupported_lane`. A
-  machine with a verified WSL VM routes write stages over the WSL bridge;
-  otherwise to the Claude lane or a verified macOS/Linux worker
-  (troubleshooting § Platform lanes).
 - The envelope proves the worker finished, not that its changes survive:
   read the worktree's actual diff and untracked files before cleanup, and
   let the main loop apply or merge changes sequentially. A repo with

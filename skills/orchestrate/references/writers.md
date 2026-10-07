@@ -1,8 +1,5 @@
 # Writers
 
-Read this before the first writing stage of a run. `SKILL.md` § Dispatch
-owns where workers may write at all: the session's own repository only.
-
 ## The writer's brief
 
 On top of `SKILL.md` § The brief, a writing stage's brief names its write
@@ -15,7 +12,7 @@ One exclusive writer may use the main tree on a branch when the tree is
 clean at dispatch and nothing else writes there until it returns: record
 HEAD and porcelain status at dispatch, read only outside the write set
 meanwhile, and at harvest compare `git diff --name-status <base>` plus
-status against the write set; a file outside it or a moved HEAD stops
+status against the write set; a file or hunk outside it or a moved HEAD stops
 integration. Every other writer gets its own worktree: concurrent writers
 in one checkout, a target linked into live configuration, or a cheap-tier
 writer outside a machine-gated mechanical task.
@@ -40,6 +37,14 @@ nothing in the worktree's status or diff. Repo tooling sees
 
 Inspect partial changes from a failed writer before cleanup; a failed
 writer never earns a blind rerun.
+
+For a reviewable candidate, the seat's read and the review it owes run at
+once on the same frozen candidate, and their triaged findings go back
+together in one fix brief, to the writer that built it when it can be
+resumed: each finding with its evidence, the files the fix may touch and
+the case a test should pin. The writer says when a finding does not
+reproduce. Several findings from one cause go back to the seat as a design
+question.
 
 When a stage moved or rewrote tests and the seat doubts they still bite, a
 mutation probe settles it: a few deliberate small breaks in the code under
