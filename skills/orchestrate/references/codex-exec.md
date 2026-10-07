@@ -96,10 +96,38 @@ stages read `references/imagegen.md` before the prompt is written.
 
 ## Dispatch
 
-Every Codex stage is a seat dispatch; no Workflow carries one.
+A stage on its own is a seat dispatch. A stage inside a Workflow rides a
+transport agent (below); both forms govern the Codex and the Gemini lane.
 
-**Seat dispatch.** This paragraph governs the Codex and the Gemini lane
-(the Gemini helper is `"$GEMINI_HELPER"`). `SKILL.md` § Dispatch owns what stays lane-neutral:
+**Workflow stage.** The seat writes the prompt and schema files and picks
+an empty run-dir path before the Workflow starts, and passes the whole
+helper command to the script; its state lives beside the run dir in
+`<run-dir>.stage/`:
+
+```bash
+"$(dirname "$HELPER")/stage-wait.sh" --run-dir "$RUN_DIR" --wait 240 -- \
+  "$HELPER" run --model gpt-6.1-sol --effort high --sandbox read-only \
+  --workspace "$WS" --prompt-file "$DIR/prompt.md" \
+  --schema-file "$DIR/schema.json" --run-dir "$RUN_DIR" --no-progress
+```
+
+The first call starts the helper once, detached; every call waits up to
+`--wait` seconds and prints one line: `status` (`running`, `done`,
+`failed`), `ok`, `error_class`, `run_dir`. The transport agent's brief is
+that one command with literal paths, the Bash tool's timeout at 300,000 ms,
+"run it again unchanged while it says `running`, at most N times" and
+"return the last line; run nothing else, read nothing, retry nothing". Set
+N so that N × 240 s covers the helper's `--timeout` with margin. A
+transport agent that still returns `running` has handed the wait back: the
+seat runs the same command itself until the stage ends, and nothing starts
+the helper a second time. The Workflow script checks `status` before a
+stage that depends on the outside result. A later stage that needs the
+findings reads `result.json` itself; the transport agent never carries a
+payload. The helper's own live view goes to `<run-dir>.stage/stderr.log`,
+so the user follows the stage through the Workflow view and the agent's
+label; a stage the user should watch line by line is a seat dispatch.
+
+**Seat dispatch.** The Gemini helper is `"$GEMINI_HELPER"`. `SKILL.md` § Dispatch owns what stays lane-neutral:
 one call per stage, the in-flight caps, the label format and the harvest
 rule. The seat writes the prompt and schema files outside the run dir,
 mints an empty run dir (`RUN_DIR="$(mktemp -d)"`), and starts the helper

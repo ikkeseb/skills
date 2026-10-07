@@ -4,6 +4,52 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.57.0 — 2026-10-08
+
+orchestrate: context first, phases of one to six agents, a review phase
+with a test phase behind it, and outside models inside a Workflow.
+
+- § Cut and schedule opens with context: before the first brief the seat
+  reads what the session repository already holds on the subject, says its
+  plan back and asks only what the context left open; where there is more
+  to gather, the first phase is readers. A phase holds one to six agents
+  and more phases beat a wider one; a discovery phase of cheap readers may
+  go wider, as wide as the seat can triage, and any phase does on the
+  user's word.
+- § Review: work that owes verification gets a review phase (the
+  outside-family reader, one same-family reader briefed to argue against
+  the work as its user will meet it, a criterion checker only where one is
+  cheap to test alone) and then a test phase in which each claimed blocker
+  is reproduced by one cheap reader before the seat triages.
+- § Dispatch: a Codex or Gemini stage may run inside a Workflow through one
+  `haiku` transport agent that runs the new `scripts/stage-wait.sh` and
+  nothing else. The script starts the helper once, detached (an exclusive
+  create is the claim), waits in bounded calls and prints one status line;
+  the seat still takes the payload from the run dir. A stage on its own
+  stays a seat dispatch. The model map's `haiku` row gains the transport
+  role and the test of one claimed finding.
+- The Gemini helper prints a live view on stderr: a start banner, one line
+  per tool step with its target and per finished message, and a closing
+  line; `--no-progress` keeps the banner only. Reads and writes are
+  bounded, worker text is clipped and stripped of control characters.
+
+Field evidence, one machine. A transport agent carried an outside stage
+in five Workflows on a prototype of the script and in one on the shipped
+script, at about ten seconds and a few thousand cached tokens of overhead; a forced deadline came back as `failed` beside the writer's
+intact result. The same two pieces built chained and seat-dispatched: three
+seat wakes against four, and the same wall clock, so the chain buys fewer
+hand-offs and not speed. In a wide review of those pieces, a same-family
+reader arguing as the user found the findings that changed what the result
+said; the outside reader found contract slips and rated most of them
+blockers, and a per-finding test round kept 18 of 53. Fourteen reviewers in
+one phase returned little that six would not have. A headless session on a
+fixture repository read its decision notes before writing, ran an outside
+and a same-family reader, reproduced the claimed blockers itself and
+earned a fresh outside read after a fix that reversed a design choice. An
+outside read of the release diff found five contradictions in the new rule
+text, all fixed. Unmeasured: more than two chains at once, a failure other
+than a deadline inside a chain, and the wait script on macOS and Git Bash.
+
 ## 0.56.0 — 2026-10-07
 
 orchestrate: cheap reads move from `gpt-6-luna` to `haiku`, now that the

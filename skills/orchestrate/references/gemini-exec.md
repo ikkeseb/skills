@@ -67,15 +67,18 @@ workspace's `AGENTS.md`.
   [--schema-file "$DIR/schema.json"]   # JSON Schema for the final answer; an `enum` field is a string type with string values
   [--timeout 900]                      # total deadline in seconds
   [--run-dir "$RUN_DIR"]               # empty, outside the workspace
+  [--no-progress]                      # start banner only, no live lines on stderr
 ```
 
 The prompt travels on stdin, so its size has no command-line limit. The
 model id carries the effort (`-low`, `-medium`, `-high`); there is no
-separate effort flag. Dispatch is seat dispatch only: `SKILL.md` § Dispatch owns the caps, labels and the harvest
-rule, and `codex-exec.md` § Dispatch, Seat dispatch owns the packet,
-background call, streams, timeout, wait, delivery ownership and stage
-lines, shared by both lanes; read
-that paragraph before the first Gemini run. The subscription quota behind
+separate effort flag. `SKILL.md` § Dispatch owns the caps, labels and the
+harvest rule, and `codex-exec.md` § Dispatch owns the two forms (a seat
+dispatch and a Workflow stage), the packet, background call, streams,
+timeout, wait, delivery ownership and stage lines, shared by both lanes;
+read that section before the first Gemini run. The live view on stderr is
+a start banner, one line per tool step with its target and per finished
+message, and a closing `end` line: best effort, never a liveness signal. The subscription quota behind
 the four in-flight runs is shared, and its depth is unknown.
 
 ## Result contract

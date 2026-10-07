@@ -45,11 +45,18 @@ context lean.
 
 ## Cut and schedule
 
-Scout inline only as far as the briefs need (listings, search, diff
-stats) and send wider reconnaissance to readers. Then cut the work into
-pieces at settled interfaces, file seams where they exist: each with its
-write set, the interfaces it consumes or provides, and what it depends on.
-Then run everything that is ready:
+Context comes first. Before the first brief, read what the session
+repository already holds on the subject: its own notes, status and
+decision documents, the few that bear on the task, and for work about a
+person, their voice or their taste, what it holds on them. Say the plan
+back in a few lines and ask the user only what is theirs to answer and the
+context has left open. Scout inline only as far as the briefs need
+(listings, search, diff stats); where there is more to gather, the first
+phase is readers, and what they return reaches the seat before anything is
+cut. Then cut the work into phases, and each phase into pieces at settled
+interfaces, file seams where they exist: each with its write set, the
+interfaces it consumes or provides, and what it depends on. Then run
+everything that is ready:
 
 - Pieces with independent behavior and disjoint write sets (named regions
   of one file count) whose prerequisites are met start together, within
@@ -68,12 +75,15 @@ Then run everything that is ready:
   a named gap; without one (defects, edge cases) it loops until a round
   finds nothing new. A tightly coupled problem may be clearer in one
   strong context than across readers the seat must reconcile.
-- The bound is the seat: readers as wide as it can triage, writers as many
-  as it can review in full and integrate without a backlog. Slot counts are
-  capacity, not a target; a worker earns its slot with a named, distinct
-  slice, and a one-line fix needs no fan-out. Where a miss
-  costs most, add depth (another independent reviewer, an Astra read), not
-  width. Builds, browser probes and hardware tests sharing one machine slow
+- A phase holds one to six agents, and more phases beat a wider one. A
+  discovery phase of cheap readers goes wider when the ground needs it, as
+  wide as the seat can triage, and any phase does on the user's word.
+  Writers follow the same rule: several in one phase when their write sets
+  are disjoint, as many as the seat can review in full and integrate
+  without a backlog. A worker earns its slot
+  with a named, distinct slice, and a one-line fix needs no fan-out. Where a
+  miss costs most, add depth (another independent reviewer, an Astra read),
+  not width. Builds, browser probes and hardware tests sharing one machine slow
   each other and can flake timing-sensitive checks.
 - A writer runs the checks its own change needs to finish (typecheck,
   targeted tests). A gate that runs for minutes is the seat's: started in
@@ -82,8 +92,8 @@ Then run everything that is ready:
   force an order. A cheap check whose red result forces a source change
   runs before the expensive gate. So do the review a candidate owes and its
   fixes, unless that review needs evidence the gate makes.
-- A Workflow ends where its result unlocks a seat decision or another
-  lane's stage; it never holds unrelated pieces behind one barrier. Chain
+- A Workflow ends where its result unlocks a seat decision; it never holds
+  unrelated pieces behind one barrier. Chain
   Workflows across phases, or run several side by side. Fix-ups to a
   landed piece fold into the next piece instead of blocking it.
 
@@ -154,11 +164,21 @@ schema-typed result may arrive as a JSON string: parse before use. Resume
 keys on `(prompt, opts)`, not on referenced files: after fixing an input,
 change the prompt and the run path.
 
-**Codex and Gemini lanes** run only from the seat, never inside a
-Workflow: one background helper call per stage, visible in the user's job
-list, harvested when the harness reports it done (`codex-exec.md` covers a
-harness without that signal). Up to ten Codex and four
-Gemini stages in flight, beside any running Workflow. Read
+**Codex and Gemini lanes.** A stage on its own is a seat dispatch: one
+background helper call, visible in the user's job list, harvested when the
+harness reports it done (`codex-exec.md` covers a harness without that
+signal). A stage inside a Workflow rides one transport agent: `haiku`,
+briefed to run `scripts/stage-wait.sh` unchanged until it prints `done` or
+`failed`, and to return that line alone. Transport is its own kind of
+stage, neither read-only nor a writer: the agent runs that one command,
+reads nothing, retries nothing and never does the stage's work. Its label
+names the outside model (`gpt-6.1-sol @ high — review (haiku transport)`),
+and the seat takes the payload from the run dir as for any dispatch. The
+script branches on the returned status before any stage that depends on
+the outside result, so a failed stage ends its chain and returns beside
+the results of the stages before it; the retry is the seat's
+(`codex-exec.md` § Dispatch has the call). Up to ten Codex and
+four Gemini stages in flight, across the seat and every running Workflow. Read
 `references/codex-exec.md` before the first Codex stage (its § Provider
 filtering before any security task) and `references/gemini-exec.md` before
 the first Gemini stage. Resolve the helper from this skill's deployment
@@ -192,6 +212,15 @@ gate again and the seat's read of its delta; that delta needs no fresh
 cross-family read when it stays within the findings and a test pins each
 fixed finding, and earns one when it goes further (a new design choice or
 surface, a test weakened or rewritten).
+
+Work that owes verification gets a review phase, then a test phase. The
+review phase holds the outside-family reader the map names, one
+same-family reader briefed to argue against the work as its user will meet
+it (what would mislead them, what a green gate cannot see), and a
+criterion checker only where a criterion is cheap to test alone. Reviewers
+over-rate severity, so in the test phase each claimed blocker goes to one
+cheap reader that reproduces it and says whether it bears on the real
+case; the seat triages what survives.
 
 - Record identity at dispatch (prompt packet, base SHA, diff hash) and
   classify each result fresh, stale or unknown before use; revalidate

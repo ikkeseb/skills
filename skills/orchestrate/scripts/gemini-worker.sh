@@ -14,6 +14,8 @@
 #       [--timeout <seconds>]    total deadline (default: 900)
 #       [--run-dir <dir>]        caller-minted run dir, empty or nonexistent
 #                                (default: mktemp)
+#       [--no-progress]          no live progress lines on stderr (the start
+#                                banner stays)
 #   gemini-worker.sh probe       CLI present + authenticated, no model call
 #   gemini-worker.sh verify      one small billed run: read canary + denied write
 #
@@ -25,7 +27,11 @@
 #
 # Output: exactly one JSON object on stdout, mirrored to RUN_DIR/result.json.
 # Images agy generates are kept in RUN_DIR/images/ and listed in `images`.
-# Dependencies: Bash, jq, agy; git for the workspace check in git workspaces.
+# stderr, for `run`: a start banner, then live progress lines while the worker
+# runs and one closing line (see the progress section). Never a result channel.
+# Dependencies: Bash, jq, agy; git for the workspace check in git workspaces;
+# perl and tail for the progress lines (without perl only the banner
+# prints).
 set -euo pipefail
 
 DENY_RULES='["write_file(*)","command(*)","unsandboxed(*)","read_url(*)","execute_url(*)","mcp(*)"]'
@@ -160,6 +166,152 @@ meets_floor() {
   [ "${BASH_REMATCH[2]}" -gt 5 ] || { [ "${BASH_REMATCH[2]}" -eq 5 ] && [ "${BASH_REMATCH[3]}" -ge 5 ]; }
 }
 
+# --- progress -----------------------------------------------------------------
+# The user's live view of a run: this helper's stderr is what a background job
+# shows. Each wait-loop tick, and a final flush after the worker exits, prints
+# the events.jsonl lines not printed yet:
+#   $ <tool> <target>   a tool step, the first time its step_index is seen
+#                       (agy sends ACTIVE, then DONE, for the same step). The
+#                       target is the AbsolutePath parameter, else the first
+#                       string parameter in key order, else nothing.
+#   > <text>            an agent message completes (agent_response DONE): its
+#                       text_delta pieces joined. A DONE without any text,
+#                       which is how a turn that only calls tools ends, prints
+#                       nothing.
+# Every other event, a line that is not JSON and any unexpected shape print
+# nothing. cmd_run closes the view with `end ok=... steps=... <seconds>s`: ok
+# and the seconds are read back from the envelope, steps is the highest
+# step_index the view saw plus one (the envelope carries no step count).
+#
+# It is a view, so it must not be able to cost the run anything. The contract
+# is codex-worker.sh's:
+#   * Reading is guarded and bounded in time and in memory. tail and jq run
+#     under a two-second alarm, and one tick reads at most PROGRESS_MAX_BYTES
+#     bytes and hands jq only the whole lines in them, at most
+#     PROGRESS_MAX_LINES, so neither a backlog nor one huge event grows what
+#     jq holds. A read that fails or runs out prints nothing and the next tick
+#     reads the same lines again.
+#   * A line fits when it and its newline are within one tick's bytes. An
+#     unfinished line that may still fit waits. One that cannot fit (the read
+#     is full and holds no newline) is skipped unparsed, not retried: jq gets
+#     `null` in its place, the position moves past it, and tail shows what
+#     follows once the line has its newline.
+#   * Each event is parsed on its own: one with an unexpected shape is dropped
+#     and the events around it still print.
+#   * Writing is bounded and best effort. A foreground perl child does each
+#     write under a one-second alarm. What it did not write by then is dropped
+#     and never retried, so a stderr reader that stops reading costs lines and
+#     that second per write. Nothing runs in the background, so no exit path
+#     has a writer to clean up.
+#   * A tick that took time skips the loop's one-second sleep, and the
+#     deadline is checked before a tick prints. The final flush repeats while
+#     a pass still consumes lines, for at most PROGRESS_FLUSH_SECONDS; a
+#     backlog it does not reach stays unprinted and uncounted.
+#   * The text is worker-controlled, so every piece is cut to 200 characters
+#     before anything else touches it, every line is cut at 200 characters,
+#     and every control character (C0, DEL, C1) becomes a space.
+#   * The position is a count of newline-terminated lines, so a line still
+#     being written waits for the next tick.
+#   * What a message needs between ticks lives in this shell, not in one jq
+#     call: the open message (PROGRESS_MSG, one at a time: a message that
+#     starts while another is open replaces it), its first 200 characters as
+#     code points (PROGRESS_TEXT) and the last message closed (PROGRESS_DONE).
+#     Events for a message at or below PROGRESS_DONE print nothing, so a
+#     repeated DONE cannot print twice; a step_index is a whole number below
+#     1e9, anything else is an unexpected shape.
+# The jq program and the state it hands back are ASCII-only (the ellipsis is
+# built from its code point); a native Windows jq ends its lines with CRLF,
+# which is stripped below.
+PROGRESS=true PROGRESS_SEEN=0 PROGRESS_TOOL=-1 PROGRESS_STEPS=0 PERL_BIN=""
+PROGRESS_MSG=-1 PROGRESS_DONE=-1 PROGRESS_TEXT=""
+PROGRESS_MAX_LINES=2000 PROGRESS_MAX_BYTES=262144 PROGRESS_FLUSH_SECONDS=5
+# Direct executable only, like resolve_agy. No perl, no view: the banner stays.
+resolve_perl() { PERL_BIN="$(type -P perl || true)"; [ -n "$PERL_BIN" ]; }
+# One bounded write to stderr. The alarm's default action ends perl in the
+# kernel, even inside a blocked write. The helper's stderr travels as fd 3 and
+# the group's own stderr is /dev/null, so bash has nowhere to report the
+# ended child but away from the pipe the write was stuck on. perl's stdout is
+# /dev/null, never the envelope channel.
+progress_write() { # $1 = text; always returns 0
+  {
+    printf '%s\n' "$1" 3>&- \
+      | "$PERL_BIN" -e 'alarm 1; local $/; print STDERR scalar <STDIN>' >/dev/null 2>&3 3>&-
+  } 3>&2 2>/dev/null || true
+  return 0
+}
+print_progress() { # $1 = events.jsonl; always returns 0
+  [ "$PROGRESS" = true ] || return 0
+  local out hdr
+  # pipefail off in the subshell: the reader closing early ends tail with SIGPIPE,
+  # and only jq's own status says whether the read worked.
+  out="$(exec 2>/dev/null
+    set +o pipefail
+    "$PERL_BIN" -e 'alarm 2; exec @ARGV' tail -n "+$((PROGRESS_SEEN + 1))" "$1" \
+    | "$PERL_BIN" -e 'my ($lines, $bytes) = @ARGV; binmode STDIN; binmode STDOUT;
+        my $buf = ""; read(STDIN, $buf, $bytes);
+        my ($n, $end) = (0, 0);
+        while ($n < $lines && (my $i = index($buf, "\n", $end)) >= 0) { $end = $i + 1; $n++ }
+        print $end ? substr($buf, 0, $end) : length($buf) >= $bytes ? "null\n" : ""' \
+        "$PROGRESS_MAX_LINES" "$PROGRESS_MAX_BYTES" \
+    | "$PERL_BIN" -e 'alarm 2; exec @ARGV' "$JQ_BIN" -Rrs \
+      --argjson tool "$PROGRESS_TOOL" --argjson idx "$PROGRESS_MSG" --argjson done "$PROGRESS_DONE" \
+      --argjson text "[$PROGRESS_TEXT]" '
+      def safe:
+        explode | map(if . < 32 or (. >= 127 and . < 160) then 32 else . end)
+        | implode;
+      def clip($max): if length > $max then .[0:$max - 1] + ([8230] | implode) else . end;
+      def short: if type == "string" then .[0:200] else "" end;
+      def target:
+        .tool_info.parameters
+        | if type != "object" then ""
+          elif (.AbsolutePath | type) == "string" then .AbsolutePath
+          else ([.[] | select(type == "string")][0] // "") end;
+      def valid:
+        type == "object" and .event == "step_update" and (.step_update | type) == "object"
+        and (.step_update.step_index
+             | (type == "number" and . == floor and . >= 0 and . < 1000000000));
+      def apply($s):
+        $s.step_index as $i
+        | .steps = ([.steps, $i + 1] | max)
+        | if $s.step_type == "tool" and ($s.state == "ACTIVE" or $s.state == "DONE") then
+            if $i > .tool then
+              .tool = $i
+              | .out += ["$ " + ([($s.tool_name | short), ($s | target | short)]
+                                 | map(select(. != "")) | join(" "))]
+            else . end
+          elif $s.step_type == "agent_response" and ($s.state == "ACTIVE" or $s.state == "DONE")
+               and $i > .done then
+            ((if .idx == $i then .text else "" end) + ($s.text_delta | short) | short) as $t
+            | if $s.state == "ACTIVE" then .idx = $i | .text = $t
+              else .done = $i | .idx = -1 | .text = ""
+                   | if ($t | test("\\S")) then .out += ["> " + ($t | sub("\\s+$"; ""))] else . end
+              end
+          else . end;
+      split("\n") as $p
+      | {tool: $tool, idx: $idx, done: $done, text: ($text | implode), steps: 0, out: [], n: 0}
+      | reduce $p[:-1][] as $l (.;
+          . as $keep
+          | try (($l | fromjson) as $e
+                 | if ($e | valid) then apply($e.step_update) else . end)
+            catch $keep
+          | .n += 1)
+      | "\(.n) \(.steps) \(.tool) \(.idx) \(.done) \(.text | explode | map(tostring) | join(","))",
+        (.out[] | "[gemini-worker] " + . | clip(200) | safe)')" || return 0
+  # Unpinned: no test fails if `safe` runs before `clip` above.
+  out="${out//$'\r'/}"
+  # First output line: lines consumed, steps, then the state the next tick
+  # starts from (last tool step printed, open message, last message closed,
+  # the open message's text as code points).
+  hdr="${out%%$'\n'*}"
+  [[ "$hdr" =~ ^([0-9]+)\ ([0-9]+)\ (-?[0-9]+)\ (-?[0-9]+)\ (-?[0-9]+)\ ([0-9,]*)$ ]] || return 0
+  PROGRESS_SEEN=$((PROGRESS_SEEN + 10#${BASH_REMATCH[1]}))
+  [ "$((10#${BASH_REMATCH[2]}))" -le "$PROGRESS_STEPS" ] || PROGRESS_STEPS="$((10#${BASH_REMATCH[2]}))"
+  PROGRESS_TOOL="${BASH_REMATCH[3]}" PROGRESS_MSG="${BASH_REMATCH[4]}"
+  PROGRESS_DONE="${BASH_REMATCH[5]}" PROGRESS_TEXT="${BASH_REMATCH[6]}"
+  [ "$out" = "$hdr" ] || progress_write "${out#*$'\n'}"
+  return 0
+}
+
 cmd_run() {
   require_jq
   local model="" prompt_file="" workspace="$PWD" schema_file="" timeout="$DEFAULT_TIMEOUT" run_dir_opt=""
@@ -175,6 +327,7 @@ cmd_run() {
       --schema-file) schema_file="$2"; shift 2 ;;
       --timeout) timeout="$2"; shift 2 ;;
       --run-dir) run_dir_opt="$2"; shift 2 ;;
+      --no-progress) PROGRESS=false; shift ;;
       *) fail_json usage "unknown argument: $1" ;;
     esac
   done
@@ -221,6 +374,9 @@ cmd_run() {
   fingerprint "$workspace" "$RUN_DIR/before"
   # agy measures its own --print-timeout; this watchdog only catches a process
   # that outlives it.
+  # Start banner on stderr; stdout stays the envelope channel.
+  local banner="[gemini-worker] start model=$model run-dir=$RUN_DIR" tick
+  if resolve_perl; then progress_write "$banner"; else PROGRESS=false; printf '%s\n' "$banner" >&2 || true; fi
   local start=$SECONDS deadline=$((SECONDS + timeout + ${GEMINI_WORKER_GRACE:-30})) rc=0 timed_out=false
   (cd "$workspace" && agy_env "$AGY_BIN" "${args[@]}") \
     < "$RUN_DIR/input.jsonl" > "$RUN_DIR/events.jsonl" 2> "$RUN_DIR/stderr.log" &
@@ -230,11 +386,21 @@ cmd_run() {
       timed_out=true; kill "$AGY_PID" 2>/dev/null || true; sleep 2; kill -9 "$AGY_PID" 2>/dev/null || true
       break
     fi
-    sleep 1
+    tick=$SECONDS
+    print_progress "$RUN_DIR/events.jsonl"
+    [ "$SECONDS" -ne "$tick" ] || sleep 1
   done
   wait "$AGY_PID" || rc=$?
   AGY_PID=""
   local wall=$((SECONDS - start))
+  # Final flush: the events of the worker's last second, one bounded read at
+  # a time while a read still consumes lines.
+  local flush_until=$((SECONDS + PROGRESS_FLUSH_SECONDS)) seen_before
+  while :; do
+    seen_before=$PROGRESS_SEEN
+    print_progress "$RUN_DIR/events.jsonl"
+    [ "$PROGRESS_SEEN" -gt "$seen_before" ] && [ "$SECONDS" -lt "$flush_until" ] || break
+  done
   cp "$WORK_HOME/.gemini/antigravity-cli/cli.log" "$RUN_DIR/cli.log" 2>/dev/null || true
   # Generated images land in the throwaway HOME's conversation dir, which
   # cleanup deletes: keep them in the run dir.
@@ -315,12 +481,25 @@ cmd_run() {
     class=empty_result; msg="the worker returned an empty answer"
   fi
 
+  local envelope
   if [ -z "$class" ]; then
-    emit "$("$JQ_BIN" -c '{ok: true} + .' <<<"$base")"
+    envelope="$("$JQ_BIN" -c '{ok: true} + .' <<<"$base")"
   else
-    emit "$("$JQ_BIN" -c --arg c "$class" --arg m "$msg" --arg d "$err_text" \
+    envelope="$("$JQ_BIN" -c --arg c "$class" --arg m "$msg" --arg d "$err_text" \
       '{ok: false, error_class: $c, error: $m} + . + (if $d == "" then {} else {detail: $d} end)' <<<"$base")"
   fi
+  # Closing progress line, read back from the envelope so the two cannot
+  # disagree. Best effort and bounded like every progress write (one second to
+  # read, one to write); the delivery below waits no longer than that.
+  if [ "$PROGRESS" = true ]; then
+    local end_line
+    end_line="$(exec 2>/dev/null
+      "$PERL_BIN" -e 'alarm 1; exec @ARGV' "$JQ_BIN" -r --argjson s "$PROGRESS_STEPS" \
+      '"[gemini-worker] end ok=\(.ok) steps=\($s) \(.spend.wall_seconds)s"' <<<"$envelope")" || end_line=""
+    end_line="${end_line//$'\r'/}"
+    [ -z "$end_line" ] || progress_write "$end_line"
+  fi
+  emit "$envelope"
 }
 
 cmd_verify() {
