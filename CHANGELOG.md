@@ -4,6 +4,25 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.55.0 — 2026-10-07
+
+orchestrate: a shorter model map that also serves sessions not running
+the skill. A same-family reader briefed to argue against the work counts
+as a real adversarial read, an `opus` reader for an `opus` seat included;
+outside-family verification stays owed for the risk classes, now named in
+the map so a reader without `SKILL.md` can act on them. `gpt-6-astra`
+joins `opus` unasked on a plan a build will rest on and on the review of
+any change whose miss could lose data, break security or not be undone,
+however small; its review counts as the owed verification, and Sol
+verifies the rest. Reporting rules move to `SKILL.md` § Report and the
+image relay exception to `imagegen.md`; restatement is cut (1649 to 1283
+words). second-opinion: an `opus` session may also ask `opus`, and stakes
+set how many readers. Field check: a headless session on a fixture repo
+with a data-format migration first sent its review to Sol only, because
+the map named Astra in one place and Sol in another; with the two
+aligned, a rerun sent the review to Astra unasked. A session outside the
+skill, asked for a cheap read, opened the map and chose Luna.
+
 ## 0.54.1 — 2026-10-07
 
 orchestrate: the seat's triage of findings has a test. A finding that no

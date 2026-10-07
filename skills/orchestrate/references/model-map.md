@@ -1,85 +1,84 @@
 # Model map
 
-Roles and fallbacks are the contract. They encode routing judgment, not
-benchmarks; field evidence and dated price comparisons belong in the commit
-body, not this file.
+Roles and fallbacks are the contract: routing judgment, not benchmarks.
 
 ## Seat
 
 The session model owns design, briefs, cuts and seams, integration and
-final review; this skill never selects or replaces it. Opus 5.5 is a strong
-seat at far lower cost; Fable 5.1, the larger model, may still read intent
-and the big picture a little better; `sonnet` is a budget seat. An `opus`
-seat delegating to `opus` buys parallelism and context isolation, not a
-second opinion. The seat verifies its own conclusions against evidence.
+final review; this map never selects or replaces it. `opus` is the
+strongest all-round seat; `fable` may read intent and the big picture a
+little better at higher cost; `sonnet` is a budget seat.
 
 ## Delegates
 
-The table holds each model's role, effort and fallback; this section holds
-what spans rows.
+`opus` is the default delegate. A same-family reader briefed to argue
+against the work is a real adversarial read, an `opus` reader for an
+`opus` seat included. A reader from another family adds blind spots the
+seat's family does not share, and it is owed, while that lane is up, for
+work whose wrong result can ship or is expensive to unwind (state, data
+shape, wire-adjacent, security-sensitive, a test that could stop catching
+a regression) and for the counter-case to a plan a build will rest on.
+Label every review cross-family, same-family or none.
 
-`opus` is the default delegate. Sol is the standing cross-family partner;
-Astra takes the work where a mistake costs most, and one or two Astra
-stages in a run is normal when the work warrants them. Cross-family review
-is preferred; an `opus` review of Claude output is a same-family check,
-labeled as such. Fable's taste and intent role implies no general
-reasoning advantage over `opus` or Astra.
+Quality work gets more than one strong model, unasked. The seat puts
+`gpt-6-astra` beside `opus` on a plan a build will rest on, and on the
+review of any change whose miss could lose data, break security or not be
+undone, however small the change; it adds `fable` where taste or intent is
+at stake. One or two Astra stages in a run is normal; routine fixes get
+none. Sol verifies the rest of what is owed, and an Astra review counts as
+the owed verification for what it read. Astra writes and reviews code close to `opus` but
+costs more and has weaker taste: a voice beside `opus` and `fable`, not
+their replacement.
 
-`sonnet` runs at `high` only; work that would need more goes to `opus`. It
-shares the Claude quota with `opus` and gives no cross-family coverage, so
-while the Codex lane is up, Sol at `medium` stays first for cheap mechanical
-writes and Luna for cheap reads. Luna never writes, however simple the
-edit, and open-ended decisions go to a workhorse.
+`sonnet` runs at `high` only; work that needs more goes to `opus`. While
+the Codex lane is up, Sol at `medium` comes before `sonnet` for cheap
+mechanical writes and Luna for cheap reads. Open-ended decisions go to a
+workhorse.
 
-Gemini Flash runs on its own quota, separate from the Codex and Claude
-lanes, and is never the only source for a fact. The agy Claude rows are a
-reserve, not a default: their quota has been reported to drain fast. The
-floors the Gemini helper enforces for both: `gemini-exec.md`,
-`model_floor`.
+Gemini Flash runs on its own quota and is never the only source for a
+fact. The agy Claude rows are a reserve; their quota has been reported to
+drain fast. Floors for both: `gemini-exec.md`, `model_floor`.
 
 Rule text and docs (instruction files, skill text, user-facing prose) are
 written by the seat, `opus` or `fable`; other models give input and
-review, never the wording.
-
-Research requiring live web or other harness tools uses a lane verified to
-provide them; the Codex probe does not test tool availability.
+review, never the wording. Research that needs live web or other harness
+tools uses a lane verified to provide them; the Codex probe does not test
+tool availability.
 
 | Model | Lane | Default effort | Role | Availability fallback |
 |---|---|---|---|---|
-| `gpt-6-astra` | Codex | high; medium for bounded work; xhigh only on the user's word | Planning and architectural counter-cases; the outside-family second opinion for a Claude seat; large reviews and cross-family verification where a missed defect is costliest; research, synthesis or root-cause work at the same stakes | `opus` at high/xhigh; `fable` for fuzzy intent |
-| `gpt-6.1-sol` | Codex | high; xhigh on the seat's judgment for hard work; medium for cheap mechanical writes | Default cross-family partner: review and verification of Claude-produced work, investigation, root-cause second views, focused research and relay work; writes code only under a tight spec whose wrong result a test or lint gate catches, Sweep transforms and simple low-risk edits included; a second opinion only on the user's explicit word | `gpt-6-astra`; `opus` if the Codex lane is down |
-| `fable` | Claude | medium/high | Design taste, fuzzy intent and highest-stakes user-facing judgment; the same-family second opinion for an `opus` seat. Delegate only a distinct question the seat cannot resolve as efficiently; a Fable seat seldom needs another Fable | `opus` |
-| `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default workhorse for long-horizon implementation, hard root-cause work and diagnosis, migrations, codebase audits, frontend builds, user-facing copy and API-shape proposals; judgment-bearing work needing Claude harness tools; cross-family verification of Codex-produced work; the same-family second opinion for a `fable` seat | `gpt-6-astra`, with degraded family coverage when applicable |
-| `gpt-6-luna` | Codex | xhigh; never below high; max allowed | Read-only: Map readers, extraction, classification and small criterion-based reviews, screenshots and UI images included; never writes | `gpt-6.1-sol`; `sonnet` if the Codex lane is down |
-| `gemini-3.8-flash-high` | agy (read-only) | in the id: `-high` | Extra third-family voice in ideation, product and UX rounds, an extra reader of screenshots and UI images beside Luna, research from supplied sources and general knowledge, and first-pass review triage; never ahead of Luna for bounded reads and extraction unless the user sends work here (Codex usage spent, or Google models asked for); never writes code, never counts or inventories (no shell) and never the owed cross-family verifier | `gpt-6-luna` |
-| `claude-opus-5-5-high`, `claude-opus-5-5-medium`, `claude-sonnet-5-5-high` | agy (read-only) | in the id | Reserve Claude readers on the Google quota (§ Delegates): recon, Map reads, summaries and Claude-judgment reads when Anthropic quota is tight or the user sends work here; never the cross-family verifier of Claude-produced work, never writes, never counts or inventories (no shell) | `opus` or `sonnet` on the Claude lane |
-| `sonnet` | Claude | high only | Execution whose wrong result a test or lint gate catches: spec-bounded implementation, Sweep transforms, shell-heavy agentic work and bounded work needing Claude harness tools; also the budget seat. Never design, fuzzy intent or owed verification | `opus` |
-| `haiku` | Claude | — | Off-limits; Luna covers cheap reads, Sol at `medium` cheap writes | `gpt-6-luna` |
+| `gpt-6-astra` | Codex | high; medium for bounded work; xhigh only on the user's word | The extra strong voice on quality work: plans and architectural counter-cases, large reviews, thorough implementation, and root-cause, research or synthesis where a missed defect costs most; the outside-family second opinion for a Claude seat | `opus` at high/xhigh; `fable` for fuzzy intent |
+| `gpt-6.1-sol` | Codex | high; xhigh on the seat's judgment for hard work; medium for cheap mechanical writes | Standing cross-family reviewer and verifier of Claude-produced work, diffs and rule text included; investigation, root-cause second views, focused research, relay work; writes code only under a tight spec whose wrong result a test or lint gate catches | `gpt-6-astra`; `opus` if the Codex lane is down |
+| `fable` | Claude | medium/high | Design taste, fuzzy intent and highest-stakes user-facing judgment; a second opinion beside `opus` or Astra. Delegate only a distinct question the seat cannot resolve as efficiently; a Fable seat seldom needs another Fable | `opus` |
+| `opus` | Claude | medium; high for substantive work, xhigh for a named hard problem | Default workhorse: long-horizon implementation, root-cause work, migrations, codebase audits, frontend builds, user-facing copy, API shapes; judgment-bearing work needing Claude harness tools; cross-family verification of Codex-produced work | `gpt-6-astra` |
+| `gpt-6-luna` | Codex | xhigh; never below high; max allowed | Read-only: Map readers, extraction, classification, small criterion-based reviews, screenshots and UI images; never writes | `gpt-6.1-sol`; `sonnet` if the Codex lane is down |
+| `gemini-3.8-flash-high` | agy (read-only) | in the id: `-high` | Extra third-family voice in ideation, product and UX rounds; extra reader of screenshots and UI images beside Luna; research from supplied sources and general knowledge; first-pass review triage. Never ahead of Luna for bounded reads unless the user sends work here | `gpt-6-luna` |
+| `claude-opus-5-5-high`, `claude-opus-5-5-medium`, `claude-sonnet-5-5-high` | agy (read-only) | in the id | Reserve Claude readers on the Google quota when Anthropic quota is tight or the user sends work here: recon, Map reads, summaries, Claude-judgment reads | `opus` or `sonnet` on the Claude lane |
+| `sonnet` | Claude | high only | Execution whose wrong result a test or lint gate catches: spec-bounded implementation, Sweep transforms, shell-heavy agentic work, bounded work needing Claude harness tools. Never design, fuzzy intent or owed verification | `opus` |
+| `haiku` | Claude | — | Off-limits | — |
+
+The agy rows never write, never count or inventory (no shell) and are
+never the owed cross-family verifier.
 
 ## Routing rules
 
 **Lane naming.** Claude rows use harness aliases accepted by the Agent
-`model` parameter, never a versioned ID. Codex rows use exact IDs passed
+`model` parameter, never a versioned ID; Codex rows use exact IDs passed
 to `codex --model`; agy rows use an exact id from the Gemini helper's
 `probe`, effort included. The Codex rows are an allowlist: dispatch only a
-Codex model the table names, or one the user names explicitly, and never
-`gpt-5.6-terra`, whoever names it. The live catalog (`codex debug models`:
-about a second, no model call; the models cache it refreshes can lag a new
-release) confirms that an ID exists and never adds a model. The agy rows
-follow their floors (`gemini-exec.md`, `model_floor`). An ambiguous or unmapped name needs
-clarification; an invalid ID fails loudly, never silently selects another
-model.
+Codex model the table or the user names, never `gpt-5.6-terra`, whoever
+names it. `codex debug models` confirms an ID exists and never adds a
+model; its cache can lag a new release. An ambiguous or unmapped name
+needs clarification; an invalid ID fails loudly, never silently selects
+another model.
 
-**Effort follows difficulty.** Use the table defaults, judged on the
-difficulty left after the brief: a tight brief has already made the
-decisions, so its implementer may run a notch below the default, never
-below `medium`, and Sol never below `high` outside cheap mechanical writes;
-a thin brief earns no discount. `medium` suits bounded substantive work.
-`low` and `max` are off-limits for work on every lane, except Luna's `max`.
-When an Astra stage looks too hard for `high`, say so and let the user
-choose, or route the hard part to `opus` at `xhigh`. `fable` supports
-`medium` and `high` only. Codex `ultra` stays off-limits because it may
-introduce nested delegation.
+**Effort follows difficulty** left after the brief: a tight brief lets
+its implementer run one notch below the table default, never below
+`medium` (Sol: `high` outside cheap mechanical writes); a thin brief earns
+no discount. `low` and `max` are off-limits on every lane except Luna's
+`max`, and Codex `ultra` is off-limits because it may nest delegation.
+`fable` takes `medium` and `high` only. Image relay stages:
+`imagegen.md`.
 
 **Escalate a quality miss once.** Name the missed acceptance criterion and
 why the next model can resolve it. Luna and `sonnet` go to `opus`; a Sol
@@ -87,54 +86,27 @@ review miss and reasoning failures go to Astra; taste or intent failures go
 to Fable. A second miss goes back to the seat to fix the brief or
 investigate, not another reroll.
 
-**Availability fallback** is for a model or lane that is unavailable or
-throttled, distinct from quality escalation. State the replacement and any
-lost coverage. A whole Codex outage uses the Claude lane even when a table
-row's first fallback is another Codex model.
+**Availability fallback** covers a model or lane that is down or
+throttled, never a quality miss: take the row's fallback, the Claude lane
+during a whole Codex outage, and state the replacement and the coverage
+lost.
 
 ## Review and spend
 
 - **Quality before price for work that ships.** Take the least costly
-  route that meets the acceptance criteria, judged on expected total work
-  per accepted task (reconnaissance, verification, likely rework), never on
-  token price alone.
-- **Quota posture.** Subscription quota is there to be used: pick model and
-  effort from what the work needs and the bullet above. How much quota is
-  left is an input only when the user says it is tight; then drop optional
-  depth first and say once what was dropped. Owed verification still runs,
-  and if it cannot, report the task as blocked.
-- **Verification routing.** When verification is owed (`SKILL.md`
-  § Review), the producer family includes the seat's contributions:
-  Claude-produced work goes to Sol, or Astra for plans, large reviews and
-  the highest stakes; Codex-produced work goes to `opus`, or Fable for
-  design and intent.
-  Same-family coverage is degraded: usable when the other lane is
-  unavailable, and labeled as such. Report cross-provider, same-provider or
-  none. Agreement never replaces checking evidence.
-- **Adversarial reads and second opinions.** The seat's own design, plan,
-  architecture decision or big-picture judgment is challenged by the
-  strongest models, never by Sol by default: an `opus` seat asks
-  `gpt-6-astra`, `fable`, or both; a `fable` seat asks `opus` and may also
-  ask `gpt-6-astra`. The counter-case owed before a build rests on a
-  seat design (`SKILL.md` § Cut and schedule) comes from outside the seat's family, so on a
-  Claude seat it is Astra's. `fable` and `opus` are one family: a
-  Claude-lane second opinion is labeled same-family and never replaces
-  owed outside-family verification. Sol stays the standing reviewer of
-  diffs and rule text and the cross-family verifier `SKILL.md` § Review
-  owes; it gives a second opinion only on the user's explicit word.
-- **Reporting.** The report's token figure per stage is fresh input plus
-  output, from existing stage results and harness telemetry, each attempt
-  once; a Claude-lane stage reports the total its harness gives. Codex and
-  Gemini input sums every round's replayed context, so cached input stays
-  out of the figure. A stage without data reads `unknown`. The lines name the requested model:
-  the helper envelope echoes the request and proves nothing about
-  provider-side substitution, so name a served model only on runtime
-  evidence that it differed. Collecting spend needs no extra model call or
-  transcript review.
-- **Image-generation relay exception.** When the worker only prompts a
-  separate image model, use `gpt-6.1-sol` at `medium`. The image model does
-  the substantive work; this exception never applies to a stage doing its
-  own research or implementation. The Gemini lane generates images too
-  (`gemini-exec.md`), on a small quota and only when the user sends image
-  work there. Which image model suits which job is
-  unmeasured.
+  route that meets the acceptance criteria, judged on total work per
+  accepted task (reconnaissance, verification, likely rework), never on
+  token price alone. Quota is there to be used; it is an input only when
+  the user says it is tight, and then optional depth goes first, said
+  once. Owed verification still runs, or the task is reported blocked.
+- **Verification routing.** The producer family includes the seat's
+  contributions: Claude-produced work goes to Sol, or to Astra in the
+  cases § Delegates names and for large reviews; Codex-produced work goes to
+  `opus`, or Fable for design and intent. With the other lane down, a
+  same-family adversarial read is the fallback, labeled same-family.
+  Agreement never replaces checking evidence.
+- **Second opinions** on the seat's design, plan or big-picture judgment
+  come from the strongest models, one or several by stakes, never from Sol
+  unless the user says so: an `opus` seat asks Astra, `fable`, `opus` or
+  several; a `fable` seat asks `opus` and may add Astra. On a Claude seat
+  the owed counter-case before a build is Astra's.

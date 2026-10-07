@@ -217,5 +217,10 @@ ceiling. In Workflows, `budget.total` detects a target and
 coverage (top-N, sampling, no retry) says what it omitted. The final report
 closes with one line per delegated stage, failed attempts included:
 requested model and effort, task tag, what it did or found in a few words,
-tokens and time (model map § Review and spend, Reporting). No table, no
-totals, nothing about the seat's own consumption.
+tokens and time. No table, no totals, nothing about the seat's own
+consumption. Tokens are fresh input plus output, each attempt once, taken
+from stage results and harness telemetry without an extra model call or
+transcript review; a Claude-lane stage reports the total its harness
+gives, and Codex and Gemini input leaves cached replay out. A stage
+without data reads `unknown`. Name the requested model, and a served one
+only on runtime evidence that it differed.

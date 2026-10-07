@@ -14,12 +14,13 @@ work that does not exist yet, or taste.
 A second opinion comes from the strongest models, picked by the session's
 own model:
 
-- An `opus` session asks `gpt-6-astra`, `fable`, or both.
+- An `opus` session asks `gpt-6-astra`, `fable`, `opus`, or several.
 - A `fable` session asks `opus`, and may also ask `gpt-6-astra`.
 - Any other session model asks `gpt-6-astra`.
 
+Stakes set how many: a costly plan or review takes more than one reader.
 `gpt-6-astra` runs through § Codex path, `fable` and `opus` through
-§ Claude path; "both" is one call on each path over the same packet.
+§ Claude path; several readers get one call each over the same packet.
 `gpt-6.1-sol` gives a second opinion only on the user's explicit word.
 
 `fable` and `opus` are one model family: label a Claude-path read

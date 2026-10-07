@@ -2,8 +2,11 @@
 
 Authoring guide for Codex-lane stages whose real labor happens in the image
 model the worker prompts. `codex-exec.md` owns dispatch mechanics; the pin
-is `gpt-6.1-sol` @ `medium` (`model-map.md` § Review and spend,
-image-generation relay exception). Gemini-lane images: `gemini-exec.md`.
+is `gpt-6.1-sol` @ `medium`, an exception to the model map's effort rules
+because the image model does the substantive work; it never covers a stage
+doing its own research or implementation. Gemini-lane images, on a small
+quota and only when the user sends image work there: `gemini-exec.md`.
+Which image model suits which job is unmeasured.
 
 The relay worker is an LLM that forwards to the image model through its
 prompting skill — triggered explicitly with `$imagegen` or by plain
