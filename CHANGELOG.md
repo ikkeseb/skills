@@ -4,6 +4,24 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.56.0 — 2026-10-07
+
+orchestrate: cheap reads move from `gpt-6-luna` to `haiku`, now that the
+alias serves Haiku 5.5. The `haiku` row replaces the Luna row with the same
+read-only roles plus retrieval, at `high` (`xhigh` for Map readers and wide
+retrieval, never below `high`); it never writes and never carries owed
+verification, a miss escalates to `opus`, and Gemini's fallback points at
+it. A cheap read no longer depends on the Codex lane being up, and no lane
+keeps a `max` exception. Luna leaves the table and stays reachable only on
+the user's word. Field check: the same three read tasks to both models at
+`xhigh` (retrieval with verbatim quotes in a notes repository, an impact
+map of this change, one rendered page as an image). Every quote from both
+existed verbatim and the image facts matched the source; `haiku` returned
+about twice as many items on the two text tasks and took about twice the
+wall time. A headless session outside the skill, asked for a cheap read,
+opened the map and dispatched `haiku` at `high`. second-opinion: the
+`max` exception for a user-named Luna goes with it.
+
 ## 0.55.0 — 2026-10-07
 
 orchestrate: a shorter model map that also serves sessions not running

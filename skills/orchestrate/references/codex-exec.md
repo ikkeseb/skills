@@ -45,7 +45,7 @@ invocation; only verify proves it still behaves.
 
 ```bash
 "$HELPER" run \
-  --model gpt-6-luna                   # REQUIRED; exact Codex model ID
+  --model gpt-6.1-sol                  # REQUIRED; exact Codex model ID
   --prompt-file "$DIR/prompt.md" \
   [--effort high]                      # default high
   [--sandbox read-only]                # or workspace-write (git workspace only)
@@ -79,7 +79,7 @@ a throwaway worktree; keep `read-only` for pure read-and-reason work.
 **Worker prompts.** Workers read text only through shell commands; never
 forbid shell reads. Image files given by absolute path are viewed
 directly, without a shell command, also outside `--workspace`: verified for
-Luna on the WSL lane, where readers have also taken the reference for the
+`gpt-6-luna` on the WSL lane, where readers have also taken the reference for the
 new image and flagged differences that did not hold. A comparison brief names the
 reference and the new path of every pair and asks each difference for its
 region; one the seat cannot find there is dropped, not re-read. Sol, Astra and
@@ -115,8 +115,8 @@ unattended session the 30-minute background default kills a longer run and
 loses its result.
 
 ```bash
-# gpt-6-luna @ xhigh — r1 authority
-"$HELPER" run --model gpt-6-luna --effort xhigh --sandbox read-only \
+# gpt-6.1-sol @ high — r1 authority
+"$HELPER" run --model gpt-6.1-sol --effort high --sandbox read-only \
   --workspace "$PWD" --prompt-file "$DIR/prompt.md" \
   --schema-file "$DIR/schema.json" --run-dir "$RUN_DIR" > "$DIR/stdout.json"
 ```

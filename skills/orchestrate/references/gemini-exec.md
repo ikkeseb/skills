@@ -19,7 +19,7 @@ GEMINI_HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/gemini-worker.sh
 
 Once per session before the first Gemini stage, `"$GEMINI_HELPER" probe`
 (no model call) returns `{ok, agy_version, authenticated, models}`.
-`ok: false` means the lane is down: route to Luna or the Claude lane and say
+`ok: false` means the lane is down: route to the Claude lane and say
 so. `authenticated: false` needs one interactive `agy` login on that
 machine, which only the user can do. On macOS over SSH, agy has reported no
 login while a local terminal had one; run the lane from a local session.
@@ -105,7 +105,7 @@ is `input_tokens` plus `output_tokens`.
 | `quota` | subscription quota or capacity exhausted | lane down for now; take the model map's fallback |
 | `timeout` | deadline hit; agy reports its own as `SUCCESS` with partial output | narrow the task or raise `--timeout` once |
 | `tool_denied` | it needed a tool or path outside its grant | the result may be incomplete; rebrief without that need |
-| `schema_missing` / `empty_result` | no usable answer | one rebrief, then Luna |
+| `schema_missing` / `empty_result` | no usable answer | one rebrief, then `haiku` |
 | `workspace_changed` | files changed during the run | check `changed_files`; unexplained changes are a stop |
 | `agy_failed` | anything else | read `detail` and `stderr.log`; seen once: `enum[0]: cannot be empty` for a number in a schema `enum`, refused before any work; a string field with string values passed |
 

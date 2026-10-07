@@ -78,8 +78,7 @@ workspace. The user's explicit wording may change `--model` or `--effort`.
 `gpt-6-astra` may run at `medium` for a small bounded review and takes
 `xhigh` only when the user names it; a user-named `gpt-6.1-sol` may run at
 `xhigh` when the review is hard.
-Never use `low`, `max` only for a user-named `gpt-6-luna`, and never
-`gpt-5.6-terra`, whoever names it. Ask when the wording is ambiguous; an invalid value fails loudly and
+Never use `low` or `max`, and never `gpt-5.6-terra`, whoever names it. Ask when the wording is ambiguous; an invalid value fails loudly and
 is never silently replaced. Record the task ID and
 output-file path and say the independent review started. The main session
 owns delivery: continue useful local work, otherwise wait for the terminal
