@@ -4,6 +4,13 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.57.2 — 2026-10-08
+
+orchestrate: the model map and the Codex troubleshooting note no longer
+use «Map readers», «Map reads» and «Sweep transforms», names from a section
+the skill dropped. They say what the work is: parallel readers across many
+files, and the same mechanical edit across many files.
+
 ## 0.57.1 — 2026-10-08
 
 html-brief: wording taken back from a downstream fork, and one rule from a

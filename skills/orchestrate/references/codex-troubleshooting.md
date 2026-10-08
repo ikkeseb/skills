@@ -20,7 +20,7 @@ to the task automatically (one plain allowlisted command per exec call, no
 pipelines, redirection, separators, subshells or other executables) and
 stops the worker as `read_policy_denied` when stderr shows a policy
 rejection. Even with the rules file, fan-out reads are fragile on this
-lane (a field run lost three of four Map readers), so a machine with a WSL
+lane (a field run lost three of four parallel readers), so a machine with a WSL
 VM routes reads there too.
 
 **Native Windows write lane** is unsupported: the elevated sandbox turns
