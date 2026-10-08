@@ -4,6 +4,23 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.57.1 — 2026-10-08
+
+html-brief: wording taken back from a downstream fork, and one rule from a
+field run.
+
+- The font splice takes the document and `assets/fonts.css` as full paths
+  in both shells; the bash line used paths relative to a directory the
+  session is rarely in. Reading the result without the font data has a
+  PowerShell line beside the bash one.
+- Light in print is named as ready for PDF, a light screen theme is built
+  only on the user's ask, and the language follows the audience of the
+  document, not the chat. The description names restyling an existing HTML
+  file. One sentence states the licence of the embedded fonts.
+- § Compose: a table holds short cells; entries that each carry a sentence
+  go in `.row.tagged` rows. A four-column table with a column of sentences
+  overflowed at phone width in a field run.
+
 ## 0.57.0 — 2026-10-08
 
 orchestrate: context first, phases of one to six agents, a review phase

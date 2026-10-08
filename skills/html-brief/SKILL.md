@@ -1,6 +1,6 @@
 ---
 name: html-brief
-description: "Turn content into one self-contained, dark, editorial HTML document: plans, summaries, breakdowns, explanations, decisions, run sheets, day sheets, prep docs, status, comparisons, multi-part packs. Triggers on any ask for a polished HTML page or 'an html'. Not for showcase pages (html-showcase), decks (html-slides), or web-app frontends."
+description: "Turn content into one self-contained, dark, editorial HTML document: plans, summaries, breakdowns, explanations, decisions, run sheets, day sheets, prep docs, status, comparisons, multi-part packs, or an existing HTML file restyled. Triggers on any ask for a polished HTML page or 'an html'. Not for showcase pages (html-showcase), decks (html-slides), or web-app frontends."
 ---
 
 # HTML brief
@@ -18,13 +18,15 @@ it is, type sizes included; its body is a catalogue to empty and compose from.
 
 1. **One self-contained file.** Inline CSS, zero network requests, renders
    from `file://` offline. Fonts: Build, step 2.
-2. **Dark on screen, light in print**, handled by the stylesheet. No theme
-   toggle, hero image, icons or emoji.
+2. **Dark on screen, light in print** (ready for PDF), handled by the
+   stylesheet. No theme toggle, hero image, icons or emoji. A light screen
+   theme only when the user asks for one.
 3. **One box: the glance.** It holds what the reader must not miss.
    Everything else sits on hairlines, with the left rail carrying the spine
    (`.row` > `.rail`).
 4. **Every section earns its place.** Long? Cut, or fold into `details`;
-   never shrink type or spacing. **Language follows the audience.**
+   never shrink type or spacing. **Language follows the audience** of the
+   document, not the chat.
 
 ## Compose
 
@@ -62,6 +64,9 @@ sentence. Two or three shapes carry a document; prose is a shape too
   else is coloured.
 - **Bars only when relative size is the point**: shares of a total, budget
   used, one option against another. Never on a single number or as decoration.
+- **A table holds short cells**: numbers, single words, a state. Entries
+  that each carry a sentence go in `.row.tagged` rows, which stack on a
+  phone where a table of sentences overflows.
 - **Tabs only for four or more distinct segments.** Panels are `.tab` with
   `data-tab`; the first is the overview. No-JS and print show every panel.
 - **Missing shape?** Build it from the template's variables. The footer
@@ -70,11 +75,17 @@ sentence. Two or three shapes carry a document; prose is a shape too
 ## Build
 
 1. Copy the template, keep the `/* FONTS */` line, write the document.
-2. Splice the fonts (Archivo + IBM Plex Mono, about 180 KB) without reading them:
-   `awk 'NR==FNR{f=f $0 RS;next} /\/\* FONTS \*\//{printf "%s",f;next}1' assets/fonts.css doc.html > out.html && mv out.html doc.html`
+2. Splice the fonts (Archivo + IBM Plex Mono, about 180 KB) without reading
+   them. `$p` is the document and `$fonts` is this skill's `assets/fonts.css`,
+   both as full paths:
+   bash: `awk 'NR==FNR{f=f $0 RS;next} /\/\* FONTS \*\//{printf "%s",f;next}1' "$fonts" "$p" > "$p.tmp" && mv "$p.tmp" "$p"`
    PowerShell: `[IO.File]::WriteAllText($p,[IO.File]::ReadAllText($p).Replace('/* FONTS */',[IO.File]::ReadAllText($fonts)))`
-   with full paths in `$p` and `$fonts`.
-3. Read the result with `grep -v base64`, never raw.
+3. Read the result without the font data, never raw: bash
+   `grep -v base64 "$p"`, PowerShell
+   `Select-String -Path $p -Pattern base64 -NotMatch`.
+
+The fonts are under the SIL Open Font License; `assets/OFL.txt` and the
+notice at the top of `assets/fonts.css` travel with them.
 
 ## Deliver and check
 
