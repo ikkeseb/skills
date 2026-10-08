@@ -106,8 +106,9 @@ helper's `probe` subcommand reports auth plus whether the installed CLI still
 advertises every flag the runner passes. The recipe gates on that flag
 surface, not on a pinned version.
 
-The main session runs the helper as a background job; no subagent is
-involved. (OpenAI's separate `codex` companion plugin is a different
+A stage on its own runs the helper as a background job of the main session;
+inside a Workflow, one small transport agent waits on the same helper and
+returns its status line. (OpenAI's separate `codex` companion plugin is a different
 integration and isn't required by anything here.)
 
 ### orchestrate's Gemini lane

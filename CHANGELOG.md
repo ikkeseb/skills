@@ -4,6 +4,12 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.59.2 — 2026-10-09
+
+README: the Codex lane section said no subagent is involved. Since 0.57.0 a
+Codex or Gemini stage inside a Workflow rides one transport agent; a stage
+on its own is still a background job of the main session.
+
 ## 0.59.1 — 2026-10-08
 
 handoff: shorter skill, shorter handoffs. The body goes from eight build
