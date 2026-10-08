@@ -192,6 +192,10 @@ HELPER="${CLAUDE_PLUGIN_ROOT}/skills/orchestrate/scripts/codex-worker.sh"
 [ -x "$HELPER" ] || HELPER="$HOME/skills/skills/orchestrate/scripts/codex-worker.sh"
 ```
 
+**Credit lane.** On the user's word only, a stage runs as a headless
+Claude process billed to API credit instead of the subscription; read
+`references/credit-exec.md` before the first.
+
 **Writers** write only in the session's own repository; in any other the
 seat says so and edits itself, and workers read or return patches. Read
 `references/writers.md` before the first writing stage.

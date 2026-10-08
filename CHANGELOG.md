@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.58.0 — 2026-10-08
+
+orchestrate: a credit lane. On the user's word, a stage runs as a
+headless Claude Code process billed to an API key, so plan-included API
+credit carries heavy stages instead of the subscription's quota.
+`references/credit-exec.md` holds the launcher contract (one key per
+process, auto mode only, ordinary pushes failing), account choice,
+the dispatch line with web tools and MCP off by default, and a harvest
+judged on the worktree rather than the run's own success flag. Measured
+in field runs: an interactive session on a key is not covered by the
+credit, `--max-turns` did not stop a headless run, and auto mode alone let
+a headless force-push through.
+
 ## 0.57.2 — 2026-10-08
 
 orchestrate: the model map and the Codex troubleshooting note no longer
