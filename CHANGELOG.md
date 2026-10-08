@@ -4,6 +4,27 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.59.0 — 2026-10-08
+
+handoff: the reader is an agent, and nobody proofreads on the way. The
+writer walks the user's messages from the start of the session instead of
+its memory of the end, so an early open ask weighs as much as the last
+topic. `## Asks` replaces `## Goal` and lists every ask still open. The
+handoff keeps apart what the user said, what was verified and what the
+writer concludes, quotes the user only where the wording carries a decision
+or can be read two ways, and leaves an unclear statement unclear. `## Next`
+says whether the step is settled, so the reader continues, or the writer's
+suggestion, so the reader gives its view and asks first; the disclaimer
+tells the reader the same, and that what the user types beside the handoff
+outranks it. The temporary file, its status line and the no-file option are
+gone: the final message's one fence is the only copy.
+
+From a field case where a handoff framed a whole session as its last topic
+and listed the writer's ranking under `## Next`, and the receiving session
+parked an ask the user still wanted. Second-opinion reviewed (fable @ high,
+same family). One real session, forked from that case's transcript, wrote
+the handoff with no tool call and marked the ranking as its own.
+
 ## 0.58.0 — 2026-10-08
 
 orchestrate: a credit lane. On the user's word, a stage runs as a
