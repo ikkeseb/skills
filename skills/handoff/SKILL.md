@@ -5,42 +5,37 @@ description: "Write a paste-ready handoff for continuing the current task in a f
 
 # Handoff
 
-Write a complete but selective continuation handoff, tailored to any next-session focus the user provides. The focus may narrow the next action; it must not erase the other open asks or remaining work.
+Write a continuation handoff for a fresh session. The reader is another agent, and the user usually pastes the handoff without reading it: the reader acts on what you wrote and cannot tell your reading from the user's word unless the text shows the difference. A focus the user gives may narrow the next action; it never erases the other open asks.
 
-A handoff is a judgment exercise, not template fill. Its failure mode is either a polished recap of facts recoverable from `git status`, or a terse pointer that makes the next session reconstruct the research and decisions again.
-
-The reader is another agent, and the user usually pastes the handoff without reading it. Nobody corrects it on the way: the reader acts on what you wrote and cannot tell your reading from the user's word unless the text shows the difference.
+Length follows what the reader needs in order to act, nothing else. A recap of what `git status` or the repository's own status document already says is waste; so is a pointer so terse that the next session redoes the research and the decisions.
 
 ## Close the session
 
-Before building the handoff, finish in-flight verification and normal repository bookkeeping allowed by the existing task scope and authorization, including an already authorized commit, push, or deploy. Do not start new product work. If a clean stop needs new implementation or authority, preserve the exact remaining state. Write the handoff last, from that state.
+Finish in-flight verification and the bookkeeping the task's scope and authorization already cover, an authorized commit, push or deploy included. Start no new work; where a clean stop would need it, record the exact remaining state. Write the handoff last.
 
 ## Build the handoff
 
-1. Walk the user's messages from the start of the session, not your memory of its end: every ask still open, every correction and decision with its reason, and what the user said about the next session. An early ask that is not resolved weighs as much as the last topic. Where the context was compacted, the summary is all you have of the early part: say so.
-2. Add what the work produced: verified state, research that changed the direction, rejected or deferred paths, failed approaches, blockers. Include only the categories that matter, but do not drop load-bearing context to make the handoff short.
-3. Keep three things apart wherever they could steer the reader: what the user said, what you verified, and what you conclude or recommend. Your reading belongs in the handoff, named as yours. Quote the user where the wording carries a decision or can be read two ways, and leave an unclear statement unclear instead of resolving it; paraphrase the rest.
-4. Spend a verification budget of at most five cheap, read-only operations total — `git status`, one bounded `git log`, a targeted read or search — on the facts whose misstatement would change the receiving session's first action. Write everything outside the budget as unverified. Never run builds, tests, or history reconstruction (merge-base, ancestry, reflog tracing) for the handoff.
-5. Omit facts the next session can recover cheaply unless their interpretation matters. Link durable documents — specs, plans, ADRs, issues, commits, diffs, audits — and say what each load-bearing one establishes. A link never replaces a decision, disposition, warning, or next step.
-6. When continuation depends on working documents, give each exact path and its durability as known from the session — committed, untracked, gitignored, temporary, or unknown. If the only detailed artifact is ephemeral, carry enough of its findings in the handoff to survive its loss.
-7. When work spans sessions or repositories, name both states instead of collapsing them: the session-sized loop that may be closed, and the larger workstream — its scope, what landed, what remains open, what was rejected or parked.
-8. Match the user's language. Keep commands, paths, identifiers, and source-language technical text exact. Redact secrets and personal details that are unnecessary for continuation.
+1. Walk the user's messages from the start of the session, not your memory of its end: every ask still open, every correction and decision with its reason, what the user said about the next session. An early unresolved ask weighs as much as the last topic. Where the context was compacted, say that the summary is all you have of the early part.
+2. Add what the work produced, only where it would change what the reader does: verified state, findings that changed the direction, rejected or parked paths, failed approaches, blockers.
+3. Keep apart what the user said, what you verified, and what you conclude. Your reading belongs in the handoff, named as yours. Quote the user where the wording carries a decision or can be read two ways, and leave an unclear statement unclear; paraphrase the rest.
+4. Verify with at most five cheap read-only operations (`git status`, one bounded `git log`, a targeted read), spent on the facts whose misstatement would change the reader's first action. Mark the rest unverified. No builds, tests or history reconstruction.
+5. Point instead of copying: what a durable document already holds (a status file the repository loads at session start, a spec, a commit, an issue) gets its path and one line on what it establishes. A decision, warning or next step is always written out. For a working document, give its path and whether it is committed, untracked or temporary, and carry the findings of one that may not survive.
+6. Where the work is larger than the session, name both: what this session closed, and what the workstream still has open, parked or rejected.
+7. Match the user's language; keep commands, paths and identifiers exact. Leave out secrets and personal details the continuation does not need.
 
-Done when the receiving session can answer, without redoing the investigation: what the user asked for, what changed, what was decided, what remains, which documents carry the evidence, what to do first, and whether that first step is the user's or your suggestion.
+Done when the receiving session can say, without redoing the investigation, what the user asked for, what changed and was decided, what remains, and what to do first and on whose word.
 
-## Structure the content
+## Structure
 
-Use `# Handoff: [task]`, the disclaimer below, then `## Asks` and `## Next` near the top, and only the other sections the work earns (state, decisions, working documents, workstream, failed approaches, warnings, setup).
+`# Handoff: [task]`, the disclaimer below, `## Asks`, `## Next`, then only the sections the work earns.
 
-- `## Asks`: what the user wants: every ask still open, oldest first. A session that left three asks open has three, not one goal; an ask that was closed is not listed here.
-- `## Next`: the clearest step first, then its prerequisite, blocker, or approval. Say which case holds. Work that was underway, or a next step the user settled: the reader continues with it. An order that is your recommendation, or that the user left open: say so, and the reader gives its own view and asks before starting.
+- `## Asks`: every ask still open, oldest first. Three open asks are three, not one goal; a closed ask is not listed.
+- `## Next`: the clearest step first, with its prerequisite, blocker or approval. Say which case holds: work underway or a step the user settled, which the reader continues; or an order that is your recommendation or that the user left open, where the reader gives its own view and asks first.
 
-Name a skill only when the receiving session should invoke it before the next step to avoid a wrong start. Simple tasks produce short handoffs; rich tasks earn enough detail for continuity.
+Name a skill only when the reader must invoke it before the next step to avoid a wrong start.
 
 > Handoff written from session memory: context, not authority. Orient yourself before you build on it: question its assumptions, surface material concerns or better options, and ask when the user's intent is unclear. What the user typed beside this handoff outranks it. Continue directly where it says the next step is settled and that still fits what you find; where the next step is the writer's suggestion, say what you would do and ask first. Verify a claim only when the next action depends on it or the state may have changed; never repeat completed verification merely to validate the handoff.
 
 ## Reply
 
-The final message is the copy surface: exactly one `markdown` fence, longer than any backtick run inside it, containing the whole handoff. Nothing before the fence, nothing after it, so a copy of the message is the handoff and nothing else.
-
-Done when the final message contains only the fence and the fence holds the whole handoff.
+The final message is exactly one `markdown` fence, longer than any backtick run inside it, holding the whole handoff: nothing before it and nothing after, so a copy of the message is the handoff.

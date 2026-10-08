@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.59.1 — 2026-10-08
+
+handoff: shorter skill, shorter handoffs. The body goes from eight build
+steps to seven and loses its restatements; the rules are the same. One
+changes weight: length follows what the reader needs in order to act, and
+what a durable document already holds (a status file the repository loads
+at session start, a spec, a commit) gets its path and one line instead of a
+copy, while a decision, warning or next step is still written out.
+
+One real session, forked from the transcript that wrote a handoff under
+0.59.0, wrote it again: about a fifth shorter, pointing at the repository's
+own status document for the item list, with no closed ask under `## Asks`.
+
 ## 0.59.0 — 2026-10-08
 
 handoff: the reader is an agent, and nobody proofreads on the way. The
