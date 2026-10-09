@@ -11,9 +11,10 @@ the test seam and cases named, not a follow-up.
 One exclusive writer may use the main tree on a branch when the tree is
 clean at dispatch and nothing else writes there until it returns: record
 HEAD and porcelain status at dispatch, read only outside the write set
-meanwhile, and at harvest compare `git diff --name-status <base>` plus
-status against the write set; a file or hunk outside it or a moved HEAD stops
-integration. Every other writer gets its own worktree: concurrent writers
+meanwhile (a status or stat progress watch excepted), and at harvest
+compare `git diff --name-status <base>` plus status against the write set;
+a file or hunk outside it or a moved HEAD stops integration. Every other
+writer gets its own worktree: concurrent writers
 in one checkout, a target linked into live configuration, or a cheap-tier
 writer outside a machine-gated mechanical task.
 
@@ -32,6 +33,15 @@ repository: `.git`, hooks and `--local` config are shared, and a write
 through a tracked symlink pointing outside the repo reaches live state with
 nothing in the worktree's status or diff. Repo tooling sees
 `.claude/worktrees/`: keep it out of test globs.
+
+A writer expected to run past a few minutes gets one progress watch the
+user sees, from dispatch to harvest: a Codex seat dispatch's own job,
+otherwise a watcher (Claude Code: `Monitor`, each event relayed by the seat
+in one line) that prints a line labeled with the writer whenever
+`git --no-optional-locks status --porcelain` or
+`git --no-optional-locks diff --shortstat` on its tree changes, renewed
+when it expires. It reports file activity, never progress or liveness: a
+quiet tree can be a writer testing or thinking.
 
 ## After a writer returns
 

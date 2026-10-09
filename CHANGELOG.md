@@ -4,6 +4,33 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.59.3 — 2026-10-09
+
+orchestrate: who runs a slow gate, when a frozen interface is a seam, and
+what the user sees while a writer runs. From a field run on a native
+audio-engine repo: one writer carried a 22-file change for 45 minutes, the
+repo's whole test suite inside its acceptance criteria, while a third of
+the diff behind an interface the brief had already written out could have
+run beside it, and nothing reached the user meanwhile.
+
+- A writer runs the loop its brief names, typecheck or compile and its own
+  change's tests selected as narrowly as the tooling allows, even when
+  slow; a suite it cannot narrow below the whole is a gate, and the brief
+  hands every other gate to the seat by name. The seat-owned gate keeps its
+  background and concurrency rule.
+- An interface whose shape and behavior the seat fixes in a brief is
+  settled, and pieces that meet only at it have independent behavior.
+- A writer expected to run past a few minutes gets one progress watch the
+  user sees: a Codex seat dispatch's own job, otherwise a watcher on its
+  tree's status and diff stat, read as file activity, never as liveness.
+
+Reviewed by Opus twice and Astra once; Opus wrote the final wording. One
+real session in a scratch repo whose instructions name a slow whole-suite
+gate as mandatory: a three-piece task ran three writers at once, each brief
+naming the writer's own second-long loop and handing the suite back to the
+seat by name; the progress watch did not trigger, since no writer ran past
+a minute.
+
 ## 0.59.2 — 2026-10-09
 
 README: the Codex lane section said no subagent is involved. Since 0.57.0 a

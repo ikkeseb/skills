@@ -55,8 +55,10 @@ context has left open. Scout inline only as far as the briefs need
 phase is readers, and what they return reaches the seat before anything is
 cut. Then cut the work into phases, and each phase into pieces at settled
 interfaces, file seams where they exist: each with its write set, the
-interfaces it consumes or provides, and what it depends on. Then run
-everything that is ready:
+interfaces it consumes or provides, and what it depends on. An interface
+whose shape and behavior the seat fixes in a brief is settled, and pieces
+that meet only at it have independent behavior. Then run everything that
+is ready:
 
 - Pieces with independent behavior and disjoint write sets (named regions
   of one file count) whose prerequisites are met start together, within
@@ -85,11 +87,14 @@ everything that is ready:
   miss costs most, add depth (another independent reviewer, an Astra read),
   not width. Builds, browser probes and hardware tests sharing one machine slow
   each other and can flake timing-sensitive checks.
-- A writer runs the checks its own change needs to finish (typecheck,
-  targeted tests). A gate that runs for minutes is the seat's: started in
-  the background where the user sees it, independent gates at once against
-  the same frozen candidate unless shared outputs, locks or machine load
-  force an order. A cheap check whose red result forces a source change
+- A writer runs the loop its brief names: typecheck or compile and its own
+  change's tests, selected as narrowly as the tooling allows, even when
+  slow; a suite it cannot narrow below the whole is a gate. The brief hands
+  every other gate to the seat by name, since repo instructions might tell
+  any agent to run it. A seat-owned gate that runs for minutes starts in the
+  background where the user sees it, independent gates at once against the
+  same frozen candidate unless shared outputs, locks or machine load force
+  an order. A cheap check whose red result forces a source change
   runs before the expensive gate. So do the review a candidate owes and its
   fixes, unless that review needs evidence the gate makes.
 - A Workflow ends where its result unlocks a seat decision; it never holds
