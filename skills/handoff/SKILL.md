@@ -11,7 +11,7 @@ Length follows what the reader needs in order to act, nothing else. A recap of w
 
 ## Close the session
 
-Finish in-flight verification and the bookkeeping the task's scope and authorization already cover, an authorized commit, push or deploy included. Start no new work; where a clean stop would need it, record the exact remaining state. Write the handoff last.
+Close when the user says the session ends now. A notice that a close is coming ("soon", "when it fits") moves the stop to the next clean point: land the piece in flight, start nothing new, then write the handoff without waiting for another prompt; if landing it will run long, say roughly how long and ask. In order: finish in-flight verification and anything the session dispatched (a subagent, a background job, a Workflow), each harvested with its diff inspected or deliberately stopped with its partial state (worktree, branch, uncommitted files) recorded; then the bookkeeping the task's scope and authorization already cover, an authorized commit, push or deploy included. Where a clean stop needs it, record the exact remaining state. A handoff never reports a dispatched run as still running; if one cannot finish before the close, ask whether to wait or stop it. Write the handoff last.
 
 ## Build the handoff
 

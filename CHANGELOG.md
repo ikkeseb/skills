@@ -4,6 +4,21 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.59.4 — 2026-10-09
+
+handoff: a notice that a close is coming is not the close. From a field
+run: the user said the session would wrap up soon, and the agent wrote the
+handoff in the same turn while a writer it had dispatched was still
+building, so the handoff told the next session to salvage work that the
+end of the session was about to orphan. § Close the session now says that
+"soon" moves the stop to the next clean point (land the piece in flight,
+start nothing new, then write the handoff without another prompt; if
+landing it will run long, say how long and ask), that anything the session
+dispatched is harvested or deliberately stopped with its partial state
+recorded before the bookkeeping and the handoff, and that a handoff never
+reports a dispatched run as still running. Reviewed by Opus; unverified in
+a real session.
+
 ## 0.59.3 — 2026-10-09
 
 orchestrate: who runs a slow gate, when a frozen interface is a seam, and
