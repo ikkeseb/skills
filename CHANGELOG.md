@@ -4,6 +4,23 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.59.5 — 2026-10-10
+
+handoff: what the writer took from a gate travels with the handoff. From a
+field run: a handoff named the browser probe the next build was measured
+against and told the reader to read it first, although the writing session
+had already read it; the reader spent most of its orientation on that one
+file, and the two assertions that changed the build sat in parts the
+writer had not read. Step 5 now says that a document the next step is
+measured against (a test, a gate, a spec) also gets the constraints the
+writer took from it, each with its line number, and the parts the writer
+did not read; where the reader should still read it, the handoff says what
+for. Real sessions, forked from the transcript that wrote the original
+handoff, with no file tools: under the old text the handoff pointed at the
+probe; under the new text it carried the constraints with line numbers,
+listed what was unread and said why to read it. Wording reviewed by Fable
+(same-family). One run per wording, so handoff length is unmeasured.
+
 ## 0.59.4 — 2026-10-09
 
 handoff: a notice that a close is coming is not the close. From a field
