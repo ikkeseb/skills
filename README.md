@@ -38,17 +38,6 @@ Codex-supported skills that should stay explicit set
 
 In Codex, invoke the same skills through the `$` picker.
 
-### Claude Code only
-
-These are intentionally omitted from the Codex manifest; their contracts rely
-on Claude Code session, agent, or loop behavior, or on tooling (browser
-automation, image inspection) not yet verified under Codex.
-
-| Skill | What it does | Invoke |
-|---|---|---|
-| **[second-opinion](skills/second-opinion)** | One read-only review of work that already exists, answered as a synthesis rather than a relay. The session model picks the reader from the strongest models: GPT-6 Astra through the Codex CLI, Fable or Opus through a Claude subagent, with family coverage stated. | `/second-opinion` |
-| **[orchestrate](skills/orchestrate)** | The main loop keeps everything critical (design, spec, review, integration) and routes bounded, reviewable execution and reconnaissance to Claude and Codex worker models by tier. Claude agents plus optional Codex CLI and read-only Gemini (Antigravity CLI) lanes. | `/orchestrate` · `/orchestrate sustained` |
-
 Each skill folder contains its `SKILL.md`; Excalidraw also carries setup notes
 for its render-and-inspect pipeline.
 
@@ -95,31 +84,6 @@ codex plugin list   # verify the installed version
 If you previously symlinked skills from this repo into `~/.agents/skills/`,
 remove those symlinks before installing, otherwise the same skills load
 twice.
-
-### orchestrate's Codex lane
-
-The `orchestrate` skill's optional Codex worker lane needs the
-[Codex CLI](https://github.com/openai/codex), `jq`, and Bash installed, with
-Codex logged in (`codex login`). Without that lane, orchestration continues
-through Claude Code workers and says so; the
-helper's `probe` subcommand reports auth plus whether the installed CLI still
-advertises every flag the runner passes. The recipe gates on that flag
-surface, not on a pinned version.
-
-A stage on its own runs the helper as a background job of the main session;
-inside a Workflow, one small transport agent waits on the same helper and
-returns its status line. (OpenAI's separate `codex` companion plugin is a different
-integration and isn't required by anything here.)
-
-### orchestrate's Gemini lane
-
-The optional read-only Gemini lane needs the
-[Antigravity CLI](https://antigravity.google/docs/cli/overview/) (`agy`),
-`jq`, and Bash, with `agy` logged in once interactively. Every run gets a
-throwaway home whose permission rules deny writes, shell, web and MCP, so
-these workers read and answer, nothing else. The helper's `probe` reports
-the login and the offered models; `verify` runs one small billed check of
-the read-only boundary.
 
 ## License
 

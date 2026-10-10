@@ -131,7 +131,7 @@ if (linkedSkills.length !== uniqueLinkedSkills.length) {
   fail("README.md lists at least one skill more than once");
 }
 
-const sharedSection = readme.match(/### Claude Code and Codex\n([\s\S]*?)\n### Claude Code only/)?.[1] ?? "";
+const sharedSection = readme.match(/### Claude Code and Codex\n([\s\S]*?)\n(?:### Claude Code only|## Install)/)?.[1] ?? "";
 const claudeOnlySection = readme.match(/### Claude Code only\n([\s\S]*?)\n## Install/)?.[1] ?? "";
 const sharedNames = [...sharedSection.matchAll(/\]\(skills\/([a-z0-9-]+)\)/g)].map((match) => match[1]).sort();
 const claudeOnlyNames = [...claudeOnlySection.matchAll(/\]\(skills\/([a-z0-9-]+)\)/g)].map((match) => match[1]).sort();

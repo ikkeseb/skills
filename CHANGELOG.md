@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.60.0 — 2026-10-10
+
+`orchestrate` and `second-opinion` leave the plugin. Both are built around
+one maintainer's own set of subscriptions and local tooling, so they now
+live in a private configuration repository; an upgrade removes them from
+an install. The plugin ships 11 skills, all usable from Claude Code and
+Codex. The helper suites and the helper-resolution check leave the
+repository gate with them, and the README drops its Claude Code only table
+and the two lane requirement sections. The last commit that holds both
+skills is `78fbaa2`.
+
 ## 0.59.7 — 2026-10-10
 
 orchestrate: Sol no longer comes before `sonnet` for writes. On the
