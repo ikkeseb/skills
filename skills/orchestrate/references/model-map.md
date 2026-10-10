@@ -33,8 +33,9 @@ their replacement.
 `sonnet` at `high` takes simpler mechanical delegated work that does not
 need `opus`: additional reviews, bounded implementation with a clear
 done-criterion, and reads that ask more understanding than `haiku` has. In
-doubt, `opus`. While the Codex lane is up, Sol at `medium` comes before
-`sonnet` for cheap mechanical writes. Cheap reads go to `haiku`. Open-ended
+doubt, `opus`. Sol at `medium` writes code only for the simplest jobs where
+little rides on the result, and `opus` reviews what's important; other
+writes go to `sonnet` or `opus`. Cheap reads go to `haiku`. Open-ended
 decisions go to a workhorse.
 
 Gemini Flash runs on its own quota and is never the only source for a

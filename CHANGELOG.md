@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.59.7 — 2026-10-10
+
+orchestrate: Sol no longer comes before `sonnet` for writes. On the
+maintainer's direction the model map says Sol at `medium` writes code only
+for the simplest jobs where little rides on the result, `opus` reviews
+what's important, and other writes go to `sonnet` or `opus`. Sol's table row
+is unchanged. No session ran under the new wording before release.
+
 ## 0.59.6 — 2026-10-10
 
 orchestrate: `sonnet` takes a little more delegated work. On the
