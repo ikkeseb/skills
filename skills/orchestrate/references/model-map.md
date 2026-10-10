@@ -30,10 +30,12 @@ the owed verification for what it read. Astra writes and reviews code close to `
 costs more and has weaker taste: a voice beside `opus` and `fable`, not
 their replacement.
 
-`sonnet` runs at `high` only; work that needs more goes to `opus`. While
-the Codex lane is up, Sol at `medium` comes before `sonnet` for cheap
-mechanical writes. Cheap reads go to `haiku`. Open-ended decisions go to a
-workhorse.
+`sonnet` at `high` takes simpler mechanical delegated work that does not
+need `opus`: additional reviews, bounded implementation with a clear
+done-criterion, and reads that ask more understanding than `haiku` has. In
+doubt, `opus`. While the Codex lane is up, Sol at `medium` comes before
+`sonnet` for cheap mechanical writes. Cheap reads go to `haiku`. Open-ended
+decisions go to a workhorse.
 
 Gemini Flash runs on its own quota and is never the only source for a
 fact. The agy Claude rows are a reserve; their quota has been reported to
@@ -54,7 +56,7 @@ tool availability.
 | `haiku` | Claude | high; xhigh for parallel readers across many files and wide retrieval; never below high | Read-only: parallel readers across many files, retrieval, extraction, classification, small criterion-based reviews, the test of one claimed finding, screenshots and UI images. Also transport for an outside stage inside a Workflow, where it runs the wait script and nothing else. Never writes code or documents, never owed verification | `sonnet` |
 | `gemini-3.8-flash-high` | agy (read-only) | in the id: `-high` | Extra third-family voice in ideation, product and UX rounds; extra reader of screenshots and UI images beside `haiku`; research from supplied sources and general knowledge; first-pass review triage. Never ahead of `haiku` for bounded reads unless the user sends work here | `haiku` |
 | `claude-opus-5-5-high`, `claude-opus-5-5-medium`, `claude-sonnet-5-5-high` | agy (read-only) | in the id | Reserve Claude readers on the Google quota when Anthropic quota is tight or the user sends work here: recon, parallel reads, summaries, Claude-judgment reads | `opus` or `sonnet` on the Claude lane |
-| `sonnet` | Claude | high only | Execution whose wrong result a test or lint gate catches: spec-bounded implementation, the same mechanical edit across many files, shell-heavy agentic work, bounded work needing Claude harness tools. Never design, fuzzy intent or owed verification | `opus` |
+| `sonnet` | Claude | high only | The simpler mechanical work § Delegates names, the same mechanical edit across many files and shell-heavy agentic work included. Never design, fuzzy intent or owed verification | `opus` |
 
 The agy rows never write, never count or inventory (no shell) and are
 never the owed cross-family verifier.

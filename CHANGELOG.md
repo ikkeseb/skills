@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.59.6 — 2026-10-10
+
+orchestrate: `sonnet` takes a little more delegated work. On the
+maintainer's direction, the model map's sentence for `sonnet` at `high` now
+reads: simpler mechanical delegated work that does not need `opus`, namely
+additional reviews, bounded implementation with a clear done-criterion, and
+reads that ask more understanding than `haiku` has; in doubt, `opus`. The
+table row no longer requires a test or lint gate behind the work. Unchanged:
+`high` only, Sol at `medium` first for cheap mechanical writes, never
+design, fuzzy intent or owed verification, one escalation to `opus` on a
+miss. No session ran under the new wording before release; the maintainer
+watches real use.
+
 ## 0.59.5 — 2026-10-10
 
 handoff: what the writer took from a gate travels with the handoff. From a
