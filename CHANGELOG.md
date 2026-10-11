@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.60.1 — 2026-10-11
+
+handoff: an account of how the session ran stays out of the handoff. On
+the maintainer's direction, the length rule now names it as waste beside
+the status recap: how many agents or runs the session dispatched, their
+models, tokens, cost and time belong to the session's own closing report,
+and enter the handoff only where a figure changes the reader's next step.
+No session wrote a handoff under the new wording before release.
+
 ## 0.60.0 — 2026-10-10
 
 `orchestrate` and `second-opinion` leave the plugin. Both are built around

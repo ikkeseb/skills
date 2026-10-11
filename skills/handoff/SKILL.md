@@ -7,7 +7,7 @@ description: "Write a paste-ready handoff for continuing the current task in a f
 
 Write a continuation handoff for a fresh session. The reader is another agent, and the user usually pastes the handoff without reading it: the reader acts on what you wrote and cannot tell your reading from the user's word unless the text shows the difference. A focus the user gives may narrow the next action; it never erases the other open asks.
 
-Length follows what the reader needs in order to act, nothing else. A recap of what `git status` or the repository's own status document already says is waste; so is a pointer so terse that the next session redoes the research and the decisions.
+Length follows what the reader needs in order to act, nothing else. A recap of what `git status` or the repository's own status document already says is waste; so is an account of how the session ran (how many agents or runs it dispatched, their models, tokens, cost, time), which belongs to the session's own closing report and enters the handoff only where a figure changes the reader's next step; so is a pointer so terse that the next session redoes the research and the decisions.
 
 ## Close the session
 
