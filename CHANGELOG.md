@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.62.0 — 2026-10-13
+
+motion-design: `assets/` is framed as a starting point to adapt or replace,
+not a fixed architecture. The engine gains optional scene seams (`SEAMS` in
+`reel.js`: the next scene wipes in behind a moving edge, a plain line or a
+drawing function, and motion blur runs on across the seam), a normalised
+`outExpo` that no longer steps on its last frame, and a boot that stops
+with a visible error when a scene or music file fails to load. A new
+`still.mjs` renders frames over `file://` without a server. The text adds
+colouring a looped part's harmony over its own roots before moving the bass,
+parallel chunked renders, and remuxing an audio-only change instead of
+re-rendering.
+
 ## 0.61.2 — 2026-10-12
 
 motion-design, from a second field run (a full reel rebuilt at a slower

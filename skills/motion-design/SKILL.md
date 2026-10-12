@@ -10,11 +10,12 @@ on, looking like the product made it. Two failures to design against: a reel tha
 template (generic type, no idea, motion for its own sake) and a reel that stutters (pops, jumps,
 fast motion strobing at video frame rates).
 
-The architecture is fixed and ships in `assets/`: one HTML page where `reel.js` holds the
-product's look, the timeline and the score; `engine.js` is the clock, helpers, motion blur and
-offline audio; each scene is a file drawing on a 2D canvas as a pure function of time; each
-music candidate is a file synthesizing the score with Web Audio. Because every frame is a
-function of `t`, rendering is exact on any machine, with or without a GPU.
+`assets/` ships one way to build it, a starting point to adapt or replace when the piece asks
+for something else: one HTML page where `reel.js` holds the product's look, the timeline and the
+score; `engine.js` is the clock, helpers, scene seams, motion blur and offline audio; each scene
+is a file drawing on a 2D canvas as a pure function of time; each music candidate is a file
+synthesizing the score with Web Audio. Because every frame is a function of `t`, rendering is
+exact on any machine, with or without a GPU.
 
 ## 1. Read the product
 
@@ -47,8 +48,8 @@ scene's first frame is already a finished composition. A hit-driven value needs 
 or overshoots reads as a pop. Sync with meaning: an element moves with the sound it stands for
 and the rest holds or drifts; when everything pulses on every subdivision, the frame reads busy.
 Hand-overs between shots read smoother as a continuous seam (the next shot starts on the last
-frame's geometry) or a wipe behind a moving edge that leaves the frame on the hit than as hard
-cuts; viewers asked for clean transitions still expect the sync.
+frame's geometry) or a wipe behind a moving edge that leaves the frame on the hit (`SEAMS` in
+`reel.js`) than as hard cuts; viewers asked for clean transitions still expect the sync.
 
 Every landing the scene table names cites an event that exists in the score, by instrument and
 beat. Before the pieces fan out, have a reader from another model family check the brief
@@ -62,13 +63,16 @@ Done when `BRIEF.md` holds the concept, the full scene table with copy, and both
 Copy `assets/` into the reel's folder (scratch space, not a project's source tree). Fill in
 `reel.js`: the tokens, `SCENES`, the score (layers enter as the picture builds; breaks and
 risers before the peak, with the pulse kept on the break's downbeat so the listener keeps the
-one; a looped part's harmony repeating with its loop; a last hit on the end card) and the signature component as a helper,
+one; a looped part's harmony repeating with its loop, coloured later by extensions in the
+other voices over its own roots before the bass moves under it, since a slash bass under an
+open triad can read off-key and harmony checked on paper is unheard; a last hit on the end card) and the signature component as a helper,
 so every scene draws the same product. It often fills the frame at the peak, so give it detail
 that holds up at that size, not a thin outline. The engine adds grain and a vignette after the motion blur
 (`LOOK` in `reel.js`). Point `index.html` at the product's font files. Serve
 the folder over HTTP (`python3 -m http.server 8791 --bind 127.0.0.1`).
 
-Write one throwaway scene and look at a still (`index.html?t=<seconds>`).
+Write one throwaway scene and look at a still (`index.html?t=<seconds>`, or
+`node still.mjs <dir> <seconds…>` over `file://` without the server).
 
 Done when the still shows the signature component in the product's look and the console is
 clean.
@@ -130,7 +134,12 @@ stutter you can see.
 
 `node render.mjs <name>.mp4 --blur 8 --query "music=a"` per music candidate. The script
 renders the audio offline, normalizes it to −14 LUFS (so candidates compare on music, not
-volume) and encodes H.264 + AAC with `faststart`. Deliver the files with what differs between
+volume) and encodes H.264 + AAC with `faststart`. A blurred render splits well: parallel
+`--from`/`--to` chunks at whole seconds (in a field run four chunks with `--blur 8` finished
+sooner than one process without blur),
+concatenated as video only, with one chunk's full-length audio muxed once at −14 LUFS. A change
+that touches only the audio, and no data a scene reads, is a remux onto the rendered video, not
+a new render. Deliver the files with what differs between
 them and what nobody has verified (no one has heard the audio until the user plays it).
 
 Grain makes the master large (about 6 MB per second at CRF 18): send a share copy,

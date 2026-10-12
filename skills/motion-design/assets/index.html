@@ -19,11 +19,25 @@ canvas { position: absolute; inset: 0; margin: auto; width: 100vw; height: 56.25
 <script src="engine.js"></script>
 <script>
 // ?<scene-id>=<file> swaps in an alternative take, e.g. ?s3=s3b; ?music=<x> picks music/<x>.js
+// A scene or music file that fails to load stops the boot: the error is drawn on the canvas and logged,
+// so a render never goes out with a missing scene or silent audio.
 (async () => {
   const q = new URLSearchParams(location.search);
-  const load = src => new Promise(res => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = res; document.head.appendChild(s); });
-  await Promise.all(REEL.SCENES.map(s => load(`scenes/${q.get(s.id) || s.id}.js`)));
-  await load(`music/${q.get('music') || 'a'}.js`);
+  const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('failed to load ' + src)); document.head.appendChild(s); });
+  try {
+    await Promise.all(REEL.SCENES.map(s => load(`scenes/${q.get(s.id) || s.id}.js`)));
+    const music = q.get('music') || 'a';
+    await load(`music/${music}.js`);
+    if (!REEL.music) throw new Error(`music/${music}.js loaded but did not set REEL.music`);
+  } catch (e) {
+    console.error('boot stopped: ' + e.message);
+    const c = document.getElementById('c'), x = c.getContext('2d');
+    c.width = REEL.W; c.height = REEL.H;
+    x.fillStyle = '#000'; x.fillRect(0, 0, c.width, c.height);
+    x.fillStyle = '#ff4d4d'; x.font = '600 40px sans-serif'; x.fillText('boot stopped: ' + e.message, 80, c.height / 2);
+    document.getElementById('hint').style.display = 'none';
+    return;
+  }
   REEL.boot(document.getElementById('c'));
 })();
 </script>

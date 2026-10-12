@@ -1,4 +1,4 @@
-// engine.js: the reel's fixed infrastructure. One clock, frame-exact rendering, motion blur,
+// engine.js: the reel's shared infrastructure. One clock, frame-exact rendering, motion blur,
 // offline audio. reel.js (loaded first) supplies the look, the timeline and the score.
 // Scene and music authors never edit this file.
 (function () {
@@ -6,6 +6,18 @@
   const W = cfg.W || 1920, H = cfg.H || 1080, FPS = cfg.FPS || 60, BPM = cfg.BPM;
   const BEAT = 60 / BPM, BAR = 4 * BEAT, BARS = cfg.BARS, DUR = BARS * BAR;
   const C = cfg.C, SCENES = cfg.SCENES, FONT = cfg.FONT || { sans: 'sans-serif', mono: 'monospace' };
+
+  // Seams (optional): { at, from, dir, edge?, w? }. At the scene boundary `at` (global beat) the incoming scene
+  // is wiped in over [from, at) and owns the whole frame on the hit. dir: ltr, rtl, ttb, btt. edge: none (default),
+  // 'line' (a w px line in C.text), or a function (ctx, x, len, k) drawing the edge as a vertical line at x of
+  // height len (axes swapped for ttb/btt), with k set to the incoming scene. Invalid seams are reported and dropped.
+  const DIRS = ['ltr', 'rtl', 'ttb', 'btt'];
+  const SEAMS = (cfg.SEAMS || []).filter(s => {
+    const i = SCENES.findIndex(sc => Math.abs(sc.from * 4 - s.at) < 1e-9);
+    const ok = i > 0 && s.from < s.at && s.from >= SCENES[i - 1].from * 4 - 1e-9 && DIRS.includes(s.dir);
+    if (!ok) console.error('seam ignored (at must be a scene boundary, from inside the outgoing scene, dir known): ' + JSON.stringify(s));
+    return ok;
+  });
 
   const ev = cfg.SCORE.slice().sort((a, b) => a.b - b.b);
   const byInst = {};
@@ -18,7 +30,7 @@
     outCubic: t => 1 - Math.pow(1 - clamp(t), 3),
     inCubic: t => Math.pow(clamp(t), 3),
     inOutCubic: t => { t = clamp(t); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; },
-    outExpo: t => (t = clamp(t)) === 1 ? 1 : 1 - Math.pow(2, -10 * t),
+    outExpo: t => (1 - Math.pow(2, -10 * clamp(t))) / (1 - Math.pow(2, -10)), // normalised: reaches 1 without a step
     outBack: t => { t = clamp(t); const c = 1.70158; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); },
   };
   // 0..1 as x runs from a to b, e.g. k.range(k.lb, 0, 1) over the scene's first beat
@@ -59,11 +71,14 @@
 
   const registry = {};
   const R = window.REEL = {
-    W, H, FPS, BPM, BEAT, BAR, BARS, DUR, C, SCENES, SCORE: ev,
+    W, H, FPS, BPM, BEAT, BAR, BARS, DUR, C, SCENES, SEAMS, SCORE: ev,
     scene(id, fn) { registry[id] = fn; },
     music: null, // set by music/<x>.js: function (ac, dest, when) scheduling every SCORE event
   };
 
+  // Per draw the engine sets t, beat, bar (global) and lt, lb, p, dur, scene (the scene being drawn). In a seam
+  // both scenes are drawn at the same global time, so the incoming one sees negative lt/lb/p; k.seam is the
+  // active seam (or null), k.seamU its linear progress 0..1 and k.seamP the edge's eased progress 0..1.
   const k = {
     W, H, C, BEAT, BAR, BPM, clamp, lerp, ease, range, rng, rrect, text, measure,
     // seconds since the last hit of an instrument (Infinity before the first)
@@ -82,12 +97,17 @@
     return SCENES[0];
   }
 
-  let ctx, acc, accCtx, sub, subCtx;
-  function draw(target, t) {
-    t = clamp(t, 0, DUR - 1e-6);
-    const sc = sceneAt(t);
+  const seamAt = beat => SEAMS.find(s => beat >= s.from - 1e-9 && beat < s.at - 1e-9) || null;
+  // the edge's travel: starts at rest and leaves the frame at speed, so it exits crisply on the hit
+  const seamEase = u => { u = clamp(u); return u * u * (2 - u); };
+
+  // k's per-scene fields for scene sc at time t (negative local time for an incoming scene in a seam)
+  function setK(sc, t) {
     k.t = t; k.beat = t / BEAT; k.bar = t / BAR;
     k.lt = t - sc.from * BAR; k.lb = k.lt / BEAT; k.dur = sc.bars * BAR; k.p = k.lt / k.dur; k.scene = sc;
+  }
+  function drawScene(target, sc, t) {
+    setK(sc, t);
     target.save(); target.setTransform(1, 0, 0, 1, 0, 0); target.globalAlpha = 1; target.shadowBlur = 0;
     const fn = registry[sc.id];
     if (fn) { try { fn(target, k); } catch (e) { k.bg(target); text(target, sc.id + ' threw: ' + e.message, 80, H / 2, { size: 36, color: '#ff4d4d' }); console.error(e); } }
@@ -95,13 +115,49 @@
     target.restore();
   }
 
+  let ctx, acc, accCtx, sub, subCtx;
+  function draw(target, t) {
+    t = clamp(t, 0, DUR - 1e-6);
+    const A = sceneAt(t), sm = seamAt(t / BEAT);
+    k.seam = sm; k.seamU = 0; k.seamP = 0;
+    if (!sm) { drawScene(target, A, t); return; }
+    // a seam: A whole, then B at the same global time clipped to the swept region, then the edge
+    const B = SCENES.find(s => Math.abs(s.from * 4 - sm.at) < 1e-9);
+    const u = (t / BEAT - sm.from) / (sm.at - sm.from), p = seamEase(u);
+    drawScene(target, A, t);
+    const vert = sm.dir === 'ltr' || sm.dir === 'rtl', len = vert ? W : H, span = vert ? H : W;
+    const ew = sm.edge ? sm.w || 3 : 0;
+    const pos = -ew / 2 + (len + ew) * p;                              // edge centre along the travel axis
+    const c = sm.dir === 'ltr' || sm.dir === 'ttb' ? pos : len - pos;  // in frame coordinates
+    target.save(); target.setTransform(1, 0, 0, 1, 0, 0);
+    target.beginPath();
+    if (sm.dir === 'ltr') target.rect(0, 0, Math.max(0, c), H);
+    else if (sm.dir === 'rtl') target.rect(c, 0, W - c, H);
+    else if (sm.dir === 'ttb') target.rect(0, 0, W, Math.max(0, c));
+    else target.rect(0, c, W, H - c);
+    target.clip();
+    drawScene(target, B, t);
+    target.restore();
+    k.seam = sm; k.seamU = u; k.seamP = p;
+    if (ew > 0) { // k still describes B; a horizontal edge is drawn axis-swapped
+      target.save();
+      target.setTransform(vert ? 1 : 0, vert ? 0 : 1, vert ? 0 : 1, vert ? 1 : 0, 0, 0);
+      if (typeof sm.edge === 'function') sm.edge(target, c, span, k);
+      else { target.fillStyle = C.text; target.fillRect(c - ew / 2, 0, ew, span); }
+      target.restore();
+    }
+    setK(A, t); // k is left describing the scene that owns t
+  }
+
   // Motion blur: average `blur` sub-frames across `shutter` of the frame interval, never across a cut
-  // (a sub-frame from the next scene would ghost into this one).
+  // (a sub-frame from the next scene would ghost into this one). Across a seam the sub-frames run on: the
+  // composite is continuous into the next scene.
   function renderAt(t, o = {}) {
     const n = o.blur || 1;
     if (n <= 1) { draw(ctx, t); post(t); return; }
     const span = (o.shutter != null ? o.shutter : 0.5) / FPS;
-    const sc = sceneAt(t), end = (sc.from + sc.bars) * BAR - 1e-4;
+    const sc = sceneAt(t), endB = (sc.from + sc.bars) * 4;
+    const end = SEAMS.some(s => Math.abs(s.at - endB) < 1e-9) ? DUR : endB * BEAT - 1e-4;
     accCtx.globalCompositeOperation = 'copy';
     for (let j = 0; j < n; j++) {
       const ts = Math.min(end, t + span * (j / n));
@@ -148,6 +204,7 @@
 
   // ---------- audio: the offline render that goes into the video ----------
   R.renderAudio = async function () {
+    if (!R.music) throw new Error('no music loaded: renderAudio needs music/<x>.js to set REEL.music');
     const sr = 48000, ac = new OfflineAudioContext(2, Math.ceil((DUR + 0.2) * sr), sr);
     R.music(ac, ac.destination, 0);
     const buf = await ac.startRendering();

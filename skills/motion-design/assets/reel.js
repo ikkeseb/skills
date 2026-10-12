@@ -8,13 +8,17 @@ window.REEL_CONFIG = (function () {
     accent: '#36e39a', accent2: '#ffae2a', alert: '#ff3b52',
   };
 
-  // Hard cuts on bar lines. Copy lives in the brief's scene table; scenes render it verbatim.
+  // Scenes change on bar lines. Copy lives in the brief's scene table; scenes render it verbatim.
   const SCENES = [
     { id: 's1', from: 0, bars: 2, name: 'Open' },
     { id: 's2', from: 2, bars: 2, name: 'The idea' },
     { id: 's3', from: 4, bars: 4, name: 'Peak' },
     { id: 's4', from: 8, bars: 2, name: 'End card' },
   ];
+
+  // Optional wipes in place of cuts: the next scene sweeps in behind a moving edge over [from, at) and owns the
+  // frame on the hit (engine.js documents the fields). Example: { at: 16, from: 15, dir: 'ltr', edge: 'line' }.
+  const SEAMS = [];
 
   // The score: every sound event in global beats. Music plays it; scenes sync to it via
   // k.env(inst) and k.since(inst). Build layers so the picture and the arrangement grow together.
@@ -40,7 +44,7 @@ window.REEL_CONFIG = (function () {
   }
 
   return {
-    W: 1920, H: 1080, FPS: 60, BPM: 140, BARS: 10, C, SCENES, SCORE,
+    W: 1920, H: 1080, FPS: 60, BPM: 140, BARS: 10, C, SCENES, SEAMS, SCORE,
     // the film finish the engine adds after the blur; a direction's scene file may override it
     // with REEL.LOOK; 0 turns either off
     LOOK: { grain: 0.035, vignette: 0.35 },
