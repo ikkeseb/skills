@@ -4,6 +4,18 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.61.2 — 2026-10-12
+
+motion-design, from a second field run (a full reel rebuilt at a slower
+tempo after the user's verdict): the brief asks every scored landing to
+cite an event the score plays and a cross-family check of brief against
+score before fan-out; motion rules add short attacks on hit-driven values,
+landings without a fast start or overshoot, and continuous seams or
+edge wipes in place of hard cuts; the score keeps the pulse on a break's
+downbeat and a looped part's harmony periodic with its loop; scene authors
+need a lane that can launch the browser; music candidates reach the user
+loudness-matched.
+
 ## 0.61.1 — 2026-10-12
 
 motion-design, from its first field run on the skill's own engine: the

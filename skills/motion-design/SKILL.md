@@ -42,9 +42,18 @@ the result into the brief.
 Motion rules that belong in every brief: every move eases; things land on beats via
 `k.env(inst)`; a slow camera drift so nothing sits still; no element jumps between consecutive
 frames except on a scored hit; fast large motion is slowed or blurred, never left to strobe; a
-scene's first frame is already a finished composition (it is a cut). Sync with meaning: an
-element moves with the sound it stands for and the rest holds or drifts; when everything
-pulses on every subdivision, the frame reads busy.
+scene's first frame is already a finished composition. A hit-driven value needs a short attack
+(an envelope that jumps to full on the hit moves in one frame), and a landing that starts fast
+or overshoots reads as a pop. Sync with meaning: an element moves with the sound it stands for
+and the rest holds or drifts; when everything pulses on every subdivision, the frame reads busy.
+Hand-overs between shots read smoother as a continuous seam (the next shot starts on the last
+frame's geometry) or a wipe behind a moving edge that leaves the frame on the hit than as hard
+cuts; viewers asked for clean transitions still expect the sync.
+
+Every landing the scene table names cites an event that exists in the score, by instrument and
+beat. Before the pieces fan out, have a reader from another model family check the brief
+against the evaluated score: a direction that promises a landing the score never plays is the
+costliest rework.
 
 Done when `BRIEF.md` holds the concept, the full scene table with copy, and both rule sets.
 
@@ -52,7 +61,8 @@ Done when `BRIEF.md` holds the concept, the full scene table with copy, and both
 
 Copy `assets/` into the reel's folder (scratch space, not a project's source tree). Fill in
 `reel.js`: the tokens, `SCENES`, the score (layers enter as the picture builds; breaks and
-risers before the peak; a last hit on the end card) and the signature component as a helper,
+risers before the peak, with the pulse kept on the break's downbeat so the listener keeps the
+one; a looped part's harmony repeating with its loop; a last hit on the end card) and the signature component as a helper,
 so every scene draws the same product. It often fills the frame at the peak, so give it detail
 that holds up at that size, not a thin outline. The engine adds grain and a vignette after the motion blur
 (`LOOK` in `reel.js`). Point `index.html` at the product's font files. Serve
@@ -72,8 +82,10 @@ reel's own timeline, it goes straight into the final cut.
 
 One author per scene file and per music candidate, in parallel if your harness can dispatch
 agents; a cheaper model is fine for a piece because you hold the concept, the seams and the
-assembly. Give the hero scene (the peak) two independent takes, and the music two candidates
-with different flavours. Each author:
+assembly. A scene author must be able to launch the browser that renders its stills; a lane
+that cannot (a sandbox without a browser) writes music, the score or reviews instead. Give the
+hero scene (the peak) two independent takes, and the music two candidates with different
+flavours, sent to the user loudness-matched to choose by ear. Each author:
 
 - reads `BRIEF.md`, `reel.js`, `engine.js` and the screenshot, and edits only its own file
   (`scenes/<id>.js` or `music/<x>.js`; an alternative take is `scenes/<id>b.js`, viewed with
@@ -83,7 +95,7 @@ with different flavours. Each author:
   is off before returning;
 - for music: schedules every score event at `when + e.b * REEL.BEAT`, pure synthesis, then
   measures `REEL.renderAudio()` until the peak is below 0.95 and the per-bar RMS follows the
-  arrangement (quiet open, rising layers, a dip at the break, loudest at the peak).
+  arrangement (quiet open, rising layers, a build at the break, loudest at the peak).
 
 Done when every scene and both candidates exist and each author has reported its stills or
 measurements.
