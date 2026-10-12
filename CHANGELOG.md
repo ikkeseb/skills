@@ -4,6 +4,19 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.61.1 — 2026-10-12
+
+motion-design, from its first field run on the skill's own engine: the
+brief now sets an art direction before the scene table and asks for sync
+with meaning rather than every element pulsing on every subdivision; the
+signature component is built to hold detail at full-frame size; an open
+direction is settled on a proof segment of the peak before the rest fans
+out, told to the user as a segment; delivery adds a lighter share encode.
+The engine adds grain and a vignette once per frame after the motion blur
+(`LOOK`, overridable per direction), and `render.mjs` renders a time range
+with `--from`/`--to`. Template smoke-tested on WSL; no full reel has been
+made from the skill text yet.
+
 ## 0.61.0 — 2026-10-12
 
 New skill `motion-design`: a short product motion reel as a finished mp4

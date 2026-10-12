@@ -41,6 +41,9 @@ window.REEL_CONFIG = (function () {
 
   return {
     W: 1920, H: 1080, FPS: 60, BPM: 140, BARS: 10, C, SCENES, SCORE,
+    // the film finish the engine adds after the blur; a direction's scene file may override it
+    // with REEL.LOOK; 0 turns either off
+    LOOK: { grain: 0.035, vignette: 0.35 },
     FONT: { sans: "'Inter'", mono: "'JetBrains Mono'" },
     FONT_LOADS: ["600 40px 'Inter'", "700 40px 'Inter'", "500 40px 'JetBrains Mono'"],
     helpers: { card, bg },

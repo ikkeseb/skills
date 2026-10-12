@@ -34,10 +34,17 @@ enters, what the picture does, the exact copy), the type rules (families, sizes,
 most one headline and one small caps line per shot, margins) and the motion rules (below).
 Write every word of copy yourself; scene authors render it verbatim.
 
+Before the scene table, set the art direction: the one idea, how scale changes across the
+reel, where light and texture come from, how shots hand over to each other, and what to avoid.
+A reference the user names and a second opinion from another strong model sharpen it; write
+the result into the brief.
+
 Motion rules that belong in every brief: every move eases; things land on beats via
 `k.env(inst)`; a slow camera drift so nothing sits still; no element jumps between consecutive
 frames except on a scored hit; fast large motion is slowed or blurred, never left to strobe; a
-scene's first frame is already a finished composition (it is a cut).
+scene's first frame is already a finished composition (it is a cut). Sync with meaning: an
+element moves with the sound it stands for and the rest holds or drifts; when everything
+pulses on every subdivision, the frame reads busy.
 
 Done when `BRIEF.md` holds the concept, the full scene table with copy, and both rule sets.
 
@@ -46,7 +53,9 @@ Done when `BRIEF.md` holds the concept, the full scene table with copy, and both
 Copy `assets/` into the reel's folder (scratch space, not a project's source tree). Fill in
 `reel.js`: the tokens, `SCENES`, the score (layers enter as the picture builds; breaks and
 risers before the peak; a last hit on the end card) and the signature component as a helper,
-so every scene draws the same product. Point `index.html` at the product's font files. Serve
+so every scene draws the same product. It often fills the frame at the peak, so give it detail
+that holds up at that size, not a thin outline. The engine adds grain and a vignette after the motion blur
+(`LOOK` in `reel.js`). Point `index.html` at the product's font files. Serve
 the folder over HTTP (`python3 -m http.server 8791 --bind 127.0.0.1`).
 
 Write one throwaway scene and look at a still (`index.html?t=<seconds>`).
@@ -55,6 +64,11 @@ Done when the still shows the signature component in the product's look and the 
 clean.
 
 ## 4. Fan out the pieces
+
+When the direction is still open, build the peak first as a proof segment in one or two
+directions (`node render.mjs proof.mp4 --from <s> --to <s>`) and let the user choose before the
+rest fans out. Tell the user up front that a proof is a segment, not the reel; written on the
+reel's own timeline, it goes straight into the final cut.
 
 One author per scene file and per music candidate, in parallel if your harness can dispatch
 agents; a cheaper model is fine for a piece because you hold the concept, the seams and the
@@ -106,6 +120,10 @@ stutter you can see.
 renders the audio offline, normalizes it to −14 LUFS (so candidates compare on music, not
 volume) and encodes H.264 + AAC with `faststart`. Deliver the files with what differs between
 them and what nobody has verified (no one has heard the audio until the user plays it).
+
+Grain makes the master large (about 6 MB per second at CRF 18): send a share copy,
+`ffmpeg -i <name>.mp4 -c:v libx264 -preset slow -crf 22 -c:a copy -movflags +faststart
+<name>-share.mp4`, about a tenth of the size.
 
 Done when each mp4 plays, `ffprobe` shows a video and an audio stream of the reel's length,
 and the render printed no page errors.

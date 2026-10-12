@@ -1,6 +1,6 @@
 // render.mjs: step the reel frame by frame (exact on any machine, GPU or not), render its audio
 // offline, mux both into an mp4 at a fixed loudness.
-// usage: node render.mjs <out.mp4> [--query "music=b&s3=s3b"] [--blur 8] [--url http://127.0.0.1:8791/index.html]
+// usage: node render.mjs <out.mp4> [--query "music=b&s3=s3b"] [--blur 8] [--from <s>] [--to <s>] [--url http://127.0.0.1:8791/index.html]
 // Needs ffmpeg on PATH and Playwright: `playwright` or `playwright-core` resolvable from here, or PW_MODULE=<path>.
 import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -19,6 +19,7 @@ const args = process.argv.slice(2);
 const opt = (name, def) => { const i = args.indexOf(`--${name}`); return i >= 0 ? args[i + 1] : def; };
 const out = args.find(a => a.endsWith('.mp4')) || 'reel.mp4';
 const blur = parseInt(opt('blur', '1'), 10);
+const from = parseFloat(opt('from', '0'));
 const url = `${opt('url', 'http://127.0.0.1:8791/index.html')}?t=0&${opt('query', '')}`;
 
 const browser = await chromium.launch();
@@ -36,15 +37,16 @@ const wavPath = out.replace(/\.mp4$/, '.wav');
 writeFileSync(wavPath, Buffer.from(audio.wav, 'base64'));
 console.log(`audio: peak ${audio.peak}, rms/bar ${audio.rms.join(' ')}`);
 
+const to = Math.min(DUR, parseFloat(opt('to', String(DUR))));
 const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-',
-  '-i', wavPath, '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p',
+  '-ss', String(from), '-i', wavPath, '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p',
   '-af', 'loudnorm=I=-14:TP=-1:LRA=11', '-ar', '48000', '-c:a', 'aac', '-b:a', '192k',
   '-shortest', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
 
 const canvas = await page.$('canvas');
-const n = Math.floor(DUR * FPS);
+const f0 = Math.round(from * FPS), n = Math.floor(to * FPS) - f0;
 for (let i = 0; i < n; i++) {
-  await page.evaluate(([t, b]) => REEL.renderAt(t, { blur: b }), [i / FPS, blur]);
+  await page.evaluate(([t, b]) => REEL.renderAt(t, { blur: b }), [(f0 + i) / FPS, blur]);
   const png = await canvas.screenshot({ type: 'png' });
   if (!ff.stdin.write(png)) await new Promise(r => ff.stdin.once('drain', r));
   if (i % (FPS * 3) === 0) console.log(`frame ${i}/${n}`);

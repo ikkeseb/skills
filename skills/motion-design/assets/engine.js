@@ -99,7 +99,7 @@
   // (a sub-frame from the next scene would ghost into this one).
   function renderAt(t, o = {}) {
     const n = o.blur || 1;
-    if (n <= 1) { draw(ctx, t); return; }
+    if (n <= 1) { draw(ctx, t); post(t); return; }
     const span = (o.shutter != null ? o.shutter : 0.5) / FPS;
     const sc = sceneAt(t), end = (sc.from + sc.bars) * BAR - 1e-4;
     accCtx.globalCompositeOperation = 'copy';
@@ -112,6 +112,37 @@
     }
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'copy';
     ctx.drawImage(acc, 0, 0); ctx.restore();
+    post(t);
+  }
+  // Film finish, once per output frame after the blur (grain drawn per sub-frame would average away):
+  // a grain tile that changes every frame and a soft vignette. reel.js sets the defaults (LOOK); a
+  // direction may override them with REEL.LOOK.
+  const LOOK = Object.assign({ grain: 0.035, vignette: 0.35 }, cfg.LOOK || {});
+  let grainTiles = null;
+  function post(t) {
+    const L = Object.assign({}, LOOK, R.LOOK || {}); // a direction's scene file may set REEL.LOOK
+    if (!grainTiles) {
+      const r = rng(7); grainTiles = [];
+      for (let g = 0; g < 4; g++) {
+        const c = new OffscreenCanvas(256, 256), x = c.getContext('2d'), im = x.createImageData(256, 256);
+        for (let i = 0; i < im.data.length; i += 4) { const v = r() < 0.5 ? 0 : 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = Math.floor(r() * 255); }
+        x.putImageData(im, 0, 0); grainTiles.push(c);
+      }
+    }
+    const f = Math.floor(t * FPS + 1e-6);
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (L.vignette > 0) {
+      const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, W * 0.62);
+      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${L.vignette})`);
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    }
+    if (L.grain > 0) {
+      ctx.globalAlpha = L.grain;
+      ctx.fillStyle = ctx.createPattern(grainTiles[f % 4], 'repeat');
+      const ox = (f * 97) % 256, oy = (f * 61) % 256;
+      ctx.translate(-ox, -oy); ctx.fillRect(0, 0, W + 256, H + 256);
+    }
+    ctx.restore();
   }
   R.renderAt = window.renderAt = renderAt;
 
