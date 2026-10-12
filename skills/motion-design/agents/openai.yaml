@@ -1,0 +1,9 @@
+interface:
+  display_name: motion-design
+  short_description: >-
+    Make a short product motion reel as a finished mp4 with sound: one concept,
+    one score driving picture and soundtrack, canvas scenes in the product's
+    own look, rendered frame-exact and checked for judder. Not for screen
+    recordings, decks, or static pages.
+policy:
+  allow_implicit_invocation: false

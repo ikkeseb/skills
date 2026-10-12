@@ -4,6 +4,20 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.61.0 — 2026-10-12
+
+New skill `motion-design`: a short product motion reel as a finished mp4
+with sound. One concept and one musical score drive both the picture and a
+synthesized soundtrack; scenes are canvas functions of time in the
+product's own look, so rendering is frame-exact on any machine. Ships the
+engine (clock, helpers, motion blur that never crosses a cut, offline
+audio), a `reel.js` template, a render script (60 fps, loudness-normalized
+audio) and a judder check that lists frame-to-frame jumps and strobing
+outside cuts. Built from a field run where cheaper agents wrote the scenes
+in parallel; the user found the result promising but not smooth, which the
+blur and the judder pass address. No reel has been made from the skill
+text yet.
+
 ## 0.60.1 — 2026-10-11
 
 handoff: an account of how the session ran stays out of the handoff. On

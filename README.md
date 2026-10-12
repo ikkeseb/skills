@@ -34,6 +34,7 @@ Codex-supported skills that should stay explicit set
 | **[drawio](skills/drawio)** | Native `.drawio` XML that opens straight in app.diagrams.net. | `/drawio` |
 | **[agents-md-convert](skills/agents-md-convert)** | Audits, converts, or repairs repository instruction scopes so `AGENTS.md` is canonical and `CLAUDE.md` stays a one-line import adapter. | `/agents-md-convert` |
 | **[context-audit](skills/context-audit)** | Audits instruction reach and the document skeleton, proposing a leaner context structure without stranding mandatory rules. | `/context-audit` |
+| **[motion-design](skills/motion-design)** | Short product motion reels as a finished mp4 with sound: one concept, one score driving picture and soundtrack, canvas scenes in the product's own look, rendered frame-exact and checked for judder. | `/motion-design` |
 | **[repo-cosplay](skills/repo-cosplay)** | Operates as a named repository from a session rooted elsewhere, loading that repository's own contract and gates. Explicit ask required. | `/repo-cosplay` |
 
 In Codex, invoke the same skills through the `$` picker.
@@ -57,7 +58,8 @@ Add the repo as a marketplace, then install the plugin (ships every skill above)
 The same repo installs as a Codex plugin. It exposes only the Codex-supported
 skills, the ones carrying an `agents/openai.yaml`: `agents-md-convert`,
 `context-audit`, `drawio`, `excalidraw`, `handoff`, `history-audit`,
-`html-brief`, `pretty-pdf`, `html-slides`, `html-showcase`, `repo-cosplay`.
+`html-brief`, `pretty-pdf`, `html-slides`, `html-showcase`, `motion-design`,
+`repo-cosplay`.
 `html-slides` and `html-showcase` need browser automation for their
 screenshot QA; without it they deliver with an honest unverified list.
 `drawio` degrades gracefully where the sandbox denies network

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reel</title>
+<style>
+/* Point these at the product's own font files (check their licence before shipping the video). */
+@font-face { font-family: 'Inter'; src: url('fonts/Inter-Variable.woff2') format('woff2'); font-weight: 100 900; font-display: block; }
+@font-face { font-family: 'JetBrains Mono'; src: url('fonts/JetBrainsMono-Variable.woff2') format('woff2'); font-weight: 100 900; font-display: block; }
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+canvas { position: absolute; inset: 0; margin: auto; width: 100vw; height: 56.25vw; max-height: 100vh; max-width: 177.78vh; }
+#hint { position: absolute; left: 0; right: 0; bottom: 4vh; text-align: center; font: 600 15px sans-serif; letter-spacing: .18em; color: #7d818d; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hint">CLICK TO PLAY WITH SOUND</div>
+<script src="reel.js"></script>
+<script src="engine.js"></script>
+<script>
+// ?<scene-id>=<file> swaps in an alternative take, e.g. ?s3=s3b; ?music=<x> picks music/<x>.js
+(async () => {
+  const q = new URLSearchParams(location.search);
+  const load = src => new Promise(res => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = res; document.head.appendChild(s); });
+  await Promise.all(REEL.SCENES.map(s => load(`scenes/${q.get(s.id) || s.id}.js`)));
+  await load(`music/${q.get('music') || 'a'}.js`);
+  REEL.boot(document.getElementById('c'));
+})();
+</script>
+</body>
+</html>
