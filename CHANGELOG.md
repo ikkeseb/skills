@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.62.1 — 2026-10-13
+
+motion-design widens from product reels to any motion design piece (reels,
+promos, title sequences, logo stings, explainers, loops): the description,
+the deliverable's length, frame and sound set by where it plays, and step 1
+reads the subject (a product, a brand, an event, an idea) instead of only a
+product.
+
 ## 0.62.0 — 2026-10-13
 
 motion-design: `assets/` is framed as a starting point to adapt or replace,

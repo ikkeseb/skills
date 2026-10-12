@@ -1,12 +1,13 @@
 ---
 name: motion-design
-description: "Make a short motion reel or promo for a product as a finished mp4 with sound: one concept, one musical score that drives both picture and soundtrack, canvas scenes in the product's own look, rendered frame-exact with motion blur and checked for judder. Use for a teaser, launch video, product reel or animated demo. Not for screen recordings of a live app, slide decks (html-slides) or static pages."
+description: "Make a motion design piece as a finished video: one concept, one timeline (a musical score when it has sound) driving picture and audio, scenes in the subject's own look, rendered frame-exact with motion blur and checked for judder. Use for a product reel, promo, teaser, title sequence, logo sting, animated explainer or loop. Not for screen recordings of a live app, slide decks (html-slides) or static pages."
 ---
 
 # motion-design
 
-The deliverable is a video someone would send to a friend: 20–40 s, 1920×1080, 60 fps, sound
-on, looking like the product made it. Two failures to design against: a reel that looks like a
+The deliverable is a video someone would send to a friend, looking like its subject made it.
+Where it plays sets the length, frame and sound: a reel is often 20–40 s at 1920×1080, 60 fps,
+sound on; a sting or a loop is shorter and may be silent. Two failures to design against: a reel that looks like a
 template (generic type, no idea, motion for its own sake) and a reel that stutters (pops, jumps,
 fast motion strobing at video frame rates).
 
@@ -17,18 +18,20 @@ is a file drawing on a 2D canvas as a pure function of time; each music candidat
 synthesizing the score with Web Audio. Because every frame is a function of `t`, rendering is
 exact on any machine, with or without a GPU.
 
-## 1. Read the product
+## 1. Read the subject
 
-Find its design tokens (stylesheet variables, a design system), its fonts and their licence,
-one real screenshot of its main screen, its one-sentence pitch and its signature component
-(the thing a user would recognize: a waveform lane, a card, a chart, a map).
+The subject is what the piece is about: a product, a brand, an event, an idea. Find its design
+tokens (stylesheet variables, a design system, brand guidelines), its fonts and their licence,
+one real image of it (for a product, a screenshot of its main screen), its one-sentence pitch
+and its signature component (the thing a viewer would recognize: a waveform lane, a card, a
+chart, a map, a logo mark).
 
 Done when you can name the palette with hex values, the type families, the signature component
 and the pitch, each from a source you read.
 
 ## 2. Write the concept and the brief
 
-One idea the whole reel enacts, not a feature list: the product doing its thing, building up
+One idea the whole piece enacts, not a feature list: the subject doing its thing, building up
 to a peak. Pick a tempo so every cut lands on a bar line (at 140 BPM a bar is 1.714 s). Write
 `BRIEF.md` beside the reel: the concept in two sentences, a scene table (bars, what sound
 enters, what the picture does, the exact copy), the type rules (families, sizes, tracking, at
