@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.63.0 — 2026-10-14
+
+handoff writes the handoff to a file in the system temporary directory and
+replies with only its path and one command that starts a fresh session of the
+same harness on it, a short instruction to read the file rather than the
+handoff as an argument, since some shells drop its embedded quotes. The single
+fence stays as the fallback when no file can be written or the user asks for
+the text.
+
 ## 0.62.2 — 2026-10-14
 
 handoff: the length rule no longer points the session's run account at a
