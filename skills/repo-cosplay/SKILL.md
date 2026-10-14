@@ -10,9 +10,9 @@ description: >
 # Repo Cosplay
 
 Treat the named target as the working repository while the current session
-remains elsewhere. The user's explicit ask, or a standing ask the session's
-own instructions state, supplies the authority; this skill supplies
-native-session discipline.
+remains elsewhere. The user's explicit ask, or a standing ask the session
+repository's own instruction file states, supplies the authority; this skill
+supplies native-session discipline.
 
 ## Procedure
 
@@ -21,8 +21,8 @@ native-session discipline.
    instructions point to. Read each instruction file whole, as its own call,
    through the harness's canonical file read (Claude Code: the Read tool with
    no offset or limit; Codex: a bare whole-file read of the absolute path,
-   `cat -- <path>`, or `Get-Content -Raw -LiteralPath '<path>'` on Windows), and address it
-   by one path spelling throughout. A read folded into a compound shell
+   `cat -- <path>`, or `Get-Content -Raw -LiteralPath '<path>'` on Windows),
+   and address it by one path spelling throughout. A read folded into a compound shell
    command, a windowed read, or a second spelling of the same path leaves no
    record a write gate or edit tool can match, and the first write is refused.
    Report its branch, sync state, and unrelated dirt before writing.

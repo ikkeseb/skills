@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.62.2 — 2026-10-14
+
+handoff: the length rule no longer points the session's run account at a
+closing report the skill does not define. repo-cosplay: a standing ask in the
+session repository's own instruction file also supplies the authority; the
+Codex read form names the Windows `Get-Content -Raw -LiteralPath` spelling;
+the sentence routing later work to coordination is gone.
+
 ## 0.62.1 — 2026-10-13
 
 motion-design widens from product reels to any motion design piece (reels,
