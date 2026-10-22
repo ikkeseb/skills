@@ -1,11 +1,11 @@
 ---
 name: handoff
-description: "Write a handoff for continuing the current task in a fresh session, saved to a file with one command that starts the next session on it, invoked only by the user typing /handoff (Codex: $handoff). Not for reading or resuming from a handoff."
+description: "Write a paste-ready handoff for continuing the current task in a fresh session, invoked only by the user typing /handoff (Codex: $handoff). Not for reading or resuming from a pasted handoff."
 ---
 
 # Handoff
 
-Write a continuation handoff for a fresh session. The reader is another agent, and the user usually starts it on the handoff without reading it: the reader acts on what you wrote and cannot tell your reading from the user's word unless the text shows the difference. A focus the user gives may narrow the next action; it never erases the other open asks.
+Write a continuation handoff for a fresh session. The reader is another agent, and the user usually pastes the handoff without reading it: the reader acts on what you wrote and cannot tell your reading from the user's word unless the text shows the difference. A focus the user gives may narrow the next action; it never erases the other open asks.
 
 Length follows what the reader needs in order to act, nothing else. A recap of what `git status` or the repository's own status document already says is waste; so is an account of how the session ran (how many agents or runs it dispatched, their models, tokens, cost, time), which enters the handoff only where a figure changes the reader's next step; so is a pointer so terse that the next session redoes the research and the decisions.
 
@@ -38,4 +38,6 @@ Name a skill only when the reader must invoke it before the next step to avoid a
 
 ## Reply
 
-Write the whole handoff to a new file in the system's temporary directory, outside any repository, named `<repo>-<task>-handoff.md` in lowercase letters, digits and hyphens, with a numeric suffix rather than overwriting an existing file. The final message is then only the file's absolute path and, in one fence, a single command that starts a fresh session of the current harness on it, its prompt a short instruction to read that file whole and continue from it (Claude Code: `claude "Read <path> whole and continue from the handoff in it."`; Codex: the same with `codex`), the path quoted as the user's shell needs. The handoff never travels as a command-line argument: some shells, Windows PowerShell 5.1 among them, drop its embedded quotes. Where the session cannot write the file, or the user asks for the text, the final message is instead exactly one `markdown` fence, longer than any backtick run inside it, holding the whole handoff and nothing else.
+The final message is exactly one `markdown` fence, longer than any backtick run inside it, holding the whole handoff: nothing before it and nothing after, so a copy of the message is the handoff.
+
+When the user asks for a file instead, write the whole handoff to a new file in the system's temporary directory, outside any repository, named `<repo>-<task>-handoff.md` in lowercase letters, digits and hyphens, with a numeric suffix rather than overwriting an existing file, and reply with only its absolute path and, in one fence, a single command that starts a fresh session of the current harness on it, its prompt a short instruction to read that file whole and continue from it (Claude Code: `claude "Read <path> whole and continue from the handoff in it."`; Codex: the same with `codex`), the path quoted as the user's shell needs. The handoff never travels as a command-line argument: some shells, Windows PowerShell 5.1 among them, drop its embedded quotes. Where the file cannot be written, reply with the fence.

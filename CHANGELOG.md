@@ -4,6 +4,12 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.64.0 — 2026-10-22
+
+handoff replies with the paste-ready fence again by default; the file in the
+system temporary directory with one start command is written when the user
+asks for a file.
+
 ## 0.63.0 — 2026-10-14
 
 handoff writes the handoff to a file in the system temporary directory and

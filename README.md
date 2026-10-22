@@ -24,7 +24,7 @@ Codex-supported skills that should stay explicit set
 
 | Skill | What it does | Claude Code |
 |---|---|---|
-| **[handoff](skills/handoff)** | Compacts the session into a handoff file and one command that starts the next session on it, for switching sessions or briefing another agent: the user's open asks, the state, and a next step marked as settled or as the writer's suggestion. | `/handoff` |
+| **[handoff](skills/handoff)** | Compacts the session into a paste-ready handoff (or, on request, a file and one start command), for switching sessions or briefing another agent: the user's open asks, the state, and a next step marked as settled or as the writer's suggestion. | `/handoff` |
 | **[pretty-pdf](skills/pretty-pdf)** | PDFs that look designed rather than auto-generated (HTML + CSS via weasyprint). | `/pretty-pdf` |
 | **[html-brief](skills/html-brief)** | Dark, self-contained, editorial HTML documents that read at a glance: plans, summaries, breakdowns, explanations, decisions, multi-part packs. | `/html-brief` |
 | **[html-slides](skills/html-slides)** | Presentations as one self-contained HTML file: bundled slide engine with keyboard-only navigation and pattern-bound motion, plus a build step that inlines assets. | `/html-slides` |
