@@ -35,13 +35,12 @@ One idea the whole piece enacts, not a feature list: the subject doing its thing
 to a peak. Pick a tempo so every cut lands on a bar line (at 140 BPM a bar is 1.714 s). Write
 `BRIEF.md` beside the reel: the concept in two sentences, a scene table (bars, what sound
 enters, what the picture does, the exact copy), the type rules (families, sizes, tracking, at
-most one headline and one small caps line per shot, margins) and the motion rules (below).
-Write every word of copy yourself; scene authors render it verbatim.
+most one headline and one small caps line per shot, margins) and the motion and score rules
+(below). Write every word of copy yourself; scene authors render it verbatim.
 
 Before the scene table, set the art direction: the one idea, how scale changes across the
 reel, where light and texture come from, how shots hand over to each other, and what to avoid.
-A reference the user names and a second opinion from another strong model sharpen it; write
-the result into the brief.
+A reference the user names sharpens it; write the result into the brief.
 
 Motion rules that belong in every brief: every move eases; things land on beats via
 `k.env(inst)`; a slow camera drift so nothing sits still; no element jumps between consecutive
@@ -54,25 +53,27 @@ Hand-overs between shots read smoother as a continuous seam (the next shot start
 frame's geometry) or a wipe behind a moving edge that leaves the frame on the hit (`SEAMS` in
 `reel.js`) than as hard cuts; viewers asked for clean transitions still expect the sync.
 
-Every landing the scene table names cites an event that exists in the score, by instrument and
-beat. Before the pieces fan out, have a reader from another model family check the brief
-against the evaluated score: a direction that promises a landing the score never plays is the
-costliest rework.
+Score rules that belong in every brief: layers enter as the picture builds. Breaks and risers
+come before the peak, with the pulse kept on the break's downbeat so the listener keeps the
+one. A looped part's harmony repeats with its loop, coloured later by extensions in the other
+voices over its own roots before the bass moves under it, since a slash bass under an open
+triad can read off-key. Harmony checked on paper is unheard. A last hit lands on the end card.
 
-Done when `BRIEF.md` holds the concept, the full scene table with copy, and both rule sets.
+Every landing the scene table names cites an event that exists in the score, by instrument and
+beat. Before the pieces fan out, have a reader check the brief against the evaluated score: a
+direction that promises a landing the score never plays is the costliest rework.
+
+Done when `BRIEF.md` holds the concept, the full scene table with copy, and the type, motion
+and score rules.
 
 ## 3. Build the engine
 
 Copy `assets/` into the reel's folder (scratch space, not a project's source tree). Fill in
-`reel.js`: the tokens, `SCENES`, the score (layers enter as the picture builds; breaks and
-risers before the peak, with the pulse kept on the break's downbeat so the listener keeps the
-one; a looped part's harmony repeating with its loop, coloured later by extensions in the
-other voices over its own roots before the bass moves under it, since a slash bass under an
-open triad can read off-key and harmony checked on paper is unheard; a last hit on the end card) and the signature component as a helper,
-so every scene draws the same product. It often fills the frame at the peak, so give it detail
-that holds up at that size, not a thin outline. The engine adds grain and a vignette after the motion blur
-(`LOOK` in `reel.js`). Point `index.html` at the product's font files. Serve
-the folder over HTTP (`python3 -m http.server 8791 --bind 127.0.0.1`).
+`reel.js`: the tokens, `SCENES`, the score (by the brief's score rules) and the signature
+component as a helper, so every scene draws the same product. It often fills the frame at the
+peak, so give it detail that holds up at that size, not a thin outline. The engine adds grain
+and a vignette after the motion blur (`LOOK` in `reel.js`). Point `index.html` at the product's
+font files. Serve the folder over HTTP (`python3 -m http.server 8791 --bind 127.0.0.1`).
 
 Write one throwaway scene and look at a still (`index.html?t=<seconds>`, or
 `node still.mjs <dir> <seconds…>` over `file://` without the server).
@@ -88,16 +89,13 @@ rest fans out. Tell the user up front that a proof is a segment, not the reel; w
 reel's own timeline, it goes straight into the final cut.
 
 One author per scene file and per music candidate, in parallel if your harness can dispatch
-agents; a cheaper model is fine for a piece because you hold the concept, the seams and the
-assembly. A scene author must be able to launch the browser that renders its stills; a lane
-that cannot (a sandbox without a browser) writes music, the score or reviews instead. Give the
-hero scene (the peak) two independent takes, and the music two candidates with different
-flavours, sent to the user loudness-matched to choose by ear. Each author:
+agents. A scene author needs a browser to render its stills. Give the hero scene (the peak) two
+independent takes, and the music two candidates with different flavours, sent to the user
+loudness-matched to choose by ear. Each author:
 
 - reads `BRIEF.md`, `reel.js`, `engine.js` and the screenshot, and edits only its own file
   (`scenes/<id>.js` or `music/<x>.js`; an alternative take is `scenes/<id>b.js`, viewed with
   `?<id>=<id>b`);
-- writes the file in parts, never one long write;
 - for a scene: takes at least five stills across its time range, looks at each and fixes what
   is off before returning;
 - for music: schedules every score event at `when + e.b * REEL.BEAT`, pure synthesis, then
@@ -127,23 +125,21 @@ the camera continue across a cut instead of resetting; slow a large high-contras
 shrink its travel; give a pop a few frames of `outBack` instead of one frame; render with
 motion blur (`--blur 8`).
 
-This pass is where the finished look comes from. Do it yourself or give it to your strongest
-model, scene by scene, with the judder report and the stills as input.
+This pass is where the finished look comes from: work scene by scene from the judder report
+and the stills.
 
 Done when judder reports no unintended runs and a live playback (`index.html`, click) shows no
 stutter you can see.
 
 ## 7. Render and deliver
 
-`node render.mjs <name>.mp4 --blur 8 --query "music=a"` per music candidate. The script
-renders the audio offline, normalizes it to −14 LUFS (so candidates compare on music, not
-volume) and encodes H.264 + AAC with `faststart`. A blurred render splits well: parallel
-`--from`/`--to` chunks at whole seconds (in a field run four chunks with `--blur 8` finished
-sooner than one process without blur),
-concatenated as video only, with one chunk's full-length audio muxed once at −14 LUFS. A change
-that touches only the audio, and no data a scene reads, is a remux onto the rendered video, not
-a new render. Deliver the files with what differs between
-them and what nobody has verified (no one has heard the audio until the user plays it).
+`node render.mjs <name>.mp4 --blur 8 --query "music=a"` per music candidate. The script renders
+the audio offline, normalizes it to −14 LUFS (so candidates compare on music, not volume) and
+encodes H.264 + AAC with `faststart`. A blurred render splits well: parallel `--from`/`--to`
+chunks at whole seconds, concatenated as video only, with one chunk's full-length audio muxed
+once at −14 LUFS. A change that touches only the audio, and no data a scene reads, is a remux
+onto the rendered video, not a new render. Deliver the files with what differs between them and
+what nobody has verified (no one has heard the audio until the user plays it).
 
 Grain makes the master large (about 6 MB per second at CRF 18): send a share copy,
 `ffmpeg -i <name>.mp4 -c:v libx264 -preset slow -crf 22 -c:a copy -movflags +faststart

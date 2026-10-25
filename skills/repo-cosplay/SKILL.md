@@ -30,7 +30,8 @@ supplies native-session discipline.
    the requested area, preserve unrelated changes, and run the target's hooks
    or gates manually because the current session may not inherit them.
 3. Follow every repository boundary you find. A symlink target, nested
-   repository, or external owner needs its own explicit grant.
+   repository, or external owner needs its own grant, explicit or standing, and
+   its commit goes to its owner.
 4. Finish the target's normal bookkeeping, commit and push only the authorized
    work, and verify it by the target's standard. A verification that lands
    after the commit that updated the target's status document reopens that

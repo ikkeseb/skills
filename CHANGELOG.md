@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.64.2 — 2026-10-25
+
+Trim agent guidance after a rules audit. history-audit and motion-design
+drop model, family and lane choices and keep the checks they served;
+motion-design moves its score advice into the brief's score rules and drops
+a render-timing aside and the write-in-parts rule. excalidraw keeps its pixel critique without naming a
+reviewer. repo-cosplay accepts a standing grant at a repository boundary and
+sends that commit to its owner.
+
 ## 0.64.1 — 2026-10-25
 
 Use a neutral Windows test fixture path and remove a machine reference from

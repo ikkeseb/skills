@@ -157,9 +157,9 @@ Ask these adversarial questions:
 - Does the diagram still communicate when skimmed without reading every word?
 
 Correct the scene specification, rebuild, and re-import until the answers hold.
-For high-impact diagrams or a repeat failure, ask an independent reviewer to
-critique the native pixels, not the source JSON. Done only after inspecting
-the final native canvas.
+For high-impact diagrams or a repeat failure, have a second reader critique the
+native pixels, not the source JSON. Done only after inspecting the final native
+canvas.
 
 ### 6. Deliver safely
 
