@@ -158,7 +158,7 @@ try {
   assert.equal(readFileSync(syntheticPng).subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
 
   const windowsEnv = {
-    LOCALAPPDATA: "C:\\Users\\tester\\AppData\\Local",
+    LOCALAPPDATA: "C:\\test-profile\\AppData\\Local",
     ProgramFiles: "C:\\Program Files",
     "ProgramFiles(x86)": "C:\\Program Files (x86)",
   };

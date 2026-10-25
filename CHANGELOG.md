@@ -4,6 +4,11 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.64.1 — 2026-10-25
+
+Use a neutral Windows test fixture path and remove a machine reference from
+an older changelog entry. Skill behavior is unchanged.
+
 ## 0.64.0 — 2026-10-22
 
 handoff replies with the paste-ready fence again by default; the file in the
@@ -1390,7 +1395,7 @@ The three tier definitions (`opus-medium`, `opus-high`, `opus-xhigh`) tell the w
 
 ## 0.25.2 — 2026-08-30
 
-`handoff` moves the `handover:` guard line inside the markdown fence. Field find (home PC, Claude Code 2026-08-30): `/copy` now returns the fence content unwrapped, dropping everything outside it — the pasted handoff led with the literal word "Handoff", exactly what the guard line existed to prevent. With the guard as the fence's first line the paste starts with `handover:` whether `/copy` copies the message verbatim or unwraps the block. Done-when updated to match.
+`handoff` moves the `handover:` guard line inside the markdown fence. Field find (Claude Code 2026-08-30): `/copy` now returns the fence content unwrapped, dropping everything outside it — the pasted handoff led with the literal word "Handoff", exactly what the guard line existed to prevent. With the guard as the fence's first line the paste starts with `handover:` whether `/copy` copies the message verbatim or unwraps the block. Done-when updated to match.
 
 ## 0.25.1 — 2026-08-30
 
