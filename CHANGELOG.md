@@ -4,6 +4,12 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.64.3 — 2026-10-25
+
+Drop the repository check and the `AGENTS.md` line for a top-level `agents/`
+folder, which no longer exists. The per-skill `agents/openai.yaml` check is
+unchanged. Skill behavior is unchanged.
+
 ## 0.64.2 — 2026-10-25
 
 Trim agent guidance after a rules audit. history-audit and motion-design

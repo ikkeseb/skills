@@ -57,5 +57,5 @@ git diff --check "$(git hash-object -t tree /dev/null)"
 
 printf 'PASS: static and provider-free checks completed\n'
 printf 'NOT covered: real provider runs, pretty-pdf rendering, native diagram\n'
-printf 'rendering, agents/*.md frontmatter, and plugin install inventory\n'
+printf 'rendering, and plugin install inventory\n'
 printf '(run an isolated "claude plugin details" check for releases).\n'

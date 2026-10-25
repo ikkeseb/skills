@@ -75,20 +75,6 @@ const skillDirs = fs.readdirSync(skillsRoot, { withFileTypes: true })
 
 for (const skillDir of skillDirs) validateSkill(skillDir);
 
-// Subagent definitions share the cross-skill path rule.
-const agentsDir = path.join(repo, "agents");
-if (fs.existsSync(agentsDir)) {
-  for (const entry of fs.readdirSync(agentsDir).filter((f) => f.endsWith(".md"))) {
-    const text = read(path.join("agents", entry));
-    for (const ref of text.matchAll(/skills\/([a-z0-9-]+\/[A-Za-z0-9_./-]+\.(?:sh|mjs|js|md|yaml))/g)) {
-      const rel = ref[1].startsWith("skills/") ? ref[1].slice("skills/".length) : ref[1];
-      if (!fs.existsSync(path.join(repo, "skills", rel))) {
-        fail(`agents/${entry}: references skills/${rel} which does not exist in this repository`);
-      }
-    }
-  }
-}
-
 for (const extra of process.argv.slice(2)) {
   const skillDir = path.resolve(extra);
   if (!fs.existsSync(path.join(skillDir, "SKILL.md"))) fail(`${extra}: no SKILL.md`);
