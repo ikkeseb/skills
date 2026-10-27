@@ -4,6 +4,13 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.1 — 2026-10-27
+
+html-brief template fixes from review: a long `.flow` run wraps on a phone
+instead of overflowing, the copy button no longer copies its own label when a
+`pre.cmd` has no `code` element, and the bars example's accessible name
+matches its values.
+
 ## 0.65.0 — 2026-10-27
 
 Rebuild html-brief around a summary that carries the document. The template

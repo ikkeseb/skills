@@ -123,7 +123,7 @@ tr.group td { padding-top: 1.4rem; font-size: .82rem; font-weight: 600; color: v
 .flow .who { font-size: .82rem; font-weight: 600; color: var(--ink-3); }
 .flow .lane { display: flex; flex-wrap: wrap; gap: .4rem .6rem; }
 .flow .lane.col { flex-direction: column; align-items: flex-start; gap: .3rem; }
-.flow .run { display: inline-flex; gap: 3px; }
+.flow .run { display: inline-flex; flex-wrap: wrap; gap: 3px; }
 .flow i { font-style: normal; font-size: .84rem; line-height: 1; padding: .4rem .5rem; border-radius: 5px; background: var(--code); color: var(--ink-3); white-space: nowrap; }
 .flow i.on { background: var(--soft); color: var(--ink); }
 .caption { font-size: .8rem; color: var(--ink-3); margin: .35rem 0 0; }
@@ -261,7 +261,7 @@ footer p { max-width: none; margin: 0 0 .25rem; }
     <span class="who">Now</span><div class="lane"><span class="run"><i>build</i><i class="on">A</i><i class="on">B</i></span></div>
   </div>
   <ol class="chain"><li><span class="st ok">Gate</span></li><li><span class="st ok">Deploy</span></li><li><span class="st now">Smoke</span></li><li><span class="st wait">Notes</span></li></ol>
-  <div class="bars" role="img" aria-label="Three counts">
+  <div class="bars" role="img" aria-label="First 20, second 7">
     <div><span>First</span><i style="--v:1"></i><b>20</b></div>
     <div><span>Second</span><i class="idle" style="--v:.35"></i><b>7</b></div>
   </div>
@@ -306,10 +306,10 @@ footer p { max-width: none; margin: 0 0 .25rem; }
   addEventListener('afterprint', function () { shut.forEach(function (d) { d.open = false; }); shut = []; });
   var no = /^(no|nb|nn)\b/.test(document.documentElement.lang), label = no ? ['Kopier', 'Kopiert'] : ['Copy', 'Copied'];
   document.querySelectorAll('pre.cmd').forEach(function (pre) {
-    var code = pre.querySelector('code') || pre, b = document.createElement('button');
+    var text = (pre.querySelector('code') || pre).textContent, b = document.createElement('button');
     b.type = 'button'; b.className = 'copy'; b.textContent = label[0];
     b.addEventListener('click', function () {
-      var text = code.textContent, done = function () { b.textContent = label[1]; setTimeout(function () { b.textContent = label[0]; }, 1400); };
+      var done = function () { b.textContent = label[1]; setTimeout(function () { b.textContent = label[0]; }, 1400); };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
       function fallback() { var t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); try { if (document.execCommand('copy')) done(); } catch (e) {} t.remove(); }
     });
