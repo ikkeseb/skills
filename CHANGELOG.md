@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.2 — 2026-10-27
+
+Sharper triggers for two skills. motion-design's description and Codex short
+description drop the method (timeline, score, frame-exact render, judder
+check) and keep the deliverable, the uses and the boundary; the Codex text
+no longer narrows it to a product reel with sound. repo-cosplay's
+description now covers any write, commit or push in a repository other than
+the session's own, under the user's explicit ask in the session or a
+standing ask in the session repository's own instruction file.
+
 ## 0.65.1 — 2026-10-27
 
 html-brief template fixes from review: a long `.flow` run wraps on a phone

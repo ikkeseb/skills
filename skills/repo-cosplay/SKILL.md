@@ -1,10 +1,11 @@
 ---
 name: repo-cosplay
 description: >
-  Operate in a named target repository from a session rooted elsewhere, only
-  when the user explicitly says "repo cosplay" or explicitly asks to operate
-  on behalf of that repository. Not for incidental cross-repo references,
-  deferred changes, or read-only audits.
+  Operate as a target repository from a session rooted elsewhere: any write,
+  commit or push in a repository other than the session's own, under the
+  user's explicit ask in this session ("repo cosplay", "do it in <repo>") or
+  a standing ask the session repository's own instruction file states. Not
+  for incidental cross-repo references, deferred changes, or read-only audits.
 ---
 
 # Repo Cosplay

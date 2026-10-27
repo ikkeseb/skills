@@ -1,6 +1,6 @@
 ---
 name: motion-design
-description: "Make a motion design piece as a finished video: one concept, one timeline (a musical score when it has sound) driving picture and audio, scenes in the subject's own look, rendered frame-exact with motion blur and checked for judder. Use for a product reel, promo, teaser, title sequence, logo sting, animated explainer or loop. Not for screen recordings of a live app, slide decks (html-slides) or static pages."
+description: "Make a motion design piece as a finished video in its subject's own look. Use for a product reel, promo, teaser, title sequence, logo sting, animated explainer or loop. Not for screen recordings of a live app, slide decks (html-slides) or static pages."
 ---
 
 # motion-design
