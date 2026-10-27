@@ -1,9 +1,9 @@
 interface:
   display_name: html-brief
   short_description: >-
-    Turn content into one self-contained, dark, editorial HTML document:
-    plans, summaries, breakdowns, explanations, decisions, run sheets,
-    status, comparisons, multi-part packs. Not for web-app frontends, site
-    frameworks, or Markdown notes.
+    Turn content into one self-contained, dark HTML document made to be
+    read: plans, status, findings, decisions, run sheets, summaries,
+    comparisons. Not for an art-directed launch or showcase page, web-app
+    frontends, or Markdown notes.
 policy:
   allow_implicit_invocation: false

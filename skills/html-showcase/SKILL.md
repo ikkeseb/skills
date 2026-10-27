@@ -1,6 +1,6 @@
 ---
 name: html-showcase
-description: "Art-direct a single-file HTML page with editorial ambition, designing a fresh visual concept from the content each time: launches, showcases, announcements, flagship reports. Not for plain reading documents (html-brief), decks (html-slides), or web-app frontends."
+description: "Art-direct a single-file HTML page that has to impress, designing a fresh visual concept from the content each time: a launch, a showcase, an announcement, a landing page. Not for documents made to be read, such as plans, status, findings or run sheets (html-brief), decks (html-slides), or web-app frontends."
 ---
 
 # html-showcase

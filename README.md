@@ -26,9 +26,9 @@ Codex-supported skills that should stay explicit set
 |---|---|---|
 | **[handoff](skills/handoff)** | Compacts the session into a paste-ready handoff (or, on request, a file and one start command), for switching sessions or briefing another agent: the user's open asks, the state, and a next step marked as settled or as the writer's suggestion. | `/handoff` |
 | **[pretty-pdf](skills/pretty-pdf)** | PDFs that look designed rather than auto-generated (HTML + CSS via weasyprint). | `/pretty-pdf` |
-| **[html-brief](skills/html-brief)** | Dark, self-contained, editorial HTML documents that read at a glance: plans, summaries, breakdowns, explanations, decisions, multi-part packs. | `/html-brief` |
+| **[html-brief](skills/html-brief)** | Dark, self-contained HTML documents made to be read, with the point in a summary on the first screen: plans, status, findings, decisions, run sheets. | `/html-brief` |
 | **[html-slides](skills/html-slides)** | Presentations as one self-contained HTML file: bundled slide engine with keyboard-only navigation and pattern-bound motion, plus a build step that inlines assets. | `/html-slides` |
-| **[html-showcase](skills/html-showcase)** | Art-directed single-file HTML pages with editorial ambition: a fresh visual concept per invocation, designed by the session agent against the skill's quality floor. | `/html-showcase` |
+| **[html-showcase](skills/html-showcase)** | Art-directed single-file HTML pages for a launch or showcase: a fresh visual concept per invocation, designed by the session agent against the skill's quality floor. | `/html-showcase` |
 | **[history-audit](skills/history-audit)** | Mines the machine's agent-session history for the most common failure modes per model × harness, and proposes instruction lines one by one, each citing the run that earned it. | `/history-audit` |
 | **[excalidraw](skills/excalidraw)** | `.excalidraw` diagrams that explain something instead of just labeling boxes. | `/excalidraw` |
 | **[drawio](skills/drawio)** | Native `.drawio` XML that opens straight in app.diagrams.net. | `/drawio` |

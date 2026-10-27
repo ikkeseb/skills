@@ -4,6 +4,22 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.0 — 2026-10-27
+
+Rebuild html-brief around a summary that carries the document. The template
+grows with the window (a 68rem page, root type from 17px on a phone to 21px
+on a wide screen), sits on pure black with the summary as its one raised
+block, and adds `.bars`, `.flow` and `.chain` beside the table, distribution
+bar, rows, options and steps; `.two` sets a long run sheet's steps in two
+columns on a very wide screen. The skill text picks the visual by the
+content's shape, keeps two or three short sections below the summary with
+depth in closed `details`, follows the language of the ask, and names things
+instead of internal codes. Print reopens closed `details` and closes them
+again afterwards. The embedded fonts and their licence file are gone: the
+template uses system faces. The descriptions of html-brief and html-showcase
+now split documents made to be read from art-directed launch and showcase
+pages.
+
 ## 0.64.3 — 2026-10-25
 
 Drop the repository check and the `AGENTS.md` line for a top-level `agents/`
