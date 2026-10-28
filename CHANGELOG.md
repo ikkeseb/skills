@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.3 — 2026-10-28
+
+html-brief may trigger implicitly in Codex too: its `openai.yaml` sets
+`allow_implicit_invocation: true`, and the gate holds it as the one exception
+while every other Codex skill stays explicit.
+The README's browser-automation note adds html-brief and motion-design, and
+the aggregate gate no longer requires jq, which nothing uses since 0.60.0.
+
 ## 0.65.2 — 2026-10-27
 
 Sharper triggers for two skills. motion-design's description and Codex short

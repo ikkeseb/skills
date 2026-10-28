@@ -8,10 +8,6 @@ command -v node >/dev/null 2>&1 || {
   printf 'FAIL: node is required for repository checks\n' >&2
   exit 1
 }
-command -v jq >/dev/null 2>&1 || {
-  printf 'FAIL: jq is required for the Codex worker and its tests\n' >&2
-  exit 1
-}
 command -v claude >/dev/null 2>&1 || {
   printf 'FAIL: claude is required for plugin validation\n' >&2
   exit 1

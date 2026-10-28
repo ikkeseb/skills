@@ -6,4 +6,4 @@ interface:
     comparisons. Not for an art-directed launch or showcase page, web-app
     frontends, or Markdown notes.
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true

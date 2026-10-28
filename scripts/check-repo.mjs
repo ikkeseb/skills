@@ -99,10 +99,12 @@ const manifestNames = [...codexManifest.skills]
 if (JSON.stringify(markerNames) !== JSON.stringify(manifestNames)) {
   fail(`Codex manifest skills differ from openai.yaml markers: markers=${markerNames.join(",")} manifest=${manifestNames.join(",")}`);
 }
+const modelInvoked = new Set(["html-brief"]);
 for (const name of markerNames) {
   const metadata = read(`skills/${name}/agents/openai.yaml`);
-  if (!/^\s*allow_implicit_invocation:\s*false\s*$/m.test(metadata)) {
-    fail(`skills/${name}/agents/openai.yaml must disable implicit invocation`);
+  const implicit = modelInvoked.has(name) ? "true" : "false";
+  if (!new RegExp(`^\\s*allow_implicit_invocation:\\s*${implicit}\\s*$`, "m").test(metadata)) {
+    fail(`skills/${name}/agents/openai.yaml must set allow_implicit_invocation: ${implicit}`);
   }
 }
 

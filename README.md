@@ -17,8 +17,8 @@ its own with `skillOverrides: { "<name>": "name-only" }` in your Claude Code
 settings; `html-brief` is the one skill meant to be model-invoked. For a
 plugin install those overrides do not apply, so the model may route to any
 skill whose description fits; explicit-only enforcement there is unverified.
-Codex-supported skills that should stay explicit set
-`allow_implicit_invocation: false` there.
+In Codex every skill except `html-brief` sets
+`allow_implicit_invocation: false`.
 
 ### Claude Code and Codex
 
@@ -62,6 +62,8 @@ skills, the ones carrying an `agents/openai.yaml`: `agents-md-convert`,
 `repo-cosplay`.
 `html-slides` and `html-showcase` need browser automation for their
 screenshot QA; without it they deliver with an honest unverified list.
+`html-brief`'s done check opens the page in a browser at two widths.
+`motion-design` cannot render without Playwright and ffmpeg.
 `drawio` degrades gracefully where the sandbox denies network
 or exec. `excalidraw` uses the same dependency-free builder, validator, and
 layout diagnostic in both harnesses, then requires an official Excalidraw
