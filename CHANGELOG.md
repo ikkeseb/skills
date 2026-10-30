@@ -4,6 +4,13 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.5 — 2026-10-30
+
+html-showcase's description and Codex short description name the deliverable
+as one self-contained HTML file, call the landing page a one-off, and exclude
+pages that belong inside a site's codebase, so a page built in an existing
+site no longer reads as a showcase job.
+
 ## 0.65.4 — 2026-10-30
 
 Two stale-instruction fixes. history-audit runs its two scripts from
