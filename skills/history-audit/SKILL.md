@@ -13,13 +13,16 @@ self-reported.
 
 Deterministic where possible; agents only where judgment is needed.
 
-Quick friction pass, no agents: `python3 scripts/friction-scan.py --days 14`
-counts failed tool calls (hook blocks, permission denials, read-before-edit,
-edit mismatches, exit codes, Codex `Script failed`) per harness, Claude Code
-config dir, lane and model with dated pointers; `--exclude <regex>` drops
-project dirs the user wants left out. Run it first; it answers "what breaks mechanically"
-so the pipeline below can stay on "what the user corrected". Before blaming a
-prompt or instruction line for a failure cluster, follow one sampled failed
+Quick friction pass, no agents:
+`python3 <skill-root>/scripts/friction-scan.py --days 14` (resolve
+`<skill-root>` from this `SKILL.md`; never assume the session working
+directory) counts failed tool calls (hook blocks, permission denials,
+read-before-edit, edit mismatches, exit codes, Codex `Script failed`) per
+harness, Claude Code config dir, lane and model with dated pointers;
+`--exclude <regex>` drops project dirs the user wants left out. Run it first;
+it answers "what breaks mechanically" so the pipeline below can stay on "what
+the user corrected". Before blaming a prompt or instruction line for a
+failure cluster, follow one sampled failed
 `tool_result` back to the `tool_use` that produced it (the scan already maps
 `tool_use_id` to the tool name) and record the tool, the redacted input
 shape and whether the caller was harness-shipped or user-authored. A count
@@ -59,7 +62,7 @@ says how often; the parent call says whose.
    best effort: an unusual secret can survive it, so readers never quote
    anything secret-looking, the report carries no secret, and extracts and
    report stay on this machine until step 5's OK. For Claude Code,
-   `python3 scripts/extract-user-messages.py --out <new dir> --days N`
+   `python3 <skill-root>/scripts/extract-user-messages.py --out <new dir> --days N`
    does steps 1 and 2; its header lists what it keeps, marks and skips.
    Codex rollouts still need both steps by other means. Whatever does the
    extraction keeps slash-command arguments (the task often sits there)

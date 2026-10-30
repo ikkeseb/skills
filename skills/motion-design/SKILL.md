@@ -68,7 +68,11 @@ and score rules.
 
 ## 3. Build the engine
 
-Copy `assets/` into the reel's folder (scratch space, not a project's source tree). Fill in
+The engine needs Node, Playwright (`playwright` or `playwright-core`, or `PW_MODULE`) for
+`still.mjs` and `render.mjs`, and `ffmpeg` and `ffprobe` on PATH for the steps below.
+Resolve `<skill-root>` from this `SKILL.md`; never assume the session working directory. Copy
+the files in `<skill-root>/assets/` into the reel's folder (scratch space, not a project's
+source tree) and run the commands below from there. Fill in
 `reel.js`: the tokens, `SCENES`, the score (by the brief's score rules) and the signature
 component as a helper, so every scene draws the same product. It often fills the frame at the
 peak, so give it detail that holds up at that size, not a thin outline. The engine adds grain

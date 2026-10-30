@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.4 — 2026-10-30
+
+Two stale-instruction fixes. history-audit runs its two scripts from
+`<skill-root>/scripts/`, resolved from its `SKILL.md`, instead of a path
+relative to the session's working directory. motion-design states what its
+render path needs before the engine is built (Node, Playwright for the still
+and render scripts, `ffmpeg` and `ffprobe` on PATH) and copies its engine
+from `<skill-root>/assets/` the same way.
+
 ## 0.65.3 — 2026-10-28
 
 html-brief may trigger implicitly in Codex too: its `openai.yaml` sets
