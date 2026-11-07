@@ -4,6 +4,12 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.6 — 2026-11-07
+
+history-audit's proposals climb a ladder: fix the tool, script or repo setup
+that produced a failure first, then a check or hook that catches it, and an
+instruction line only when neither reaches it, with the reason stated.
+
 ## 0.65.5 — 2026-10-30
 
 html-showcase's description and Codex short description name the deliverable

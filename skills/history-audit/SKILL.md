@@ -92,10 +92,14 @@ says how often; the parent call says whose.
    receives sampled extracts; say so and get the user's OK before the first
    such call. Done when the report names the verifier and the spot-check
    results.
-6. **Propose changes one by one, never wholesale.** Each proposal is one
-   of: add a line, rewrite a line, retire a line, change the tool or hook
-   instead of the prose, or no change. Each cites its source session and
-   gets individual approval before any instruction file changes.
+6. **Propose changes one by one, never wholesale.** Each proposal is the
+   first rung that reaches its failure: fix the tool, script or repo setup
+   that produced it; add a check or hook that catches it; add, rewrite or
+   retire an instruction line; or no change. A fix or a check holds
+   whatever the agent reads, so a proposal that lands on a line says why
+   the rungs above it do not reach the failure (corrections of intent,
+   scope or style rarely have one). Each cites its source session and
+   gets individual approval before anything changes.
    High-confidence events are the basis; medium-confidence events are
    candidates at best (observed: roughly a third of them are normal
    steering misread as corrections). A line with zero events is a retire
