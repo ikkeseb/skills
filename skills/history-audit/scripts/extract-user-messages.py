@@ -38,7 +38,8 @@ Usage: extract-user-messages.py --out DIR [--days N] [--claude-dir PATH]...
   --days        window, counted back from now (default 14)
   --claude-dir  a Claude Code config dir to read; repeatable; replaces discovery
   --exclude     skip project dirs whose name matches (case-insensitive)
-  --msg-cap     characters kept per message, middle cut (default 2500)
+  --msg-cap     characters kept per message, middle cut (default 0 = whole;
+                a cut can drop a correction that sits mid-message)
   --prev-cap    characters kept from the agent's text before a message (default 300; 0 = none)
 
 Extracts stay on this machine.
@@ -66,7 +67,7 @@ CMD_ARGS = re.compile(r"<command-args>([\s\S]*?)</command-args>")
 
 
 def cap(text, n):
-    if len(text) <= n:
+    if n <= 0 or len(text) <= n:
         return text
     head, tail = text[: int(n * 0.7)], text[-int(n * 0.2):]
     return f"{head}\n[...{len(text) - len(head) - len(tail)} chars cut...]\n{tail}"
@@ -238,7 +239,7 @@ def main():
     ap.add_argument("--days", type=int, default=14)
     ap.add_argument("--claude-dir", action="append", default=[])
     ap.add_argument("--exclude")
-    ap.add_argument("--msg-cap", type=int, default=2500)
+    ap.add_argument("--msg-cap", type=int, default=0)
     ap.add_argument("--prev-cap", type=int, default=300)
     a = ap.parse_args()
     cutoff = dt.datetime.now(UTC) - dt.timedelta(days=a.days)

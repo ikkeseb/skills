@@ -4,6 +4,13 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.7 — 2026-11-12
+
+history-audit keeps every user message whole: the extraction no longer cuts
+long messages in the middle (`--msg-cap` defaults to 0), and readers read each
+message to its end, since a correction often sits mid-message and one message
+can hold several.
+
 ## 0.65.6 — 2026-11-07
 
 history-audit's proposals climb a ladder: fix the tool, script or repo setup
