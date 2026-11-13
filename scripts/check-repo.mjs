@@ -99,7 +99,7 @@ const manifestNames = [...codexManifest.skills]
 if (JSON.stringify(markerNames) !== JSON.stringify(manifestNames)) {
   fail(`Codex manifest skills differ from openai.yaml markers: markers=${markerNames.join(",")} manifest=${manifestNames.join(",")}`);
 }
-const modelInvoked = new Set(["html-brief"]);
+const modelInvoked = new Set(["html-brief", "html-showcase"]);
 for (const name of markerNames) {
   const metadata = read(`skills/${name}/agents/openai.yaml`);
   const implicit = modelInvoked.has(name) ? "true" : "false";

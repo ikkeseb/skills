@@ -6,4 +6,4 @@ interface:
     or one-off landing page. Not for pages inside a site's codebase,
     documents made to be read, decks, or web-app frontends.
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true

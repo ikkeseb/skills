@@ -14,10 +14,11 @@ Claude Code versions, and on some it hid the skill from the model and broke
 the typed slash command too.
 For a symlink or personal install, keep the model from triggering a skill on
 its own with `skillOverrides: { "<name>": "name-only" }` in your Claude Code
-settings; `html-brief` is the one skill meant to be model-invoked. For a
-plugin install those overrides do not apply, so the model may route to any
-skill whose description fits; explicit-only enforcement there is unverified.
-In Codex every skill except `html-brief` sets
+settings; `html-brief` and `html-showcase` are the two skills meant to be
+model-invoked. For a plugin install those overrides do not apply, so the model
+may route to any skill whose description fits; explicit-only enforcement there
+is unverified.
+In Codex every skill except `html-brief` and `html-showcase` sets
 `allow_implicit_invocation: false`.
 
 ### Claude Code and Codex

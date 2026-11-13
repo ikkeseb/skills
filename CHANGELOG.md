@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.10 — 2026-11-14
+
+html-showcase may trigger implicitly in Codex too: its `agents/openai.yaml`
+sets `allow_implicit_invocation: true`, and the gate holds it beside
+html-brief as the second model-invoked skill; the README and the
+maintainer conventions say so. Measured in Codex before the change: with
+the flag off, three one-off showcase asks never loaded html-showcase; with
+it on, all three did, while a status page went to html-brief, a deck to
+html-slides and a landing page inside an existing site loaded no
+html-showcase.
+
 ## 0.65.9 — 2026-11-14
 
 motion-design's video renderer fails on encoder, input-pipe and page errors,
