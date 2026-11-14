@@ -4,6 +4,17 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.12 — 2026-11-14
+
+html-brief gets a refined template. The type scale is larger (the title reaches
+about 3.1rem on a wide screen), the page widens to 78rem, and in a split summary
+the right column holds the visual over the facts, with a chain there running
+top to bottom. The class vocabulary, accent pairs and script are unchanged, so
+pages written for the earlier template render without edits. The ask now sits
+right under the bottom line, before the points, so what the reader must decide
+or do is on the first screen on a phone too; the skill's Compose order says
+the same.
+
 ## 0.65.11 — 2026-11-14
 
 motion-design renders a piece whose audio is silent: loudnorm cannot measure

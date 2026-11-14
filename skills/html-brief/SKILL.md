@@ -35,8 +35,9 @@ from. Per document you set the accent pair and pick the pieces.
 everything they need, short, plain and easy to grasp:
 
 - a bottom line in one or two sentences;
+- right under it, the ask, when the reader must decide or do something
+  (`.note.ask`), so it is on the first screen on a phone too;
 - three to five points, one line each where possible;
-- the ask, when the reader must decide or do something (`.note.ask`);
 - one visual, when it makes the point quicker: `.summary.split` puts the
   words in `.say` and the visual in `.see`;
 - facts (ids, dates, counts) only when the reader may need them.
