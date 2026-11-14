@@ -4,6 +4,14 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.9 — 2026-11-14
+
+motion-design's video renderer fails on encoder, input-pipe and page errors,
+reports success only after a clean encode, and closes the browser on failure.
+drawio's page renderer allocates distinct deterministic export names when
+sanitized names collide, preserving ordinary names and filtered-export names.
+Both renderers have offline CLI regressions in the repository gate.
+
 ## 0.65.7 — 2026-11-12
 
 history-audit keeps every user message whole: the extraction no longer cuts

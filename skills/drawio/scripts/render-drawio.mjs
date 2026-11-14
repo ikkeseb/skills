@@ -107,8 +107,25 @@ if (!pageNames.length) {
     process.exit(1);
   }
 }
-const wanted = pageNames
-  .map((name, idx) => ({ name, idx }))
+// Allocate against every page before filtering so partial exports keep their names.
+// Reserve original stems first: a generated suffix must not steal another page's name.
+const safe = (s) => s.replace(/[^A-Za-z0-9._-]+/g, '_');
+const stems = pageNames.map(safe);
+const reserved = new Set(stems.map(s => s.toLowerCase()));
+const used = new Set();
+const pages = pageNames.map((name, idx) => {
+  const stem = stems[idx];
+  let outputStem = stem;
+  let suffix = 2;
+  while (used.has(outputStem.toLowerCase())) {
+    do {
+      outputStem = `${stem}-${suffix++}`;
+    } while (reserved.has(outputStem.toLowerCase()));
+  }
+  used.add(outputStem.toLowerCase());
+  return { name, idx, filename: outputStem + '.png' };
+});
+const wanted = pages
   .filter(p => !pageFilter.length || pageFilter.some(f => p.name.includes(f)));
 if (!wanted.length) {
   console.error(`ERROR: no pages match [${pageFilter}]. Pages: ${pageNames.join(' | ')}`);
@@ -132,7 +149,6 @@ const htmlFor = (pageIdx) => {
 };
 
 mkdirSync(outDir, { recursive: true });
-const safe = (s) => s.replace(/[^A-Za-z0-9._-]+/g, '_');
 
 const browser = await chromium.launch();
 try {
@@ -147,7 +163,7 @@ try {
     await page.setContent(htmlFor(p.idx), { waitUntil: 'networkidle', timeout });
     await page.waitForSelector('.mxgraph svg', { state: 'attached', timeout });
     await page.waitForTimeout(600); // let sketch strokes/fonts settle
-    const out = join(outDir, safe(p.name) + '.png');
+    const out = join(outDir, p.filename);
     await page.locator('.mxgraph svg').first().screenshot({
       path: out, omitBackground: bg === 'transparent', timeout,
     });

@@ -20,6 +20,8 @@ while IFS= read -r -d '' script; do
 done < <(git ls-files -z '*.sh')
 
 node skills/drawio/scripts/test-validate-drawio.mjs
+node skills/drawio/scripts/test-render-drawio.mjs
+node skills/motion-design/scripts/test-render.mjs
 node skills/excalidraw/scripts/test-excalidraw.mjs
 if command -v python3 >/dev/null 2>&1 && python3 -c 'import sys; sys.exit(sys.version_info < (3, 7))' 2>/dev/null; then
   python3 skills/history-audit/scripts/test-history-audit.py
