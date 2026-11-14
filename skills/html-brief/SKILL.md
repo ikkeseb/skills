@@ -24,7 +24,7 @@ from. Per document you set the accent pair and pick the pieces.
 3. **One raised block: the summary.** Everything else sits on hairlines.
 4. **Language follows the ask:** the language the user writes in, unless
    they name another. Technical terms keep their usual form. Set
-   `<html lang>` to match.
+   `<html lang>` and the copy button's two labels in the script to match.
 
 ## Compose
 
@@ -36,7 +36,7 @@ everything they need, short, plain and easy to grasp:
 
 - a bottom line in one or two sentences;
 - right under it, the ask, when the reader must decide or do something
-  (`.note.ask`), so it is on the first screen on a phone too;
+  (`.note.ask`);
 - three to five points, one line each where possible;
 - one visual, when it makes the point quicker: `.summary.split` puts the
   words in `.say` and the visual in `.see`;

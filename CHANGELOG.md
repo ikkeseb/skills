@@ -9,11 +9,13 @@ carries the detail.
 html-brief gets a refined template. The type scale is larger (the title reaches
 about 3.1rem on a wide screen), the page widens to 78rem, and in a split summary
 the right column holds the visual over the facts, with a chain there running
-top to bottom. The class vocabulary, accent pairs and script are unchanged, so
-pages written for the earlier template render without edits. The ask now sits
-right under the bottom line, before the points, so what the reader must decide
-or do is on the first screen on a phone too; the skill's Compose order says
-the same.
+top to bottom. The class vocabulary and accent pairs are unchanged, so content
+composed for the earlier template moves over without markup edits. The ask now
+sits right under the bottom line, before the points, so the reader meets what
+they must decide or do before the detail; the skill's Compose order says the
+same. The copy button's labels are plain English in the template, and the
+skill has the composing agent set them in the page's language with
+`<html lang>`, in place of a built-in branch for one language.
 
 ## 0.65.11 — 2026-11-14
 
