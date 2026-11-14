@@ -152,7 +152,7 @@ tr.group td { padding-top: 1.5rem; font-size: .8rem; font-weight: 600; letter-sp
 .chain li:not(:last-child)::after { content: "→"; color: var(--ink-3); font-size: .85rem; margin-left: .1rem; }
 
 /* Options side by side; .pick carries the accent rule and a tag */
-.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.5rem 2.25rem; margin: 1.5rem 0; }
+.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 1.5rem 2.25rem; margin: 1.5rem 0; }
 .option { border-top: 1px solid var(--line); padding-top: 1rem; }
 .option.pick { border-top: 2px solid var(--accent); padding-top: calc(1rem - 1px); }
 .option > .tag:first-child { float: right; margin: .45rem 0 .25rem 1rem; }  /* keeps the titles of all options on one line */

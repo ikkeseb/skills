@@ -165,14 +165,16 @@ tr.group td { padding-top: 1.5rem; font-size: .8rem; font-weight: 600; color: va
 .option .tag { display: block; line-height: 1.4rem; margin-bottom: .3rem; }
 .options:has(> .pick) > .option:not(.pick) { padding-top: calc(.95rem + 1.7rem); }
 @supports (grid-template-rows: subgrid) {
-  .options { row-gap: 0; }
-  .option { display: grid; grid-row: span 4; grid-template-rows: subgrid; row-gap: 0; align-content: start; margin-bottom: 1.5rem; }
-  .options:has(> .pick) > .option:not(.pick) { padding-top: .95rem; }
-  .option > * { grid-row: 3; }
-  .option > .tag { grid-row: 1; } .option > h3 { grid-row: 2; } .option > .pc { grid-row: 4; }
+  /* Only a group whose every option has the catalogue's shape (tag, h3, at most one p, .pc) shares rows;
+     any other group keeps block flow. Without :has() the selectors drop and every group keeps block flow. */
+  .options:not(:has(> .option > :not(.tag, h3, p, .pc), > .option > p ~ p)) { row-gap: 0; }
+  .options:not(:has(> .option > :not(.tag, h3, p, .pc), > .option > p ~ p)) > .option { display: grid; grid-row: span 4; grid-template-rows: subgrid; row-gap: 0; align-content: start; margin-bottom: 1.5rem; }
+  .options:not(:has(> .option > :not(.tag, h3, p, .pc), > .option > p ~ p)):has(> .pick) > .option:not(.pick) { padding-top: .95rem; }
+  .options:not(:has(> .option > :not(.tag, h3, p, .pc), > .option > p ~ p)) > .option > * { grid-row: 3; }
+  .options:not(:has(> .option > :not(.tag, h3, p, .pc), > .option > p ~ p)) > .option > .tag { grid-row: 1; } .options:not(:has(> .option > :not(.tag, h3, p, .pc), > .option > p ~ p)) > .option > h3 { grid-row: 2; } .options:not(:has(> .option > :not(.tag, h3, p, .pc), > .option > p ~ p)) > .option > .pc { grid-row: 4; }
   /* Grid items keep their own margins (no collapsing), so the gaps are set here */
-  .option > p { margin: 0 0 .35rem; }
-  .option > .pc { margin-top: .25rem; } .option > .pc > li:first-child { margin-top: 0; }
+  .options:not(:has(> .option > :not(.tag, h3, p, .pc), > .option > p ~ p)) > .option > p { margin: 0 0 .35rem; }
+  .options:not(:has(> .option > :not(.tag, h3, p, .pc), > .option > p ~ p)) > .option > .pc { margin-top: .25rem; } .options:not(:has(> .option > :not(.tag, h3, p, .pc), > .option > p ~ p)) > .option > .pc > li:first-child { margin-top: 0; }
 }
 .option h3 { margin: 0 0 .35rem; }
 .option p { color: var(--ink-2); font-size: .95rem; }
@@ -196,7 +198,8 @@ ol.steps > li::before { --c: var(--ink-2); content: counter(step); position: abs
 ol.steps > li:has(> .step-head .st.ok)::before { --c: var(--ok); }
 ol.steps > li:has(> .step-head .st.warn)::before { --c: var(--warn); }
 ol.steps > li:has(> .step-head .st.bad)::before { --c: var(--bad); }
-ol.steps > li.now::before, ol.steps > li:has(> .step-head .st.now)::before { --c: var(--accent); }
+ol.steps > li.now::before { --c: var(--accent); }
+ol.steps > li:has(> .step-head .st.now)::before { --c: var(--accent); }
 ol.steps > li:is(.now, :has(> .step-head .st:is(.ok, .warn, .bad, .now)))::before { background: color-mix(in srgb, var(--c) 15%, transparent); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 70%, transparent); }
 .step-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .35rem 1rem; }
 .step-head h3 { margin: 0; }
