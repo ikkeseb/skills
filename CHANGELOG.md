@@ -4,6 +4,15 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.11 — 2026-11-14
+
+motion-design renders a piece whose audio is silent: loudnorm cannot measure
+digital silence shorter than three seconds and fed the AAC encoder NaN, so the
+render failed. The renderer now skips loudness normalization when every sample
+in the rendered span is zero and says so; audible tracks keep the same chain.
+The render regression covers the silent and trimmed-to-silence cases, with
+real-encoder cases that skip where ffmpeg is absent.
+
 ## 0.65.10 — 2026-11-14
 
 html-showcase may trigger implicitly in Codex too: its `agents/openai.yaml`

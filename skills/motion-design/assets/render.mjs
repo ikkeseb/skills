@@ -1,10 +1,12 @@
 // render.mjs: step the reel frame by frame (exact on any machine, GPU or not), render its audio
-// offline, mux both into an mp4 at a fixed loudness.
+// offline, mux both into an mp4 at a fixed loudness (a silent track stays silent).
 // usage: node render.mjs <out.mp4> [--query "music=b&s3=s3b"] [--blur 8] [--from <s>] [--to <s>] [--url http://127.0.0.1:8791/index.html]
 // Needs ffmpeg on PATH and Playwright: `playwright` or `playwright-core` resolvable from here, or PW_MODULE=<path>.
 import { spawn } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const require = createRequire(import.meta.url);
 function loadPlaywright() {
@@ -23,7 +25,7 @@ const from = parseFloat(opt('from', '0'));
 const url = `${opt('url', 'http://127.0.0.1:8791/index.html')}?t=0&${opt('query', '')}`;
 
 const browser = await chromium.launch();
-let ff, encoderDone, encoderClosed = false;
+let ff, encoderDone, encoderClosed = false, spanDir;
 let failure;
 let rejectFailure;
 const failed = new Promise((_, reject) => { rejectFailure = reject; });
@@ -55,13 +57,30 @@ try {
   if (W !== 1920 || H !== 1080) await checked(page.setViewportSize({ width: W, height: H }));
   const audio = await checked(page.evaluate(() => REEL.renderAudio()));
   const wavPath = out.replace(/\.mp4$/, '.wav');
-  writeFileSync(wavPath, Buffer.from(audio.wav, 'base64'));
+  const wav = Buffer.from(audio.wav, 'base64');
+  writeFileSync(wavPath, wav);
   console.log(`audio: peak ${audio.peak}, rms/bar ${audio.rms.join(' ')}`);
 
   const to = Math.min(DUR, parseFloat(opt('to', String(DUR))));
+  const f0 = Math.round(from * FPS), n = Math.floor(to * FPS) - f0;
+  // Cut the 16-bit stereo 48 kHz WAV (44-byte header) to the span the frames cover and hand the
+  // encoder that cut, so the silence check reads exactly the samples ffmpeg encodes. loudnorm
+  // cannot measure digital silence: under 3 s of input it applies an infinite gain and the AAC
+  // encoder rejects the NaN. A WAV shorter than the span ends the cut early; the full WAV stays
+  // beside the mp4 for a later remux.
+  const start = Math.round(from * 48000);
+  const pcm = wav.subarray(44 + start * 4, 44 + (start + Math.round(n * 48000 / FPS)) * 4);
+  const header = Buffer.from(wav.subarray(0, 44));
+  header.writeUInt32LE(36 + pcm.length, 4);
+  header.writeUInt32LE(pcm.length, 40);
+  spanDir = mkdtempSync(join(tmpdir(), 'render-audio-'));
+  const spanPath = join(spanDir, 'span.wav');
+  writeFileSync(spanPath, Buffer.concat([header, pcm]));
+  const silent = pcm.every(b => b === 0);
+  if (silent) console.log('audio is silent: loudness normalization skipped');
   ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-',
-    '-ss', String(from), '-i', wavPath, '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p',
-    '-af', 'loudnorm=I=-14:TP=-1:LRA=11', '-ar', '48000', '-c:a', 'aac', '-b:a', '192k',
+    '-i', spanPath, '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p',
+    ...(silent ? [] : ['-af', 'loudnorm=I=-14:TP=-1:LRA=11']), '-ar', '48000', '-c:a', 'aac', '-b:a', '192k',
     '-shortest', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
 
   // Register before rendering frames: an encoder can fail before the first write.
@@ -78,7 +97,6 @@ try {
   }));
 
   const canvas = await checked(page.$('canvas'));
-  const f0 = Math.round(from * FPS), n = Math.floor(to * FPS) - f0;
   for (let i = 0; i < n; i++) {
     await checked(page.evaluate(([t, b]) => REEL.renderAt(t, { blur: b }), [(f0 + i) / FPS, blur]));
     const png = await checked(canvas.screenshot({ type: 'png' }));
@@ -101,6 +119,7 @@ try {
     await browser.close();
   } finally {
     if (encoderDone) await encoderDone;
+    if (spanDir) rmSync(spanDir, { recursive: true, force: true });
   }
 }
 if (failure) throw failure;

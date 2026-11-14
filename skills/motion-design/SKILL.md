@@ -138,12 +138,13 @@ stutter you can see.
 ## 7. Render and deliver
 
 `node render.mjs <name>.mp4 --blur 8 --query "music=a"` per music candidate. The script renders
-the audio offline, normalizes it to −14 LUFS (so candidates compare on music, not volume) and
-encodes H.264 + AAC with `faststart`. A blurred render splits well: parallel `--from`/`--to`
-chunks at whole seconds, concatenated as video only, with one chunk's full-length audio muxed
-once at −14 LUFS. A change that touches only the audio, and no data a scene reads, is a remux
-onto the rendered video, not a new render. Deliver the files with what differs between them and
-what nobody has verified (no one has heard the audio until the user plays it).
+the audio offline, normalizes it to −14 LUFS (so candidates compare on music, not volume; a
+silent track stays silent) and encodes H.264 + AAC with `faststart`. A blurred render splits
+well: parallel `--from`/`--to` chunks at whole seconds, concatenated as video only, with one
+chunk's full-length audio muxed once at −14 LUFS. A change that touches only the audio, and no
+data a scene reads, is a remux onto the rendered video, not a new render. Deliver the files with
+what differs between them and what nobody has verified (no one has heard the audio until the
+user plays it).
 
 Grain makes the master large (about 6 MB per second at CRF 18): send a share copy,
 `ffmpeg -i <name>.mp4 -c:v libx264 -preset slow -crf 22 -c:a copy -movflags +faststart

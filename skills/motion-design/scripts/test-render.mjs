@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,11 +20,27 @@ const cases = [
   ['browser-close', /fixture browser close/],
   ['child-good', null], ['child-exit', /23/], ['child-signal', /ffmpeg/],
   ['child-early-exit', /ffmpeg|EPIPE/], ['child-missing', /ENOENT/],
+  // Loudness normalization of digital silence yields NaN that the AAC encoder rejects.
+  ['silent', null], ['from-silence', null, ['--from', '1']],
+  // The silence check reads the samples the encoder gets: at a fractional trim edge, and past a short WAV's end.
+  ['edge', null, ['--from', '1.000001']], ['short', null, ['--from', '1']], ['short-silence', null, ['--from', '1']],
+  // The real encoder, where one is installed.
+  ['ffmpeg-good', null], ['ffmpeg-silent', null], ['ffmpeg-from-silence', null, ['--from', '1']],
+  ['ffmpeg-edge', null, ['--from', '1.000001']],
 ];
+const has = tool => spawnSync(tool, ['-version'], { stdio: 'ignore' }).status === 0;
+const hasFfmpeg = has('ffmpeg'), hasFfprobe = has('ffprobe');
+const loudnorm = /encoder args .*-af loudnorm=I=-14:TP=-1:LRA=11 /;
+const skipped = /loudness normalization skipped/;
 let failures = 0;
 try {
-  for (const [scenario, diagnostic] of cases) {
-    const result = spawnSync(process.execPath, ['--require', stub, cli, 'probe.mp4'], {
+  for (const [scenario, diagnostic, extra = []] of cases) {
+    if (scenario.startsWith('ffmpeg-') && !hasFfmpeg) {
+      console.log(`SKIP: motion render ${scenario} (ffmpeg not on PATH)`);
+      continue;
+    }
+    rmSync(join(workspace, 'probe.mp4'), { force: true });
+    const result = spawnSync(process.execPath, ['--require', stub, cli, 'probe.mp4', ...extra], {
       cwd: workspace, encoding: 'utf8', timeout: 10000,
       env: { ...process.env, NODE_OPTIONS: '', NODE_PATH: '', PW_MODULE: stub, RENDER_TEST_CASE: scenario },
     });
@@ -39,6 +55,24 @@ try {
         assert.match(result.stdout, /wrote probe\.mp4/);
         assert.match(result.stdout, /frame 0\/2/);
         assert.match(result.stdout, /encoder closed 0 null/);
+        // One second of frames at 48 kHz, or the 0.2 s a short WAV has left; the header agrees.
+        const samples = scenario.startsWith('short') ? 9600 : 48000;
+        assert.match(result.stdout, new RegExp(`audio input ${samples} samples, header ${samples}\\b`), `${scenario}: encoder audio is the cut span`);
+        if (/silen/.test(scenario)) {
+          assert.doesNotMatch(result.stdout, loudnorm, `${scenario}: a silent track skips loudnorm`);
+          assert.match(result.stdout, skipped);
+        } else if (!scenario.startsWith('child-')) {
+          assert.match(result.stdout, loudnorm, `${scenario}: an audible track keeps loudnorm`);
+          assert.doesNotMatch(result.stdout, skipped);
+        }
+        if (scenario.startsWith('ffmpeg-')) {
+          assert.ok(existsSync(join(workspace, 'probe.mp4')), `${scenario}: mp4 written`);
+          if (hasFfprobe) {
+            const streams = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_type', '-of', 'csv=p=0',
+              join(workspace, 'probe.mp4')], { encoding: 'utf8' }).stdout.split(/\s+/).filter(Boolean).sort();
+            assert.deepEqual(streams, ['audio', 'video'], `${scenario}: one video and one audio stream`);
+          }
+        }
       }
       assert.equal(result.stdout.match(/TEST: browser closed/g)?.length, 1, `${scenario}: browser must close exactly once`);
       if (['render', 'screenshot', 'page-error-frame', 'pipe-error', 'pipe-close'].includes(scenario)) {
