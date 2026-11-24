@@ -4,6 +4,13 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.13 — 2026-11-24
+
+repo-cosplay checks what a push would carry: before pushing, the session lists
+the commits the remote branch would gain, reading the remote tip with
+`git ls-remote`, and a commit there that no review in the session read holds
+the push until one has.
+
 ## 0.65.12 — 2026-11-14
 
 html-brief gets a refined template. The type scale is larger (the title reaches

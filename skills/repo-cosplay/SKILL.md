@@ -34,7 +34,10 @@ supplies native-session discipline.
    repository, or external owner needs its own grant, explicit or standing, and
    its commit goes to its owner.
 4. Finish the target's normal bookkeeping, commit and push only the authorized
-   work, and verify it by the target's standard. A verification that lands
+   work, and verify it by the target's standard. Before a push, list the
+   commits the remote branch would gain (`git log <remote tip>..HEAD`, the tip
+   read with `git ls-remote`); a commit there that no review in this session
+   read stops the push until one has. A verification that lands
    after the commit that updated the target's status document reopens that
    document: fold the result in before you finish.
 
