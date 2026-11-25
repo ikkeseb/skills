@@ -1,19 +1,20 @@
 #!/usr/bin/env node
 // Exercise the unmodified CLI in isolation, with only external operations stubbed.
 import assert from 'node:assert/strict';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const root = mkdtempSync(join(tmpdir(), 'drawio-render-test-'));
 try {
   const renderer = join(root, 'render-drawio.mjs');
   copyFileSync(new URL('./render-drawio.mjs', import.meta.url), renderer);
-  const moduleDir = join(root, 'node_modules', 'playwright');
+  const writeStub = (moduleDir) => {
   mkdirSync(moduleDir, { recursive: true });
   writeFileSync(join(moduleDir, 'index.js'), `
     const { appendFileSync, writeFileSync } = require('node:fs');
+    if (process.env.LOAD_LOG) appendFileSync(process.env.LOAD_LOG, __filename);
     module.exports.chromium = { async launch() { return {
       async newContext() { return { async newPage() {
         let index;
@@ -31,12 +32,14 @@ try {
       async close() {},
     }; } };
   `);
+  };
+  writeStub(join(root, 'node_modules', 'playwright'));
   const preload = join(root, 'preload.mjs');
   writeFileSync(preload, `
     import cp from 'node:child_process';
     import { syncBuiltinESMExports } from 'node:module';
-    // Never invoke package managers or consult installed browser providers.
-    cp.execSync = () => ${JSON.stringify(join(root, 'node_modules'))};
+    // Never invoke package managers; an empty global root leaves only the local install.
+    cp.execSync = () => ${JSON.stringify(join(root, 'no-global-root'))};
     syncBuiltinESMExports();
   `);
 
@@ -80,6 +83,76 @@ try {
     assert.deepEqual(render(tricky, filter), all.filter(c => tricky[c.index].includes(filter)), 'Filtering must not change filenames');
   }
   console.log('drawio renderer: offline filename regressions passed');
+
+  // Global-install layouts, each in its own tree so no local node_modules is an ancestor.
+  const link = (target, path) => {
+    mkdirSync(dirname(path), { recursive: true });
+    symlinkSync(target, path, process.platform === 'win32' ? 'junction' : 'dir');
+  };
+  const layouts = {
+    'flat global': (g) => writeStub(join(g, 'playwright')),
+    'nested in @playwright/cli': (g) => writeStub(join(g, '@playwright', 'cli', 'node_modules', 'playwright')),
+    'pnpm v11, with @playwright/cli': (g, store) => {
+      const pkgs = join(store, 'cli', 'node_modules');
+      mkdirSync(join(pkgs, '@playwright', 'cli'), { recursive: true });
+      writeFileSync(join(pkgs, '@playwright', 'cli', 'package.json'), '{"name":"@playwright/cli"}');
+      writeStub(join(pkgs, 'playwright'));
+      writeFileSync(join(g, '8e3d6-0', 'package.json'), '{}', { flag: 'w' });
+      link(join(pkgs, '@playwright', 'cli'), join(g, '8e3d6-0', 'node_modules', '@playwright', 'cli'));
+    },
+    'pnpm v11, direct': (g, store) => {
+      writeStub(join(store, 'pw', 'node_modules', 'playwright'));
+      link(join(store, 'pw', 'node_modules', 'playwright'), join(g, 'abc-0', 'node_modules', 'playwright'));
+    },
+    // A flat npm install must win over a pnpm v11 package's transitive playwright-core.
+    'npm flat beside pnpm v11': (g, store, dir) => {
+      writeStub(join(dir, 'npm-global', 'playwright'));
+      mkdirSync(join(store, 'other', 'node_modules', 'other'), { recursive: true });
+      writeFileSync(join(store, 'other', 'node_modules', 'other', 'package.json'), '{"name":"other"}');
+      writeStub(join(store, 'other', 'node_modules', 'playwright-core'));
+      link(join(store, 'other', 'node_modules', 'other'), join(g, '8e3d6-0', 'node_modules', 'other'));
+      return { npmRoot: join(dir, 'npm-global'), expect: join('npm-global', 'playwright') };
+    },
+  };
+  for (const [label, build] of Object.entries(layouts)) {
+    const dir = mkdtempSync(join(tmpdir(), 'drawio-layout-test-'));
+    try {
+      const global = join(dir, 'global');
+      const store = join(dir, 'store');
+      mkdirSync(join(global, '8e3d6-0'), { recursive: true });
+      const { npmRoot, expect } = build(global, store, dir) ?? {};
+      const copy = join(dir, 'bin', 'render-drawio.mjs');
+      mkdirSync(dirname(copy));
+      copyFileSync(renderer, copy);
+      const stub = join(dir, 'preload.mjs');
+      // pnpm reports the fake global root; npm reports its own root, or behaves as missing with a
+      // shell-style error on stderr.
+      writeFileSync(stub, `
+        import cp from 'node:child_process';
+        import { syncBuiltinESMExports } from 'node:module';
+        const real = cp.execSync;
+        cp.execSync = (cmd, opts) => cmd.startsWith('pnpm ') ? ${JSON.stringify(global)}
+          : ${JSON.stringify(npmRoot ?? null)} ?? real(${JSON.stringify(JSON.stringify(process.execPath))} + ' -e "process.stderr.write(\\'npm: command not found\\'); process.exit(127)"', opts);
+        syncBuiltinESMExports();
+      `);
+      const file = join(dir, 'input.drawio');
+      writeFileSync(file, '<mxfile><diagram name="P"><mxGraphModel/></diagram></mxfile>');
+      const loadLog = join(dir, 'loaded.txt');
+      const result = spawnSync(process.execPath, ['--import', stub, copy, file, '--out', join(dir, 'out')], {
+        encoding: 'utf8', timeout: 10000, cwd: dir,
+        env: { ...process.env, NODE_OPTIONS: '', NODE_PATH: '', PLAYWRIGHT_BROWSERS_PATH: '0', RENDER_LOG: join(dir, 'shots.jsonl'), LOAD_LOG: loadLog },
+      });
+      assert.ifError(result.error);
+      assert.equal(result.status, 0, `${label}: ${result.stderr}`);
+      assert.ok(existsSync(loadLog), `${label}: playwright stub was not loaded`);
+      assert.ok(existsSync(join(dir, 'out', 'P.png')), `${label}: no PNG written`);
+      if (expect) assert.ok(readFileSync(loadLog, 'utf8').includes(expect), `${label}: loaded ${readFileSync(loadLog, 'utf8')}`);
+      assert.doesNotMatch(result.stderr, /command not found/, `${label}: a missing npm must stay quiet`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+  console.log(`drawio renderer: ${Object.keys(layouts).length} global Playwright layouts resolved`);
 } finally {
   rmSync(root, { recursive: true, force: true });
 }

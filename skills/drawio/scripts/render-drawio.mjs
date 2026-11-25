@@ -28,7 +28,7 @@
  */
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
-import { readFileSync, readdirSync, mkdirSync } from 'node:fs';
+import { readFileSync, readdirSync, mkdirSync, realpathSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -53,20 +53,50 @@ const require = createRequire(import.meta.url);
   }
 }
 
+// Packages installed in one global install folder, for pnpm v11+'s layout
+// (`<root>/<install-id>/node_modules/<pkg>`, each a link into the store).
+function installedPackages(root) {
+  const pkgs = [];
+  const list = (dir) => { try { return readdirSync(dir).sort(); } catch { return []; } };
+  for (const install of list(root)) {
+    const nm = join(root, install, 'node_modules');
+    for (const name of list(nm)) {
+      if (name.startsWith('.')) continue;
+      if (name.startsWith('@')) for (const sub of list(join(nm, name))) pkgs.push(join(nm, name, sub));
+      else pkgs.push(join(nm, name));
+    }
+  }
+  return pkgs;
+}
+
 function loadPlaywright() {
-  const candidates = ['playwright', 'playwright-core'];
+  const names = ['playwright', 'playwright-core'];
+  const attempts = names.map(n => () => require(n));
+  const roots = {};
   for (const pm of ['pnpm', 'npm']) {
     try {
-      const root = execSync(`${pm} root -g`, { encoding: 'utf-8' }).trim();
-      for (const p of ['playwright', 'playwright-core',
-                       '@playwright/cli/node_modules/playwright',
-                       '@playwright/cli/node_modules/playwright-core']) {
-        candidates.push(join(root, p));
-      }
-    } catch { /* package manager not available; try the next one */ }
+      roots[pm] = execSync(`${pm} root -g`, { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    } catch { /* package manager not available */ }
   }
-  for (const c of candidates) {
-    try { return require(c); } catch { /* try next */ }
+  // Flat global node_modules (npm, pnpm <= v10), Playwright direct or nested in @playwright/cli.
+  for (const root of Object.values(roots).filter(Boolean)) {
+    for (const p of [...names, ...names.map(n => `@playwright/cli/node_modules/${n}`)]) {
+      attempts.push(() => require(join(root, p)));
+    }
+  }
+  // pnpm v11+, last so it never shadows the layouts above: resolve from each installed
+  // package's real (store) path, which finds Playwright both as its own install and as a
+  // dependency of @playwright/cli. Full playwright first, across every package.
+  if (roots.pnpm) {
+    const pkgs = installedPackages(roots.pnpm);
+    for (const n of names) {
+      for (const pkg of pkgs) {
+        attempts.push(() => createRequire(join(realpathSync(pkg), 'package.json'))(n));
+      }
+    }
+  }
+  for (const attempt of attempts) {
+    try { return attempt(); } catch { /* try next */ }
   }
   console.error('ERROR: playwright not found. Install with: pnpm add -g playwright && pnpm exec playwright install chromium');
   process.exit(2);

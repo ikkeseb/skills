@@ -4,6 +4,16 @@ One repository-wide release version, mirrored in `.claude-plugin/plugin.json`
 and `.codex-plugin/plugin.json`. Entries summarize what shipped; the git log
 carries the detail.
 
+## 0.65.14 — 2026-11-25
+
+drawio's renderer finds Playwright under pnpm v11 and later, whose global root
+holds one folder per install with each package linked into the store: it now
+resolves Playwright from each installed package's real path, so an install of
+Playwright on its own or one that came only with `@playwright/cli` both load.
+The older flat and nested global layouts still resolve, and looking up a
+package manager that is not installed no longer prints a shell error. The
+renderer's offline test covers all four layouts.
+
 ## 0.65.13 — 2026-11-24
 
 repo-cosplay checks what a push would carry: before pushing, the session lists
